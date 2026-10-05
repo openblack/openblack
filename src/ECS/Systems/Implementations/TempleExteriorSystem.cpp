@@ -38,7 +38,7 @@ using namespace openblack::ecs::components;
 
 namespace
 {
-/// fn_0064ACC0 gives a player this share of the influence when nobody has any
+/// The game gives a player this share of the influence when nobody has any
 constexpr float k_ShareOfNoInfluence = 0.01f;
 /// The mesh the temples' are made from, which the outsides are blended into
 constexpr std::string_view k_FirstTemple = "temple/b_first_temple_l3d";
@@ -53,7 +53,7 @@ void TempleExteriorSystem::UpdateTurn()
 	const auto& alignment = Locator::alignmentSystem::value();
 	registry.Each<const Temple, TempleExterior, Mesh>(
 	    [&alignment](const entt::entity entity, const Temple& temple, TempleExterior& exterior, Mesh& mesh) {
-		    // Citadel::Process: toward its player's goodness, and twice their share of the influence
+		    // Each turn the temple grows toward its player's goodness, and twice their share of the influence
 		    // TODO(raffclar): the player's share of the influence, once influence is simulated
 		    exterior.alignmentTarget = (alignment.GetPlayerAlignment(temple.owner) + 1.0f) * 0.5f;
 		    exterior.sizeTarget = 2.0f * k_ShareOfNoInfluence;

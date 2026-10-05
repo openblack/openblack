@@ -20,8 +20,9 @@ namespace openblack
 
 /// The game's own random numbers, drawn exactly as the game draws them.
 ///
-/// The arithmetic is float, one operation per statement: the game's FPU runs at 24 bits, so each of its operations
-/// rounds as a float operation does, and keeping one operation per statement stops the compiler contracting them.
+/// The arithmetic is float, one operation per statement: the game computes at single precision, so each of its
+/// operations rounds as a float operation does, and keeping one operation per statement stops the compiler contracting
+/// them.
 namespace game_random
 {
 /// Both seeds start here when the game starts

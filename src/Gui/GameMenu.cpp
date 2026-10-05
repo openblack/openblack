@@ -30,11 +30,11 @@ using Layout = StaticText::Layout;
 constexpr auto k_Big = DialogPainter::k_BigTextSize;
 constexpr auto k_Mid = DialogPainter::k_MidTextSize;
 
-// DialogBoxBase and SetupBox: fading in when shown and out when hidden
+// Dialogs and message boxes: fading in when shown and out when hidden
 constexpr float k_FadeInSeconds = 0.5f;
 constexpr float k_FadeOutSeconds = 0.2f;
 
-// MainMenu::Init and InitControls
+// The main menu's buttons
 constexpr int k_ButtonLeft = 180;
 constexpr int k_ButtonWidth = 440;
 constexpr int k_ButtonHeight = 70;
@@ -61,7 +61,7 @@ constexpr std::array k_StoryTexts = {"HELP_TEXT_DIALOG_NOTEXT", "HELP_TEXT_DIALO
 constexpr std::array k_ToolTipTexts = {"HELP_TEXT_DIALOG_NOTOOLTIPS", "HELP_TEXT_DIALOG_MINIMUMTOOLTIPS",
                                        "HELP_TEXT_DIALOG_INTELLIGENTNOTOOLTIPS", "HELP_TEXT_DIALOG_ALLTOOLTIPS"};
 
-/// ControlMap's mouse buttons
+/// The mouse buttons an action can be bound to
 enum class Mouse
 {
 	None,
@@ -74,7 +74,7 @@ enum class Mouse
 	Both,
 };
 
-/// ControlMap::LoadDefaults for a mouse with a wheel: the actions in the order the Controls page lists them, their
+/// The default controls for a mouse with a wheel: the actions in the order the Controls page lists them, their
 /// names, and the DirectInput key and mouse button bound to them
 struct Binding
 {
@@ -172,8 +172,8 @@ std::u16string KeyName(uint8_t key)
 	}
 }
 
-/// fn_00447450's mice for a wheel mouse: the third row of data/textures/mousehelp.raw, the left button the mirrored
-/// right one. The wheel turns over the fourth row.
+/// The Controls page's mice for a wheel mouse: the third row of data/textures/mousehelp.raw, the left button the
+/// mirrored right one. The wheel turns over the fourth row.
 constexpr int k_MouseRow = 2;
 std::optional<std::pair<int, bool>> MouseCell(Mouse mouse)
 {
@@ -243,8 +243,8 @@ DialogRect GameMenu::GetButtonRect(size_t index)
 
 std::vector<Dialog::Tab> GameMenu::OptionsTabs(const TextDatabase& texts, Page selected)
 {
-	// AddOptionsTabs: Main Menu, Options, Players, Advanced and Controls. Inside the temple the first is the World Room,
-	// which hides the options without showing the main menu.
+	// The options' tabs: Main Menu, Options, Players, Advanced and Controls. Inside the temple the first is the World
+	// Room, which hides the options without showing the main menu.
 	(void)selected;
 	return {
 	    {.label = _insideTemple ? _worldRoomTab : _mainMenuTab,
@@ -269,7 +269,7 @@ std::vector<Dialog::Tab> GameMenu::OptionsTabs(const TextDatabase& texts, Page s
 
 void GameMenu::BuildMain(const TextDatabase& texts)
 {
-	// AddMainMenuTabs: the third tab, Multiplayer, only has a label in a multiplayer game
+	// The main menu's tabs: the third, Multiplayer, only has a label in a multiplayer game
 	std::vector<Dialog::Tab> tabs {
 	    {.label = std::u16string(texts.Get("HELP_TEXT_DIALOG_ADDITION_88")), .onSelect = {}},
 	    // TODO(raffclar): the statistics page
@@ -302,7 +302,7 @@ void GameMenu::BuildMain(const TextDatabase& texts)
 
 void GameMenu::BuildOptions(const TextDatabase& texts)
 {
-	// MiniDialogBoxOptions::Init
+	// The Options page
 	auto& page = *(_pages[static_cast<size_t>(Page::Options)] =
 	                   std::make_unique<Dialog>(OptionsTabs(texts, Page::Options), static_cast<size_t>(Page::Options)));
 	page.Add<StaticText>(DialogRect {.min = {50, 60}, .max = {750, 100}},
@@ -365,7 +365,7 @@ void GameMenu::BuildOptions(const TextDatabase& texts)
 
 void GameMenu::BuildPlayers(const TextDatabase& texts)
 {
-	// ProfileEditor::Init
+	// The Players page, which edits the player's profile
 	auto& page = *(_pages[static_cast<size_t>(Page::Players)] =
 	                   std::make_unique<Dialog>(OptionsTabs(texts, Page::Players), static_cast<size_t>(Page::Players)));
 	page.Add<StaticText>(DialogRect {.min = {100, 60}, .max = {700, 120}},
@@ -388,7 +388,7 @@ void GameMenu::BuildPlayers(const TextDatabase& texts)
 
 	page.Add<StaticText>(DialogRect {.min = {0, 370}, .max = {190, 410}},
 	                     std::u16string(texts.Get("HELP_TEXT_DIALOG_CREATURENAME")), Layout::Right, k_Mid);
-	// SetupEdit takes 29 characters
+	// The name box takes 29 characters
 	auto& name = page.Add<EditBox>(DialogRect {.min = {200, 370}, .max = {600, 410}}, _settings.creatureName, 29);
 	name.onChange = [this](const std::u16string& text) {
 		_settings.creatureName = text;
@@ -416,7 +416,7 @@ void GameMenu::BuildPlayers(const TextDatabase& texts)
 
 void GameMenu::BuildAdvanced(const TextDatabase& texts)
 {
-	// DialogBoxOptions::Init
+	// The Advanced page
 	auto& page = *(_pages[static_cast<size_t>(Page::Advanced)] =
 	                   std::make_unique<Dialog>(OptionsTabs(texts, Page::Advanced), static_cast<size_t>(Page::Advanced)));
 	page.Add<StaticText>(DialogRect {.min = {50, 60}, .max = {750, 100}},
@@ -467,13 +467,13 @@ void GameMenu::BuildAdvanced(const TextDatabase& texts)
 
 void GameMenu::BuildControls(const TextDatabase& texts)
 {
-	// DialogBoxKeyBinding::Init
+	// The Controls page
 	auto& page = *(_pages[static_cast<size_t>(Page::Controls)] =
 	                   std::make_unique<Dialog>(OptionsTabs(texts, Page::Controls), static_cast<size_t>(Page::Controls)));
 	page.Add<StaticText>(DialogRect {.min = {100, 60}, .max = {700, 160}},
 	                     std::u16string(texts.Get("HELP_TEXT_DIALOG_CONTROLTITLE")), Layout::Wrapped);
 
-	// ControlMap::GetText: "<action> : <key> <mouse>", the mouse's name after a gap of five spaces for its picture
+	// Each binding reads "<action> : <key> <mouse>", the mouse's name after a gap of five spaces for its picture
 	std::vector<List::Item> items;
 	for (size_t i = 0; i < k_Bindings.size(); ++i)
 	{
@@ -537,7 +537,7 @@ void GameMenu::BuildControls(const TextDatabase& texts)
 
 void GameMenu::Ask(std::u16string text)
 {
-	// SetupBox::MessageBoxA with a Yes and a No: the question in the middle of a 500 by 200 box
+	// A question with a Yes and a No: the question in the middle of a 500 by 200 box
 	auto answers = std::make_unique<Dialog>();
 	answers->Add<StaticText>(DialogRect {.min = {200, 220}, .max = {600, 350}}, text, Layout::Wrapped);
 	answers->Add<BigButton>(_font, glm::ivec2(200, 338), k_ArrowSize, _yes, LabelSide::Right, Look::LeftArrow).onClick =
@@ -614,7 +614,7 @@ void GameMenu::Update(float deltaSeconds)
 		}
 	}
 
-	// fn_00447450: the wheel turns over a picture every tenth of a second, resting one in five
+	// The wheel turns over a picture every tenth of a second, resting one in five
 	_wheelTime += deltaSeconds;
 	const auto frame = static_cast<int>(_wheelTime * 10.0f) % 5;
 	for (const auto& [index, up] : _wheelMice)
@@ -716,7 +716,7 @@ void GameMenu::Draw(const DialogPainter& painter) const
 	CurrentDialog().Draw(painter, _open && !_question);
 	if (_question)
 	{
-		// SetupBox::MessageBoxA: an opaque box over the menu, fading in
+		// The question: an opaque box over the menu, fading in
 		painter.SetAlpha(fade * std::clamp(_question->fade.GetValue(), 0.0f, 1.0f));
 		painter.DrawBackground(GetQuestionRect(), glm::vec3(1.0f), true, DialogPainter::All);
 		_question->answers->Draw(painter, _open);

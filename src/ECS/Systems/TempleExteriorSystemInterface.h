@@ -18,15 +18,15 @@
 namespace openblack::ecs::systems
 {
 
-/// The temples' outsides (Citadel::Process): each turn every temple's look moves toward its player's alignment and share
-/// of influence, and its mesh and texture are blended afresh for them as they change (fn_00882B10)
+/// The temples' outsides: each turn every temple's look moves toward its player's alignment and share
+/// of influence, and its mesh and texture are blended afresh for them as they change
 class TempleExteriorSystemInterface
 {
 public:
 	virtual ~TempleExteriorSystemInterface() = default;
 
 	virtual void UpdateTurn() = 0;
-	/// The player whose temple's entrance a ray first meets, if it meets one (CitadelEntrance, picked under the cursor)
+	/// The player whose temple's entrance a ray first meets, if it meets one (the entrance picked under the cursor)
 	[[nodiscard]] virtual std::optional<PlayerNames> EntranceAt(glm::vec3 origin, glm::vec3 direction) const = 0;
 };
 

@@ -21,8 +21,8 @@ class L3DFile;
 namespace openblack
 {
 
-/// How far along a ray, in lengths of its direction, it first meets a triangle of a mesh, from either side, as LH3D picks
-/// the object under the cursor. All in the mesh's space.
+/// How far along a ray, in lengths of its direction, it first meets a triangle of a mesh, from either side, as the game
+/// picks the object under the cursor. All in the mesh's space.
 [[nodiscard]] std::optional<float> RayCast(const l3d::L3DFile& mesh, glm::vec3 origin, glm::vec3 direction);
 
 } // namespace openblack

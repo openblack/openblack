@@ -301,7 +301,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 		                                               bgfx::copy(&k_White, sizeof(k_White))));
 		bgfx::setName(toBgfx(*_whiteTexture), "White");
 	}
-	// LH3D rasterises shadows with eight coverage samples per texel, multisampling gives the same soft edges
+	// The game rasterises shadows with eight coverage samples per texel, multisampling gives the same soft edges
 	_handShadowFrameBuffer =
 	    std::make_unique<FrameBuffer>("Hand Shadow", HandShadow::k_TextureSize, HandShadow::k_TextureSize, TextureFormat::R8,
 	                                  std::nullopt, static_cast<uint8_t>(8), Wrapping::ClampEdge);
@@ -400,7 +400,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	const auto& heightMap = island.GetHeightMap();
 
 	auto const& skins = mesh.GetSkins();
-	// LH3DMesh::DrawLightMap draws the submeshes with a lightmap through it and the others as they are
+	// The game draws the submeshes with a lightmap through it and the others as they are
 	const auto lightmapSkinID = subMesh.GetLightmapSkinID();
 	const Texture2D* lightmap = lightmapSkinID.has_value() ? GetTexture(*lightmapSkinID, skins) : nullptr;
 	const auto* program = desc.lightmapProgram != nullptr && lightmap != nullptr ? desc.lightmapProgram : desc.program;
@@ -415,7 +415,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		return;
 	}
 
-	// LH3DMesh turns a submesh with a joint about its pivot by its matrix of the table, before the mesh's own matrix
+	// The game turns a submesh with a joint about its pivot by its matrix of the table, before the mesh's own matrix
 	const auto* modelMatrices = desc.modelMatrices;
 	glm::mat4 jointModel;
 	if (const auto& joint = subMesh.GetJoint();
@@ -642,7 +642,7 @@ void Renderer::DrawTempleText(const DrawSceneDesc& desc) const
 	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
 	std::memcpy(buffer.data, vertices.data(), count * sizeof(OrientedTextVertex));
 
-	// GatheringText::DrawTextRawOriented draws the glyphs blended by their coverage, tested against the room's depth
+	// The game draws the glyphs blended by their coverage, tested against the room's depth
 	const auto* shader = _shaderManager->GetShader("Text3D");
 	const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
 	bgfx::setTransform(glm::value_ptr(model));
@@ -711,7 +711,7 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
 		// In their colour alone, without the pool's lightmap: through it, the water is far darker than the game's
-		// TODO(raffclar): confirm how LH3DObject::Draw lights an object given a colour
+		// TODO(raffclar): confirm how the game lights an object given a colour
 		submitDesc.program = _shaderManager->GetShader("Object");
 		// Each primitive blended, culled and writing depth as its material says, as the room's meshes are
 		submitDesc.state = k_BgfxDefaultStateInvertedZ;
@@ -741,7 +741,7 @@ void Renderer::DrawTempleMapPass() const
 	}
 	_templeMapVisit = visit;
 
-	// 8 texels a block, as LH3D's pages of the land's textures give the map, over the 32 by 32 blocks there can be
+	// 8 texels a block, as the game's pages of the land's textures give the map, over the 32 by 32 blocks there can be
 	constexpr uint16_t k_Size = 256;
 	if (!_templeMapFrameBuffer)
 	{
@@ -820,9 +820,9 @@ void Renderer::DrawTempleMapPass() const
 void Renderer::DrawTempleUnderside(const DrawSceneDesc& desc) const
 {
 	// The rooms' meshes don't quite meet everywhere: the sills of the main room's doorways stand a hundredth of a unit off
-	// their doors' frames, and their edges have vertices of others part way along them. Vanilla draws the sky behind the
-	// temple (DoCitadelDraw), so it shows through the cracks there too, as specks of the outside. Looking down through
-	// them, this shows black instead. The creature's room goes deepest, to 70.5 below the temple.
+	// their doors' frames, and their edges have vertices of others part way along them. The game draws the sky
+	// behind the temple, so it shows through the cracks there too, as specks of the outside. Looking down through them,
+	// this shows black instead. The creature's room goes deepest, to 70.5 below the temple.
 	constexpr float k_Depth = -75.0f;
 	constexpr float k_Extent = 10000.0f;
 	if (desc.viewId != RenderPass::Main || !_whiteTexture || !Locator::temple::has_value() ||
@@ -892,7 +892,7 @@ void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
 	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
 	std::memcpy(buffer.data, vertices.data(), count * sizeof(OrientedTextVertex));
 
-	// Render mode 5: the land's texture by the vertices' colours, blended by their alpha
+	// The land's texture by the vertices' colours, blended by their alpha
 	const auto* shader = _shaderManager->GetShader("Text3D");
 	const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
 	bgfx::setTransform(glm::value_ptr(model));
@@ -962,7 +962,7 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 		{
 			continue;
 		}
-		// MiniMap::DrawMarker: ApplyCitadelColoring puts them in the temple's light
+		// The game puts the markers in the temple's light
 		const auto model = glm::translate(glm::mat4(1.0f), origin + marker.position) * turn *
 		                   glm::scale(glm::mat4(1.0f), glm::vec3(k_MarkerScale));
 		L3DMeshSubmitDesc submitDesc = {};
@@ -988,7 +988,7 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 	{
 		return;
 	}
-	// fn_00787340 gives every material of the icons the one texture, with the alpha LH3D reads from beside it
+	// The game gives every material of the icons the one texture, with the alpha read from beside it
 	if (!_iconsLoaded)
 	{
 		_iconsLoaded = true;
@@ -1034,8 +1034,8 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		const auto colour = glm::vec3((trophy.colour >> 16) & 0xFF, (trophy.colour >> 8) & 0xFF, trophy.colour & 0xFF);
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
-		// CreatureRoom::Draw draws the belts and the medals past wood in LH3D's render mode 2, which adds the first of
-		// LH3DObject's environment maps, envmap.raw (0xC37EAC)
+		// The creature's room draws the belts and the medals past wood environment-mapped, adding the game's first
+		// environment map, envmap.raw
 		const bool environmentMapped = trophy.environmentMapped && environment != nullptr;
 		submitDesc.program = _shaderManager->GetShader(environmentMapped ? "ObjectEnvironment" : "Object");
 		submitDesc.environment = environmentMapped ? environment : nullptr;
@@ -1046,7 +1046,7 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		submitDesc.matrixCount = 1;
 		submitDesc.skinTexture = &*_iconsTexture;
 		submitDesc.useMaterialBlending = true;
-		// The colour multiplies what lights them: the medals come out the mid grey of vanilla's at 0x80. ApplyCitadelColoring
+		// The colour multiplies what lights them: the medals come out the mid grey of the game's at 0x80. The game
 		// puts it in the temple's light.
 		const auto& light = Locator::temple::value().GetLight();
 		submitDesc.tint = glm::vec4(light.Colour(colour / 255.0f), 0.0f);
@@ -1079,7 +1079,7 @@ void Renderer::DrawMistDomes(const DrawSceneDesc& desc) const
 	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
 	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
 	    .end();
-	// Render mode 6 of the smoke's material: blended by alpha, without writing depth, from both sides
+	// The smoke's material: blended by alpha, without writing depth, from both sides
 	constexpr uint64_t k_State = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
 	                             BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 	// It turns to the camera as the camera is turned
@@ -1146,7 +1146,7 @@ void Renderer::DrawLightBeams(const DrawSceneDesc& desc) const
 	    .end();
 	static_assert(sizeof(BeamVertex) == 6 * sizeof(float));
 
-	// Render mode 0xd: added by alpha, without writing depth, from both sides
+	// Added by alpha, without writing depth, from both sides
 	constexpr uint64_t k_State = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
 	                             BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);
 	const auto submit = [&](const BeamMesh& mesh, const glm::mat4& model, const Texture2D& texture, const Texture2D* alpha) {
@@ -1633,7 +1633,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	// This dummy draw call is here to make sure that view is cleared if no
 	// other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
-	// bgfx sorts a view's blended draws by their programs unless told to keep them in order. LH3D draws the temple
+	// bgfx sorts a view's blended draws by their programs unless told to keep them in order. The game draws the temple
 	// in the order it is submitted, and its blended parts must be too: the pool's water, drawn with the lightmap
 	// program, would otherwise land after the hand, whose faded wrist writes depth, and leave a hole in the water
 	// where the wrist should show it through.
@@ -1824,7 +1824,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
-				// TempleRoom::Draw gives the rooms the temple's light; the hand keeps its own
+				// The game gives the rooms the temple's light; the hand keeps its own
 				const bool templeLit = Locator::temple::has_value() && Locator::temple::value().Active() &&
 				                       meshId != ecs::components::Hand::k_MeshId;
 				const auto light = templeLit ? Locator::temple::value().GetLight() : TempleLight {};
@@ -1903,15 +1903,15 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					drawInstances(meshId, placers, true);
 				}
 			}
-			// WorldRoom::Draw's pool, the map over it and its markers, ahead of the hand, whose faded wrist they show
+			// The main room's pool, the map over it and its markers, ahead of the hand, whose faded wrist they show
 			// through
 			DrawTemplePool(desc);
 			DrawTempleMap(desc);
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
-			// CHand draws the hand after the rest of the scene, blended by its translucent texture. Black & White culls
-			// its back faces; here both sides are drawn, the inside first so that the outside blends over it.
-			// WorldRoom::Draw's reflection of the main room has no hand in it
+			// The game draws the hand after the rest of the scene, blended by its translucent texture. Black & White
+			// culls its back faces; here both sides are drawn, the inside first so that the outside blends over it.
+			// The game's reflection of the main room has no hand in it
 			if (const auto hand = renderCtx.instancedDrawDescs.find(ecs::components::Hand::k_MeshId);
 			    desc.drawHand && hand != renderCtx.instancedDrawDescs.end() &&
 			    !(desc.viewId == RenderPass::Reflection && hand->second.hiddenFromReflection))
@@ -2031,8 +2031,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				registry.Each<const Sprite, const Transform>([this, &spriteShader, &desc,
 				                                              &registry](entt::entity entity, const Sprite& sprite,
 				                                                         const Transform& transform) {
-					// Temple::Draw draws the glows of the rooms it draws whole, and WorldRoom::Draw reflects the main
-					// room's alone in its floor
+					// The temple draws the glows of the rooms it draws whole, and the main room reflects its own glows
+					// alone in its floor
 					if (const auto* templePart = registry.TryGet<const TempleInteriorPart>(entity); templePart != nullptr)
 					{
 						const bool inMainRoom = templePart->room == TempleRoom::Main;

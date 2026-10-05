@@ -76,8 +76,8 @@ void openblack::graphics::AppendCone(const LightCone& cone, float phase, BeamMes
 BeamMesh openblack::graphics::MakeVolumeLight(std::span<const l3d::L3DVertex> vertices, std::span<const uint16_t> indices,
                                               glm::vec3 source, float length)
 {
-	// The edges of the window's triangles, each once. LH3DVolumeLight counts them in a table of 0x4000 by a hash of
-	// their ends, and so leaves out an edge whose hash another has taken.
+	// The edges of the window's triangles, each once. The game counts them in a table of 0x4000 by a hash of their
+	// ends, and so leaves out an edge whose hash another has taken.
 	std::array<uint8_t, 0x4000> seen {};
 	std::vector<std::pair<uint16_t, uint16_t>> edges;
 	const auto addEdge = [&seen, &edges](uint16_t a, uint16_t b) {

@@ -155,7 +155,7 @@ void Audio::Emitters() noexcept
 
 void Audio::Music() noexcept
 {
-	// What GAudio has picked and what LHAudio's music channels are playing
+	// What the game's music has picked and what the music channels are playing
 	const auto* game = Game::Instance();
 	if (const auto* gameMusic = game != nullptr ? game->GetGameMusic() : nullptr)
 	{

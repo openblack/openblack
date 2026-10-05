@@ -152,21 +152,21 @@ inline void addGlowsToRegistry(Indoors templeRoom)
 
 namespace
 {
-/// How far through its swing the main room's door is before DrawDoors draws the room behind it
+/// How far through its swing the main room's door is before the room behind it is drawn
 constexpr float k_MainRoomOpenSwing = 0.01f;
 
-/// CreatureRoom::Draw slides the waterfall's texture through this much of a slide each millisecond, and the slide
+/// The creature's room slides the waterfall's texture through this much of a slide each millisecond, and the slide
 /// across ten of the texture
 constexpr float k_WaterfallSlidePerMillisecond = 2.1e-5f;
-/// GGame::Loop has the temple's game turn every 100 milliseconds while the player is inside it
+/// The game has the temple's game turn every 100 milliseconds while the player is inside it
 constexpr float k_ToolTipTurnMilliseconds = 100.0f;
 constexpr float k_WaterfallSlideLength = -10.0f;
-/// CreatureRoom::DrawAdditional's sounds: the water at the waterfall's foot, and the fire where the creature stands, the
+/// The creature's room's sounds: the water at the waterfall's foot, and the fire where the creature stands, the
 /// second place movement.l3d marks
 constexpr glm::vec3 k_CreatureCaveWaterSound {160.0f, -45.0f, -30.0f};
 constexpr size_t k_CreatureCaveFirePlace = 1;
 
-/// The fire of the creature's room, the second place movement.l3d marks (CPController::Init)
+/// The fire of the creature's room, the second place movement.l3d marks
 std::optional<glm::vec3> CreatureCaveFire()
 {
 	const entt::id_type movement = entt::hashed_string("temple/interior/movement_l3d").value();
@@ -180,7 +180,7 @@ std::optional<glm::vec3> CreatureCaveFire()
 
 void PlayDoorSound(entt::id_type sound)
 {
-	// GAudio plays the doors' sounds without a place
+	// The game plays the doors' sounds without a place
 	if (Locator::audio::has_value())
 	{
 		Locator::audio::value().PlaySoundEffect(sound, std::nullopt);
@@ -196,14 +196,14 @@ TempleInterior::TempleInterior()
 
 namespace
 {
-/// The temple is made as the game starts, which SaveGameRoom's time played counts from
+/// The temple is made as the game starts, which the save game room's time played counts from
 const auto k_GameStarted = std::chrono::steady_clock::now();
 
 /// What the rooms' scrolls tell of the game: made up, but for what openblack keeps
 TempleScrolls::Facts GatherScrollFacts()
 {
 	auto facts = TempleScrolls::Facts::Mock();
-	// GGame's count of the people in the world
+	// The game's count of the people in the world
 	facts.population = static_cast<int32_t>(Locator::entitiesRegistry::value().Size<ecs::components::Villager>());
 	facts.timePlayed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - k_GameStarted);
 	return facts;
@@ -228,7 +228,7 @@ void TempleInterior::CreateScrolls()
 	{
 		return;
 	}
-	// PictureRoomBase::InitEngine reads the parchment every scroll is written on
+	// The rooms read the parchment every scroll is written on as they are set up
 	auto& fileSystem = Locator::filesystem::value();
 	const auto path = fileSystem.GetPath<filesystem::Path::Textures>() / "ChallengeScroll.raw";
 	std::vector<uint8_t> parchment;
@@ -240,7 +240,7 @@ void TempleInterior::CreateScrolls()
 	_scrolls->Create(GatherScrollFacts());
 	_signs = std::make_unique<TempleSigns>(_interface->GetTexts(), _interface->GetFont());
 
-	// WorldRoom::InitEngine finds the buttons of what the map shows
+	// The main room finds the buttons of what the map shows as it is set up
 	auto& meshes = Locator::resources::value().GetMeshes();
 	const entt::id_type mainMeshId = entt::hashed_string("temple/interior/main_l3d").value();
 	std::vector<std::string> names;
@@ -295,7 +295,7 @@ std::vector<TempleSubMeshTexture> TempleInterior::GetScrollTextures(TempleRoom r
 
 std::vector<TempleSubMeshGlow> TempleInterior::GetControlGlows(TempleRoom room) const
 {
-	// SubOptionEntry::GetSubMeshData: the control under the cursor brightens by up to 12, 12 and 20 of 255 as the glow
+	// The control under the cursor brightens by up to 12, 12 and 20 of 255 as the glow
 	// runs out
 	if (!_hovered.has_value() || _hovered->first != room || !IsControl(room, _hovered->second) || _hoverGlow <= 0.0f)
 	{
@@ -323,7 +323,7 @@ void TempleInterior::UpdateOptionsAndFutureRooms(float seconds)
 		{
 			_cameraModel->SetDialogOpen(menu.IsOpen());
 		}
-		// GameOptionsRoom::Update, while no dialog is up: once the camera has come into the room it opens the game's
+		// The options room, while no dialog is up: once the camera has come into the room it opens the game's
 		// options, and once they are closed it goes back to the main room
 		if (_currentRoom == TempleRoom::Options && arrived && !menu.IsOpen())
 		{
@@ -347,8 +347,8 @@ void TempleInterior::UpdateOptionsAndFutureRooms(float seconds)
 		}
 	}
 
-	// UniverseRoom: once the camera has come into the room, "The future is still uncertain..." fades in to half over two
-	// seconds, from the start each time the camera comes in again
+	// The future room: once the camera has come into the room, "The future is still uncertain..." fades in to half over
+	// two seconds, from the start each time the camera comes in again
 	std::optional<gui::GameInterface::Message> message;
 	if (_currentRoom == TempleRoom::Multi && _cameraModel != nullptr)
 	{
@@ -402,8 +402,8 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 	};
 	UpdateTempleToolTip(_toolTip, input);
 
-	// Temple::ProcessGameTurn every 100 milliseconds: TempleRoom::CalculateTooltipsInsideCitadel submits the tooltip,
-	// or none under a dialog, and the help system keeps it or ends it
+	// Every 100 milliseconds the temple's game turn submits the room's tooltip, or none under a dialog, and the help
+	// system keeps it or ends it
 	auto& toolTips = _interface->GetToolTips();
 	_toolTipTurnTime += milliseconds;
 	for (; _toolTipTurnTime >= k_ToolTipTurnMilliseconds; _toolTipTurnTime -= k_ToolTipTurnMilliseconds)
@@ -415,7 +415,7 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 		toolTips.ProcessTurn();
 	}
 
-	// CameraHelp::DrawKeyOrMouse puts the tooltip by the hand, which is where the cursor meets the room
+	// The tooltip is drawn by the hand, which is where the cursor meets the room
 	std::optional<glm::vec2> onScreen;
 	if (hit.has_value() && Locator::windowing::has_value())
 	{
@@ -445,10 +445,10 @@ void TempleInterior::LeaveForMapPoint(glm::vec3 point)
 	{
 		return;
 	}
-	// GGame::LeaveInsideCitadel puts the camera 50 above the place and 70 along z from it, looking at it
+	// Leaving the temple puts the camera 50 above the place and 70 along z from it, looking at it
 	// TODO(raffclar): the hand feels the click
 	_leaveTo = std::make_pair(glm::vec3(world.x, altitude + 50.0f, world.y + 70.0f), glm::vec3(world.x, altitude, world.y));
-	// WorldRoomCamera::UpdateMain fades the temple out to white, and WorldRoom::Update leaves once it is
+	// The main room's camera fades the temple out to white, and the room leaves once it is
 	if (_interface != nullptr)
 	{
 		_interface->GetScreenFade().FadeThrough(glm::vec3(1.0f));
@@ -470,7 +470,7 @@ void TempleInterior::FadeToWhite()
 
 void TempleInterior::FadeIntoRoom()
 {
-	// Temple::GoToRoom covers the cut from 1.2, in whatever colour is still fading
+	// Going to another room covers the cut from 1.2, in whatever colour is still fading
 	if (_interface != nullptr)
 	{
 		_interface->GetScreenFade().FadeFrom(1.2f);
@@ -502,8 +502,8 @@ void TempleInterior::UpdateCaveTrophies()
 		{
 			continue;
 		}
-		// CreatureRoom::InitEngine gives each its point's matrix with its axes made unit long (fn_007FB5C0), turned a
-		// quarter back about the point's own x axis
+		// The creature's room gives each its point's matrix with its axes made unit long, turned a quarter back about
+		// the point's own x axis
 		auto place = points[trophy.point];
 		const auto across = glm::normalize(glm::vec3(place[0]));
 		const auto up = glm::normalize(glm::vec3(place[1]));
@@ -531,7 +531,7 @@ void TempleInterior::UpdateMapMarkers(float seconds)
 	auto& registry = Locator::entitiesRegistry::value();
 	if (_toggles.IsShown(TempleToggles::Display::Temples))
 	{
-		// fn_0079D830: every player's temple
+		// Every player's temple
 		registry.Each<const Temple, const Transform>([this](const Temple& temple, const Transform& transform) {
 			_mapMarkers.push_back({.kind = TempleMapMarkerKind::Temple,
 			                       .position = _map.MarkerPosition(glm::vec2(transform.position.x, transform.position.z)),
@@ -540,15 +540,15 @@ void TempleInterior::UpdateMapMarkers(float seconds)
 	}
 	if (_toggles.IsShown(TempleToggles::Display::Creatures))
 	{
-		// fn_0079DAB0: every creature, in its player's colour
+		// Every creature, in its player's colour
 		registry.Each<const Creature, const Transform>([this](const Creature& creature, const Transform& transform) {
 			_mapMarkers.push_back({.kind = TempleMapMarkerKind::Creature,
 			                       .position = _map.MarkerPosition(glm::vec2(transform.position.x, transform.position.z)),
 			                       .colour = TempleMap::MarkerColour(creature.owner)});
 		});
 	}
-	// TODO(raffclar): WorldRoom::DrawChallenges marks the challenges not yet done, DrawWorldMapSpells the miracles being
-	// cast, and InfluenceCircle::Draw the players' influence on the map, as their buttons show them
+	// TODO(raffclar): the map also marks the challenges not yet done, the miracles being cast, and the players'
+	// influence, as their buttons show them
 	// The markers turn a radian a second while the map is drawn
 	_mapMarkerTurn += seconds;
 }
@@ -592,7 +592,7 @@ bool TempleInterior::IsRoomDrawn(TempleRoom room) const
 	{
 		return true;
 	}
-	// From another room, WorldRoom::DrawDoors draws the main room whole only while its door is open, and otherwise just
+	// From another room, the main room is drawn whole only while its door is open, and otherwise just
 	// its doors (the submeshes with joints)
 	return room == TempleRoom::Main && !_transitionRoom.has_value() && _doors.GetSwing() > k_MainRoomOpenSwing;
 }
@@ -623,15 +623,15 @@ std::optional<TempleCursorHit> TempleInterior::GetCursorHit() const
 	{
 		return std::nullopt;
 	}
-	// TempleRoom::Draw: the cursor is over the submesh LH3D picks while drawing the room (fn_00795310), and the hand goes
-	// where the pick meets it, or onto the floor where the cursor meets that this frame
+	// The cursor is over the submesh the game picks while drawing the room, and the hand goes where the pick meets
+	// it, or onto the floor where the cursor meets that this frame
 	const auto& hit = _cameraModel->GetCursorHit();
 	const bool onFloor = hit.has_value() && hit->floor;
 	const auto& ray = _cameraModel->GetCursorRay();
 	if (ray.has_value())
 	{
-		// LH3D picks along the ray through every room's mesh it draws, and from another room just the main room's doors
-		// (WorldRoom::DrawDoors)
+		// The game picks along the ray through every room's mesh it draws, and from another room just the main room's
+		// doors
 		const auto toRoom =
 		    glm::inverse(glm::translate(glm::mat4(1.0f), _templePosition) * glm::eulerAngleY(_templeRotation.y));
 		const auto origin = glm::vec3(toRoom * glm::vec4(ray->origin, 1.0f));
@@ -733,7 +733,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 
 		UpdateOptionsAndFutureRooms(milliseconds / 1000.0f);
 
-		// TempleRoom::Update lets the glow of the control under the cursor run out, and TempleRoom::Draw sets it off
+		// The glow of the control under the cursor runs out each frame, and drawing the room sets it off
 		// again as the cursor moves onto another submesh, while no control is held
 		_hoverGlow = std::max(0.0f, _hoverGlow - std::floor(milliseconds));
 		if (!IsControlHeld())
@@ -751,8 +751,8 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			}
 		}
 
-		// The rooms' Draw: the scroll the camera is close to has its text drawn in front of it, and the signs their
-		// labels
+		// As the rooms are drawn, the scroll the camera is close to has its text drawn in front of it, and the signs
+		// their labels
 		_text.clear();
 		if (_scrolls != nullptr && _cameraModel != nullptr)
 		{
@@ -769,7 +769,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			{
 				if (IsRoomDrawn(room))
 				{
-					// WorldRoom::Draw lights the label of the door the cursor is over
+					// The main room lights the label of the door the cursor is over
 					const auto highlighted = room == TempleRoom::Main && _cameraModel != nullptr
 					                             ? TempleSigns::MainRoomSignOfDoor(_cameraModel->GetHoveredDoor())
 					                             : std::nullopt;
@@ -780,7 +780,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 
 		UpdateToolTips(milliseconds);
 
-		// WorldRoom::Draw takes the land's heights and brightness for the map every frame the main room is drawn
+		// The main room takes the land's heights and brightness for the map every frame the main room is drawn
 		_mapTriangles.clear();
 		if (IsRoomDrawn(TempleRoom::Main) && Locator::terrainSystem::has_value())
 		{
@@ -788,12 +788,12 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			_map.Build([&island](glm::u16vec2 cell) { return island.FindCell(cell); }, _mapTriangles);
 		}
 		UpdateMapMarkers(milliseconds / 1000.0f);
-		// Temple::Draw lights the temple by the alignment, pulsing by GetTickCount
+		// The temple is lit by the alignment, pulsing with the time
 		_light = TempleLight::At(Locator::alignmentSystem::value().GetCameraAlignment(),
 		                         static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
 		                                                   std::chrono::steady_clock::now().time_since_epoch())
 		                                                   .count()));
-		// CreatureRoom::Update chooses the belts and medals every frame
+		// The creature's room chooses the belts and medals every frame
 		if (IsRoomDrawn(TempleRoom::CreatureCave))
 		{
 			UpdateCaveTrophies();
@@ -802,7 +802,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 		{
 			_caveTrophies.clear();
 		}
-		// WorldRoom::Draw moves the pool's shimmer on while the main room is drawn
+		// The main room moves the pool's shimmer on while the main room is drawn
 		if (IsRoomDrawn(TempleRoom::Main))
 		{
 			_poolTime += milliseconds / 1000.0f;
@@ -815,7 +815,7 @@ void TempleInterior::Update(std::chrono::microseconds dt)
 			}
 		}
 
-		// CreatureRoom::Draw moves the room's effects on while the room is drawn
+		// The creature's room moves its effects on while the room is drawn
 		if (_creatureCaveEffects != nullptr && IsRoomDrawn(TempleRoom::CreatureCave))
 		{
 			const auto tickCount = static_cast<uint32_t>(
@@ -849,7 +849,7 @@ void TempleInterior::Activate(TempleRoom room)
 	_playerPositionOutside = camera.GetOrigin();
 	_playerRotationOutside = camera.GetRotation();
 
-	// WorldRoom::InitEngine frames the map on the island as it is each visit, and draws its texture afresh
+	// The main room frames the map on the island as it is each visit, and draws its texture afresh
 	++_visits;
 	if (Locator::terrainSystem::has_value())
 	{
@@ -879,11 +879,11 @@ void TempleInterior::Activate(TempleRoom room)
 	_active = true;
 	_leaveRequested = false;
 	_leavingForMapPoint = false;
-	// Temple::InitEngine covers the way in from 1.2
+	// Entering the temple covers the way in from 1.2
 	FadeIntoRoom();
 	_transitionRoom.reset();
 	_doors = TempleDoors(PlayDoorSound);
-	// CreatureRoom::InitEngine
+	// The creature's room's effects start around its fire
 	if (const auto fire = CreatureCaveFire(); fire.has_value())
 	{
 		_creatureCaveEffects = std::make_unique<CreatureCaveEffects>(*fire);
@@ -946,7 +946,7 @@ void TempleInterior::Deactivate()
 	_transitionRoom.reset();
 	_leavingForMapPoint = false;
 	_caveTrophies.clear();
-	// GGame::LeaveInsideCitadel goes out to the island all white, which fades over a second
+	// Leaving the temple goes out to the island all white, which fades over a second
 	if (_interface != nullptr)
 	{
 		_interface->GetScreenFade().FadeFrom(1.0f, glm::vec3(1.0f));

@@ -14,19 +14,19 @@
 namespace openblack
 {
 
-/// Vanilla's Zoomer: a value that eases to a destination over a set time, setting off from its current value and speed
+/// A value that eases to a destination over a set time, as the game's do, setting off from its current value and speed
 /// so that it can be given a new destination every frame. Its path is a quartic in time that arrives at the destination
-/// at the destination's speed, its last term ending at nothing, and its speed is kept as Zoomer::Update keeps it.
+/// at the destination's speed, its last term ending at nothing, and its speed is kept as the game keeps it.
 class Zoomer
 {
 public:
 	explicit Zoomer(float value = 0.0f) { Reset(value); }
 
-	/// Zoomer::SetPosition: at value, still
+	/// At value, still
 	void Reset(float value);
-	/// Zoomer::SetDestinationWithSpeedAndTime. Under a millisecond puts it there.
+	/// Eases to destination over seconds, arriving at speed. Under a millisecond puts it there.
 	void SetDestination(float destination, float seconds, float speed = 0.0f);
-	/// Zoomer::Update
+	/// Moves the value on along its path
 	void Update(float deltaSeconds);
 
 	[[nodiscard]] float GetValue() const { return _value; }
@@ -46,7 +46,7 @@ private:
 	glm::vec3 _coefficients {0.0f};
 };
 
-/// Zoomer3d: a point of three zoomers
+/// A point of three zoomers
 struct Zoomer3
 {
 	Zoomer x;

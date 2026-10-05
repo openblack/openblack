@@ -35,9 +35,9 @@ class TextDatabase;
 } // namespace gui
 
 /// The scrolls on the temple's walls that the rooms write their texts on: the world's statistics in the main room, the
-/// creature's four in its room, the challenges, the save games and the library's seven. Each room's InitEngine makes a
-/// texture for each of its LH_Scroll submeshes and writes the scroll's text on it, and SubOptionEntryScroll turns the
-/// scroll up and down as the mouse drags it. Pressing a scroll has the camera look at it from close by, and while the
+/// creature's four in its room, the challenges, the save games and the library's seven. Each room, as it is set up,
+/// makes a texture for each of its LH_Scroll submeshes and writes the scroll's text on it, and the scroll turns up and
+/// down as the mouse drags it. Pressing a scroll has the camera look at it from close by, and while the
 /// camera is close its text is drawn in front of it instead.
 class TempleScrolls
 {
@@ -83,7 +83,7 @@ public:
 		bool knowsGodsDesire {false};
 		/// The creatures, temples, flocks and forests it knows about
 		std::array<int32_t, 4> known {};
-		/// How it leans in its fights, from -1 to 1 (its mind's +0x17D04), which the belts on the attack dummies show
+		/// How it leans in its fights, from -1 to 1, which the belts on the attack dummies show
 		float fightBalance {0.0f};
 		/// The miracles it knows of, the text of each and how much of it it has learnt
 		struct Miracle
@@ -104,7 +104,7 @@ public:
 	/// What the scrolls tell of the game
 	struct Facts
 	{
-		/// GGame's count of the people in the world
+		/// The game's count of the people in the world
 		int32_t population {0};
 		int32_t believersPercent {0};
 		int32_t malePercent {0};
@@ -114,7 +114,7 @@ public:
 		int32_t buildings {0};
 		int32_t wonders {0};
 		int32_t disciples {0};
-		/// The disciples of each kind fn_0064BA70 counts, in the order the scroll lists them: builders, breeders,
+		/// The disciples of each kind the game counts, in the order the scroll lists them: builders, breeders,
 		/// fishermen, farmers, foresters, missionaries, craftsmen and traders
 		std::array<int32_t, 8> discipleKinds {};
 		int32_t challengesDiscovered {0};
@@ -140,7 +140,7 @@ public:
 	TempleScrolls(const TempleScrolls&) = delete;
 	TempleScrolls& operator=(const TempleScrolls&) = delete;
 
-	/// The rooms' InitEngine: finds each scroll's submesh, makes its texture and writes it
+	/// As the rooms are set up: finds each scroll's submesh, makes its texture and writes it
 	void Create(const Facts& facts);
 
 	/// Where the camera looks at a scroll from, and the point it looks at, in the temple
@@ -149,14 +149,13 @@ public:
 		glm::vec3 position;
 		glm::vec3 lookAt;
 	};
-	/// SubOptionEntryScroll::UpdateMouse and the rooms' scroll callbacks: a press on a scroll takes hold of it, and
-	/// while held the mouse moving up and down turns it, rewriting it, with a squeak each time it starts to turn. True
-	/// while a scroll has the press, which the camera then doesn't see. A press on a scroll gives where the camera is to
-	/// look at it from (Temple::SetCameraToLookAtSubMesh) in focus.
+	/// A press on a scroll takes hold of it, and while held the mouse moving up and down turns it, rewriting it, with a
+	/// squeak each time it starts to turn. True while a scroll has the press, which the camera then doesn't see. A
+	/// press on a scroll gives where the camera is to look at it from in focus.
 	bool Hold(bool pressed, float mouseY, const std::optional<TempleCursorHit>& hit, const Facts& facts,
 	          std::optional<Focus>& focus);
 	/// How close the camera is to the scroll it looks at, from 0 to 1. Past half way the scroll's text is drawn in
-	/// front of it each frame (Make*Text(1)), and once back under half way it is written on its texture again.
+	/// front of it each frame, and once back under half way it is written on its texture again.
 	void SetFocus(float zoom, const Facts& facts);
 	/// Whether a scroll is being dragged
 	[[nodiscard]] bool IsHeld() const { return _held.has_value(); }
@@ -173,11 +172,10 @@ public:
 	};
 	/// The scrolls of a room's mesh, in the order its callbacks are run
 	[[nodiscard]] std::vector<Control> GetControls(TempleRoom room) const;
-	/// FormatTextureForScroll with a submesh: the text of the scroll the camera is close to, drawn in front of it in
-	/// the temple
+	/// The text of the scroll the camera is close to, drawn in front of it in the temple
 	void AppendFocusedText(std::vector<OrientedTextVertex>& vertices, const Facts& facts) const;
 
-	/// The text of a scroll, written as its room's Make*Text writes it
+	/// The text of a scroll, written as its room writes it
 	enum class Content
 	{
 		World,
@@ -213,12 +211,12 @@ private:
 		glm::vec3 min {0.0f};
 		glm::vec3 max {0.0f};
 	};
-	/// FormatTextureForScroll into the scroll's texture, its text left off while the camera is close to it
+	/// Writes the scroll's texture, its text left off while the camera is close to it
 	void Redraw(Scroll& scroll, const Facts& facts);
 
 	const gui::TextDatabase& _texts;
 	const gui::GameFont& _font;
-	/// ChallengeScroll.raw, 256 by 256 RGB, which PictureRoomBase::InitEngine reads for every scroll
+	/// ChallengeScroll.raw, 256 by 256 RGB, which the rooms of pictures read for every scroll
 	std::vector<uint8_t> _parchment;
 	std::vector<Scroll> _scrolls;
 	/// The scroll being dragged and where the mouse was

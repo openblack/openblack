@@ -233,7 +233,7 @@ public:
 	float volume;
 	int pitch;
 	int pitchDeviation;
-	/// Play parameters of the bank header, used where LHSamplePlay applies them (see pack::AudioBankOverride)
+	/// Play parameters of the bank header, used where the game plays the sample (see pack::AudioBankOverride)
 	uint32_t overrideFlags;
 	uint16_t headerVolume;
 	int32_t loop;

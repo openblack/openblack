@@ -331,11 +331,11 @@ constexpr glm::ivec2 k_OptionsQuit {750, 550};
 
 TEST(GameMenu, IsLaidOutAsTheOriginal)
 {
-	// MainMenu::InitControls: 440 by 70 buttons 80 apart, from 145 down
+	// The main menu's 440 by 70 buttons 80 apart, from 145 down
 	EXPECT_EQ(GameMenu::GetButtonRect(0).min, glm::ivec2(180, 145));
 	EXPECT_EQ(GameMenu::GetButtonRect(0).max, glm::ivec2(620, 215));
 	EXPECT_EQ(GameMenu::GetButtonRect(4).min, glm::ivec2(180, 465));
-	// AddMainMenuTabs: a fifth of the box's width each, along its top
+	// The main menu's tabs: a fifth of the box's width each, along its top
 	EXPECT_EQ(Dialog::GetTabRect(0).min, glm::ivec2(10, 10));
 	EXPECT_EQ(Dialog::GetTabRect(0).max, glm::ivec2(166, 50));
 	EXPECT_EQ(Dialog::GetTabRect(4).max, glm::ivec2(790, 50));
@@ -571,7 +571,7 @@ TEST(SymbolPicture, RingComesUpAndGoes)
 {
 	SymbolPicture picture({.min = {368, 295}, .max = {432, 359}}, 15);
 	EXPECT_FLOAT_EQ(picture.GetRingOpening(), 0.0f);
-	// SetupPicture: up over half a second, down over a second
+	// The symbol picture's ring opens up over half a second, down over a second
 	picture.MouseDown({400, 327});
 	picture.Update(0.25f);
 	EXPECT_GT(picture.GetRingOpening(), 0.0f);
@@ -598,7 +598,7 @@ TEST(GameMenu, ListsTheControls)
 	const MenuFixture f;
 	const auto& items = f.menu.GetControls().GetItems();
 	ASSERT_EQ(items.size(), 33);
-	// ControlMap::GetText: the action, its key and its mouse button after a gap for the mouse's picture
+	// A control's text: the action, its key and its mouse button after a gap for the mouse's picture
 	EXPECT_EQ(items[0].text, u"Help : F1 ");
 	EXPECT_FALSE(items[0].mouseCell.has_value());
 	EXPECT_EQ(items[1].text, u"Move :       (LMB)");

@@ -23,7 +23,7 @@ openblack::CreatureCaveTargets::TargetAt(const std::array<std::optional<glm::vec
 		{
 			continue;
 		}
-		// LH3DTech::ProjectPoint gives whole pixels
+		// The game projects the targets to whole pixels
 		auto place = glm::ivec2(*places.at(i));
 		if (static_cast<Target>(i) == Target::Creature)
 		{

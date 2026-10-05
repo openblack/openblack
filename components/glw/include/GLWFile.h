@@ -29,8 +29,8 @@ enum class GLWResult : uint8_t
 
 std::string_view ResultToStr(GLWResult result);
 
-/// A light of a room of the temple, as LH3D's lights read them (fn_0083D8D0) and as they were exported from the
-/// lights of the rooms' scenes. The game draws a glow at each and a beam down each spot light that has one.
+/// A light of a room of the temple, as the game reads them and as they were exported from the lights of the rooms'
+/// scenes. The game draws a glow at each and a beam down each spot light that has one.
 struct Glow
 {
 	uint32_t size; // Must be 196, how far on the next light is

@@ -21,8 +21,8 @@
 namespace openblack
 {
 
-/// What the cursor can be over in the creature's room, which CreatureRoomCamera::UpdateMain finds each frame by where on
-/// the screen a point of each is, and what clicking it zooms the camera to (fn_00789FA0)
+/// What the cursor can be over in the creature's room, which the room's camera finds each frame by where on the screen
+/// a point of each is, and what clicking it zooms the camera to
 namespace CreatureCaveTargets
 {
 
@@ -43,19 +43,18 @@ enum class Target : uint8_t
 };
 constexpr size_t k_Count = static_cast<size_t>(Target::_Count);
 
-/// Where on the screen each target is found, by how far from its point across and down, in pixels (0x99EC04). The
-/// creature has no reach but its point: it is found by picking its mesh.
+/// Where on the screen each target is found, by how far from its point across and down, in pixels. The creature
+/// has no reach but its point: it is found by picking its mesh.
 constexpr std::array<glm::ivec2, k_Count> k_Reach {{{0, 0}, {45, 60}, {65, 35}, {65, 35}, {40, 50}}};
 /// The creature's point is found this far further down the screen
 constexpr int32_t k_CreatureDrop = 10;
 
 /// Where the camera looks at the exit from, and the place it looks at, which is also the exit's place on the screen
-/// (0xDE19E0 and 0xDE19F0)
 constexpr glm::vec3 k_ExitEye {207.0f, 2.0f, -11.0f};
 constexpr glm::vec3 k_ExitPlace {229.0f, 2.0f, -40.0f};
 
 /// The points of the creature's room's mesh the camera looks at a target from, and looks at, when zoomed to it: 44 and
-/// 49 onwards. Each but the exit is found on the screen by the point looked at (0x31 to 0x34).
+/// 49 onwards. Each but the exit is found on the screen by the point looked at (points 49 to 52).
 constexpr uint32_t k_FirstEyePoint = 44;
 constexpr uint32_t k_FirstLookPoint = 49;
 

@@ -50,8 +50,8 @@ void main()
 	vec4 footprints = texture2D(s3_footprints, v_texcoord1.xy);
 	col.rgb = mix(col.rgb, footprints.rgb, footprints.a);
 
-	// The objects' shadows are baked into the land's textures over the footprints, under the light. LH3D counts how
-	// many of eight samples in each texel are covered; four filtered taps across a texel soften the edges as much.
+	// The objects' shadows are baked into the land's textures over the footprints, under the light. The game counts
+	// how many of eight samples in each texel are covered; four filtered taps across a texel soften the edges as much.
 	vec2 texel = u_objectShadows.yz * 0.5f;
 	float objectShadow = 0.25f * (
 		texture2D(s5_objectShadows, v_texcoord1.xy + vec2(-texel.x, -texel.y)).r +

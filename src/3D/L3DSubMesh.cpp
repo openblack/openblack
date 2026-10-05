@@ -70,7 +70,7 @@ std::optional<float> L3DSubMesh::Pick(glm::vec3 origin, glm::vec3 direction) con
 	std::optional<float> nearest;
 	for (size_t i = 0; i + 2 < _pickTriangles.size(); i += 3)
 	{
-		// Möller and Trumbore's test, from either side, as LH3D picks
+		// Möller and Trumbore's test, from either side, as the game picks
 		const auto& a = _pickTriangles[i];
 		const auto edge1 = _pickTriangles[i + 1] - a;
 		const auto edge2 = _pickTriangles[i + 2] - a;

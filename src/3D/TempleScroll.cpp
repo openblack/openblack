@@ -20,13 +20,13 @@ using namespace openblack;
 
 namespace
 {
-/// SeeIfAnyCuttingUpOfTheTextNeedsDoing breaks a line once it is 230 texels across
+/// The game breaks a line once it is 230 texels across
 constexpr uint32_t k_WrapWidth = 230;
-/// fn_00799DF0 reads a line into a buffer of 64 characters, and stops the text at a longer one
+/// The game reads a line into a buffer of 64 characters, and stops the text at a longer one
 constexpr size_t k_MaxLineLength = 63;
-/// GatheringText::DrawChar2Texture draws letters smaller than this from the glyphs cached at a quarter of their height
+/// The game draws letters smaller than this from the glyphs cached at a quarter of their height
 constexpr float k_SmallGlyphSize = 26.0f;
-/// GatheringText's font units: a size is the height of a line, 80 of them
+/// The game's font units: a size is the height of a line, 80 of them
 constexpr float k_FontUnit = 0.0125f;
 
 /// iswspace in the C locale
@@ -57,7 +57,7 @@ int32_t ParseNumber(std::u16string_view text)
 	return negative ? -value : value;
 }
 
-/// __ftol: towards zero
+/// The C runtime's float to integer conversion: towards zero
 int32_t Truncate(float value)
 {
 	return static_cast<int32_t>(value);
@@ -69,7 +69,7 @@ uint16_t ParchmentTexel(uint8_t r, uint8_t g, uint8_t b)
 	return static_cast<uint16_t>(0xF000u | ((r & 0xF0u) << 4) | (g & 0xF0u) | (b >> 4));
 }
 
-/// GatheringText::DrawChar2Texture: a glyph into the texels, from x across its bitmap's width at scale and from y down
+/// A glyph drawn into the texels, from x across its bitmap's width at scale and from y down
 /// size, sampled from the small glyph and blended over the texels with the colour's ramp by its coverage
 void DrawGlyph(std::span<uint16_t> texels, const gui::GameFont::SmallGlyph& small, uint16_t bitmapWidth, float x, float y,
                float scale, float size, const std::array<uint16_t, 16>& ramp, uint16_t colour)
@@ -171,7 +171,7 @@ void TempleScrollText::Add(std::u16string_view source)
 		return;
 	}
 
-	// SeeIfAnyCuttingUpOfTheTextNeedsDoing works on a copy. "$g" and a number, or "$m" and one, ends the text there
+	// The game breaks the lines of a copy. "$g" and a number, or "$m" and one, ends the text there
 	// and names a gesture or a control to picture after it; a word that starts with any other "$", "/" or "\" is
 	// hidden, every character of it up to the next space.
 	std::u16string text(source);
@@ -203,7 +203,7 @@ void TempleScrollText::Add(std::u16string_view source)
 				else
 				{
 					// TODO(raffclar): For the controls 0 to 32 the line goes on "(" with the keys and mouse buttons the
-					// control is bound to (fn_0046F260, fn_0046F2B0), a space between them, then ")"
+					// control is bound to, a space between them, then ")"
 					control = number;
 				}
 			}
@@ -358,7 +358,7 @@ uint32_t TempleScrollTexture::LayOut(std::u16string_view text, uint32_t position
 	size_t at = 0;
 	while (at < text.size())
 	{
-		// fn_00799DF0: up to the next "<N>", or "<E>" which ends the text, as long as the line fits its buffer
+		// A line runs up to the next "<N>", or "<E>" which ends the text, as long as the line fits its buffer
 		size_t length = 0;
 		bool ended = false;
 		bool found = false;
@@ -396,7 +396,7 @@ uint32_t TempleScrollTexture::LayOut(std::u16string_view text, uint32_t position
 		// A gesture's or a control's picture is drawn over the scroll only when the camera is close to it
 		if (!words.empty() && (words.front() == TempleScrollText::k_Gesture || words.front() == TempleScrollText::k_Control))
 		{
-			// TODO(raffclar): The picture, fn_005760C0, a gesture's glyph or the keys and buttons of a control
+			// TODO(raffclar): The picture, a gesture's glyph or the keys and buttons of a control
 			continue;
 		}
 		const float x = (static_cast<float>(k_Size) - (font.GetWidth(words, size) * k_Stretch)) * 0.5f;
@@ -413,7 +413,7 @@ uint32_t TempleScrollTexture::Draw(std::span<uint16_t> texels, std::span<const u
 	{
 		return 0;
 	}
-	// fn_0079A2C0: the parchment, its rows turned up by the position so it rolls with the text
+	// The parchment, its rows turned up by the position so it rolls with the text
 	const uint32_t roll = position & 0xFFu;
 	for (uint32_t y = 0; y < k_Size; ++y)
 	{

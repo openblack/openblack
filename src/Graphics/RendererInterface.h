@@ -98,7 +98,7 @@ public:
 		float depthBias;
 		/// How far the mesh's texture has slid across it
 		glm::vec2 uvOffset;
-		/// A texture every primitive with a skin is drawn with in place of it, when set, as fn_00787340 gives the creature
+		/// A texture every primitive with a skin is drawn with in place of it, when set, as the game gives the creature
 		/// room's icons
 		const TextureHandle* skinTexture;
 		/// The environment map added to the mesh where its program takes one (s_environment)
@@ -112,7 +112,7 @@ public:
 		/// A colour the mesh is drawn in, where its program takes one: lit when w is 0, otherwise unlit with its alpha by w
 		glm::vec4 tint {1.0f, 1.0f, 1.0f, 0.0f};
 		/// The temple's light, which the lightmapped submeshes are multiplied by, and which is added to every submesh
-		/// that doesn't glow, as LH3D adds the vertices' specular (0xE05FE8 and 0xE05FE4)
+		/// that doesn't glow, as the game adds the vertices' specular
 		glm::vec3 lightMultiply {1.0f};
 		/// How much brighter than the land's light where it stands the mesh is, at most white: the god hand is half as
 		/// bright again

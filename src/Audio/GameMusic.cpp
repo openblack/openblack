@@ -31,7 +31,7 @@ struct MusicTypeInfo
 	std::string_view name;
 };
 
-// GAudio's MUSIC_TYPE table: the bank of each music type and its name
+// The game's table of music types: the bank of each and its name
 constexpr std::array<MusicTypeInfo, static_cast<size_t>(MusicType::_COUNT)> k_MusicTypes = {{
     {.bank = "", .name = "MUSIC_TYPE_NONE"},
     {.bank = "audio/music/align/evil.sad", .name = "MUSIC_TYPE_GENERIC_EVIL"},
@@ -121,7 +121,7 @@ constexpr std::array<MusicTypeInfo, static_cast<size_t>(MusicType::_COUNT)> k_Mu
     {.bank = "audio/music/script/creatureendsequence.sad", .name = "MUSIC_TYPE_SCRIPT_CREATURE_END_SEQUENCE"},
 }};
 
-// GAlignment::GetDiscreteAlignmentValue gives 0 (evil) to 6 (good), which the music tables group into evil, neutral
+// The alignment in seven steps, 0 (evil) to 6 (good), which the music tables group into evil, neutral
 // and good
 constexpr std::array<int32_t, 7> k_AlignmentIndex = {0, 0, 1, 1, 1, 2, 2};
 constexpr float k_DiscreteAlignmentSteps = 6.9999995f;
@@ -133,7 +133,7 @@ constexpr std::array<MusicType, 9> k_TribeTownMusic = {
     MusicType::GreekTownEvil,    MusicType::NorseTownEvil,  MusicType::TibetanTownEvil,
 };
 
-// GSoundInfo's town trigger distances in info.dat: a town's music starts within 300 of the camera and carries on to
+// The town trigger distances in info.dat: a town's music starts within 300 of the camera and carries on to
 // 400. Above 400 from the land there is no town music.
 constexpr float k_TownTriggerDistance = 300.0f;
 constexpr float k_TownTriggerOffDistance = 400.0f;
@@ -226,7 +226,7 @@ void GameMusic::ProcessMusic(const TurnInputs& inputs)
 	_landType = MusicType::None;
 }
 
-// GAudio::ProcessCitadelMusic: inside the citadel its music plays, of the player's alignment, carrying on from where
+// Inside the citadel its music plays, of the player's alignment, carrying on from where
 // it was
 bool GameMusic::ProcessCitadel(const TurnInputs& inputs)
 {
@@ -253,7 +253,7 @@ bool GameMusic::ProcessCitadel(const TurnInputs& inputs)
 	return true;
 }
 
-// fn_00427CA0: music a script has started plays from its start until the script stops it
+// Music a script has started plays from its start until the script stops it
 bool GameMusic::ProcessScript()
 {
 	auto& audio = Locator::audio::value();
@@ -283,7 +283,7 @@ bool GameMusic::ProcessScript()
 	return true;
 }
 
-// LoginBox::ControlCallback as it is misnamed, GAudio's alignment music: the music of the land under the camera.
+// The alignment music: the music of the land under the camera.
 // Changing to another piece of the same music group carries on in time. A piece that plays to its end is left alone
 // until the camera has been elsewhere for a while.
 bool GameMusic::ProcessLand(const TurnInputs& inputs)
@@ -337,7 +337,7 @@ bool GameMusic::ProcessLand(const TurnInputs& inputs)
 	return true;
 }
 
-// fn_00427460: the music of the nearest town's tribe within 300 of the camera, or of the town last heard while still
+// The music of the nearest town's tribe within 300 of the camera, or of the town last heard while still
 // within 400, otherwise the player's alignment music. Too high above the land there are no towns to hear.
 MusicType GameMusic::SelectLandType(const TurnInputs& inputs)
 {

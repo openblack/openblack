@@ -21,17 +21,17 @@ namespace openblack
 {
 
 /// The belts the creature's room hangs on its attack dummies for how the creature fights, and the medals on its magic
-/// plinths for how well it has learnt its miracles (CreatureRoom::UpdateBeltsAndMedals)
+/// plinths for how well it has learnt its miracles
 namespace CreatureCaveTrophies
 {
 
-/// The icons fn_00787340 loads from data/citadel/icons (0xC26F38): four of each of the seven belts, white to black,
+/// The icons the game loads from data/citadel/icons: four of each of the seven belts, white to black,
 /// then five of each of the five medals, wood to gem
 constexpr size_t k_IconCount = 53;
 constexpr uint32_t k_BeltColours = 7;
 constexpr uint32_t k_BeltLevels = 4;
 constexpr uint32_t k_MedalLevels = 25;
-/// The belts' and medals' colours (their objects' +0x1B0)
+/// The belts' and medals' colours
 constexpr uint32_t k_BeltColour = 0xFFA0A0A0;
 constexpr uint32_t k_MedalColour = 0xFF808080;
 /// The medals for the miracles best learnt, after the one for all of them
@@ -46,7 +46,7 @@ struct Trophy
 	uint32_t point;
 	uint32_t icon;
 	bool medal;
-	/// Drawn with an environment map added: every belt and every medal past wood (the object's +0xD8)
+	/// Drawn with an environment map added: every belt and every medal past wood
 	bool environmentMapped;
 };
 
@@ -57,10 +57,11 @@ struct MiracleLearning
 	std::array<float, k_BestMiracles> best {};
 };
 
-/// CreatureRoom::MakeMagicScrollText: all the miracles' percentages learnt together over 42, and the best four
+/// As the creature's room's scroll of miracles has it: all the miracles' percentages learnt together over 42, and the
+/// best four
 [[nodiscard]] MiracleLearning LearningOf(std::span<const int32_t> percents);
 
-/// The belts and medals shown. Fight balance is from -1 to 1 (the creature's mind +0x17D04): a row of belts each way
+/// The belts and medals shown. Fight balance is from -1 to 1, as the creature's mind keeps it: a row of belts each way
 /// fills, white first, five a colour, as it leans to its side.
 [[nodiscard]] std::vector<Trophy> Choose(float fightBalance, const MiracleLearning& learning);
 

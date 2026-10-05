@@ -64,7 +64,7 @@ enum class L3DMeshFlags : uint32_t
 	Unknown7 = 1U << 6U,                  // 0x40     (25)
 	Unknown8 = 1U << 7U,                  // 0x80     (24)
 	HasBones = 1U << 8U,                  // 0x100    (23)
-	Unknown10 = 1U << 9U,                 // 0x200    (22) the object goes to the Z-sorter whole (L3DMesh::IsZSorted)
+	Unknown10 = 1U << 9U,                 // 0x200    (22) the object is depth-sorted whole
 	HasChimney = 1U << 10U,               // 0x400    (21) extra point [1] is where its chimney smokes
 	HasDoorPosition = 1U << 11U,          // 0x800    (20)
 	Packed = 1U << 12U,                   // 0x1000   (19)
@@ -264,7 +264,7 @@ struct L3DMaterial
 };
 static_assert(sizeof(L3DMaterial) == 4 * sizeof(uint32_t));
 
-/// A submesh's lightmap, from the UV2 block. LH3DMesh::DrawLightMap multiplies its primitives by the skin, mapped by
+/// A submesh's lightmap, from the UV2 block. The game multiplies its primitives by the skin, mapped by
 /// the vertices' second texture coordinates.
 struct L3DLightmap
 {
@@ -315,8 +315,8 @@ struct L3DSubmeshName
 {
 	enum Flags : uint32_t
 	{
-		/// The submesh, a window, sheds a volume of light: LH3D draws its edges drawn out away from volumeLightSource,
-		/// fading as they go
+		/// The submesh, a window, sheds a volume of light: the game draws its edges drawn out away from
+		/// volumeLightSource, fading as they go
 		VolumeLight = 1u << 0,
 	};
 
@@ -324,16 +324,15 @@ struct L3DSubmeshName
 	uint32_t flags;
 	float unknown1;
 	L3DPoint volumeLightSource;
-	/// How far the edges are drawn out, before LH3DVolumeLight scales it
+	/// How far the edges are drawn out, before the game scales it
 	float volumeLightLength;
 	/// The point the submesh turns about, when it has a joint
 	L3DPoint jointPivot;
-	/// The matrix of LH3D's table of joints which LH3DMesh turns the submesh by, when it is from 0 to 255. The leaves of
+	/// The matrix of the game's table of joints which the submesh is turned by, when it is from 0 to 255. The leaves of
 	/// the temple's doors have joints.
 	int32_t jointIndex;
-	/// The submesh's frame, which the temple's rooms place their controls' text and camera by
-	/// (InnerCamera::FocusOnSubMesh, TempleRoom::DrawNameScrolls): its x, y and z axes, then its origin. A point in the
-	/// frame is x * axes[0] + y * axes[1] + z * axes[2] + origin in the mesh.
+	/// The submesh's frame, which the temple's rooms place their controls' text and camera by: its x, y and z axes,
+	/// then its origin. A point in the frame is x * axes[0] + y * axes[1] + z * axes[2] + origin in the mesh.
 	std::array<L3DPoint, 3> frameAxes;
 	L3DPoint frameOrigin;
 	std::array<float, 12> unknown2;

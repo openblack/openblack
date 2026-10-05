@@ -22,7 +22,7 @@
 namespace openblack::ecs::systems
 {
 
-/// How Black & White's trees move (Tree::PreDraw and Tree::Draw).
+/// How Black & White's trees move.
 ///
 /// Trees share 16 sways, each a slow back and forth whose speed changes at random every two seconds of game time. A
 /// tree follows the sway its facing picks, so trees facing the same way move together. The sway leans the tree along
@@ -33,7 +33,7 @@ namespace openblack::ecs::systems
 /// crash about, and they rustle by themselves around the camera (TreeRustle).
 ///
 /// Fully grown fields follow the same sways, leaning their crops 1.75 times as far.
-// TODO(raffclar): creatures and thrown objects bend the trees they pass in vanilla too
+// TODO(raffclar): creatures and thrown objects bend the trees they pass in the game too
 class VegetationSystem final: public VegetationInterface
 {
 public:

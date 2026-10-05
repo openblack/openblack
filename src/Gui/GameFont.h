@@ -23,14 +23,14 @@ namespace openblack::gui
 {
 
 /// One of Black & White's fonts (data/j0, f1, f3: a .met of glyph metrics and a .fnt of glyph bitmaps), read the way
-/// FontFile and GatheringText read them.
+/// the game reads them.
 ///
 /// The .met starts with the height of the glyph bitmaps (80 for j0) and the font's name, then has a record for each
 /// glyph: its character, the width of its bitmap, its left bearing, inked width and right bearing, and where its
 /// bitmap is in the .fnt. A bitmap is one bit a pixel, row by row, run length encoded: runs of clear and set pixels
 /// take turns, starting with clear, each a byte or 0xFF and then two bytes.
 ///
-/// GatheringText draws text from a cache of the glyphs at half their height, each pixel the average of four, and
+/// The game draws text from a cache of the glyphs at half their height, each pixel the average of four, and
 /// scales them to the size of the text: a size is the height of a line in pixels. The glyphs here go into an atlas
 /// at that half height in the same way.
 class GameFont
@@ -52,7 +52,7 @@ public:
 		uint32_t smallGlyph;
 	};
 
-	/// CachePage::RenderChar's second level of a glyph, which GatheringText::DrawChar2Texture draws text smaller than
+	/// The game's second level of a glyph, which it draws text smaller than
 	/// 26 pixels into textures from: the glyph at a quarter of its height, the alpha of each pixel from 0 to 15, with a
 	/// clear column either side
 	struct SmallGlyph
@@ -78,10 +78,10 @@ public:
 	[[nodiscard]] const Glyph* Find(char16_t character) const;
 	[[nodiscard]] const std::vector<Glyph>& GetGlyphs() const noexcept { return _glyphs; }
 
-	/// GatheringText::GetStringWidth: how far text of a size moves the pen. U+F8FE, which TempleRoom hides the words it
-	/// can't show with, takes no room.
+	/// How far text of a size moves the pen. U+F8FE, which the temple hides the words it can't show with, takes no
+	/// room.
 	[[nodiscard]] float GetWidth(std::u16string_view text, float size) const;
-	/// GatheringText::DrawText's line breaking: lines that fit in width at a size, broken after spaces and hyphens and
+	/// The game's line breaking: lines that fit in width at a size, broken after spaces and hyphens and
 	/// at line breaks. A word too long for a line is broken where it reaches the end.
 	[[nodiscard]] std::vector<std::u16string_view> Wrap(std::u16string_view text, float size, float width) const;
 

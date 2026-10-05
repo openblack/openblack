@@ -31,20 +31,20 @@ using namespace openblack::ecs::components;
 
 namespace
 {
-// SF_GripLandscape: CreateRuleAnAtom0 puts the centre above the ground, CreateRuleSphere0 the sprites around it
+// The grip effect: a centre is put above the ground, and a sphere of sprites around it
 constexpr auto k_CentreHeight = 0.935841f;
 constexpr auto k_SpriteCount = 8;
 constexpr auto k_SphereRadius = std::numbers::sqrt2_v<float>;
-// UR_ChangeScale3: the centre grows from nothing, and the sprites, its children, with it
+// The centre grows from nothing, and the sprites, its children, with it
 constexpr auto k_FinalScale = 1.43009f;
 constexpr auto k_GrowTime = 1.01f;
-// AR_FadeAlpha0
+// The sprites fade out as they age
 constexpr auto k_StartAlpha = 78.0f / 255.0f;
 constexpr auto k_EndAlpha = 2.0f / 255.0f;
 constexpr auto k_FadeTime = 0.865714f;
-// RemoveRuleOldAgeOnly0 removes the centre, and its sprites with it
+// The centre dies of old age, and its sprites with it
 constexpr auto k_DieAge = 2.65752f;
-// ParticleSpriteCreator0: the first 32 frames of the 8 by 8 sheet are dust, played looping from a random frame
+// The sprites: the first 32 frames of the 8 by 8 sheet are dust, played looping from a random frame
 constexpr auto k_FrameRate = 20.7611f;
 constexpr auto k_FrameCount = 32;
 constexpr auto k_SheetColumns = 8;
@@ -57,7 +57,7 @@ glm::vec2 FrameOrigin(float frame)
 	return glm::vec2(index % k_SheetColumns, index / k_SheetColumns) / static_cast<float>(k_SheetColumns);
 }
 
-/// PSysManager::PSysRandR3: a point uniformly within the unit sphere
+/// A point uniformly within the unit sphere
 glm::vec3 RandomInUnitSphere()
 {
 	auto& rng = Locator::rng::value();
@@ -108,7 +108,7 @@ void GripLandscapeEffect::Update(float deltaSeconds)
 		    const auto scale = k_FinalScale * glm::min(particle.age / k_GrowTime, 1.0f);
 		    const auto alpha = glm::mix(k_StartAlpha, k_EndAlpha, glm::min(particle.age / k_FadeTime, 1.0f));
 
-		    // A sprite of unit scale spans two units, like LH3DSprite's quad of half its size either side
+		    // A sprite of unit scale spans two units, like the game's sprite quad of half its size either side
 		    transform.position = particle.centre + particle.offset * scale;
 		    transform.scale = glm::vec3(scale);
 		    sprite.uvMin = FrameOrigin(particle.frame);

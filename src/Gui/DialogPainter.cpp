@@ -30,7 +30,7 @@ constexpr float k_Cell = 1.0f / 16.0f;
 constexpr float k_HalfTexel = 1.0f / 512.0f;
 constexpr float k_Texel = 1.0f / 256.0f;
 
-// SetupThing::DrawBg's frame: corners and edges of a soft shadow eight pixels wide
+// The dialog background's frame: corners and edges of a soft shadow eight pixels wide
 constexpr float k_FrameLeft = 0.1875f;
 constexpr float k_FrameInnerLeft = 0.2109375f;
 constexpr float k_FrameInnerRight = 0.2890625f;
@@ -41,11 +41,11 @@ constexpr float k_FrameInnerBottom = 0.1015625f;
 constexpr float k_FrameBottom = 0.125f;
 constexpr int k_ShadowWidth = 8;
 
-// This comes from SetupThing::DrawBg and DrawTab: see-through backgrounds and tabs, and unselected tabs drawn fainter
+// The game's dialogs have see-through backgrounds and tabs, and unselected tabs drawn fainter
 constexpr float k_SeeThroughAlpha = 0.8333333f;
 constexpr float k_UnselectedTabAlpha = 0.5f;
 
-// The edge colours of SetupThing::DrawBevBox's styles
+// The edge colours of the bevelled boxes' styles
 constexpr std::array<glm::vec3, 4> k_EdgeColours = {{
     {1.0f, 1.0f, 1.0f},
     {1.0f, 1.0f, 1.0f},
@@ -53,13 +53,13 @@ constexpr std::array<glm::vec3, 4> k_EdgeColours = {{
     {0.0f, 0.0f, 0.0f},
 }};
 
-// SetupThing::DrawBigButton's arrows: grey, orange when hovered, and their shadow
+// The big buttons' arrows: grey, orange when hovered, and their shadow
 constexpr float k_ArrowU = 0.3125f;
 constexpr float k_ArrowHoveredU = 0.4375f;
 constexpr float k_ArrowShadowU = 0.5625f;
 constexpr float k_ArrowSize = 0.125f;
 
-// FrontEnd's pointer: the cells of the atlas, 8 to a row, it turns through, one every 32 milliseconds
+// The front end's pointer: the cells of the atlas, 8 to a row, it turns through, one every 32 milliseconds
 constexpr std::array<uint8_t, 8> k_PointerFrames = {9, 10, 11, 12, 41, 49, 57, 23};
 constexpr float k_PointerCell = 0.125f;
 constexpr float k_PointerExtent = 0.12109375f;
@@ -80,7 +80,7 @@ void DialogPainter::Begin(glm::u16vec2 resolution)
 	const auto size = glm::vec2(k_Size);
 	if (screen.x >= size.x && screen.y >= size.y)
 	{
-		// SetupThing::adjust: a pixel a unit, in the middle of the screen
+		// A pixel a unit, in the middle of the screen
 		_scale = 1.0f;
 		_offset = glm::vec2((glm::ivec2(resolution) - k_Size) / 2);
 	}
@@ -118,7 +118,7 @@ void DialogPainter::DrawBevelBox(const DialogRect& rect, int style, uint8_t edge
 	const auto cell = glm::vec2(static_cast<float>(style & 0xF), static_cast<float>(style >> 4)) * k_Cell;
 	if (cellsToARow != 16)
 	{
-		// The whole of a bigger cell. Only the squares of SetupThing::DrawBigButton are edged.
+		// The whole of a bigger cell. Only the squares of the big buttons are edged.
 		DrawBox(rect, cell, cell + 1.0f / static_cast<float>(cellsToARow), glm::vec3(tint));
 		if ((style & 0x1F) != 0xB && (style & 0x1F) != 0xD)
 		{
@@ -238,7 +238,7 @@ void DialogPainter::DrawTab(const DialogRect& rect, std::u16string_view label, b
 		DrawLine({max.x - 10, lineY}, {max.x - 10, max.y - 4}, white);
 		DrawLine({min.x + 10, lineY}, {min.x + 10, max.y - 4}, white);
 
-		// SetupTabButton::Draw: the label at the mid text size, smaller if it doesn't fit, in the middle of the tab. The
+		// A tab's label at the mid text size, smaller if it doesn't fit, in the middle of the tab. The
 		// size and the centring are as the original draws them.
 		const DialogRect labelRect {.min = {min.x + 8, min.y + 7}, .max = {max.x - 8, max.y + 1}};
 		auto size = k_MidTextSize;
@@ -279,7 +279,7 @@ void DialogPainter::DrawArrow(glm::ivec2 position, int size, Arrow arrow, bool h
 
 void DialogPainter::DrawSquare(glm::ivec2 position, int size, bool checked, bool hovered, bool pressed) const
 {
-	// SetupThing::DrawBigButton's first two styles: the black squares of the atlas, or below them those ticked
+	// The big buttons' first two styles: the black squares of the atlas, or below them those ticked
 	const auto style = (checked ? 0x20 : 0) + (hovered ? 2 : 0) + 0xB;
 	const auto push = pressed ? 2 : 0;
 	DrawBevelBox({.min = position + push - 1, .max = position + size + push - 3}, style, All, glm::vec4(1.0f), 8);

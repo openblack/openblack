@@ -28,8 +28,8 @@ struct Sprite
 	bool additive = true;
 	/// Turns to face the camera. Otherwise it lies as its transform turns it, in the transform's x and y.
 	bool facesCamera = true;
-	/// The alpha of a texture of colours, which LH3D loads from beside it as "<name>a.raw". Without it, the texture is
-	/// a single channel of alpha that is also the sprite's brightness.
+	/// The alpha of a texture of colours, which the game loads from beside it as "<name>a.raw". Without it, the texture
+	/// is a single channel of alpha that is also the sprite's brightness.
 	std::optional<graphics::TextureHandle> alpha;
 };
 

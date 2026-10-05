@@ -19,7 +19,7 @@ using namespace openblack;
 
 namespace
 {
-// Besides its colour and position, LH3D reads a .glw light's type, its axes and position, its cone's length, flags,
+// Besides its colour and position, the game reads a .glw light's type, its axes and position, its cone's length, flags,
 // inner cone angle and size
 enum LightFlags : uint32_t
 {
@@ -28,7 +28,7 @@ enum LightFlags : uint32_t
 };
 constexpr uint32_t k_SpotLight = 1;
 
-/// LH3D turns a light's colour into a byte of a sprite's colour at half intensity: 1 is 128, and it saturates
+/// The game turns a light's colour into a byte of a sprite's colour at half intensity: 1 is 128, and it saturates
 uint8_t ColourByte(float value)
 {
 	return static_cast<uint8_t>(std::clamp(static_cast<int>(value * 128.0f), 0, 255));

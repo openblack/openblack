@@ -24,7 +24,7 @@ using namespace openblack::ecs::components;
 
 namespace
 {
-/// GLandAlignement::DrawSky moves the sky by a hundredth of a tenth (0xBF3394) of each millisecond of game time, from 0,
+/// The game moves the sky by a hundredth of a tenth of each millisecond of game time, from 0,
 /// good, to 2, evil: a whole of -1 to 1 a second
 constexpr float k_SkyTurnPerMillisecond = 0.001f;
 } // namespace
@@ -67,8 +67,8 @@ void AlignmentSystem::AddPlayerAlignment(PlayerNames player, float change)
 
 void AlignmentSystem::UpdateTurn()
 {
-	// fn_0064AC30 takes the most influential player at the camera's eye, the neutral player where none has any, and
-	// fn_005E2240 keeps their alignment as a goodness from 0 to 1, held there
+	// The game takes the most influential player at the camera's eye, the neutral player where none has any, and
+	// keeps their alignment as a goodness from 0 to 1, held there
 	// TODO(raffclar): once influence is simulated; until then it is the player's own
 	const float goodness = std::clamp((GetPlayerAlignment(PlayerNames::PLAYER_ONE) + 1.0f) * 0.5f, 0.0f, 1.0f);
 	_camera = (goodness * 2.0f) - 1.0f;

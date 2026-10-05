@@ -68,12 +68,12 @@ std::optional<std::vector<uint8_t>> DecodeBitmap(std::span<const uint8_t> runs, 
 	return bitmap;
 }
 
-/// CachePage::RenderChar's alpha of a pixel of the half height glyph, by how many of the four pixels it is made of are set
+/// The alpha of a pixel of the half height glyph, by how many of the four pixels it is made of are set
 constexpr std::array<uint8_t, 5> k_HalfGlyphAlpha {0x0, 0x4, 0x8, 0xC, 0xF};
 constexpr uint16_t k_HalfGlyphHeight = 40;
 
-/// CachePage::RenderChar, as it caches a glyph: first at half height, a clear column either side, each pixel's alpha
-/// by how many of four pixels are set, reading on into the next row past the end of a row as RenderChar does (the
+/// As the game caches a glyph: first at half height, a clear column either side, each pixel's alpha by how many of
+/// four pixels are set, reading on into the next row past the end of a row as the game does (the
 /// bitmap has two clear rows after it); then the small glyph at a quarter of the height from that, each pixel's alpha
 /// the average of four of the half height glyph's
 GameFont::SmallGlyph MakeSmallGlyph(const std::vector<uint8_t>& bitmap, uint16_t width)

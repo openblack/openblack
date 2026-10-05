@@ -31,7 +31,7 @@ constexpr uint32_t k_FirstMedalPoint = 6;
 /// A row of belts fills by this much of the fight balance's side, five to a colour
 constexpr float k_BeltFill = 34.0f;
 constexpr int32_t k_LevelsPerColour = 5;
-/// MakeMagicScrollText divides the miracles' percentages by this many (0x8CF334)
+/// The creature's magic scroll divides the miracles' percentages by this many
 constexpr float k_MiracleCount = 42.0f;
 } // namespace
 

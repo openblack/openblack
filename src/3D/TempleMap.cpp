@@ -21,9 +21,9 @@ namespace
 {
 /// The cells between the map's vertices
 constexpr int32_t k_CellsPerVertex = 8;
-/// LH3D's height of a unit of altitude
+/// The game's height of a unit of altitude
 constexpr float k_HeightUnit = 0.67f;
-/// 0x99EE50: the alpha of the map at the altitudes under 4, the coast fading into the pool
+/// The alpha of the map at the altitudes under 4, the coast fading into the pool
 constexpr std::array<uint8_t, 4> k_CoastAlpha = {0x00, 0x55, 0xAA, 0xFF};
 
 uint32_t Pack(uint8_t grey, uint8_t alpha)
@@ -136,13 +136,13 @@ glm::vec3 TempleMap::ToMap(glm::vec2 world) const
 
 glm::u8vec3 TempleMap::MarkerColour(std::optional<PlayerNames> player)
 {
-	// The players' colours (0xBFF0B8), the neutral one black
+	// The players' colours, the neutral one black
 	constexpr std::array<glm::u8vec3, 8> k_PlayerColours = {
 	    glm::u8vec3 {0xFF, 0x46, 0x46}, glm::u8vec3 {0x47, 0xFF, 0x54}, glm::u8vec3 {0xE3, 0x47, 0xFF},
 	    glm::u8vec3 {0x47, 0xF9, 0xFF}, glm::u8vec3 {0xFF, 0xFD, 0x47}, glm::u8vec3 {0x47, 0x77, 0xFF},
 	    glm::u8vec3 {0xFF, 0xA2, 0x47}, glm::u8vec3 {0x00, 0x00, 0x00},
 	};
-	// TODO(raffclar): GetRemapedPlayer gives some lands' second and third players others' colours, by the land's number
+	// TODO(raffclar): the game gives some lands' second and third players others' colours, by the land's number
 	auto colour = player.has_value() && static_cast<size_t>(*player) < k_PlayerColours.size()
 	                  ? k_PlayerColours.at(static_cast<size_t>(*player))
 	                  : glm::u8vec3(0xFF);
@@ -155,7 +155,7 @@ glm::u8vec3 TempleMap::MarkerColour(std::optional<PlayerNames> player)
 
 glm::vec3 TempleMap::MarkerPosition(glm::vec2 world) const
 {
-	// The markers' callers give CalcPoint the cell of the thing's MapCoords, times 10
+	// The game places a marker by the cell the thing is in, times 10
 	constexpr float k_CellSize = 10.0f;
 	return ToMap(glm::floor(world / k_CellSize) * k_CellSize);
 }

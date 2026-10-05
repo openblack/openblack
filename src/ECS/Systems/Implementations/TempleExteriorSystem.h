@@ -34,7 +34,7 @@ public:
 	[[nodiscard]] std::optional<PlayerNames> EntranceAt(glm::vec3 origin, glm::vec3 direction) const override;
 
 private:
-	/// fn_00882B10: blends the temple's own mesh from the four about its size and alignment, and its texture between
+	/// Blends the temple's own mesh from the four about its size and alignment, and its texture between
 	/// the two looks about its alignment, of its player's set
 	static void Morph(entt::entity entity, components::Mesh& mesh, const components::TempleExterior& exterior,
 	                  PlayerNames owner);

@@ -40,7 +40,7 @@ namespace openblack::audio
 
 namespace
 {
-// LH_SamplePlayOptions' defaults, which a bank header overrides where it says so
+// The game's default sample play options, which a bank header overrides where it says so
 constexpr uint32_t k_MaxVolume = 127;
 constexpr uint32_t k_DefaultPitchPercent = 100;
 constexpr float k_DefaultMinDistance = 1.0f;
@@ -310,13 +310,13 @@ void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> wo
 	if (sounds.Contains(id))
 	{
 		const auto sound = sounds.Handle(id);
-		// GAudio::PlaySoundEffect: a sound with a place can't be heard from further than its maximum distance
+		// A sound with a place can't be heard from further than its maximum distance
 		if (worldPosition.has_value() &&
 		    glm::distance(Locator::camera::value().GetOrigin(), *worldPosition) > sound->maxDistance)
 		{
 			return;
 		}
-		// LHSamplePlay with the play type of the bank header: a sound played once isn't played again while it plays,
+		// Played with the play type of the bank header: a sound played once isn't played again while it plays,
 		// which lets the game ask for a sound every frame and hear it go on, and one that restarts starts over
 		if ((sound->overrideFlags & static_cast<uint32_t>(pack::AudioBankOverride::LoopType)) != 0)
 		{
@@ -359,7 +359,7 @@ void AudioManager::PlayAnimEffect(const std::string& bankName, std::span<const i
 	{
 		return;
 	}
-	// LHSampleGetAnimEffectNumber: any of the samples of the effect
+	// Any of the samples of the effect
 	const auto samples = effects->second.Find(keys);
 	if (samples.empty())
 	{
@@ -375,13 +375,13 @@ void AudioManager::PlayAnimEffect(const std::string& bankName, std::span<const i
 	}
 	const auto sound = sounds.Handle(id);
 
-	// LHSamplePlayAnimEffect: the sample can't be heard from further than its maximum distance, overridden or not
+	// The sample can't be heard from further than its maximum distance, overridden or not
 	if (glm::distance(Locator::camera::value().GetOrigin(), position) > sound->maxDistance)
 	{
 		return;
 	}
 
-	// LHSamplePlay with the play type of the bank header
+	// Played with the play type of the bank header
 	const auto bank = entt::hashed_string(bankName.c_str()).value();
 	if ((sound->overrideFlags & static_cast<uint32_t>(pack::AudioBankOverride::LoopType)) != 0)
 	{
@@ -638,7 +638,7 @@ SourceId AudioManager::CreateSource(Sound& sound, const VoiceStart& start)
 		_decodedBuffers.push_back(sound.bufferId);
 	}
 
-	// Sources are positioned relative to the listener, in LHAudio's listener frame
+	// Sources are positioned relative to the listener, in the game's listener frame
 	const auto source = _audioPlayer->CreateSource(start.pitch, true);
 	// QMixer plays a sample loopCount + 1 times
 	const auto loop = start.loopCount < 0;
@@ -670,7 +670,7 @@ void AudioManager::PositionSource(SourceId source, std::optional<glm::vec3> list
 		_audioPlayer->SetPosition(source, glm::zero<glm::vec3>());
 		return;
 	}
-	// LHAudio's listener frame is x right, y forward, z up; OpenAL's is x right, y up, -z forward
+	// The game's listener frame is x right, y forward, z up; OpenAL's is x right, y up, -z forward
 	const auto& position = *listenerPosition;
 	_audioPlayer->SetPosition(source, glm::vec3(position.x, position.z, -position.y) * distanceScale);
 }

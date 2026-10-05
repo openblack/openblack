@@ -81,10 +81,10 @@ private:
 
 	bool _active {false};
 	bool _leaveRequested {false};
-	/// Temple::InitEngine starts in the main room unless told of another
+	/// The temple starts in the main room unless told of another
 	TempleRoom _currentRoom {TempleRoom::Main};
 	std::optional<TempleRoom> _transitionRoom;
-	/// InnerRoom::InitMesh places each room at the origin, unturned: the temple is a scene of its own
+	/// The game places each room at the origin, unturned: the temple is a scene of its own
 	glm::vec3 _templePosition {0.0f};
 	glm::vec3 _templeRotation {0.0f};
 	glm::vec3 _playerPositionOutside {0.0f};
@@ -102,19 +102,19 @@ private:
 	std::vector<TempleMapMarker> _mapMarkers;
 	std::vector<TempleCaveTrophy> _caveTrophies;
 	TempleLight _light;
-	/// CreatureRoom::UpdateBeltsAndMedals: the belts for how the creature fights and the medals for its miracles, at the
+	/// The creature's room's belts for how the creature fights and the medals for its miracles, at the
 	/// points of the room's mesh
 	void UpdateCaveTrophies();
 	float _mapMarkerTurn {0.0f};
-	/// How long the main room's pool has shimmered, in seconds (0xE3A16C)
+	/// How long the main room's pool has shimmered, in seconds
 	float _poolTime {0.0f};
-	/// WorldRoom::DrawAdditional's markers of the temples and creatures
+	/// The main room's markers of the temples and creatures
 	void UpdateMapMarkers(float seconds);
 	/// Where the camera is to look from and at as the player leaves for a place double clicked on the map
 	std::optional<std::pair<glm::vec3, glm::vec3>> _leaveTo;
 	/// Whether the temple is fading to white to leave for the place on the map, which it does once the screen is white
 	bool _leavingForMapPoint {false};
-	/// WorldRoomCamera's double click on the map: leaves the temple for that place
+	/// A double click on the main room's map: leaves the temple for that place
 	void LeaveForMapPoint(glm::vec3 point);
 	/// Covers the screen as the player is put straight into a room, and fades it back over a second and a fifth
 	void FadeIntoRoom();
@@ -130,22 +130,22 @@ private:
 	/// The rooms' scrolls, written as the temple opens, and the labels of their signs
 	std::unique_ptr<TempleScrolls> _scrolls;
 	std::unique_ptr<TempleSigns> _signs;
-	/// The rooms' InitEngine: makes and writes the scrolls, and finds the signs
+	/// As each room is set up: makes and writes the scrolls, and finds the signs
 	void CreateScrolls();
 	/// This frame's text in the rooms
 	std::vector<OrientedTextVertex> _text;
-	/// Whether the options room has opened the game's options (GameOptionsRoom +0x160)
+	/// Whether the options room has opened the game's options
 	bool _optionsShown {false};
-	/// How long the future room has shown its words, which fade in (UniverseRoom +0x168)
+	/// How long the future room has shown its words, which fade in
 	float _futureTime {0.0f};
-	/// The submesh the cursor is over, and how long is left of the glow it set off, in milliseconds (TempleRoom +0xC8
-	/// and 0xE36134). Moving onto another submesh sets the glow off again, unless a control is being dragged.
+	/// The submesh the cursor is over, and how long is left of the glow it set off, in milliseconds. Moving onto
+	/// another submesh sets the glow off again, unless a control is being dragged.
 	std::optional<std::pair<TempleRoom, uint32_t>> _hovered;
 	float _hoverGlow {0.0f};
 	/// What the hand shows, which the rooms choose every frame and submit every turn, and how long since the last turn
 	TempleToolTip _toolTip {k_FirstTempleToolTip};
 	float _toolTipTurnTime {0.0f};
-	/// GameOptionsRoom::Update and UniverseRoom::Update and DrawAdditional
+	/// Moves on the options room and the future room, and what the future room draws
 	void UpdateOptionsAndFutureRooms(float seconds);
 	/// The tooltip the hand shows, and where on the screen the hand is
 	void UpdateToolTips(float milliseconds);

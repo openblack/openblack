@@ -21,7 +21,7 @@ namespace openblack::TempleExteriorMorph
 
 namespace
 {
-/// The size's index stops short of the largest (0x80BAF0)
+/// The size's index stops short of the largest
 constexpr float k_SizeShort = 0.9999f;
 /// From neutral the texture goes halfway either way: twice 255 a whole
 constexpr float k_TextureWeight = 510.0f;

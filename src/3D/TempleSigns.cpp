@@ -30,7 +30,7 @@ using namespace openblack;
 
 namespace
 {
-/// DrawNameScrolls' colour where a room gives none
+/// The labels' colour where a room gives none
 constexpr glm::u8vec3 k_DefaultColour {200, 200, 50};
 
 /// Each room's signs: the submesh, its label's text and colour, in the order the rooms list them
@@ -44,17 +44,17 @@ struct RoomSigns
 {
 	TempleRoom room;
 	std::string_view mesh;
-	/// DrawNameScrolls' size and how much the letters are stretched along the text, before its own 2.1 and 0.9
+	/// The labels' size and how much the letters are stretched along the text, before the game's own 2.1 and 0.9
 	float size;
 	float stretch;
-	/// Whether the label runs along the sign's x axis, as the creature's room and the library have it (0xE36120),
+	/// Whether the label runs along the sign's x axis, as the creature's room and the library have it,
 	/// rather than against its y axis
 	bool alongX;
 	std::array<SignPlace, 7> signs;
 	size_t count;
 };
 const std::array k_Rooms {
-    // WorldRoom::Draw, the colours of 0xC2A498
+    // The main room, each sign in its own colour
     RoomSigns {TempleRoom::Main,
                "main",
                1.0f,
@@ -70,7 +70,7 @@ const std::array k_Rooms {
                    SignPlace {"SIGN CHALLENGE", "HELP_TEXT_ROOM_CHALLENGE_TITLE", {235, 146, 111}},
                },
                7},
-    // CreatureRoom::DrawAdditional
+    // The creature's room
     RoomSigns {TempleRoom::CreatureCave,
                "creature",
                1.3f,
@@ -83,7 +83,7 @@ const std::array k_Rooms {
                    SignPlace {"SIGN MIRACLES", "HELP_TEXT_TEMPLE_SCROLLS_09", k_DefaultColour},
                },
                4},
-    // CreditsRoom::Draw. The signs are paired with their texts by what they say; the order of the game's own list of
+    // The library. The signs are paired with their texts by what they say; the order of the game's own list of
     // their names is unverified.
     RoomSigns {TempleRoom::Credits,
                "credits",
@@ -126,7 +126,7 @@ TempleSigns::TempleSigns(const gui::TextDatabase& texts, const gui::GameFont& fo
 		{
 			const auto& place = room.signs.at(i);
 			Sign sign {.room = room.room, .text = std::u16string(texts.Get(place.text)), .colour = place.colour};
-			// fn_00798350 finds the signs by name
+			// The signs are found by name
 			if (meshes.Contains(meshId))
 			{
 				for (const auto& subMesh : meshes.Handle(meshId)->GetSubMeshes())

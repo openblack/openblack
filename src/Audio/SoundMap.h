@@ -75,7 +75,7 @@ constexpr std::array<AtmosTypeInfo, k_AtmosTypeCount> k_AtmosTypeInfos = {{
     {.name = "ATMOS_TYPE_WIND", .bank = "sfx/atmos/wind.sad", .wildlife = false},
 }};
 
-/// The bytes of the LH3D WeatherInfo cell at the listener that the ambience reads
+/// The bytes of the game's weather cell at the listener that the ambience reads
 struct AtmosWeather
 {
 	/// Rain intensity in percent
@@ -86,14 +86,14 @@ struct AtmosWeather
 	int8_t windZ {0};
 };
 
-/// Port of GSoundMap: decides how loud each ambience type should be from the land around the listener.
+/// Port of the game's sound map: decides how loud each ambience type should be from the land around the listener.
 ///
 /// Each game turn the listener (the camera) scans the land cells within GSoundInfo::radiusForMinAtmosVolume,
 /// recording per type how many cells it found and which one is nearest. Every type then fades with the distance
 /// to its nearest cell and with the camera's height above the ground there.
 ///
-/// Computations reproduce the original x87 code, which evaluates in double precision and rounds to float on
-/// every store, so they are carried out in double here with float casts where the original stored a value.
+/// The game works these out in double precision and rounds to float wherever it keeps a value, so they are carried
+/// out in double here with float casts where the game keeps a value.
 class SoundMap
 {
 public:
@@ -102,11 +102,11 @@ public:
 		/// Camera position
 		glm::vec3 receiver;
 		AtmosWeather weather;
-		/// LH3DSky sky type: 0 day, 1 dusk, 2 night
+		/// Sky type: 0 day, 1 dusk, 2 night
 		float skyType;
 	};
 
-	/// Per type scan result (AtmosMapTypeInfo)
+	/// Per type scan result
 	struct TypeScan
 	{
 		uint16_t count;
@@ -124,9 +124,9 @@ public:
 	[[nodiscard]] float GetHeightAboveLand() const { return _heightAboveLand; }
 	[[nodiscard]] float GetReceiverHeight() const { return _receiverHeight; }
 
-	/// LH3DIsland::GetAltitude: interpolated land height at a map position in 1/65536 cell units
+	/// Interpolated land height at a map position in 1/65536 cell units
 	[[nodiscard]] static double GetAltitude(const LandIslandInterface& island, int32_t x, int32_t z);
-	/// Terrain::GetAtmosType
+	/// The ambience type painted into the land at a cell
 	[[nodiscard]] static uint32_t GetAtmosType(const LandIslandInterface& island, uint16_t x, uint16_t z);
 
 private:

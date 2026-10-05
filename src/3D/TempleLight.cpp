@@ -19,9 +19,9 @@ using namespace openblack;
 
 namespace
 {
-/// A turn of the pulse is 512 steps of eight milliseconds (0x8C7678)
+/// A turn of the pulse is 512 steps of eight milliseconds
 constexpr float k_PulseStep = 0.012271846f;
-/// The pulse's colours are a third of a turn apart (0x99EE44 and 0x8C7BF0)
+/// The pulse's colours are a third of a turn apart
 constexpr float k_Third = 2.0943952f;
 constexpr float k_TwoThirds = 4.1887903f;
 constexpr int32_t k_PulseMiddle = 22;

@@ -27,7 +27,7 @@ namespace morph
 class MorphFile;
 } // namespace morph
 
-/// Poses the god hand the way Black & White's CHand does it.
+/// Poses the god hand the way Black & White does it.
 ///
 /// The hand animations live in Data/CTR/hh.hbn, named by Data/hndspec5.txt. Each hand state plays a cycle (a C
 /// animation) and leans the hand with the two pose ranges that follow it in the spec (L animations, _lr and _fb).
@@ -57,7 +57,7 @@ public:
 		Phile = 63,
 	};
 
-	/// The hand states that drive the cycles: HandStateNormal while hovering and HandStateCamera while dragging the
+	/// The hand states that drive the cycles: the normal state while hovering and the camera state while dragging the
 	/// camera. They lean the hand opposite ways sideways.
 	enum class State : uint8_t
 	{
@@ -80,7 +80,7 @@ public:
 		std::vector<Frame> frames;
 	};
 
-	/// LHMatrix: a row-major rotation and a translation, used with row vectors
+	/// The game's matrix: a row-major rotation and a translation, used with row vectors
 	struct Pose
 	{
 		std::array<std::array<float, 3>, 3> rotation;
@@ -99,8 +99,8 @@ public:
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _boneMatrices; }
 	[[nodiscard]] const Animation* GetAnimation(size_t specIndex) const;
 
-	/// CHand::SetDistanceFromView and SetSize: the hand is scaled so its rest pose bones span 3.2 units from top
-	/// to bottom, growing past 150 units from the camera so that it stays about as large on screen
+	/// The hand is scaled so its rest pose bones span 3.2 units from top to bottom, growing past 150 units from the
+	/// camera so that it stays about as large on screen
 	[[nodiscard]] static float SizeAtDistance(float distanceFromCamera);
 	/// The scale of the hand mesh for a distance from the camera
 	[[nodiscard]] float ScaleAtDistance(float distanceFromCamera) const;
@@ -125,7 +125,7 @@ private:
 	std::vector<std::array<std::array<float, 3>, 3>> _restRotations;
 	std::vector<std::array<std::array<float, 3>, 3>> _inverseRestRotations;
 	std::vector<glm::mat4> _boneMatrices;
-	/// Height of the rest pose's bones in mesh units (LH3DAnim::SetTransform's return value)
+	/// Height of the rest pose's bones in mesh units, as the game measures it when posing the hand
 	float _restHeight {1.0f};
 
 	State _state {State::Normal};

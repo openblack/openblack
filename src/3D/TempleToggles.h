@@ -24,11 +24,11 @@ namespace openblack
 {
 
 /// The main room's five buttons that choose what the map in its pool shows: the temples, the creatures, miracles being
-/// cast, the players' influence and the challenges (WorldRoom's DisplayCitadel and the like).
+/// cast, the players' influence and the challenges.
 ///
 /// Each is a pair of submeshes of the main room's mesh, one pressed in and one out, of which only the one for whether
-/// its things are shown is drawn (SubOptionEntryCheckBoxChecked and SubOptionEntryCheckBoxUnChecked). A press on the
-/// one drawn takes the mouse, and letting go over it turns the button over with a click.
+/// its things are shown is drawn. A press on the one drawn takes the mouse, and letting go over it turns the button
+/// over with a click.
 class TempleToggles
 {
 public:
@@ -45,15 +45,15 @@ public:
 	using PlaySound = std::function<void(entt::id_type)>;
 	explicit TempleToggles(PlaySound playSound);
 
-	/// WorldRoom::InitEngine's LoadOptionData: finds the buttons among the main room's submeshes, by their names
+	/// Finds the buttons among the main room's submeshes, by their names
 	void Find(std::span<const std::string> subMeshNames);
 
-	/// TempleRoom::UpdateMouse: a press on a button takes the mouse from the camera, and letting go over the same button
+	/// A press on a button takes the mouse from the camera, and letting go over the same button
 	/// turns it over. True while a button has the press.
 	bool Hold(bool pressed, std::optional<uint32_t> hoveredSubMesh);
 	[[nodiscard]] bool IsHeld() const { return _held.has_value(); }
 
-	/// Whether the map shows a kind of thing. All are shown to start with (fn_0079F5D0).
+	/// Whether the map shows a kind of thing. All are shown to start with.
 	[[nodiscard]] bool IsShown(Display display) const { return _shown.at(static_cast<size_t>(display)); }
 	void SetShown(Display display, bool shown) { _shown.at(static_cast<size_t>(display)) = shown; }
 

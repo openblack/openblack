@@ -52,15 +52,14 @@ struct MenuSettings
 
 /// The menu Escape brings up during a game, and the options behind it.
 ///
-/// The first page, MainMenu, greets the player above five buttons: Continue Game, Start Skirmish Game, Join Online Game,
-/// Options and Quit Black & White, with a Main Menu and a Statistics tab. Options opens the options' pages, each a tab
-/// of the same box (AddOptionsTabs): Options for sound, detail, autosave and push scrolling (MiniDialogBoxOptions),
-/// Players for the player's profile (ProfileEditor), Advanced for help, the hand and text (DialogBoxOptions) and
-/// Controls for the keys and buttons of the game's actions (DialogBoxKeyBinding). Their Main Menu tab, or Back, goes
-/// back to the first page.
+/// The first page, the main menu, greets the player above five buttons: Continue Game, Start Skirmish Game, Join
+/// Online Game, Options and Quit Black & White, with a Main Menu and a Statistics tab. Options opens the options'
+/// pages, each a tab of the same box: Options for sound, detail, autosave and push scrolling, Players for the player's
+/// profile, Advanced for help, the hand and text and Controls for the keys and buttons of the game's actions. Their
+/// Main Menu tab, or Back, goes back to the first page.
 ///
 /// The menu fades in over half a second and out over a fifth. Quitting first asks whether the player is sure, in a
-/// smaller opaque box over the menu with a Yes and a No arrow (SetupBox::MessageBoxA).
+/// smaller opaque box over the menu with a Yes and a No arrow.
 class GameMenu
 {
 public:
@@ -104,8 +103,7 @@ public:
 	[[nodiscard]] bool IsVisible() const noexcept { return _open || _fade.GetValue() > 0.0f; }
 	[[nodiscard]] bool IsAskingToQuit() const noexcept { return _question.has_value(); }
 	[[nodiscard]] Page GetPage() const noexcept { return _page; }
-	/// Inside the temple the options' first tab is the World Room, which closes them (fn_0053F3E0), rather than the
-	/// Main Menu
+	/// Inside the temple the options' first tab is the World Room, which closes them, rather than the Main Menu
 	void SetInsideTemple(bool inside);
 	void ShowPage(Page page);
 
@@ -122,7 +120,7 @@ public:
 	/// Escape backs out of the question, then out of the options, then continues the game
 	Action Escape();
 
-	/// Whether a control was clicked since last asked, which SetupBox answers with the menu button sound
+	/// Whether a control was clicked since last asked, which the game's dialogs answer with the menu button sound
 	bool TakeClicked() noexcept { return std::exchange(_clicked, false); }
 	/// Whether the settings changed since last asked
 	bool TakeSettingsChanged() noexcept { return std::exchange(_settingsChanged, false); }

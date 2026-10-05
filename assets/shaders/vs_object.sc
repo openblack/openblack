@@ -26,7 +26,7 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
 uniform vec4 u_depthBias;
-// Slides the texture across the mesh, as LH3DObject::SetAnimatedUV does the creature's waterfall
+// Slides the texture across the mesh, as the game does the creature's waterfall
 uniform vec4 u_uvOffset;
 
 #ifdef USE_HEIGHT_MAP
@@ -107,7 +107,7 @@ void main()
 #ifdef USE_LIGHTMAP
 	v_texcoord0 = vec4(a_texcoord0, a_texcoord3);
 #elif defined(USE_ENVIRONMENT)
-	// LH3D's render mode 2 (fn_00852C40): the environment map's coordinates are where the normal points across and up
+	// The environment-mapped mode: the environment map's coordinates are where the normal points across and up
 	// the camera's view, from 0 to 0.498
 	vec3 viewNormal = normalize(mul(u_view, mul(u_model[modelIndex], vec4(a_normal, 0.0f))).xyz);
 	v_texcoord0 = vec4(a_texcoord0, (viewNormal.xy + 1.0f) * 0.498046875f);

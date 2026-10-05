@@ -2,7 +2,7 @@ $input v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 #include <bgfx_shader.sh>
 
-// WorldRoom::Draw draws the main room mirrored through its floor before the room. Where nothing of the room covers it,
+// The game draws the main room mirrored through its floor before the room. Where nothing of the room covers it,
 // as in the pool under its water, the reflection is what shows. The reflection pass is drawn from the mirrored camera
 // with the same projection, so it lines up on the screen.
 SAMPLER2D(s_reflection, 4);

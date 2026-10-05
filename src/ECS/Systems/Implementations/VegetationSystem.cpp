@@ -39,7 +39,7 @@ using namespace openblack::ecs::components;
 
 namespace
 {
-// Tree::PreDraw: the sways speed up and slow down at random every two seconds
+// The sways speed up and slow down at random every two seconds
 constexpr auto k_SpeedChangeTime = std::chrono::duration<float, std::milli>(2000.0f);
 constexpr float k_MinSpeed = 1.0f;
 constexpr float k_MaxSpeed = 2.0f;
@@ -47,10 +47,10 @@ constexpr float k_MaxSpeed = 2.0f;
 constexpr float k_PhasePerMillisecond = 0.0010606061f;
 // How far a sway leans a tree, per unit of its height
 constexpr float k_Lean = 0.03f;
-// Field::Draw: how much further a field's crop leans than a tree
+// How much further a field's crop leans than a tree
 constexpr float k_FieldLean = 1.75f;
 
-// Tree::Draw: a tree within a bend point's radius leans away from it by up to this many radians
+// A tree within a bend point's radius leans away from it by up to this many radians
 constexpr float k_MaxBend = 0.47123894f;
 // The bend falls from (1 - k_BendCore / radius) at the trunk to nothing at the radius
 constexpr float k_BendCore = 1.5f;
@@ -77,7 +77,7 @@ void VegetationSystem::Update(std::chrono::duration<float, std::milli> gameTime)
 	}
 }
 
-// GLandscape::Draw marks the trees around the hand to bend away from it, within its bounding sphere
+// The game marks the trees around the hand to bend away from it, within its bounding sphere
 void VegetationSystem::UpdateBendPoints()
 {
 	_hand.reset();
@@ -96,7 +96,7 @@ void VegetationSystem::UpdateBendPoints()
 	{
 		return;
 	}
-	// LH3DMesh's DiagonalLength: half the diagonal of the mesh's bounding box
+	// The mesh's diagonal length: half the diagonal of the mesh's bounding box
 	const auto halfDiagonal = glm::length(meshes.Handle(mesh->id)->GetBoundingBox().Size()) * 0.5f;
 	_hand = BendPoint {
 	    .position = *position,
@@ -170,7 +170,7 @@ glm::mat4 VegetationSystem::GetTreeMatrix(const glm::mat4& model, const glm::vec
 	return swaying;
 }
 
-// TODO(raffclar): vanilla only sways a field once its crop is fully grown, there is no growth in openblack yet
+// TODO(raffclar): the game only sways a field once its crop is fully grown, there is no growth in openblack yet
 glm::mat4 VegetationSystem::GetFieldMatrix(const glm::mat4& model, float scale, uint8_t swaySlot) const
 {
 	auto swaying = model;

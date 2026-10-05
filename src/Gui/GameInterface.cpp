@@ -37,7 +37,7 @@ namespace
 {
 /// The scripts the game's text is in, in the order the game reads them
 constexpr std::array k_TextScripts = {"InfoScript2.txt", "InfoScriptPatch2.txt", "InfoScriptMultiplayer2.txt"};
-/// SetupThing's font, the first of GatheringText::SetupGameFonts
+/// The dialogs' font, the first of the game's fonts
 constexpr std::string_view k_Font = "j0";
 constexpr uint16_t k_AtlasSize = 256;
 
@@ -99,7 +99,7 @@ std::array<ToolTipInfo, ToolTips::k_Count> ReadToolTipsInfo()
 	return info;
 }
 
-/// atmos.raw's glow, which CameraHelp's glow boxes are cut from, a ninth at a time
+/// atmos.raw's glow, which the tooltips' glow boxes are cut from, a ninth at a time
 constexpr std::array k_GlowU = {0.0f, 0.078125f, 0.16797f, 0.24609f};
 constexpr std::array k_GlowV = {0.25f, 0.32813f, 0.41797f, 0.49609f};
 /// atmos.raw's arrows about a tooltip's mouse
@@ -115,7 +115,7 @@ constexpr std::array k_ToolTipArrows = {
     ToolTipArrow {ToolTipArrows::k_Up, {0.7539f, 0.0039f}, {0.8711f, 0.1211f}},
     ToolTipArrow {ToolTipArrows::k_Down, {0.8789f, 0.1289f}, {0.9961f, 0.2461f}},
 };
-/// fn_00447450's mice for a wheel mouse, the third row of mousehelp.raw (fn_005C4800)
+/// The tooltips' mice for a wheel mouse, the third row of mousehelp.raw
 constexpr int k_ToolTipMouseRow = 2;
 } // namespace
 
@@ -139,7 +139,7 @@ std::unique_ptr<GameInterface> GameInterface::Create(std::u16string_view playerN
 		return nullptr;
 	}
 
-	// The front end atlas, and the pictures of the player's symbols (FrontEnd::Init) and of the mice (fn_00447450)
+	// The front end atlas, and the pictures of the player's symbols and of the tooltips' mice
 	auto atlas = LoadTexture("Front_end_buttons");
 	if (!atlas)
 	{
@@ -147,7 +147,7 @@ std::unique_ptr<GameInterface> GameInterface::Create(std::u16string_view playerN
 	}
 	auto symbols = LoadTexture("ChooseSymbol");
 	auto mice = LoadTexture("mousehelp");
-	// LH3DAtmos's glows and the tooltips' arrows
+	// The atmosphere texture's glows and the tooltips' arrows
 	auto atmos = LoadTexture("ATMOS");
 
 	// White glyphs, their coverage in alpha
@@ -233,7 +233,7 @@ bool GameInterface::ProcessEvent(const SDL_Event& event, glm::u16vec2 resolution
 		if (event.button.button == SDL_BUTTON_LEFT)
 		{
 			_action = _menu->MouseUp(_painter.ToDialog({event.button.x, event.button.y}));
-			// SetupBox: every control clicks as it acts
+			// In the game's dialogs every control clicks as it acts
 			if (_menu->TakeClicked())
 			{
 				Locator::audio::value().PlaySoundEffect(static_cast<entt::id_type>(audio::SoundId::G_MenuButton), std::nullopt);
@@ -287,7 +287,7 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 		_painter.DrawTextWrapped(DialogRect {{0, 0}, DialogPainter::k_Size}, true, _message->text, 60,
 		                         glm::vec4(1.0f, 1.0f, 1.0f, _message->alpha));
 	}
-	// KMIcon::Draw leaves the tooltip out under a dialog
+	// The game leaves the tooltip out under a dialog
 	if (!menuOpen)
 	{
 		DrawToolTip(resolution);
@@ -300,7 +300,7 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 	{
 		_painter.DrawPointer(_pointerCanvas, mouse, milliseconds);
 	}
-	// LH3DRender::FinishFrame covers the frame with the fade's colour last of all
+	// The game covers the frame with the fade's colour last of all
 	if (const auto fade = _screenFade.GetColour(); fade.a > 0.0f)
 	{
 		_canvas.DrawQuad(glm::vec2(0.0f), glm::vec2(resolution), glm::vec2(0.0f), glm::vec2(1.0f), fade, nullptr);

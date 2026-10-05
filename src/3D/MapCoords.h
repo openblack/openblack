@@ -23,7 +23,8 @@ class LandIslandInterface;
 
 /// The game's map positions: x and z in 16.16 fixed point, a 10 m cell to 0x10000 (the high word is the cell, the low
 /// word the fraction), and the altitude above the ground. Conversions, the 512 by 512 cell grid, the neighbour tables
-/// and the spiral search, exactly as the game does them: its FPU runs at 24 bits, so every product is a float product.
+/// and the spiral search, exactly as the game does them: it computes at single precision, so every product is a float
+/// product.
 ///
 /// The ground height is the island's: FromWorld and ToWorld ask it at the fixed position.
 namespace openblack::map_coords
@@ -83,8 +84,8 @@ struct MapCoords
 	}
 };
 
-/// The game's float to integer conversion, as it runs on any CPU with SSE2: truncated towards 0, and 0x80000000 for a
-/// NaN or a value out of the int32 range
+/// The game's float to integer conversion: truncated towards 0, and 0x80000000 for a NaN or a value out of the int32
+/// range
 [[nodiscard]] constexpr int32_t FtoL(float value)
 {
 	if (!(value > -2147483648.0f && value < 2147483648.0f))

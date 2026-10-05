@@ -8,9 +8,10 @@ SAMPLER2D(s_handLight, 2);
 SAMPLER2D(s_environment, 5);
 #endif // USE_ENVIRONMENT
 uniform vec4 u_skyAlphaThreshold;
-// The temple's controls glow under the cursor: LH3D adds the colour as the vertices' specular, after the texture stages
+// The temple's controls glow under the cursor: the game adds the colour as the vertices' specular, after the texture
+// stages
 uniform vec4 u_glow;
-// rgb: a colour the object is drawn in, as LH3DObject::SetColour gives it. w: 0 to light it as usual, otherwise to draw
+// rgb: a colour the object is drawn in, as the game gives it. w: 0 to light it as usual, otherwise to draw
 // it unlit, in that colour alone, with its alpha by w
 uniform vec4 u_tint;
 
@@ -31,7 +32,7 @@ void main()
 		discard;
 	}
 #ifdef USE_ENVIRONMENT
-	// The second texture stage adds the environment map (D3DTOP_ADD), which saturates
+	// The second texture stage adds the environment map, which saturates
 	diffuseTex.rgb = min(diffuseTex.rgb + texture2D(s_environment, v_texcoord0.zw).rgb, vec3_splat(1.0f));
 #endif // USE_ENVIRONMENT
 	gl_FragColor = vec4(min(diffuseTex.rgb + u_glow.rgb + v_haze.rgb, vec3_splat(1.0f)), diffuseTex.a);

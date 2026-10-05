@@ -5,7 +5,7 @@ $input v_texcoord0
 SAMPLER2D(s_diffuse, 0);
 uniform vec4 u_skyAlphaThreshold;
 
-// Writes where an object's shadow covers the land. LH3D casts the shadow through its textures' masks, so cut-out
+// Writes where an object's shadow covers the land. The game casts the shadow through its textures' masks, so cut-out
 // leaves leave gaps in a tree's shadow.
 
 void main()

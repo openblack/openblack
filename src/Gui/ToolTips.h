@@ -19,7 +19,7 @@
 namespace openblack::gui
 {
 
-/// The arrows a tooltip shows about its mouse, for the ways the mouse can be dragged (KEYALIGN)
+/// The arrows a tooltip shows about its mouse, for the ways the mouse can be dragged
 namespace ToolTipArrows
 {
 constexpr uint32_t k_None = 0;
@@ -35,13 +35,13 @@ constexpr uint32_t k_All = k_UpDown | k_Left | k_Right;
 enum class ToolTipAction : uint8_t
 {
 	None,
-	/// SELECT, the left button
+	/// The select action, the left button
 	Select,
-	/// APPLY, the right button
+	/// The apply action, the right button
 	Apply,
 };
 
-/// How many tooltips the player has asked to see (the profile's TOOLTIP_LEVEL)
+/// How many tooltips the player has asked to see (a setting of the player's profile)
 enum class ToolTipLevel : uint8_t
 {
 	None,
@@ -53,7 +53,7 @@ enum class ToolTipLevel : uint8_t
 };
 
 /// A tooltip's place in the game's 170 (HELP_TEXT_TOOLTIP_01 onwards, from text 0xE73), and its priority and how long it
-/// is shown for, from the info script (GHelpSystemTooltipsInfo)
+/// is shown for, from the info script's help system tooltips
 struct ToolTipInfo
 {
 	float priority;
@@ -63,9 +63,8 @@ struct ToolTipInfo
 
 /// The words, mouse and arrows the hand shows for what it is over.
 ///
-/// What the hand is over submits a tooltip every turn it is over it (ToolTips::SubmitToolTips), and once a turn the help
-/// system lets the tooltip live on or ends it (HelpSystem::ProcessToolTips). The one shown fades in and out every
-/// frame (KMIcon::Draw).
+/// What the hand is over submits a tooltip every turn it is over it, and once a turn the help system lets the tooltip
+/// live on or ends it. The one shown fades in and out every frame.
 class ToolTips
 {
 public:
@@ -103,7 +102,7 @@ public:
 	[[nodiscard]] static std::string TextName(uint32_t index);
 
 private:
-	/// KMIcon: the tooltip being drawn, and its fade from start to end over fadeTime seconds
+	/// The tooltip being drawn, and its fade from start to end over fadeTime seconds
 	struct Icon
 	{
 		uint32_t index;
@@ -116,7 +115,7 @@ private:
 		float elapsed;
 	};
 
-	/// ToolTips::SmartIcon: whether the intelligent level keeps the icon, which fades out once shown for long enough
+	/// Whether the intelligent level keeps the icon, which fades out once shown for long enough
 	bool KeepIntelligently();
 	[[nodiscard]] float PriorityOf(uint32_t index) const { return _info.at(index).priority; }
 

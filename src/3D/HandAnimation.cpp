@@ -47,7 +47,7 @@ constexpr uint32_t k_NoParent = std::numeric_limits<uint32_t>::max();
 
 constexpr Matrix k_Identity {{{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}};
 
-/// LHMatrix::SetYXZMatrixOnly
+/// A rotation matrix from y, x and z angles, combined in that order as the game does
 Matrix RotationYXZ(float y, float x, float z)
 {
 	const auto cy = std::cos(y);
@@ -220,7 +220,7 @@ bool HandAnimation::Load(const morph::MorphFile& file, const std::vector<uint32_
 	_inverseRestRotations.resize(restMatrices.size());
 	for (size_t i = 0; i < restMatrices.size(); ++i)
 	{
-		// The matrices are the transposes of LHMatrix: column r holds row r
+		// The matrices are the transposes of the game's: column r holds row r
 		Matrix rotation {};
 		for (size_t r = 0; r < 3; ++r)
 		{
@@ -396,7 +396,7 @@ std::vector<HandAnimation::Pose> HandAnimation::EvaluatePoses(Cycle cycle, uint3
 		{
 			ApplyLean(*sideways, LeanTime(lean->x, sideways->duration), poses);
 		}
-		// CHand checks the smoothed cursor rather than the lag here, which is practically never zero, so the
+		// The game checks the smoothed cursor rather than the lag here, which is practically never zero, so the
 		// forward and backward lean is always applied
 		const auto* forward = GetAnimation(static_cast<size_t>(cycle) + 2);
 		if (forward != nullptr)
@@ -462,7 +462,7 @@ void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycl
 	{
 		if (state != _state && state == State::Camera)
 		{
-			// HandStateCamera::Enter
+			// Starting to drag the camera starts its cycle over
 			time = std::chrono::microseconds::zero();
 		}
 		if (state == State::Normal && cycle == Cycle::HoldFingers)

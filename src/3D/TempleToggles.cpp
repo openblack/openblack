@@ -21,8 +21,8 @@ using namespace openblack;
 
 namespace
 {
-/// WorldRoom's buttons: the names of their submeshes (0xC2A800, which the mesh has in other cases) and their tooltips,
-/// in the order of the flags they set (0xC2A4EC on), as the game saves them
+/// The main room's buttons: the names of their submeshes (which the mesh has in other cases) and their tooltips, in
+/// the order of the flags they set, as the game saves them
 struct ButtonPlace
 {
 	std::string_view checked;
@@ -95,20 +95,20 @@ bool TempleToggles::Hold(bool pressed, std::optional<uint32_t> hoveredSubMesh)
 		return _held.has_value();
 	}
 
-	// SubOptionEntryCheckBox*::UpdateMouse fires the button's callback as it is let go over it: the checked one turns
+	// A button fires its callback as it is let go over it: the checked one turns
 	// its things off with a click down, the unchecked one on with a click up
 	const auto button = *std::exchange(_held, std::nullopt);
 	if (Drawn(button) == hoveredSubMesh)
 	{
 		_shown.at(button) = !_shown.at(button);
-		// TODO(raffclar): the callbacks play each button at its own LH_SamplePlayOptions +0x48 (100, 110, 95, 105 and
-		// 108 in turn, 100 by default), most likely its pitch in percent
+		// TODO(raffclar): the callbacks play each button with its own sound setting (100, 110, 95, 105 and 108 in turn,
+		// 100 by default), most likely its pitch in percent
 		if (_playSound)
 		{
 			_playSound(static_cast<entt::id_type>(_shown.at(button) ? audio::SoundId::G_CitadelButtonUp_01
 			                                                        : audio::SoundId::G_CitadelButtonDown_01));
 		}
-		// TODO(raffclar): turning influence on also resets the colours of the map's land (fn_0079DCD0), once the map is
+		// TODO(raffclar): turning influence on also resets the colours of the map's land, once the map is
 		// drawn
 	}
 	return true;

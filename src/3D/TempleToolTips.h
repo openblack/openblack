@@ -24,8 +24,7 @@ namespace openblack
 {
 
 /// The tooltip the temple submits each turn: the one of its 170 (from text 0xE73), the action whose mouse it shows and
-/// its arrows. It stays as it was in what the rooms don't set, as the game's globals do (0xC2A1C0, 0xC2A1C4 and
-/// 0xE36140).
+/// its arrows. It stays as it was in what the rooms don't set, as the game's do.
 struct TempleToolTip
 {
 	/// None submits nothing, as an id outside the tooltips' does
@@ -40,17 +39,16 @@ struct TempleToolTipInput
 	TempleRoom room;
 	/// Whether the player has the room's camera, rather than its path or a walk through a door
 	bool inControl;
-	/// How close the camera has come to the scroll it looks at (InnerCamera +0x450), and whether it looks at one
+	/// How close the camera has come to the scroll it looks at, and whether it looks at one
 	float zoom;
 	bool lookingAtScroll;
-	/// Whether one of the room's controls has the mouse (TempleRoom +0x7C)
+	/// Whether one of the room's controls has the mouse
 	bool controlHeld;
 	bool overPool;
 	bool pressingPool;
 	std::optional<uint32_t> hoveredDoor;
 	bool overWayBack;
-	/// The creature's room's target the cursor is over, and whether the camera zooms to one (CreatureRoomCamera +0x4B0
-	/// and +0x470)
+	/// The creature's room's target the cursor is over, and whether the camera zooms to one
 	std::optional<CreatureCaveTargets::Target> caveTarget;
 	bool zoomingToCaveTarget;
 	/// The submesh of the room's mesh the cursor is over
@@ -60,11 +58,11 @@ struct TempleToolTipInput
 	std::span<const TempleToggles::Control> toggles;
 };
 
-/// fn_0079A720's tooltip, before the temple has set one: Rotate, with the left button
+/// The tooltip before the temple has set one: Rotate, with the left button
 constexpr TempleToolTip k_FirstTempleToolTip {.index = 4, .action = gui::ToolTipAction::Select, .arrows = 0};
 
-/// The rooms' PreToolTipProcess, their scrolls' callbacks and TempleRoom::PostToolTipProcess: what the hand shows in
-/// the temple for what it is over
+/// What the hand shows in the temple for what it is over, as each room, its scrolls and then the temple as a whole
+/// decide it
 void UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipInput& input);
 
 } // namespace openblack

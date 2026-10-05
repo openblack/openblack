@@ -35,7 +35,7 @@ using components::WeatherInfo;
 
 namespace
 {
-// GGameInfo: a game year is 36000 turns and the calendar starts on 5 May 1998 at 18:05:30
+// The calendar: a game year is 36000 turns and the calendar starts on 5 May 1998 at 18:05:30
 constexpr float k_TurnsPerYear = 36000.0f;
 constexpr float k_DaysInYear = 365.25f;
 constexpr float k_SecondsInDay = 86400.0f;
@@ -58,14 +58,14 @@ constexpr std::array<float, 13> k_TemperatureByMonth = {0.0f, 0.1f, 0.0f, 0.3f, 
 /// Hours of the morning the temperature table is laid out for: full night, dusk start and end, full day
 constexpr std::array<float, 4> k_CanonicalDayTimes = {3.5f, 7.5f, 8.0f, 8.5f};
 
-// LH3DAtmos
+// The atmosphere: how the weather changes with height above the ground
 constexpr float k_HighAltitude = 200.0f;
 constexpr float k_LowAltitude = 50.0f;
 constexpr float k_HighAltitudeBlend = 0.25f;
 constexpr float k_TemperatureLapse = -0.075f;
 constexpr int8_t k_HighAltitudeCooling = 11;
 
-// GClimate
+// Climates and the storms they create
 constexpr float k_GlobalRadius = 5120.0f;
 constexpr uint16_t k_GlobalCentreCell = 256;
 constexpr uint32_t k_GlobalMaxStorms = 10;
@@ -86,7 +86,7 @@ constexpr float k_MinStormLife = 20.0f;
 constexpr float k_ShortStormLife = 8.0f;
 constexpr int k_StormPlacementTries = 20;
 
-// GWeather
+// Storms as they live, move and fade
 constexpr float k_TurnDuration = 0.1f;
 constexpr float k_ArrivalDistance = 0.001f;
 constexpr float k_EffectScale = 256.0f;
@@ -160,7 +160,7 @@ float WindMax(const GClimateInfo& info, uint32_t season)
 	return Seasons(info.windMaxSpring, info.windMaxSummer, info.windMaxAutumn, info.windMaxWinter).at(season);
 }
 
-/// fn_0086A110: maps an hour onto the sky's day so the temperature table follows dusk and dawn
+/// Maps an hour onto the sky's day so the temperature table follows dusk and dawn
 float RelativeHour(float hour, const SkyInterface::DayNightTimes& sky)
 {
 	const std::array<float, 4> actual = {sky.nightFull, sky.duskStart, sky.duskEnd, sky.dayFull};
@@ -194,7 +194,7 @@ float RelativeHour(float hour, const SkyInterface::DayNightTimes& sky)
 	return afternoon ? 24.0f - result : result;
 }
 
-/// GWeather::CalcAtmos: adds a storm's effect to the weather at a point
+/// Adds a storm's effect to the weather at a point
 void ApplyStorm(const Storm& storm, const glm::vec3& point, WeatherInfo& info)
 {
 	const auto& centre = storm.currentPosition;
@@ -244,7 +244,7 @@ glm::vec3 CellCentre(const Climate& climate)
 
 WeatherSystem::WeatherSystem()
 {
-	// GGameInfo::SetStartDate and SetStartTime
+	// The turn the calendar starts on
 	const auto turnsPerDay = k_TurnsPerYear / k_DaysInYear;
 	_secondsPerTurn = k_SecondsInDay / turnsPerDay;
 	const auto secondsPerTurn = static_cast<double>(_secondsPerTurn);
@@ -343,11 +343,11 @@ void WeatherSystem::InitialiseClimate(Climate& climate) const
 {
 	const auto& info = GetInfo(climate);
 
-	// fn_00773D30: the rain budget and desire start from the season's values
+	// The rain budget and desire start from the season's values
 	climate.rainingDays = Ftol(RainMin(info, _season) * 100.0f);
 	climate.rainDesire = RainMax(info, _season);
 
-	// fn_00773ED0
+	// The temperature starts at the time of day's target
 	const auto& sky = Locator::skySystem::value();
 	const auto hour = RelativeHour(static_cast<float>(Ftol(sky.GetTime())), sky.GetDayNightTimes());
 	const auto hourFactor = k_TemperatureByHour.at(std::clamp(Ftol(hour), 0, 23));
@@ -376,7 +376,7 @@ entt::entity WeatherSystem::GetGlobalClimate()
 		return entity;
 	}
 
-	// GClimate::GClimate(0): covers the whole map with the first climate type
+	// The global climate covers the whole map with the first climate type
 	auto& registry = Locator::entitiesRegistry::value();
 	entity = registry.Create();
 	auto& climate = registry.Assign<Climate>(entity);
@@ -414,7 +414,7 @@ void WeatherSystem::CreateClimate(int32_t index, uint32_t info, glm::vec2 positi
 		return;
 	}
 
-	// fn_00771170
+	// A local climate around a point, between two radii
 	const auto entity = registry.Create();
 	auto& climate = registry.Assign<Climate>(entity);
 	climate.index = index;
@@ -471,7 +471,7 @@ void WeatherSystem::Update(uint32_t turn)
 {
 	_turn = turn;
 
-	// LH3DAtmos::UpdateGame: storms move on, then every cell of the atmosphere is stale
+	// Storms move on, then every cell of the atmosphere is stale
 	UpdateStorms();
 	_activeStorms.clear();
 	Locator::entitiesRegistry::value().Each<const Storm>([this](entt::entity, const Storm& storm) {
@@ -491,7 +491,7 @@ void WeatherSystem::Update(uint32_t turn)
 		_stamp = 1;
 	}
 
-	// GClimate::ProcessAll
+	// Every climate, with the season changing on a new day
 	GetGlobalClimate();
 	const auto day = Ftol(GetDayOfMonth(turn));
 	const auto newDay = !_day.has_value() || *_day != day;
@@ -510,7 +510,7 @@ void WeatherSystem::Update(uint32_t turn)
 	}
 }
 
-// GWeather::Update and fn_0083F840
+// Storms age, fade in and out and travel towards their destination; dead ones linger a couple of turns
 void WeatherSystem::UpdateStorms()
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -571,7 +571,7 @@ void WeatherSystem::UpdateStorms()
 	}
 }
 
-// fn_00772330
+// A climate's turn: its temperature, its storms drifting and clearing, and once a day its rain and wind
 void WeatherSystem::ProcessClimate(entt::entity entity, bool newDay)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -643,7 +643,7 @@ void WeatherSystem::ProcessClimate(entt::entity entity, bool newDay)
 	}
 }
 
-// fn_00773F40: the temperature steps towards the time of day's
+// The temperature steps towards the time of day's
 void WeatherSystem::ProcessTemperature(Climate& climate) const
 {
 	const auto& info = GetInfo(climate);
@@ -669,7 +669,7 @@ void WeatherSystem::ProcessTemperature(Climate& climate) const
 	}
 }
 
-// fn_00773D60: once a game day
+// Once a game day
 void WeatherSystem::ProcessRain(Climate& climate)
 {
 	if (climate.raining)
@@ -681,14 +681,14 @@ void WeatherSystem::ProcessRain(Climate& climate)
 	++climate.dryDays;
 	climate.rainingDays = std::max(climate.rainingDays - 1, 0);
 
-	// The monthly and hourly terms come from GClimateRainInfo, which the game never loads, so they are 0
+	// The monthly and hourly terms come from a table of rain figures that the game never loads, so they are 0
 	const auto& info = GetInfo(climate);
 	const auto fromMin = RandomFloat(RainMin(info, _season) * k_RainDesireRandom);
 	const auto fromMax = RandomFloat(RainMax(info, _season) * k_RainDesireRandom);
 	climate.rainDesire = std::min(climate.rainDesire + fromMax + fromMin, 1.0f);
 }
 
-// fn_00774AA0
+// The wind, between the season's extremes by how close the climate is to rain
 void WeatherSystem::ProcessWind(Climate& climate) const
 {
 	const auto& info = GetInfo(climate);
@@ -703,7 +703,7 @@ void WeatherSystem::ProcessWind(Climate& climate) const
 	climate.windZ = blend(minimum * std::sin(climate.windAngle), maximum * std::sin(climate.windAngle));
 }
 
-// GClimate::FindWhereToCreateStorm
+// A cell for a new storm: near the middle of a local climate, anywhere for the global one
 glm::ivec2 WeatherSystem::FindWhereToCreateStorm(const Climate& climate)
 {
 	auto& island = Locator::terrainSystem::value();
@@ -724,7 +724,7 @@ glm::ivec2 WeatherSystem::FindWhereToCreateStorm(const Climate& climate)
 			cell.y = static_cast<int16_t>(Locator::rng::value().NextValue<int>(0, 0x1FF));
 		}
 
-		// MapCoords::IsWater returns the cell's water bit, which is never 1: only points off the island retry
+		// The game's water test reads the cell's water bit, which is never 1: only points off the island retry
 		if (cell.x >= 0 && cell.y >= 0 && cell.x < 512 && cell.y < 512 &&
 		    island.FindCell({static_cast<uint16_t>(cell.x), static_cast<uint16_t>(cell.y)}) != nullptr)
 		{
@@ -734,7 +734,7 @@ glm::ivec2 WeatherSystem::FindWhereToCreateStorm(const Climate& climate)
 	return cell;
 }
 
-// GClimate::CreateStorm
+// A new storm, if the climate still has rain left and room for another
 void WeatherSystem::CreateStorm(entt::entity climateEntity)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -872,7 +872,7 @@ const WeatherInfo& WeatherSystem::GetCell(int x, int z)
 	return cell;
 }
 
-// LH3DAtmos::GetWeather
+// The weather of the atmosphere's cell at a point
 WeatherInfo WeatherSystem::GetWeather(const glm::vec3& position)
 {
 	auto info = GetCell(Ftol(position.x * 0.025f), Ftol(position.z * 0.025f));
@@ -886,7 +886,7 @@ WeatherInfo WeatherSystem::GetWeather(const glm::vec3& position)
 	return info;
 }
 
-// LH3DAtmos::GetWeatherSmooth
+// The weather at a point, blended between the four nearest cells
 WeatherInfo WeatherSystem::GetWeatherSmooth(const glm::vec3& position)
 {
 	const auto fx = position.x * 0.025f;

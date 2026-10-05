@@ -144,7 +144,7 @@ TEST(GUtilsAngle, AnglesFromPositions)
 
 TEST(GUtilsAngle, Conversions)
 {
-	EXPECT_EQ(gu::ConvertAngle3DToGame(-0.5f), 1886u); // ftol(-162.97) = -162 & 0x7FF
+	EXPECT_EQ(gu::ConvertAngle3DToGame(-0.5f), 1886u); // trunc(-162.97) = -162 & 0x7FF
 	EXPECT_EQ(gu::ConvertAngle3DToGame(1.0f), 325u);
 	EXPECT_EQ(gu::ConvertAngle3DToGame(3.1415927f), 1024u);
 	EXPECT_EQ(gu::ConvertAngle3DToGame(6.2831855f), 0u);                              // 2048.0001 & 0x7FF

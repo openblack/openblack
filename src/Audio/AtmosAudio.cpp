@@ -110,7 +110,7 @@ void AtmosAudio::Release()
 	_registered = false;
 }
 
-// fn_005E2240, from the alignment that fn_0064AC30 maps to 0-1
+// From the camera's alignment, mapped to 0-1
 void AtmosAudio::SetAlignment(float alignment)
 {
 	_alignment = CalculateAlignmentValue(alignment);
@@ -180,7 +180,7 @@ void AtmosAudio::EndTurn(const TurnInputs& inputs)
 
 void AtmosAudio::ContinueTurn(const TurnInputs& inputs)
 {
-	// GAudio::ProcessAudioGameTurn, which Temple::ProcessGameTurn calls for every turn of the temple, however early
+	// The game's audio turn, which runs for every turn of the temple, however early
 	auto& audio = Locator::audio::value();
 	CopyTargets(inputs.inCitadel);
 	ProcessAtmosBanks();
@@ -190,7 +190,7 @@ void AtmosAudio::ContinueTurn(const TurnInputs& inputs)
 	}
 }
 
-// fn_00429100: the sound map's volumes, or none inside the temple
+// The sound map's volumes, or none inside the temple
 void AtmosAudio::CopyTargets(bool inCitadel)
 {
 	if (inCitadel)

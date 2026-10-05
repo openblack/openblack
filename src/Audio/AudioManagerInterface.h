@@ -38,7 +38,7 @@ namespace audio
 
 class AtmosPlayer;
 
-/// LHBankGetMusicGroupId and LHBankGetNumberOfSamples of a music bank
+/// A music bank's group and its number of samples
 struct MusicBankInfo
 {
 	int32_t groupId;
@@ -72,11 +72,11 @@ public:
 	/// Plays a music bank on its own, from the start, stopping any other music at once
 	virtual void PlayMusic(const std::string& packPath, PlayType type) = 0;
 	virtual void StopMusic() = 0;
-	/// LHMusicPlay with the bank at a path, loading it if it is not playing already. options.bank is ignored.
+	/// Plays the music bank at a path, loading it if it is not playing already. options.bank is ignored.
 	virtual bool MusicPlay(const std::string& bankPath, const MusicPlayOptions& options) = 0;
-	/// LHMusicStop
+	/// Stops the music, fading it out if asked
 	virtual void MusicStop(bool fadeOut) = 0;
-	/// LHMusicIsActive
+	/// Whether music is playing
 	[[nodiscard]] virtual bool MusicIsActive() const = 0;
 	/// The music group and length of a bank, null if there is no such bank
 	[[nodiscard]] virtual std::optional<MusicBankInfo> GetMusicBankInfo(const std::string& bankPath) = 0;
@@ -84,15 +84,15 @@ public:
 	[[nodiscard]] virtual const MusicPlayer* GetMusic() const = 0;
 	/// Plays a sound as 2D audio
 	virtual void PlaySound(entt::id_type id, PlayType type) = 0;
-	/// A one-shot sound effect played the way GAudio::PlaySoundEffect hands it to LHSamplePlay: volume, pitch, loop
-	/// and distances come from the bank header where it overrides them. With a world position it is a 3D sound
-	/// anchored there, otherwise it is centred on the listener.
+	/// A one-shot sound effect played the way the game plays its sound effects: volume, pitch, loop and distances come
+	/// from the bank header where it overrides them. With a world position it is a 3D sound anchored there, otherwise
+	/// it is centred on the listener.
 	virtual void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) = 0;
 	/// Stops the sound effects of a sound that PlaySoundEffect started, as one that loops forever goes on until then
 	virtual void StopSoundEffect(entt::id_type id) = 0;
 	/// The animation effects of a loaded sound bank, named as its sounds are ("<bank>/<sample id>")
 	virtual void AddAnimEffects(const std::string& bankName, AnimEffectTable table) = 0;
-	/// GAudio::SamplePlayAnimEffect: one of the samples a bank's animation effects pick for keys, chosen at random, as
+	/// One of the samples a bank's animation effects pick for keys, chosen at random, as
 	/// a one-shot 3D sound at position on behalf of owner. Nothing plays when the listener is beyond the sample's
 	/// maximum distance, or when the bank header plays the sample once and owner is playing it, or another of its
 	/// voice group, already.
@@ -106,7 +106,7 @@ public:
 	virtual void AddMusicEntry(const std::string& name) = 0;
 	[[nodiscard]] virtual const std::vector<std::string>& GetMusicTracks() const = 0;
 
-	// Atmosphere banks (LHAudioDLL LHAtmos* functions). Bank 0 is no bank and is ignored.
+	// Atmosphere banks, as the game's audio library keeps them. Bank 0 is no bank and is ignored.
 	virtual uint32_t AtmosRegisterBank(const std::string& bankName, const std::vector<pack::AudioBankSampleHeader>& headers,
 	                                   uint16_t atmosCount) = 0;
 	virtual void AtmosReleaseBank(uint32_t bank) = 0;

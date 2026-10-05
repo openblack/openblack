@@ -46,9 +46,9 @@ const float LandIslandInterface::k_CellSize = 10.0f;
 namespace
 {
 constexpr int32_t k_MapSize = 0x200;
-// The 1/256 of LH3DIsland::GetAltitude's integer interpolation
+// The 1/256 of the game's integer altitude interpolation
 constexpr double k_AltitudeFraction = 1.0 / 256.0;
-// Land at or below this altitude is at sea level. LH3DIsland draws it at height 0, and GetAltitude treats it the same
+// Land at or below this altitude is at sea level. The game draws it at height 0, and GetAltitude treats it the same
 // in cells no higher than k_SeaLevelClampAltitude. The game only turns the latter off while it creates a fish farm.
 constexpr uint8_t k_SeaLevelAltitude = 3;
 constexpr uint8_t k_SeaLevelClampAltitude = 4;

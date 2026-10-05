@@ -37,7 +37,7 @@ public:
 	enum class Blend : uint8_t
 	{
 		Alpha,
-		/// Added, by its alpha, as LH3DAtmos's additive material is
+		/// Added, by its alpha, as the game's additive weather material is
 		Additive,
 	};
 

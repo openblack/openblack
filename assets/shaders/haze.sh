@@ -1,7 +1,7 @@
 #ifndef HAZE_SH
 #define HAZE_SH
 
-// The game's distance haze (LandLightTable::Haze). Colours here are 0 to 255.
+// The game's distance haze, from the land's light table. Colours here are 0 to 255.
 
 uniform vec4 u_haze;       // x: near distance, y: far distance, z: k, w: 1 when the haze is on
 uniform vec4 u_hazeColour; // rgb: the haze's colour

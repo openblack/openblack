@@ -124,9 +124,9 @@ public:
 	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
-	/// How far along a ray, in the mesh's space, it first meets a submesh drawn of the mesh (LH3DMesh's pick of the
-	/// triangle under the mouse as it draws), other than the submeshes left undrawn. Only the temple's rooms keep their
-	/// triangles to be picked.
+	/// How far along a ray, in the mesh's space, it first meets a submesh drawn of the mesh (as the game picks the
+	/// triangle under the mouse while it draws), other than the submeshes left undrawn. Only the temple's rooms keep
+	/// their triangles to be picked.
 	struct PickHit
 	{
 		float distance;

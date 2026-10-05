@@ -81,24 +81,24 @@ private:
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState,
 	                 const TextureHandle* texture = nullptr, glm::vec3 glow = glm::vec3(0.0f)) const;
 	void DrawPass(const DrawSceneDesc& desc) const;
-	/// The beams of the temple's spot lights and the light its windows shed, which InnerRoom::DrawGlow draws in its
+	/// The beams of the temple's spot lights and the light its windows shed, which the game draws in its
 	/// rooms but not in the reflection of the main room
 	void DrawLightBeams(const DrawSceneDesc& desc) const;
-	/// The temple's domes of mist, which LH3DMist draws facing the camera with a frame of the smoke texture
+	/// The temple's domes of mist, which the game draws facing the camera with a frame of the smoke texture
 	void DrawMistDomes(const DrawSceneDesc& desc) const;
 	/// The text the temple's rooms write in the world this frame: the signs' labels and the scroll the camera is close to
 	void DrawTempleText(const DrawSceneDesc& desc) const;
-	/// MiniMap::BuildMapTex: the land seen from above, unlit, once a visit to the temple
+	/// The temple's map: the land seen from above, unlit, once a visit to the temple
 	void DrawTempleMapPass() const;
-	/// WorldRoom::Draw's pool: its water twice, turned an eighth apart, each shimmering as the other fades
+	/// The main room's pool: its water twice, turned an eighth apart, each shimmering as the other fades
 	void DrawTemplePool(const DrawSceneDesc& desc) const;
-	/// MiniMap's draw: the island in relief over the main room's pool
+	/// The temple's map: the island in relief over the main room's pool
 	void DrawTempleMap(const DrawSceneDesc& desc) const;
 	/// A black floor under the whole temple, which the cracks the rooms are modelled with show instead of the sky
 	void DrawTempleUnderside(const DrawSceneDesc& desc) const;
-	/// WorldRoom::DrawAdditional: the markers on the map, on soft glows that show through anything
+	/// The markers on the temple's map, on soft glows that show through anything
 	void DrawTempleMapMarkers(const DrawSceneDesc& desc) const;
-	/// CreatureRoom::Draw's belts and medals
+	/// The creature's room's belts and medals
 	void DrawCaveTrophies(const DrawSceneDesc& desc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;

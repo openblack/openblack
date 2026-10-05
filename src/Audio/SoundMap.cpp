@@ -28,7 +28,7 @@ constexpr float k_MapCoordsPerUnit = 6553.6f;
 constexpr float k_MapCoordsPerCell = 65536.0f;
 constexpr float k_UnitsPerCell = 10.0f;
 constexpr float k_CellsPerMapCoord = 1.0f / 65536.0f;
-// Scanned cells are measured at their centre: (GMap cell size 8 >> 1) * 0x2000
+// Scanned cells are measured at their centre: half the map's cell size of 8, times 0x2000
 constexpr int32_t k_HalfCell = 0x8000;
 constexpr uint16_t k_MapSize = 0x200;
 
@@ -37,7 +37,7 @@ constexpr double k_WindVolumeStart = 15.0;
 constexpr double k_WindVolumeRange = 1.0 / 30.0;
 constexpr float k_MinimumWindVolume = 0.01f;
 
-/// MSVC _ftol: truncation, with the integer indefinite value when out of range
+/// Truncation as the game does it, giving the most negative integer when out of range
 int32_t Ftol(double value)
 {
 	if (value <= -2147483649.0 || value >= 2147483648.0)
@@ -52,7 +52,7 @@ int16_t CellOf(int32_t coordinate)
 	return static_cast<int16_t>(static_cast<uint32_t>(coordinate) >> 16);
 }
 
-/// Distance in world units of a map coordinate, as AtmosMapTypeInfo::Add computes it
+/// Distance in world units of a map coordinate, as the game's scan computes it
 double ToUnits(int32_t coordinate)
 {
 	return static_cast<double>(coordinate) * k_UnitsPerCell * k_CellsPerMapCoord;
@@ -113,7 +113,7 @@ void SoundMap::Reset()
 	_totalCount = 0;
 }
 
-// GSoundMap::AddAtmosType and AtmosMapTypeInfo::Add
+// Counts a cell of a type, and keeps it if it is the nearest yet
 void SoundMap::AddAtmosType(uint32_t type, const MapCoords& coords)
 {
 	auto& scan = _scans.at(type < k_AtmosTypeCount ? type : 0);

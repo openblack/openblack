@@ -17,14 +17,14 @@ namespace openblack::ecs::components
 {
 
 /// How a temple's outside looks: its player's alignment and share of influence, each from 0 to 1, and where each is
-/// heading (the citadel's LH3D object +0x94, +0x98, +0x88 and +0x8C). Its mesh is blended for them as they change.
+/// heading. Its mesh is blended for them as they change.
 struct TempleExterior
 {
 	float alignment {0.5f};
 	float alignmentTarget {0.5f};
 	float size {0.0f};
 	float sizeTarget {0.0f};
-	/// The size and alignment its mesh was last blended for, none before it first is (+0x84 and +0x90)
+	/// The size and alignment its mesh was last blended for, none before it first is
 	std::optional<glm::vec2> morphed;
 };
 

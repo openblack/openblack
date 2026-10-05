@@ -20,7 +20,7 @@
 namespace openblack::ecs::components
 {
 
-/// The weather at a point (LH3D WeatherInfo). Storms add to calm, temperature 0 air.
+/// The weather at a point. Storms add to calm, temperature 0 air.
 struct WeatherInfo
 {
 	int8_t temperature {0};
@@ -36,7 +36,7 @@ struct WeatherInfo
 	uint8_t stamp {0};
 };
 
-/// A region of the island that breeds storms (GClimate). Every island has a global climate covering the whole
+/// A region of the island that breeds storms. Every island has a global climate covering the whole
 /// map; the land scripts add local ones with CREATE_WEATHER_CLIMATE.
 struct Climate
 {
@@ -81,8 +81,8 @@ struct Climate
 	std::vector<entt::entity> storms;
 };
 
-/// A moving weather system (GWeather / LH3DStorm). Within its outer radius it pulls the temperature towards its own
-/// and adds its rain, snow, cloud and wind, at full strength inside its inner radius.
+/// A moving weather system. Within its outer radius it pulls the temperature towards its own and adds its rain, snow,
+/// cloud and wind, at full strength inside its inner radius.
 struct Storm
 {
 	/// Centre the climate drifts with the wind

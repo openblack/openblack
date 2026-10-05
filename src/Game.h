@@ -89,13 +89,13 @@ public:
 	static constexpr float k_TurnDurationMultiplierSlow = 2.0f;
 	static constexpr float k_TurnDurationMultiplierNormal = 1.0f;
 	static constexpr float k_TurnDurationMultiplierFast = 0.5f;
-	/// The height of the hand at standard size, which CHand pulls the hovering hand back from the land by
+	/// The height of the hand at standard size, which the game pulls the hovering hand back from the land by
 	static constexpr float k_HandHeight = 3.2f;
-	/// CHand::SetDistanceFromView's limits on how far the hand is from the camera
+	/// The game's limits on how far the hand is from the camera
 	static constexpr float k_HandMinDistance = 2.0f;
 	static constexpr float k_HandMaxDistance = 1800.0f;
-	/// HandStateCitadel: how far short of the room the hand hangs, its limits on how far it is from the camera, and how
-	/// long it takes to turn to the surface the cursor is on
+	/// Inside the temple: how far short of the room the hand hangs, its limits on how far it is from the camera, and
+	/// how long it takes to turn to the surface the cursor is on
 	static constexpr float k_HandTempleGap = 3.25f;
 	static constexpr float k_HandTempleMinDistance = 4.0f;
 	static constexpr float k_HandTempleMaxDistance = 300.0f;
@@ -105,7 +105,7 @@ public:
 	/// Seconds the hand eases over to land further from and nearer to the camera
 	static constexpr float k_HandEaseOutTime = 0.28f;
 	static constexpr float k_HandEaseInTime = 0.1f;
-	/// Seconds the hand takes to settle onto the land it grips, CHand's pose cross-fade
+	/// Seconds the hand takes to settle onto the land it grips, the game's pose cross-fade
 	static constexpr float k_HandGripSettleTime = 0.13f;
 
 	explicit Game(Arguments&& args) noexcept;
@@ -113,7 +113,7 @@ public:
 
 	bool ProcessEvents(const SDL_Event& event) noexcept;
 	bool GameLogicLoop() noexcept;
-	/// GAudio::ProcessMusic, for a turn of the world or of the temple
+	/// The game's music, for a turn of the world or of the temple
 	void ProcessMusicTurn(glm::vec3 cameraPosition, bool inCitadel);
 	/// The audio of a turn inside the temple, while the world is paused
 	void ProcessTempleAudioTurn();
@@ -177,9 +177,9 @@ private:
 	/// Grabbing the sea plays G_HandInWater_01 to _10 in turn
 	uint32_t _handInWaterSample {0};
 
-	/// Plays the sound of the hand grabbing the land or the sea at the grab point (GInterface's land grab)
+	/// Plays the sound of the hand grabbing the land or the sea at the grab point, as the game does
 	void PlayHandGrabSound();
-	/// Places the hand on the line of sight through the cursor the way CHand does
+	/// Places the hand on the line of sight through the cursor the way the game does
 	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
 	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh
 	void LoadHandAnimation();

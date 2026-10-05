@@ -61,13 +61,13 @@ public:
 
 	[[nodiscard]] GameMenu& GetMenu() noexcept { return *_menu; }
 	[[nodiscard]] const TextDatabase& GetTexts() const noexcept { return _texts; }
-	/// SetupThing's font, which the temple's scrolls are written in too
+	/// The dialogs' font, which the temple's scrolls are written in too
 	[[nodiscard]] const GameFont& GetFont() const noexcept { return _font; }
 	/// The font's glyphs, white with their coverage in alpha
 	[[nodiscard]] const graphics::Texture2D& GetFontTexture() const noexcept { return *_fontTexture; }
 
 	/// Words shown over the screen, wrapped across the dialogs' 800 by 600 and 60 high from its top, as the temple's
-	/// future room has SetupThing::DrawTextWrap show them
+	/// future room shows them
 	struct Message
 	{
 		std::u16string text;
@@ -88,9 +88,9 @@ private:
 	              std::unique_ptr<graphics::Texture2D> mice, std::unique_ptr<graphics::Texture2D> atmos,
 	              std::u16string_view playerName, MenuSettings settings);
 
-	/// CameraHelp::DrawKeyOrMouse: the tooltip by the hand, its words and then its mouse
+	/// The tooltip by the hand, its words and then its mouse
 	void DrawToolTip(glm::u16vec2 resolution);
-	/// CameraHelp's glow: a soft box of atmos.raw added round a rectangle
+	/// The tooltip's glow: a soft box of atmos.raw added round a rectangle
 	void DrawGlow(glm::vec2 min, glm::vec2 max, glm::vec4 colour);
 
 	TextDatabase _texts;
@@ -99,7 +99,7 @@ private:
 	std::unique_ptr<graphics::Texture2D> _fontTexture;
 	std::unique_ptr<graphics::Texture2D> _symbols;
 	std::unique_ptr<graphics::Texture2D> _mice;
-	/// LH3DAtmos's texture of glows and arrows
+	/// The atmosphere texture of glows and arrows
 	std::unique_ptr<graphics::Texture2D> _atmos;
 	Canvas _canvas;
 	Canvas _pointerCanvas {graphics::RenderPass::Cursor};

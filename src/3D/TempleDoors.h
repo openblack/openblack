@@ -23,13 +23,13 @@
 namespace openblack
 {
 
-/// The doors of the temple's main room, which swing open as the camera walks through them (InnerRoom's door). Each
-/// doorway has two leaves, submeshes of the main room whose joints are numbered in pairs: the first leaf of the doorway
-/// and the one after it. The leaves of the open doorway turn about their hinges, away from the room.
+/// The doors of the temple's main room, which swing open as the camera walks through them. Each doorway has two leaves,
+/// submeshes of the main room whose joints are numbered in pairs: the first leaf of the doorway and the one after it.
+/// The leaves of the open doorway turn about their hinges, away from the room.
 class TempleDoors
 {
 public:
-	/// LH3D's table of joint matrices which InnerRoom::SetDoorMatrices fills
+	/// The size of the table of joint matrices the doors' leaves are turned by
 	static constexpr size_t k_JointCount = 32;
 	/// How far each leaf turns at most, twice this, in radians
 	static constexpr float k_HalfSwing = 0.6981317f;

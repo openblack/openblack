@@ -60,7 +60,7 @@ constexpr std::array k_ScrollPlaces {
     ScrollPlace {TempleRoom::Credits, "credits", "LH_SCROLL_LIB07", TempleScrolls::Content::LibraryHistory},
 };
 
-/// The library's first scroll, the people who made the game (fn_0078BDA0)
+/// The library's first scroll, the people who made the game
 constexpr std::array<std::u16string_view, 36> k_Staff {
     u"Aaron Ludlow",    u"Alex Evans",          u"Andy Bass",         u"Andy Robson",      u"Catherine Tutton",
     u"Cathy Campos",    u"Christian Bravery",   u"Claire Hedley",     u"Daniel Deptford",  u"Eric Bailey",
@@ -72,7 +72,7 @@ constexpr std::array<std::u16string_view, 36> k_Staff {
     u"Tim Rance",
 };
 
-/// The squeaks of a scroll turning, InGame.sad 54 to 59, one by GetTickCount
+/// The squeaks of a scroll turning, InGame.sad 54 to 59, one picked by the time
 constexpr std::array k_Squeaks {
     audio::SoundId::G_ScrollSqueak_01, audio::SoundId::G_ScrollSqueak_02, audio::SoundId::G_ScrollSqueak_03,
     audio::SoundId::G_ScrollSqueak_04, audio::SoundId::G_ScrollSqueak_05, audio::SoundId::G_ScrollSqueak_06,
@@ -167,7 +167,7 @@ void TempleScrolls::Create(const Facts& facts)
 		}
 		if (scroll.subMesh.has_value())
 		{
-			// fn_008379E0: a texture in memory, 256 texels square, 16 bits a texel
+			// A texture in memory, 256 texels square, 16 bits a texel
 			scroll.texture = graphics::fromBgfx(bgfx::createTexture2D(TempleScrollTexture::k_Size, TempleScrollTexture::k_Size,
 			                                                          false, 1, bgfx::TextureFormat::BGRA4, BGFX_TEXTURE_NONE));
 			bgfx::setName(graphics::toBgfx(*scroll.texture), fmt::format("Scroll {}", place.subMesh).c_str());
@@ -195,8 +195,8 @@ void TempleScrolls::Redraw(Scroll& scroll, const Facts& facts)
 	}
 	else
 	{
-		// TODO(raffclar): A scroll its room leaves unwritten keeps what fn_008379E0 made it from: 128 KiB of the game's
-		// own memory after the texture's name, read as texels. It is the parchment here.
+		// TODO(raffclar): A scroll its room leaves unwritten keeps what the game made its texture from: 128 KiB of the
+		// game's own memory after the texture's name, read as texels. It is the parchment here.
 		TempleScrollTexture::Draw(texels, _parchment, u"", 0, _font);
 	}
 	bgfx::updateTexture2D(graphics::toBgfx(*scroll.texture), 0, 0, 0, 0, TempleScrollTexture::k_Size,
@@ -219,8 +219,8 @@ bool TempleScrolls::Hold(bool pressed, float mouseY, const std::optional<TempleC
 				_held = i;
 				_heldMouseY = mouseY;
 				_squeaked = false;
-				// The rooms' scroll callbacks: Temple::SetCameraToLookAtSubMesh(scroll, -30, 0, 0). InnerCamera::
-				// FocusOnSubMesh looks at the middle of the scroll's box from 30 units back along its frame's x axis.
+				// Pressing a scroll has the room's camera look at the middle of the scroll's box from 30 units back
+				// along its frame's x axis.
 				if (_focused != i)
 				{
 					if (_focused.has_value() && _focusedText)
@@ -283,8 +283,8 @@ void TempleScrolls::SetFocus(float zoom, const Facts& facts)
 	{
 		return;
 	}
-	// CreatureRoom::Draw and WorldRoom::Draw: the text goes in front of the scroll once the camera is over half way to
-	// it, and back on the texture when it is back under half way, when the camera no longer looks at it
+	// In the creature's room and the main room, the text goes in front of the scroll once the camera is over half way
+	// to it, and back on the texture when it is back under half way, when the camera no longer looks at it
 	const bool textInFront = zoom > 0.5f;
 	if (textInFront != _focusedText)
 	{
@@ -341,7 +341,7 @@ void TempleScrolls::AppendFocusedText(std::vector<OrientedTextVertex>& vertices,
 	{
 		return;
 	}
-	// FormatTextureForScroll with a submesh: the frame's axes made unit long, its y and z axes turned round, at the
+	// The scroll's submesh gives the text's frame: its axes made unit long, its y and z axes turned round, at the
 	// middle of the scroll's box. The texture's 237 texels across fit the box's depth along z and its 255 down its
 	// height along y.
 	TextFrame frame;
@@ -371,7 +371,7 @@ void TempleScrolls::AppendFocusedText(std::vector<OrientedTextVertex>& vertices,
 		    {
 			    return;
 		    }
-		    // GatheringText::DrawTextRawOriented along the frame's z axis and down its y, 0.7 units in front: the shadow
+		    // The text is laid along the frame's z axis and down its y, 0.7 units in front: the shadow
 		    // a texel down and right, then the yellow
 		    AppendOrientedText(vertices, _font, frame, 2, 1, line,
 		                       {(x - k_Middle + 1.0f) * across, ((y - k_Middle) * down) + down, -0.7f}, size, stretch,
@@ -450,13 +450,13 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 	const auto named = [&](std::string_view name, std::u16string_view value) {
 		text.Add(TempleScrollText::WithString(get(name), value));
 	};
-	// GAlignment::GetDiscreteAlignmentValue's seven texts, from totally evil to angelic
+	// The game's seven texts for an alignment, from totally evil to angelic
 	const auto alignment = [&](float value) {
 		const auto n = std::clamp(static_cast<int32_t>((value + 1.0f) * 0.5f * 6.9999995f), 0, 6);
 		return get(fmt::format("HELP_TEXT_ALIGNMENT_{:02}", n + 1));
 	};
 	const auto* creature = facts.creature ? &*facts.creature : nullptr;
-	// AddText's texts about the player's creature are a blank line without one
+	// The texts about the player's creature are a blank line without one
 	const auto aboutCreature = [&](const auto& write) {
 		if (creature != nullptr)
 		{
@@ -470,7 +470,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 
 	switch (content)
 	{
-	case Content::World: // WorldRoom::MakeScrollText
+	case Content::World: // The main room's scroll
 	{
 		text.Add(get("HELP_TEXT_ROOM_WORLD_TITLE"));
 		text.AddNewLine();
@@ -500,7 +500,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		text.End();
 		break;
 	}
-	case Content::CreatureAttributes: // CreatureRoom::MakeCreatureScrollText
+	case Content::CreatureAttributes: // The creature's room's scroll of the creature's attributes
 	{
 		text.Add(get("HELP_TEXT_ROOM_CREATURE_SCROLL_TITLE"));
 		text.AddNewLine();
@@ -543,7 +543,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		text.End();
 		break;
 	}
-	case Content::CreatureActions: // CreatureRoom::MakeActionsLearntScrollText, only for the player's creature
+	case Content::CreatureActions: // The actions the creature has learnt, only for the player's creature
 		if (creature == nullptr)
 		{
 			return std::nullopt;
@@ -561,7 +561,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		}
 		text.End();
 		break;
-	case Content::CreatureMind: // CreatureRoom::MakePersonalityScrollText, only for the player's creature
+	case Content::CreatureMind: // The creature's personality, only for the player's creature
 		if (creature == nullptr)
 		{
 			return std::nullopt;
@@ -595,7 +595,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		number("HELP_TEXT_ROOM_PERSONALITY_BELIEFS_ABOUT_FORESTS", creature->known[3]);
 		// The game doesn't end this scroll's text, which reads the same
 		break;
-	case Content::CreatureMiracles: // CreatureRoom::MakeMagicScrollText
+	case Content::CreatureMiracles: // The miracles the creature has learnt
 		text.Add(get("HELP_TEXT_ROOM_MAGIC_SCROLL_TITLE"));
 		text.AddNewLine();
 		if (creature != nullptr)
@@ -609,7 +609,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		}
 		text.End();
 		break;
-	case Content::Challenge: // ChallengeRoom::MakeScrollText
+	case Content::Challenge: // The challenge room's scroll
 		text.Add(get("HELP_TEXT_ROOM_CHALLENGE_TITLE"));
 		text.AddNewLine();
 		number("HELP_TEXT_ROOM_CHALLENGE_LIST_NUMBER_OF_DISCOVERED_CHALLENGES", facts.challengesDiscovered);
@@ -621,7 +621,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		}
 		text.End();
 		break;
-	case Content::SaveGame: // SaveGameRoom::MakeScrollText
+	case Content::SaveGame: // The save game room's scroll
 	{
 		text.Add(get("HELP_TEXT_ROOM_SAVEGAME_TITLE"));
 		text.AddNewLine();
@@ -646,11 +646,11 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		}
 		text.End();
 		break;
-	case Content::LibraryControl:     // CreditsRoom::MakeNavigationText
-	case Content::LibraryCreature:    // CreditsRoom::MakeCreatureText
-	case Content::LibraryVillageLife: // CreditsRoom::MakeVillageLifeText
-	case Content::LibraryMiracles:    // CreditsRoom::MakeMiraclesText
-	case Content::LibraryDidYouKnow:  // CreditsRoom::MakeMiscText
+	case Content::LibraryControl:     // The library's help on getting about
+	case Content::LibraryCreature:    // on the creature
+	case Content::LibraryVillageLife: // on village life
+	case Content::LibraryMiracles:    // on miracles
+	case Content::LibraryDidYouKnow:  // and its "did you know"s
 	{
 		constexpr std::array<std::string_view, 5> k_Titles {
 		    "HELP_TEXT_LIBRARY_ROOM_02", "HELP_TEXT_LIBRARY_ROOM_03", "HELP_TEXT_LIBRARY_ROOM_04",
@@ -667,7 +667,7 @@ std::optional<std::u16string> TempleScrolls::Write(Content content, const gui::T
 		text.End();
 		break;
 	}
-	case Content::LibraryHistory: // CreditsRoom::MakeHistoryText
+	case Content::LibraryHistory: // The story so far
 		text.Add(get("HELP_TEXT_LIBRARY_ROOM_07"));
 		text.AddNewLine();
 		// TODO(raffclar): Up to five entries of the story so far, each its caption and text and two blank lines

@@ -56,7 +56,7 @@ class L3DSubMesh
 		bool modulateAlpha;  ///< Multiply ouput alpha by a uniform
 		bool thresholdAlpha; ///< Dismiss fragments below a certain threshold
 		float alphaCutoutThreshold;
-		/// Drawn from both sides: LH3D culls the back faces of the rest (D3DRS_CULLMODE from the material's cull mode)
+		/// Drawn from both sides: the game culls the back faces of the rest, as the material's cull mode says
 		bool twoSided;
 	};
 
@@ -73,7 +73,7 @@ public:
 	[[nodiscard]] graphics::Mesh& GetMesh() const;
 	[[nodiscard]] const AxisAlignedBoundingBox& GetBoundingBox() const { return _boundingBox; }
 	[[nodiscard]] const std::vector<Primitive>& GetPrimitives() const { return _primitives; }
-	/// The skin LH3DMesh::DrawLightMap multiplies the submesh by, twice over, with the vertices' second texture
+	/// The lightmap skin the game multiplies the submesh by, twice over, with the vertices' second texture
 	/// coordinates. Submeshes without one are drawn as they are.
 	[[nodiscard]] std::optional<uint32_t> GetLightmapSkinID() const { return _lightmapSkinID; }
 	/// Whether the vertices carry the lightmap coordinates of the mesh, which all of its submeshes do when any has a

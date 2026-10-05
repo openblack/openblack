@@ -35,10 +35,10 @@ using namespace openblack::ecs::components;
 
 namespace
 {
-// The smoke texture's and the fire's frames are 8 by 8 cells of their textures (LH3DSprite)
+// The smoke texture's and the fire's frames are 8 by 8 cells of their textures
 constexpr float k_Cell = 1.0f / 8.0f;
 
-// CreatureRoom::InitEngine's flames: four sprites of S_Fire over the fire, orange and added by alpha
+// The creature's room's flames: four fire sprites over the fire, orange and added by alpha
 constexpr size_t k_Flames = 4;
 constexpr glm::vec4 k_FlameColour {1.0f, 128.0f / 255.0f, 64.0f / 255.0f, 128.0f / 255.0f};
 
@@ -47,7 +47,7 @@ constexpr size_t k_FireSmokes = 2;
 constexpr glm::vec3 k_FireSmokeColour {64.0f / 255.0f};
 constexpr float k_FireSmokeSize = 2.0f;
 
-// The spray at the waterfall's foot, sixteen smokes thrown up from places CreatureRoom::Draw picks again every frame
+// The spray at the waterfall's foot, sixteen smokes thrown up from places the game picks again every frame
 constexpr size_t k_Sprays = 16;
 constexpr float k_SpraySize = 4.0f;
 
@@ -55,7 +55,7 @@ constexpr float k_SpraySize = 4.0f;
 constexpr size_t k_Mists = 4;
 constexpr glm::vec4 k_MistColour {1.0f, 1.0f, 1.0f, 128.0f / 255.0f};
 
-// fn_007F8E00's rates: the particles' spin a second, their drift, the pull of the wind on them, how they fall when
+// The smokes' rates: the particles' spin a second, their drift, the pull of the wind on them, how they fall when
 // thrown up, and the steps of age a second
 constexpr float k_Spin = 0.765f;
 constexpr float k_DriftSpeed = 2.55f;
@@ -134,7 +134,7 @@ entt::entity CreateSprite(const char* texture, const char* alpha, bool additive,
 	return entity;
 }
 
-/// LH3DSmoke::Create: its particles start on their way up from the world's origin, unseen until they first start over
+/// A new smoke: its particles start on their way up from the world's origin, unseen until they first start over
 CreatureCaveEffects::Smoke CreateSmoke()
 {
 	CreatureCaveEffects::Smoke smoke;
@@ -154,7 +154,7 @@ CreatureCaveEffects::Smoke CreateSmoke()
 
 CreatureCaveEffects::CreatureCaveEffects(glm::vec3 fire)
 {
-	// CreatureRoom::InitEngine
+	// As the creature's room sets up its effects
 	auto& registry = Locator::entitiesRegistry::value();
 	for (size_t i = 0; i < k_Flames; ++i)
 	{
@@ -198,7 +198,7 @@ CreatureCaveEffects::CreatureCaveEffects(glm::vec3 fire)
 		registry.Assign<TempleInteriorPart>(mist, TempleRoom::CreatureCave);
 		registry.Assign<Transform>(mist, place, glm::mat3(1.0f), glm::vec3(1.0f));
 		registry.Assign<MistDome>(mist, _mistDome, glm::vec2(0.0f), k_MistColour);
-		// LH3DMist starts at a random frame of its texture
+		// The game's mist starts at a random frame of its texture
 		_mists.push_back({mist, static_cast<int32_t>(Random(0.0f, 16.0f)) & 0xf});
 	}
 }
@@ -233,8 +233,7 @@ CreatureCaveEffects::~CreatureCaveEffects()
 
 uint32_t CreatureCaveEffects::FlameFrame(uint32_t tickCount, uint32_t flame)
 {
-	// CreatureRoom::DrawAdditional: the flames' 32 frames, every 32 milliseconds, each a quarter of the way on from the
-	// one before it
+	// The flames' 32 frames, every 32 milliseconds, each a quarter of the way on from the one before it
 	return 0x1fU - (((tickCount >> 5U) + flame * 8U) & 0x1fU);
 }
 
@@ -252,7 +251,7 @@ uint8_t CreatureCaveEffects::SmokeAlpha(int32_t age, bool rising)
 
 void CreatureCaveEffects::StepSmoke(Smoke& smoke, uint32_t milliseconds)
 {
-	// fn_007F8E00. The cave's smokes are out of the wind: only smoke thrown up pulls down.
+	// The cave's smokes are out of the wind: only smoke thrown up pulls down.
 	glm::vec3 pull {0.0f};
 	if (smoke.rising)
 	{
@@ -309,7 +308,7 @@ void CreatureCaveEffects::Update(uint32_t milliseconds, uint32_t tickCount)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
-	// CreatureRoom::Draw: the spray from new places about the waterfall's foot, and the fire's smoke
+	// Each frame: the spray from new places about the waterfall's foot, and the fire's smoke
 	for (auto& spray : _spray)
 	{
 		spray.place = {Random(0.0f, 5.0f) + 160.0f - 2.5f, -30.0f - Random(0.0f, 23.0f), Random(0.0f, 1.0f) - 16.0f - 0.5f};
@@ -322,7 +321,7 @@ void CreatureCaveEffects::Update(uint32_t milliseconds, uint32_t tickCount)
 		ShowSmoke(smoke);
 	}
 
-	// LH3DMist::Draw: each dome steps on through 16 frames of the smoke texture
+	// Each mist dome steps on through 16 frames of the smoke texture
 	for (auto& mist : _mists)
 	{
 		mist.counter += static_cast<int32_t>(static_cast<float>(milliseconds) * 0.255f);
@@ -334,7 +333,7 @@ void CreatureCaveEffects::Update(uint32_t milliseconds, uint32_t tickCount)
 		registry.Get<MistDome>(mist.entity).uvOffset = Cell(frame);
 	}
 
-	// CreatureRoom::DrawAdditional: the flames' frames
+	// The flames' frames
 	for (uint32_t i = 0; i < _flames.size(); ++i)
 	{
 		registry.Get<Sprite>(_flames[i]).uvMin = Cell(FlameFrame(tickCount, i));

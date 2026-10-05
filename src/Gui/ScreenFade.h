@@ -17,9 +17,9 @@
 namespace openblack::gui
 {
 
-/// A colour over the whole screen that fades towards an amount at a whole of it a second (Temple::UpdateFade). Fading up,
-/// it turns at the amount and fades back down; fading down to nothing, its colour goes back to black. Beyond a whole
-/// amount the screen stays covered, so a fade from more than one waits that long before it shows anything.
+/// A colour over the whole screen that fades towards an amount at a whole of it a second, as the temple's fade does.
+/// Fading up, it turns at the amount and fades back down; fading down to nothing, its colour goes back to black. Beyond
+/// a whole amount the screen stays covered, so a fade from more than one waits that long before it shows anything.
 class ScreenFade
 {
 public:

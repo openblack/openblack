@@ -22,7 +22,7 @@
 namespace openblack::ecs::systems
 {
 
-/// When Black & White's trees rustle (Tree::Draw).
+/// When Black & White's trees rustle.
 ///
 /// A tree being bent crashes about, louder the further it is bent: a bend of more than k_BendLarge plays the large
 /// collision of a tree, of more than k_BendMedium the medium one and less the small one, of which the game's bank has

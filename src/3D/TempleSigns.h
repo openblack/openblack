@@ -30,7 +30,7 @@ class GameFont;
 class TextDatabase;
 } // namespace gui
 
-/// The labels TempleRoom::DrawNameScrolls writes on the rooms' "SIGN" submeshes: the main room's over its doors, the
+/// The labels the game writes on the rooms' "SIGN" submeshes: the main room's over its doors, the
 /// creature's room's over its four scrolls and the library's over its seven
 class TempleSigns
 {
@@ -38,12 +38,12 @@ public:
 	/// Finds each room's signs in its mesh and reads their texts
 	TempleSigns(const gui::TextDatabase& texts, const gui::GameFont& font);
 
-	/// DrawNameScrolls for a room: each label in its colour, centred on its sign, over a shadow. The highlighted label
-	/// pulses grey with GetTickCount.
+	/// Draws a room's labels: each label in its colour, centred on its sign, over a shadow. The highlighted label
+	/// pulses grey with the time.
 	void Append(std::vector<OrientedTextVertex>& vertices, TempleRoom room, std::optional<size_t> highlighted,
 	            uint32_t milliseconds) const;
 
-	/// WorldRoom::Draw's label to highlight for the door the cursor is over, whose sectors run as the signs do but for
+	/// The main room's label to highlight for the door the cursor is over, whose sectors run as the signs do but for
 	/// the wall of scrolls, sector 6: the challenge room's door, sector 7, is the last sign, 6
 	[[nodiscard]] static std::optional<size_t> MainRoomSignOfDoor(std::optional<uint32_t> door);
 

@@ -176,7 +176,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		middleMouseButton = (event.motion.state & SDL_BUTTON_MMASK) != 0;
 	}
 
-	// The hand grips the land, which the temple has none of: its camera takes the clicks (HandStateCitadel)
+	// The hand grips the land, which the temple has none of: its camera takes the clicks
 	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton)
 	{
@@ -316,8 +316,7 @@ bool Game::GameLogicLoop() noexcept
 	const auto delta = currentTime - _lastGameLoopTime;
 	auto& clock = Locator::time::value();
 
-	// GGame::GoInsideCitadel pauses the world while the player is in the temple, whose own turns
-	// (Temple::ProcessGameTurn) keep the audio going
+	// The game pauses the world while the player is in the temple, whose own turns keep the audio going
 	if (Locator::temple::has_value() && Locator::temple::value().Active())
 	{
 		// NOLINTNEXTLINE(modernize-use-nullptr): clang-tidy bug
@@ -369,10 +368,9 @@ bool Game::GameLogicLoop() noexcept
 		weather = weatherSystem.GetWeatherSmooth(cameraPosition);
 	}
 
-	// GPlayer::ProcessPlayers ends each turn with the camera taking the alignment of the player of most influence where it
-	// is
+	// Each turn ends with the camera taking the alignment of the player of most influence where it is
 	Locator::alignmentSystem::value().UpdateTurn();
-	// Citadel::Process: the temples' outsides follow their players' alignments
+	// The temples' outsides follow their players' alignments
 	Locator::templeExteriorSystem::value().UpdateTurn();
 
 	if (_atmosAudio)
@@ -404,7 +402,7 @@ bool Game::GameLogicLoop() noexcept
 
 void Game::ProcessMusicTurn(glm::vec3 cameraPosition, bool inCitadel)
 {
-	// GAudio::ProcessMusic picks the music for the turn
+	// The game picks the music for the turn
 	if (!_gameMusic)
 	{
 		return;
@@ -435,8 +433,8 @@ void Game::ProcessTempleRoomKeys()
 	{
 		return;
 	}
-	// GGame::DoAction's keys for the temple's rooms take the player into the temple at that room's path in
-	// (GGame::GoInsideCitadel), and inside it Temple's keys cut to the room (Temple::GoToRoom)
+	// The keys for the temple's rooms take the player into the temple at that room's path in, and inside the temple
+	// they cut to the room
 	constexpr std::array<std::pair<input::BindableActionMap, TempleRoom>, 6> k_RoomKeys {{
 	    {input::BindableActionMap::ZOOM_TO_INSIDE_TEMPLE, TempleRoom::Main},
 	    {input::BindableActionMap::ZOOM_TO_CREATURE_ROOM, TempleRoom::CreatureCave},
@@ -467,8 +465,7 @@ void Game::ProcessTempleRoomKeys()
 
 void Game::ProcessTempleAudioTurn()
 {
-	// GAudio::ProcessAudioGameTurn from Temple::ProcessGameTurn: the citadel's music, while the land's ambience fades
-	// out
+	// The temple's turns play the citadel's music, while the land's ambience fades out
 	ProcessMusicTurn(Locator::camera::value().GetOrigin(), true);
 	if (_atmosAudio)
 	{
@@ -596,7 +593,7 @@ bool Game::Update() noexcept
 				_cursorWorldPosition.reset();
 				if (Locator::temple::has_value() && Locator::temple::value().Active())
 				{
-					// HandStateCitadel: the hand goes where the cursor meets the room, turning to its surface
+					// In the temple, the hand goes where the cursor meets the room, turning to its surface
 					if (const auto hit = Locator::temple::value().GetCursorHit())
 					{
 						const auto seconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count();
@@ -613,8 +610,8 @@ bool Game::Update() noexcept
 				}
 				else if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
 				{
-					// CitadelEntrance::InterfaceTap: the Action button on the player's own temple's entrance takes them inside
-					// TODO(raffclar): in a game of one player, only once a script lets it (GScript::SetCitadelInteract)
+					// The Action button on the player's own temple's entrance takes them inside
+					// TODO(raffclar): in a game of one player, only once a script lets the player use the temple
 					const auto& actions = Locator::gameActionSystem::value();
 					if (actions.GetChanged(input::BindableActionMap::ACTION) && actions.Get(input::BindableActionMap::ACTION))
 					{
@@ -665,8 +662,8 @@ bool Game::Update() noexcept
 			Locator::entitiesRegistry::value().SetDirty();
 		}
 
-		// Animate the hand: HandStateCamera while it drags the land, otherwise HandStateNormal. Turning the camera with
-		// the middle button leaves the hand idle.
+		// Animate the hand: gripping while it drags the land, otherwise its normal pose. Turning the camera with the
+		// middle button leaves the hand idle.
 		if (_handAnimation)
 		{
 			using HandState = HandAnimation::State;
@@ -687,7 +684,7 @@ bool Game::Update() noexcept
 			if (auto* handTransform = registry.TryGet<ecs::components::Transform>(handEntity))
 			{
 				const auto distance = glm::distance(camera.GetOrigin(), handTransform->position);
-				// CHand mirrors the mesh's left hand along its x axis to make a right hand
+				// The game mirrors the mesh's left hand along its x axis to make a right hand
 				const auto scale = _handAnimation->ScaleAtDistance(distance);
 				handTransform->scale = glm::vec3(config.rightHandedHand ? -scale : scale, scale, scale);
 			}
@@ -748,7 +745,7 @@ bool Game::Initialize() noexcept
 		// If gui captures this input, do not propagate
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
-			// Inside the temple, Escape goes back to its main room and out (Temple's key handling)
+			// Inside the temple, Escape goes back to its main room and out, as the temple's keys do
 			if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && event.key.repeat == 0 &&
 			    Locator::temple::has_value() && Locator::temple::value().Active())
 			{
@@ -818,8 +815,8 @@ bool Game::Initialize() noexcept
 	auto& glowManager = resources.GetGlows();
 	auto& camPathManager = resources.GetCameraPaths();
 
-	// WorldRoom::InitEngine's markers of the temples, creatures and challenges on the map, and the creature's room's belts
-	// and medals (fn_00787340)
+	// The main room's markers of the temples, creatures and challenges on the map, and the creature's room's belts and
+	// medals
 	std::vector<std::string> icons {"I_citadel_on_map", "I_creature_on_map", "I_challenge_on_map"};
 	for (uint32_t i = 0; i < CreatureCaveTrophies::k_IconCount; ++i)
 	{
@@ -848,8 +845,8 @@ bool Game::Initialize() noexcept
 			                   {
 				                   SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
 				                   meshManager.Load(name, resources::L3DLoader::FromDiskTag {}, f);
-				                   // Citadel's outside is blended from the temple meshes, into the first temple's
-				                   // (fn_00882B10), and its entrance is picked under the cursor
+				                   // The temple's outside is blended from the temple meshes, into the first temple's,
+				                   // and its entrance is picked under the cursor
 				                   if (name.starts_with("temple/b_temple") || name.starts_with("temple/b_first_temple") ||
 				                       name == "temple/entrance_l3d")
 				                   {
@@ -1533,7 +1530,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 	const bool dragging = _handGripping && !_handRotating;
 	const bool rotating = _handGripping && _handRotating;
 
-	// HandStateCitadel: in the temple the hand hangs on the line of sight through the cursor, a little short of where it
+	// In the temple the hand hangs on the line of sight through the cursor, a little short of where it
 	// meets the room, slowly away from the camera and quickly towards it
 	if (Locator::temple::has_value() && Locator::temple::value().Active())
 	{
@@ -1550,7 +1547,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 			const auto easeTime = _handHoverZoomer.GetDestination() <= target ? 0.4f : 0.2f;
 			_handHoverZoomer.SetDestination(target, easeTime);
 			_handHoverZoomer.Update(deltaSeconds);
-			// CHand::SetDistanceFromView
+			// The hand's distance from the camera
 			_handDistance = _handHoverZoomer.GetValue();
 		}
 		handTransform.position = eye + _handRayDirection * _handDistance;
@@ -1587,7 +1584,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 	}
 	_handWasRotating = false;
 
-	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and CHand keeps the hand under the
+	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and the hand is kept under the
 	// cursor, so the hand holds on to that land and moves with it. It settles onto it as quickly as it changes pose.
 	if (dragging)
 	{
@@ -1607,7 +1604,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 	}
 	_handWasDragging = false;
 
-	// CHand puts the origin of the hand, by its fingertips, on the line of sight through the cursor, so the hand is
+	// The game puts the origin of the hand, by its fingertips, on the line of sight through the cursor, so the hand is
 	// always under the cursor on screen. How far along it depends on the land the cursor is over.
 	if (_cursorWorldPosition)
 	{
@@ -1618,14 +1615,14 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 			_handRayDirection = toLand / landDistance;
 		}
 
-		// fn_0046DF60: the hand is pulled back from the land towards the camera by its height, so its fingers hang
+		// The hand is pulled back from the land towards the camera by its height, so its fingers hang
 		// down to the land. Over the sea it rests on the water.
 		const auto overSea = Locator::terrainSystem::value().GetHeightAt(glm::xz(*_cursorWorldPosition)) < k_HandSeaAltitude;
 		const auto handHeight = k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
 		const auto nearest =
 		    glm::clamp(overSea ? landDistance : landDistance - handHeight, k_HandMinDistance, k_HandMaxDistance);
 
-		// HandStateHolding: the hand eases out to the land, slowly away from the camera and quickly towards it
+		// The hand eases out to the land, slowly away from the camera and quickly towards it
 		const auto target = glm::max(landDistance, 1.0f);
 		const auto easeTime = _handHoverZoomer.GetValue() <= target ? k_HandEaseOutTime : k_HandEaseInTime;
 		_handHoverZoomer.SetDestination(target, easeTime);
@@ -1634,7 +1631,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		{
 			_handHoverZoomer.Reset(1.0f);
 		}
-		// CHand::SetDistanceFromView
+		// The hand's distance from the camera, no further out than the land less the hand's height
 		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, k_HandMaxDistance);
 	}
 	handTransform.position = eye + _handRayDirection * _handDistance;
@@ -1648,7 +1645,7 @@ void Game::PlayHandGrabSound()
 	}
 	const auto position = *_cursorWorldPosition;
 
-	// MapCoords::IsLand: a cell of the landscape without water
+	// Land is a cell of the landscape without water
 	bool isLand = false;
 	const auto cell = glm::floor(glm::vec2(position.x, position.z) / 10.0f);
 	if (cell.x >= 0.0f && cell.y >= 0.0f && cell.x < 512.0f && cell.y < 512.0f)
@@ -1660,7 +1657,7 @@ void Game::PlayHandGrabSound()
 	auto& audio = Locator::audio::value();
 	if (isLand)
 	{
-		// GInterface throws up the GRIP_LANDSCAPE spot visual where the hand grips the land, as it plays the sound
+		// The game throws up a spot visual where the hand grips the land, as it plays the sound
 		GripLandscapeEffect::Spawn(
 		    glm::vec3(position.x, Locator::terrainSystem::value().GetHeightAt(glm::xz(position)), position.z));
 	}

@@ -29,7 +29,7 @@ namespace
 {
 using Justify = DialogPainter::Justify;
 
-/// SetupThing's colour for a control's text: orange under the pointer, white with the focus, grey otherwise
+/// The game's colour for a control's text: orange under the pointer, white with the focus, grey otherwise
 glm::vec4 TextColour(bool hovered, bool focused)
 {
 	if (hovered)
@@ -39,11 +39,11 @@ glm::vec4 TextColour(bool hovered, bool focused)
 	return focused ? DialogPainter::k_FocusColour : DialogPainter::k_TextColour;
 }
 
-/// SetupBigButton labels and SetupSlider labels are at the mid text size
+/// Big buttons' and sliders' labels are at the mid text size
 constexpr int k_LabelSize = DialogPainter::k_MidTextSize;
-/// SetupSlider::Drag beside the knob
+/// How far a click on a slider beside the knob moves it
 constexpr float k_SliderStep = 0.1f;
-/// SetupList: the gap below each item's text
+/// A list's gap below each item's text
 constexpr int k_ItemGap = 6;
 } // namespace
 
@@ -61,7 +61,7 @@ void StaticText::Draw(const DialogPainter& painter, bool /*hovered*/, bool /*foc
 	{
 		return;
 	}
-	// SetupStaticText::Draw shrinks the text until it fits: wrapped text in the height and on one line in the width
+	// Static text shrinks the text until it fits: wrapped text in the height and on one line in the width
 	auto fitted = size;
 	while (fitted > 10 && (painter.GetTextWidth(text, fitted) > static_cast<float>(rect.Width()) ||
 	                       (layout == Layout::Wrapped &&
@@ -108,7 +108,7 @@ void Button::Draw(const DialogPainter& painter, bool hovered, bool focused, bool
 	{
 		return;
 	}
-	// SetupButton::Draw: the second style of box, the third under the pointer, and the label shrunk to fit
+	// A button draws the second style of box, the third under the pointer, and the label shrunk to fit
 	painter.DrawBevelBox(rect, hovered ? 2 : 1, DialogPainter::All, glm::vec4(1.0f));
 	auto fitted = size;
 	while (fitted > 10 && painter.GetTextWidth(label, fitted) > static_cast<float>(rect.Width()))
@@ -177,7 +177,7 @@ void BigButton::DrawLabel(const DialogPainter& painter, bool hovered) const
 	{
 		return;
 	}
-	// SetupBigButton::Draw: a shadow two pixels down and right, then the label in white, orange under the pointer
+	// A big button draws a shadow two pixels down and right, then the label in white, orange under the pointer
 	const auto colour = hovered ? DialogPainter::k_HoverColour : DialogPainter::k_FocusColour;
 	const auto shadow = DialogPainter::k_ShadowColour;
 	const auto top = rect.Centre().y - (_labelSize / 2);
@@ -199,7 +199,7 @@ void BigButton::DrawLabel(const DialogPainter& painter, bool hovered) const
 }
 
 CheckBox::CheckBox(const GameFont& font, glm::ivec2 position, std::u16string label, bool checked)
-    // SetupCheckBox: 25 pixel squares, labelled below
+    // Check boxes are 25 pixel squares, labelled below
     : BigButton(font, position, 25, std::move(label), LabelSide::Below, Look::Square)
 {
 	_checked = checked;
@@ -254,7 +254,7 @@ void Slider::MouseDown(glm::ivec2 point)
 
 void Slider::Drag(glm::ivec2 point)
 {
-	// SetupSlider::Drag: the knob follows the pointer from where it was grabbed, or steps a tenth towards it
+	// Dragging a slider: the knob follows the pointer from where it was grabbed, or steps a tenth towards it
 	const auto knob = GetKnobLeft(_downValue);
 	const auto range = static_cast<float>(rect.Width() - rect.Height());
 	const bool onKnob = _downX >= knob && _downX < knob + rect.Height();
@@ -304,7 +304,7 @@ void List::SetItems(std::vector<Item> items)
 	for (const auto& item : _items)
 	{
 		const auto lines = std::max<size_t>(1, _font.Wrap(item.text, static_cast<float>(_size), width).size());
-		// SetupList::UpdateHeights measures the item's text with GatheringText::DrawText, which leaves a gap below it
+		// The game measures the item's text with its text drawing, which leaves a gap below it
 		// TODO(raffclar): the gap is measured from the original's screens, not worked out from its code
 		_heights.push_back((static_cast<int>(lines) * _size) + k_ItemGap);
 	}
@@ -362,7 +362,7 @@ void List::Draw(const DialogPainter& painter, bool hovered, bool focused, bool /
 			}
 			const auto colour = selected ? DialogPainter::k_FocusColour : TextColour(hoveredItem == i, focused);
 
-			// SetupList::Draw fades the lines the box cuts through
+			// The list fades the lines the box cuts through
 			const auto left = rect.min.x + 4;
 			const auto right = boxRight - 4;
 			const auto lines = painter.GetLines(right - left, item.text, _size);
@@ -379,7 +379,7 @@ void List::Draw(const DialogPainter& painter, bool hovered, bool focused, bool /
 				const auto lineLeft = _centred ? ((left + right) / 2) - (static_cast<int>(lineWidth) / 2) : left;
 				painter.DrawText({lineLeft, lineTop}, right - left, Justify::Left, lines[l], _size, colour);
 
-				// DialogBoxKeyBinding's mice, in the gap of five spaces before the button's name
+				// The key binding dialog's mice, in the gap of five spaces before the button's name
 				if (l == 0 && item.mouseCell && lineTop >= rect.min.y && lineTop + _size <= rect.max.y)
 				{
 					const auto bracket = lines[l].find(u'(');
@@ -552,7 +552,7 @@ bool EditBox::KeyDown(int key)
 
 namespace
 {
-// SetupPicture::Draw: the ring of symbols comes up over half a second and goes over a second
+// The picture's ring of symbols comes up over half a second and goes over a second
 constexpr float k_RingOpenSeconds = 0.5f;
 constexpr float k_RingCloseSeconds = 1.0f;
 // A third of the symbols are on the inner ring, the others on the outer
@@ -705,7 +705,7 @@ void SymbolPicture::Release()
 
 void SymbolPicture::Activate(glm::ivec2 point)
 {
-	// SetupPicture::MouseUp picks the symbol under the pointer
+	// Releasing the mouse picks the symbol under the pointer
 	if (const auto symbol = RingSymbolAt(point); _ringOpen && symbol)
 	{
 		_symbol = *symbol;

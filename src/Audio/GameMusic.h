@@ -22,7 +22,7 @@
 namespace openblack::audio
 {
 
-/// MUSIC_TYPE
+/// The types of music the game plays, in the order its scripts number them
 enum class MusicType : int32_t
 {
 	None = 0,
@@ -114,17 +114,17 @@ enum class MusicType : int32_t
 	_COUNT
 };
 
-/// The bank GAudio loads for a music type, relative to the game's directory. Empty for MusicType::None.
+/// The bank the game loads for a music type, relative to the game's directory. Empty for MusicType::None.
 [[nodiscard]] std::string_view GetMusicBankPath(MusicType type);
 [[nodiscard]] std::string_view GetMusicTypeName(MusicType type);
 
-/// The music half of GAudio: once a game turn, picks what music plays and hands it to LHAudioDLL's music player.
+/// The game's music: once a game turn, picks what music plays and hands it to the audio library's music player.
 ///
 /// In order, the first that wants to play wins: the citadel's music while inside the citadel, music a script has
 /// started, and the music of the land under the camera. Over land the music follows the player's alignment, and near a
 /// town that of its tribe too. Each music group remembers where it got to, so the land's music carries on in time when
 /// it changes and picks up where it left off when it comes back.
-// TODO(raffclar): GAudio also plays creature fight, chant, creature dance and object music before the land's music
+// TODO(raffclar): the game also plays creature fight, chant, creature dance and object music before the land's music
 class GameMusic
 {
 public:
@@ -155,14 +155,14 @@ public:
 	GameMusic(const GameMusic&) = delete;
 	GameMusic& operator=(const GameMusic&) = delete;
 
-	/// GAudio::ProcessMusic
+	/// Picks the music for this game turn
 	void ProcessTurn(const TurnInputs& inputs);
 	/// Forgets what was playing, when a land is loaded
 	void Reset();
 
-	/// GAudio::StartScriptMusic: MusicType::None stops it
+	/// Music a script starts: MusicType::None stops it
 	void StartScriptMusic(MusicType type);
-	/// ENABLE_DISABLE_ALIGNMENT_MUSIC
+	/// The script command that turns the alignment music on or off
 	void SetAlignmentMusicEnabled(bool enabled) { _alignmentMusicEnabled = enabled; }
 
 	// Debug introspection
@@ -174,9 +174,9 @@ public:
 	[[nodiscard]] bool IsAlignmentMusicEnabled() const { return _alignmentMusicEnabled; }
 	[[nodiscard]] const std::map<int32_t, uint32_t>& GetResumeChunks() const { return _resumeChunks; }
 
-	/// GAlignment::GetDiscreteAlignmentValue followed by the evil, neutral or good index of the music tables
+	/// The alignment in seven steps, grouped into the evil, neutral or good index of the music tables
 	[[nodiscard]] static int32_t GetAlignmentIndex(float alignment);
-	/// fn_00427460: the land's music at the camera
+	/// The land's music at the camera
 	[[nodiscard]] MusicType SelectLandType(const TurnInputs& inputs);
 
 private:
@@ -184,7 +184,7 @@ private:
 	bool ProcessCitadel(const TurnInputs& inputs);
 	bool ProcessScript();
 	bool ProcessLand(const TurnInputs& inputs);
-	/// fn_004281C0: remembers where each playing music group has got to
+	/// Remembers where each playing music group has got to
 	void SaveResumeChunks();
 	[[nodiscard]] uint32_t GetResumeChunk(int32_t groupId) const;
 

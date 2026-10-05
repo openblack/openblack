@@ -22,7 +22,7 @@
 namespace openblack::audio
 {
 
-/// Port of the ambience part of GAudio: one atmosphere bank per AtmosType whose volume follows the SoundMap.
+/// Port of the game's ambient audio: one atmosphere bank per AtmosType whose volume follows the SoundMap.
 ///
 /// Each game turn the SoundMap's volumes become the banks' targets and every bank moves towards its target by
 /// 0.02 (0.04 between 0.1 and 0.8), so a full fade takes 30 to 50 turns. Banks switch to their second sample
@@ -38,25 +38,24 @@ public:
 		AtmosWeather weather;
 		bool paused;
 		uint32_t turn;
-		/// Inside the temple (GGame's citadel flag, which fn_00429100 checks): every bank fades out to silence
+		/// Inside the temple: every bank fades out to silence
 		bool inCitadel;
 		bool videoPlaying;
 	};
 
-	/// GAudio::InitAtmos, when a level has finished loading
+	/// Loads the ambience banks, when a level has finished loading
 	void Init();
-	/// GAudio::ReleaseAtmosSoundBanks
+	/// Releases the ambience banks
 	void Release();
 
 	/// Alignment of the most influential player at the camera, -1 (evil) to 1 (good). Updated by the game every
 	/// turn before EndTurn.
 	void SetAlignment(float alignment);
 
-	/// The ambience part of GGame::EndTurn
+	/// The ambience part of the end of a game turn
 	void EndTurn(const TurnInputs& inputs);
-	/// GAudio::ProcessAudioGameTurn without the sound map moving on, as Temple::ProcessGameTurn has it. The world is
-	/// paused in the temple, so GGame::EndTurn doesn't run (LocalTimerSaysDoATurn), and the banks fade out there: the
-	/// temple has no ambience.
+	/// The audio's game turn without the sound map moving on, as the temple has it. The world is paused in the temple,
+	/// so the world's turn doesn't end, and the banks fade out there: the temple has no ambience.
 	void ContinueTurn(const TurnInputs& inputs);
 
 	[[nodiscard]] const SoundMap& GetSoundMap() const { return _soundMap; }
@@ -65,9 +64,9 @@ public:
 	[[nodiscard]] float GetAlignmentValue() const { return _alignment; }
 	[[nodiscard]] uint32_t GetGroup() const;
 
-	/// LH3DSky::Time2SkyType: 0 day, 1 dusk, 2 night
+	/// The sky type at a time of day: 0 day, 1 dusk, 2 night
 	[[nodiscard]] static float CalculateSkyType(float time, const SkyInterface::DayNightTimes& times);
-	/// fn_005E2240: the value GAudio keeps for an alignment, -1 (evil) to 1 (good)
+	/// The value the game's audio keeps for an alignment, -1 (evil) to 1 (good)
 	[[nodiscard]] static float CalculateAlignmentValue(float alignment);
 	/// One turn of a bank's fade towards its target: the new volume and what is sent to the bank (0-127)
 	[[nodiscard]] static std::pair<float, int32_t> StepBankVolume(float current, float target);

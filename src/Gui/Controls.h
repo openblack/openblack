@@ -27,7 +27,7 @@ namespace openblack::gui
 
 class GameFont;
 
-/// One of the controls of the game's dialogs (SetupControl), laid out in the dialogs' 800 by 600 space.
+/// One of the controls of the game's dialogs, laid out in the dialogs' 800 by 600 space.
 ///
 /// Controls light up under the pointer, take the focus when the mouse button goes down on them, and act when it is let
 /// go over the control it went down on (see Dialog).
@@ -54,7 +54,7 @@ public:
 	virtual void MouseMove(glm::ivec2 /*point*/) {}
 	/// The mouse button went down on the control
 	virtual void MouseDown(glm::ivec2 /*point*/) {}
-	/// Every frame while the mouse button is held down after going down on the control (SetupControl::Drag)
+	/// Every frame while the mouse button is held down after going down on the control
 	virtual void Drag(glm::ivec2 /*point*/) {}
 	/// Every frame
 	virtual void Update(float /*deltaSeconds*/) {}
@@ -76,7 +76,7 @@ public:
 	std::function<void()> onClick;
 };
 
-/// SetupStaticText: text with a shadow, shrinking to fit
+/// Static text with a shadow, shrinking to fit
 class StaticText final: public Control
 {
 public:
@@ -98,7 +98,7 @@ public:
 	int size;
 };
 
-/// SetupButton: a dark box with a label, orange under the pointer
+/// A button: a dark box with a label, orange under the pointer
 class Button final: public Control
 {
 public:
@@ -109,13 +109,13 @@ public:
 	int size;
 };
 
-/// SetupBigButton: an arrow, or a black square, with a label beside or below it
+/// A big button: an arrow, or a black square, with a label beside or below it
 class BigButton: public Control
 {
 public:
 	enum class Look
 	{
-		/// SetupThing::DrawBigButton's black square
+		/// A black square
 		Square,
 		LeftArrow,
 		RightArrow,
@@ -129,7 +129,7 @@ public:
 
 	BigButton(const GameFont& font, glm::ivec2 position, int size, std::u16string label, LabelSide side, Look look);
 	void Draw(const DialogPainter& painter, bool hovered, bool focused, bool pressed) const override;
-	/// SetupBigButton::HitTest: the button or its label
+	/// The button or its label
 	[[nodiscard]] bool HitTest(glm::ivec2 point) const override;
 
 	std::u16string label;
@@ -145,7 +145,7 @@ protected:
 	bool _checked {false};
 };
 
-/// SetupCheckBox: a square ticked when checked, labelled below
+/// A check box: a square ticked when checked, labelled below
 class CheckBox final: public BigButton
 {
 public:
@@ -157,7 +157,7 @@ public:
 	std::function<void(bool)> onChange;
 };
 
-/// SetupSlider: a dark bar with a square knob and a label along it. Holding the mouse button down beside the knob
+/// A slider: a dark bar with a square knob and a label along it. Holding the mouse button down beside the knob
 /// steps it a tenth towards the pointer every frame, dragging the knob moves it with the pointer.
 class Slider final: public Control
 {
@@ -181,7 +181,7 @@ private:
 	float _downValue {0.0f};
 };
 
-/// SetupList: lines of text in a dark box, the selected one on a grey bar, with a scroll bar when they don't fit
+/// A list: lines of text in a dark box, the selected one on a grey bar, with a scroll bar when they don't fit
 class List final: public Control
 {
 public:
@@ -237,7 +237,7 @@ private:
 	glm::ivec2 _pointer {-1, -1};
 };
 
-/// SetupEdit: a dark box of text the player types into when it has the focus
+/// An edit box: a dark box of text the player types into when it has the focus
 class EditBox final: public Control
 {
 public:
@@ -256,7 +256,7 @@ private:
 	size_t _caret;
 };
 
-/// SetupPicture: the player's symbol. Holding the mouse button down on it brings the symbols up around it on a dark
+/// The player's symbol. Holding the mouse button down on it brings the symbols up around it on a dark
 /// see-through disc, to let go over the one to pick: a ring of six inside a ring of ten. The disc fades in over half a
 /// second and out over a second, the symbols growing as it does and the two rings turning into place, the inner one
 /// way and the outer the other.
@@ -272,7 +272,7 @@ public:
 	void MouseDown(glm::ivec2 point) override;
 	void Activate(glm::ivec2 point) override;
 	void Update(float deltaSeconds) override { _ring.Update(deltaSeconds); }
-	/// SetupBox::Draw draws the picture last, its ring over the controls around it
+	/// The dialog draws the picture last, its ring over the controls around it
 	[[nodiscard]] bool IsOnTop() const override { return GetRingOpening() > 0.0f; }
 
 	[[nodiscard]] int GetSymbol() const noexcept { return _symbol; }

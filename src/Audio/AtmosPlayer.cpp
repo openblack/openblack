@@ -22,13 +22,13 @@ using pack::AudioBankOverride;
 
 namespace
 {
-// Default LH_SamplePlayOptions
+// The game's default sample play options
 constexpr int32_t k_DefaultPitchPercent = 100;
 constexpr float k_DefaultMinDistance = 1.0f;
 constexpr float k_DefaultMaxDistance = 9999.0f;
 constexpr float k_DefaultDistanceScale = 0.3f;
 
-// Volumes are handed to QMixer's QSWaveMixSetVolume, which is linear from 0 to 32767
+// Volumes are handed to the QMixer library, whose volume is linear from 0 to 32767
 constexpr uint32_t k_QMixerVolumePerStep = 258;
 constexpr float k_QMixerMaxVolume = 32767.0f;
 
@@ -71,7 +71,7 @@ AtmosPlayer::AtmosPlayer(VoiceBackend& backend, Clock clock)
     : _backend(backend)
     , _clock(clock ? std::move(clock) : [] { return static_cast<uint32_t>(std::time(nullptr)); })
 {
-	// LH_AudioSystem::Create seeds the CRT generator once at start up
+	// The game's audio system seeds the CRT generator once at start up
 	Reseed();
 }
 
@@ -110,7 +110,6 @@ AtmosPlayer::BankId AtmosPlayer::RegisterBank(const std::string& bankName,
 	return id;
 }
 
-// fn_10001610
 void AtmosPlayer::RegisterAtmos(Bank& bank)
 {
 	Reseed();
@@ -168,7 +167,6 @@ uint32_t AtmosPlayer::ScheduleTime(int32_t interval)
 	return _tick + offset + static_cast<uint32_t>(fourTimes);
 }
 
-// fn_100011B0
 void AtmosPlayer::Insert(std::unique_ptr<AtmosInfo> info)
 {
 	if (info->header->atmosInterval == 0)
@@ -196,7 +194,6 @@ void AtmosPlayer::InsertLoop(const AtmosInfo& info)
 	});
 }
 
-// fn_100013C0 and LHBankRelease
 void AtmosPlayer::ReleaseBank(BankId id)
 {
 	auto* bank = FindBank(id);
@@ -224,7 +221,6 @@ void AtmosPlayer::ReleaseBank(BankId id)
 	_banks.erase(id);
 }
 
-// LHAtmosSetBankVolume
 void AtmosPlayer::SetBankVolume(BankId id, int32_t volume)
 {
 	auto* bank = FindBank(id);
@@ -256,14 +252,12 @@ void AtmosPlayer::SetBankVolume(BankId id, int32_t volume)
 	}
 }
 
-// LHAtmosGetBankVolume
 uint32_t AtmosPlayer::GetBankVolume(BankId id) const
 {
 	const auto* bank = FindBank(id);
 	return bank != nullptr ? bank->volume : 0;
 }
 
-// LHAtmosSetGroup
 void AtmosPlayer::SetGroup(BankId id, uint32_t group)
 {
 	if (auto* bank = FindBank(id))
@@ -272,7 +266,6 @@ void AtmosPlayer::SetGroup(BankId id, uint32_t group)
 	}
 }
 
-// LHAtmosProcess
 void AtmosPlayer::Process(bool active)
 {
 	PruneVoices();
@@ -450,7 +443,6 @@ void AtmosPlayer::PlayOneShot(const AtmosInfo& info)
 	PlaySample(*info.bank, *info.header, options);
 }
 
-// LHSamplePlay
 VoiceBackend::Handle AtmosPlayer::PlaySample(Bank& bank, const pack::AudioBankSampleHeader& header, const PlayOptions& options)
 {
 	if (!_playSeeded)
@@ -459,7 +451,7 @@ VoiceBackend::Handle AtmosPlayer::PlaySample(Bank& bank, const pack::AudioBankSa
 		_playSeeded = true;
 	}
 
-	// fn_10011020: what to do about instances already playing
+	// What to do about instances already playing
 	const auto playType = HasOverride(header, AudioBankOverride::LoopType)
 	                          ? static_cast<PlayType>(static_cast<uint32_t>(header.loopType))
 	                          : options.playType;
@@ -567,7 +559,6 @@ VoiceBackend::Handle AtmosPlayer::PlaySample(Bank& bank, const pack::AudioBankSa
 	return handle;
 }
 
-// LHSampleSetVolume
 void AtmosPlayer::SetVoiceVolume(Voice& voice, int32_t volume)
 {
 	const auto clamped = static_cast<uint32_t>(std::clamp(volume, 0, static_cast<int32_t>(k_MaxVolume)));

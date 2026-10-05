@@ -12,7 +12,7 @@ $output v_texcoord0
 // The sun, from the caster's origin (ObjectShadows::k_Sun)
 uniform vec4 u_shadowSun;
 
-// Projects an object onto the land beneath it from the sun, as LH3D bakes static objects' shadows into the land's
+// Projects an object onto the land beneath it from the sun, as the game bakes static objects' shadows into the land's
 // textures (ObjectShadows::Project): each vertex is cast from the sun onto the flat plane through the object's origin.
 void main()
 {

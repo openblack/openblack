@@ -59,7 +59,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	// Count number of instances
 	uint32_t instanceCount = 0;
 	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
-	// Temple::Draw draws the room the player is in and the room the camera is on its way into. From the other rooms the
+	// The game draws the room the player is in and the room the camera is on its way into. From the other rooms the
 	// main room, which they lead off, is drawn whole only while one of its doors is open, and otherwise just its doors.
 	const auto& temple = Locator::temple::value();
 	_loadedRooms.clear();
@@ -83,7 +83,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount++;
 	};
 
-	// WorldRoom::Draw mirrors the main room, without its floor or pool, through the plane of its origin and draws the
+	// The game mirrors the main room, without its floor or pool, through the plane of its origin and draws the
 	// floor over the reflection, blended by the floor's alpha
 	std::unordered_set<entt::id_type> mirroredMeshIds;
 	std::unordered_set<entt::id_type> reflectiveMeshIds;
@@ -124,7 +124,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		    }
 		    if (templePart.room == TempleRoom::Main && mainRoomDoorsOnly)
 		    {
-			    // WorldRoom::DrawDoors draws just the room's mesh, and of that just the doors
+			    // The game draws just the room's mesh, and of that just the doors
 			    if (templePart.mesh == TempleInteriorMesh::Room)
 			    {
 				    prep(mesh, false);
@@ -144,7 +144,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 			    }
 		    }
 	    });
-	// CHand draws the player's hand in the temple too, in HandStateCitadel
+	// The game draws the player's hand in the temple too, while the hand is in its temple state
 	const auto playerHand = PlayerHand();
 	registry.Each<const Mesh, const Transform, const Hand>(
 	    [&prep, playerHand](const entt::entity entity, const Mesh& mesh, const Transform& /*unused*/, const Hand& /*unused*/) {
@@ -190,16 +190,15 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		drawDesc->second.onlyJoints = doorMeshIds.contains(meshId);
 		// Each side room has its own copy of its door to the main room (the creature's room's "door arch03", joint 3),
 		// which is lit by the room's lightmap and pokes up above the arch of the doorway. Drawn shut, in place, it shows
-		// as a grey slab above the rotunda with a red edge, where vanilla shows nothing.
-		// Vanilla never shows it because LH3D keeps the doors' joint matrices that InnerRoom::SetDoorMatrices fills in
-		// the same table (0xe9ce28) that skinned meshes write their bones into: CHand::PrepareForDrawing writes the
-		// hand's bones there, and GameOptionsRoom::DrawAdditional calls SetDoorMatrices again after drawing the hand to
-		// put the doors back. The side room's door is presumably drawn with a bone in its slot instead, which throws it
-		// out of its doorway.
-		// TODO: which bone it is turned by, and where that puts it, needs vanilla run under a debugger. Until then the
+		// as a grey slab above the rotunda with a red edge, where the game shows nothing.
+		// The game never shows it because it keeps the doors' joint matrices in the same table that skinned meshes
+		// write their bones into: preparing the hand for drawing writes the hand's bones there, and the options room
+		// sets the door matrices again after drawing the hand to put the doors back. The side room's door is presumably
+		// drawn with a bone in its slot instead, which throws it out of its doorway.
+		// TODO: which bone it is turned by, and where that puts it, needs the game run under a debugger. Until then the
 		// side rooms' doors are drawn only while they swing.
 		drawDesc->second.hideShutJoints = sideRoomMeshIds.contains(meshId);
-		// LH3DMesh draws each primitive of the temple's meshes by its material, blended or not, in their order. The
+		// The game draws each primitive of the temple's meshes by its material, blended or not, in their order. The
 		// meshes of nothing but blended primitives, as the rooms' domes and floors are, go over the rest.
 		if (meshId != Hand::k_MeshId)
 		{
@@ -216,7 +215,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 			drawDesc->second.translucent = allBlended;
 		}
 		drawDesc->second.behindCurrentRoom = otherRoomMeshIds.contains(meshId);
-		// SubOptionEntryScroll::GetSubMeshData draws each scroll with its own material, the texture its room wrote
+		// The game draws each scroll with its own material, the texture its room wrote
 		if (const auto room = roomMeshIds.find(meshId); room != roomMeshIds.end())
 		{
 			for (const auto& scroll : temple.GetScrollTextures(room->second))
@@ -229,7 +228,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 			}
 			drawDesc->second.hiddenSubMeshes = temple.GetHiddenSubMeshes(room->second);
 		}
-		// CreatureRoom::Draw draws its water by the materials' alpha, sliding its texture down it
+		// The creature's room draws its water by the materials' alpha, sliding its texture down it
 		if (waterMeshIds.contains(meshId))
 		{
 			drawDesc->second.translucent = true;

@@ -29,7 +29,7 @@ struct GClimateInfo;
 namespace openblack::ecs::systems
 {
 
-/// Port of Black & White's climate (GClimate) and atmosphere (LH3DAtmos, GWeather) simulation.
+/// Port of Black & White's climate and atmosphere simulation.
 ///
 /// Once a game day each climate's desire to rain grows at random; when it reaches 1 the climate creates a storm at a
 /// random point in its area. Storms drift with the wind, fade in, last a while and fade out. The atmosphere is a grid

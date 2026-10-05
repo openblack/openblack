@@ -32,10 +32,10 @@ entt::entity CitadelArchetype::Create(const glm::vec3& position, PlayerNames pla
 	registry.Assign<Temple>(entity, playerOwner);
 	const auto meshId = entt::hashed_string("temple/b_first_temple_l3d");
 	registry.Assign<Mesh>(entity, meshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
-	// Its outside is blended for its player's alignment, each vertex then set on the land (fn_00882B10)
+	// Its outside is blended for its player's alignment, each vertex then set on the land
 	registry.Assign<TempleExterior>(entity);
 	registry.Assign<MorphWithTerrain>(entity);
-	// CitadelHeart::CallVirtualFunctionsForCreation puts its entrance where it is, turned as it is
+	// The temple's heart, as it is made, puts its entrance where it is, turned as it is
 	const auto entrance = registry.Create();
 	registry.Assign<Transform>(entrance, position, rotation, size);
 	registry.Assign<TempleEntrance>(entrance, entity);

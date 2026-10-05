@@ -31,8 +31,8 @@ constexpr uint32_t k_WorldStats = 0xEE3 - 0xE73;
 constexpr uint32_t k_SaveGameStats = 0xEE4 - 0xE73;
 constexpr uint32_t k_ChallengeStats = 0xEE5 - 0xE73;
 constexpr uint32_t k_TiltRotate = 0xEED - 0xE73;
-/// WorldRoom's table of the main room's doors (0x79F5B0): the creature, options, exit, future, library, save game and
-/// challenge rooms. The scroll's wall, door 6, leaves the tooltip be.
+/// The main room's doors, in the game's order: the creature, options, exit, future, library, save game and challenge
+/// rooms. The scroll's wall, door 6, leaves the tooltip be.
 constexpr std::array<std::optional<uint32_t>, 8> k_Doors = {
     0xE95 - 0xE73, 0xE99 - 0xE73, 0xE98 - 0xE73, 0xE9A - 0xE73, 0xE97 - 0xE73, 0xE96 - 0xE73, std::nullopt, 0xE94 - 0xE73,
 };
@@ -42,8 +42,8 @@ bool IsZoomed(const TempleToolTipInput& input)
 	return input.zoom == 1.0f;
 }
 
-/// fn_0079F0E0, fn_00784210 and fn_00791F90: the main, challenge and save game rooms' scrolls. Close up, a scroll
-/// shows it can be dragged; from afar what it tells of; and looking at it, the way back.
+/// The main, challenge and save game rooms' scrolls. Close up, a scroll shows it can be dragged; from afar what it
+/// tells of; and looking at it, the way back.
 void UpdateRoomScroll(TempleToolTip& toolTip, const TempleToolTipInput& input, const TempleScrolls::Control& scroll,
                       uint32_t stats)
 {
@@ -72,7 +72,7 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 	switch (input.room)
 	{
 	case TempleRoom::Main:
-		// WorldRoom::PreToolTipProcess: moving about, the pool zooms in and once close tilts and turns the map, and the
+		// In the main room: moving about, the pool zooms in and once close tilts and turns the map, and the
 		// doors lead to their rooms
 		toolTip = {.index = k_Move, .action = ToolTipAction::Select, .arrows = Arrows::k_All};
 		if (input.overPool)
@@ -93,8 +93,8 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 				toolTip = {.index = door, .action = ToolTipAction::Select, .arrows = Arrows::k_None};
 			}
 		}
-		// The controls' draw callbacks, in the order of their submeshes (LoadOptionData sorts them): the buttons of what
-		// the map shows say what they show when hovered, and the scroll as the others' rooms do
+		// The controls' draw callbacks, in the order of their submeshes (as the game sorts them on loading): the
+		// buttons of what the map shows say what they show when hovered, and the scroll as the others' rooms do
 		{
 			std::vector<uint32_t> controls;
 			for (const auto& toggle : input.toggles)
@@ -128,7 +128,7 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 	case TempleRoom::Challenge:
 	case TempleRoom::SaveGame:
 	case TempleRoom::Credits:
-		// ChallengeRoom, SaveGameRoom and CreditsRoom::PreToolTipProcess: moving about, and the way back
+		// The challenge, save game and credits rooms: moving about, and the way back
 		toolTip = {.index = k_Move, .action = ToolTipAction::Select, .arrows = Arrows::k_All};
 		if (overWayBack)
 		{
@@ -147,7 +147,7 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 		break;
 	case TempleRoom::CreatureCave:
 	{
-		// CreatureRoom::PreToolTipProcess leaves the arrows as they were, so after a scroll's they stay up and down
+		// The creature's room leaves the arrows as they were, so after a scroll's they stay up and down
 		toolTip.index = k_Move;
 		toolTip.action = ToolTipAction::Select;
 		if (overWayBack)
@@ -203,7 +203,7 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 		break;
 	}
 
-	// TempleRoom::PostToolTipProcess: none on the way in, or on the way through a door
+	// In every room: none on the way in, or on the way through a door
 	if (!input.inControl)
 	{
 		toolTip = {.index = std::nullopt, .action = ToolTipAction::None, .arrows = Arrows::k_None};

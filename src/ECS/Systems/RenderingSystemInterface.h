@@ -49,7 +49,7 @@ struct RenderContext
 		bool hiddenFromReflection {false};
 		/// The instances show the reflection pass through them, as the temple's floor does
 		bool showsReflection {false};
-		/// Only the submeshes with joints are drawn, as WorldRoom::DrawDoors draws the main room's doors
+		/// Only the submeshes with joints are drawn, as the game draws the main room's doors
 		bool onlyJoints {false};
 		/// The submeshes with joints are drawn only while their joints turn: the side rooms' copies of their doors
 		bool hideShutJoints {false};

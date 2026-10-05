@@ -24,7 +24,7 @@ namespace glw
 struct Glow;
 }
 
-/// The two sprites the LH3D glow of a light draws over each other, additively, from the atmosphere texture
+/// The two sprites the game's glow of a light draws over each other, additively, from the atmosphere texture
 struct Glow
 {
 	glm::vec3 position;
@@ -59,7 +59,7 @@ struct LightEmitter
 	std::optional<LightCone> cone;
 };
 
-/// The glow and beam LH3D draws for a light of a .glw file
+/// The glow and beam the game draws for a light of a .glw file
 [[nodiscard]] LightEmitter MakeLightEmitter(const glw::Glow& light);
 
 struct Lights

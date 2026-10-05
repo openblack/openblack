@@ -23,7 +23,7 @@ namespace openblack::TempleExteriorMorph
 constexpr uint32_t k_Sizes = 3;
 constexpr uint32_t k_Stages = 5;
 
-/// Citadel::Process moves each a step a turn toward where it is to be, and the rest of the way when that is near
+/// The game moves each a step a turn toward where it is to be, and the rest of the way when that is near
 constexpr float k_Step = 0.016f;
 constexpr float k_Near = 0.001f;
 [[nodiscard]] float Step(float current, float target);
@@ -35,7 +35,7 @@ struct Corner
 	uint32_t stage;
 	float weight;
 };
-/// fn_00882B10's meshes for a size and an alignment, each from 0 to 1, and their weights
+/// The meshes for a size and an alignment, each from 0 to 1, and their weights
 [[nodiscard]] std::array<Corner, 4> Corners(float size, float alignment);
 /// The name of a size's and stage's mesh
 [[nodiscard]] std::string MeshName(uint32_t size, uint32_t stage);

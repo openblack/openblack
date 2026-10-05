@@ -22,12 +22,12 @@ struct BeamMesh;
 namespace openblack::ecs::components
 {
 
-/// LH3DMist: a dome of mist.l3d that turns to face the camera, drawn by the smoke's alpha with a frame of the smoke
-/// texture at its transform's position
+/// The game's mist: a dome of mist.l3d that turns to face the camera, drawn by the smoke's alpha with a frame of the
+/// smoke texture at its transform's position
 struct MistDome
 {
 	std::shared_ptr<const graphics::BeamMesh> dome;
-	/// The frame of the smoke texture, as LH3DObject::SetAnimatedUV slides it
+	/// The frame of the smoke texture, as the game slides it
 	glm::vec2 uvOffset {0.0f};
 	glm::vec4 colour {1.0f};
 };

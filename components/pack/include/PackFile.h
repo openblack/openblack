@@ -156,7 +156,7 @@ struct AudioBankSampleHeader
 	std::array<char, 0x100> description;
 	uint16_t priority; ///< 0-9999
 	uint16_t unknown9; ///<
-	/// Which play parameters this header overrides (LHSamplePlay applies a header value only when its bit is set
+	/// Which play parameters this header overrides (the game applies a header value only when its bit is set
 	/// here and the caller did not set the same bit in its play options).
 	uint32_t overrideFlags;
 	int32_t loop;             ///< Loop count (-1 = forever), applied with AudioBankOverride::Loop

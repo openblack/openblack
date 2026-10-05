@@ -27,14 +27,14 @@
 namespace openblack
 {
 
-/// The camera inside the temple (InnerCamera and the rooms' cameras). Each room's camera comes in along the room's path,
-/// then the player takes it over:
-/// - in the main room (WorldRoomCamera) they turn the room around them and lean in and out, by dragging its walls, with
+/// The camera inside the temple and its rooms' cameras. Each room's camera comes in along the room's path, then the
+/// player takes it over:
+/// - in the main room they turn the room around them and lean in and out, by dragging its walls, with
 ///   the arrow keys and at the screen's top and bottom edges, and walk through its doors by clicking them
-/// - in the creature's room (CreatureRoomCamera) they look around from where its path ends, by dragging and with the
+/// - in the creature's room they look around from where its path ends, by dragging and with the
 ///   arrow keys
-/// - in the rooms of pictures (ChallengeRoomCamera, which PictureRoomBase gives the challenge, save game, options,
-///   multiplayer and credits rooms) they turn the room around them and raise and lower the camera, by dragging its walls
+/// - in the rooms of pictures (the challenge, save game, options, multiplayer and credits rooms, which share one kind
+///   of camera) they turn the room around them and raise and lower the camera, by dragging its walls
 ///   and with the arrow keys, and walk back to the main room by clicking its door
 class TempleCameraModel final: public CameraModel
 {
@@ -50,7 +50,7 @@ public:
 		glm::vec3 focus;
 	};
 
-	/// Where a ray from the camera meets a room: the cylinder of its walls or its floor (InnerCamera::RayCast)
+	/// Where a ray from the camera meets a room: the cylinder of its walls or its floor
 	struct RoomHit
 	{
 		/// From the room's axis
@@ -64,10 +64,10 @@ public:
 		glm::vec3 normal;
 	};
 
-	/// The radius of the main room's walls, InnerRoom's
+	/// The radius of the main room's walls
 	static constexpr float k_RoomRadius = 45.0f;
 
-	/// A room's cylinder of walls about its axis, standing on its floor (InnerRoom)
+	/// A room's cylinder of walls about its axis, standing on its floor
 	struct Cylinder
 	{
 		glm::vec3 centre;
@@ -78,30 +78,30 @@ public:
 	/// The cylinder each room's camera casts the cursor against
 	[[nodiscard]] static Cylinder CylinderOf(Room room);
 
-	/// A ray from origin along direction, which is scaled as LH3DTech's is to the near plane, against a room at the
-	/// origin
+	/// A ray from origin along direction, which is scaled to the near plane as the game's picking rays are, against a
+	/// room at the origin
 	[[nodiscard]] static std::optional<RoomHit> RayCastRoom(glm::vec3 origin, glm::vec3 direction);
 	[[nodiscard]] static std::optional<RoomHit> RayCastRoom(glm::vec3 origin, glm::vec3 direction, const Cylinder& room);
-	/// The main room's door a hit on its walls is in (InnerCamera::CalcDoorHit): the eighth of the room it is in, when
+	/// The main room's door a hit on its walls is in: the eighth of the room it is in, when
 	/// it is within that eighth's door
 	[[nodiscard]] static std::optional<uint32_t> DoorAt(const RoomHit& hit);
 	/// The room behind a door of the main room: none behind the door out and the wall of the scrolls
 	[[nodiscard]] static std::optional<Room> RoomBehindDoor(uint32_t door);
 	/// The main room's view at a turn about the room and a lean between looking down at the pool, at 0, and up at the
-	/// room, at 1 (WorldRoomCamera)
+	/// room, at 1
 	[[nodiscard]] static Pose OrbitPose(float yaw, float lean);
 	/// A pose about the main room's centre turned to face one of its doors
 	[[nodiscard]] static Pose TurnToDoor(const Pose& pose, uint32_t door);
-	/// Whether a room is one of PictureRoomBase's, whose camera is ChallengeRoomCamera
+	/// Whether a room is one of the rooms of pictures, which share one kind of camera
 	[[nodiscard]] static bool IsPictureRoom(Room room);
-	/// ChallengeRoomCamera's view of a room of pictures at a turn about its centre, a lean between looking up, at 0, and
+	/// The view of a room of pictures at a turn about its centre, a lean between looking up, at 0, and
 	/// down, at 1, and a height. The credits room turns about where its path ends instead of its centre.
 	[[nodiscard]] static Pose PictureOrbitPose(Room room, float yaw, float lean, float height, glm::vec3 pathEnd);
-	/// The turn ChallengeRoomCamera starts at, which looks along the end of the room's path
+	/// The turn a room of pictures' camera starts at, which looks along the end of the room's path
 	[[nodiscard]] static float PictureStartYaw(const Pose& pathEnd);
-	/// CreatureRoomCamera's look from a point, about the vertical and up and down (GCamera's heading and pitch)
+	/// The creature's room camera's look from a point, as a heading about the vertical and a pitch up and down
 	[[nodiscard]] static Pose LookPose(glm::vec3 from, float heading, float pitch);
-	/// The heading and pitch of a look at a point (GCamera::GetHeadingAndPitchFromPoints)
+	/// The heading and pitch of a look at a point, as the game's camera works them out
 	[[nodiscard]] static glm::vec2 HeadingAndPitch(const Pose& look);
 
 	TempleCameraModel(Paths paths, Room room);
@@ -117,57 +117,56 @@ public:
 
 	/// Comes into a room along its path. When blending, the camera eases from where it is onto the path.
 	void StartIntro(Room room, bool blendFromCurrent);
-	/// Temple::GoToRoom: cuts to a room, past its path
+	/// Cuts to a room, past its path, as the temple does when it sends the player straight to a room
 	void GoToRoom(Room room);
-	/// Where the cursor meets the room's cylinder this frame, if it does, which TempleRoom::Draw puts the hand on when it
+	/// Where the cursor meets the room's cylinder this frame, if it does, which the room puts the hand on when it
 	/// is the floor
 	[[nodiscard]] const std::optional<RoomHit>& GetCursorHit() const { return _cursorHit; }
-	/// The line from the camera through the cursor, which LH3D picks the room's mesh along
+	/// The line from the camera through the cursor, which the game picks the room's mesh along
 	[[nodiscard]] const std::optional<Pose>& GetCursorRay() const { return _cursorRay; }
 	/// Walks through the main room's door to a room, as clicking it does, while the player has the main room's camera
 	/// @return Whether the camera is on its way
 	bool GoThroughDoorTo(Room room);
-	/// InnerCamera::FocusOnSubMesh: looks at a scroll from close by, from position at lookAt (InnerCamera's state 4),
-	/// with a woosh as it starts. A press elsewhere, or the arrow keys, sends the camera back.
+	/// Looks at a scroll from close by, from position at lookAt, with a woosh as it starts. A press elsewhere, or the
+	/// arrow keys, sends the camera back.
 	void LookAtSubMesh(glm::vec3 position, glm::vec3 lookAt);
-	/// How close the camera has come to what it looks at, from 0 to 1 (InnerCamera +0x450)
+	/// How close the camera has come to what it looks at, from 0 to 1
 	[[nodiscard]] float GetSubMeshZoom() const { return _subMeshZoom; }
-	/// Whether the player has the room's camera, past its path in (InnerCamera's state 1)
+	/// Whether the player has the room's camera, past its path in
 	[[nodiscard]] bool IsInControl() const { return _state == ControlOf(GetRoom()); }
 	/// Whether a dialog is up over the temple, as the game's options are in the Game Options room, which takes the rooms
-	/// of pictures' cameras from the player (SetupBox::GetCurrentActiveBox in ChallengeRoomCamera::UpdateMain)
+	/// of pictures' cameras from the player
 	void SetDialogOpen(bool open) { _dialogOpen = open; }
-	/// The main room's door the cursor is over, while the player has its camera (WorldRoomCamera +0x12C)
+	/// The main room's door the cursor is over, while the player has its camera
 	[[nodiscard]] std::optional<uint32_t> GetHoveredDoor() const { return _hoveredDoor; }
-	/// Whether the cursor is over the main room's pool, and whether a press began on it (InnerCamera +0x3F8 and +0x13C)
+	/// Whether the cursor is over the main room's pool, and whether a press began on it
 	[[nodiscard]] bool IsOverPool() const { return _overPool; }
 	[[nodiscard]] bool IsPressingPool() const { return _pressingPool; }
 	/// Whether the cursor is over the door a room other than the main room is left by, while the player has its camera
-	/// (ChallengeRoomCamera +0x12C)
 	[[nodiscard]] bool IsOverWayBack() const { return _overWayBack; }
-	/// Whether the camera looks at a scroll from close by (InnerCamera's state 4)
+	/// Whether the camera looks at a scroll from close by
 	[[nodiscard]] bool IsLookingAtSubMesh() const { return _lookingAtSubMesh; }
-	/// The creature's room's target the cursor is over, while the player has its camera (CreatureRoomCamera +0x4B0)
+	/// The creature's room's target the cursor is over, while the player has its camera
 	[[nodiscard]] std::optional<CreatureCaveTargets::Target> GetCaveTarget() const { return _caveTarget; }
-	/// Whether the camera is zooming to one of the creature's room's targets, or there (CreatureRoomCamera +0x470)
+	/// Whether the camera is zooming to one of the creature's room's targets, or there
 	[[nodiscard]] bool IsZoomingToCaveTarget() const { return _caveZoomTarget == 1.0f; }
 	/// The point of the pool the island's map was double clicked at, once, in the camera's space: the player asks to
-	/// leave the temple for that place (WorldRoomCamera::UpdateMain)
+	/// leave the temple for that place
 	[[nodiscard]] std::optional<glm::vec3> TakeMapDoubleClick() { return std::exchange(_mapDoubleClick, std::nullopt); }
 
 private:
 	enum class State : uint8_t
 	{
 		Intro,
-		/// WorldRoomCamera's control
+		/// The main room's control
 		Orbit,
-		/// CreatureRoomCamera's control
+		/// The creature's room's control
 		Look,
-		/// ChallengeRoomCamera's control
+		/// The rooms of pictures' control
 		PictureOrbit,
 		ThroughDoor,
 	};
-	/// How far through a door the camera is (InnerCamera's state 3)
+	/// How far through a door the camera is
 	enum class DoorStage : uint8_t
 	{
 		Approaching,
@@ -196,19 +195,19 @@ private:
 	void UpdateIntro(float dt, const Input& input);
 	void UpdateOrbit(float dt, const Input& input);
 	void UpdateLook(float dt, const Input& input);
-	/// CreatureRoomCamera::UpdateMain's targets: a click on one zooms to it, a press anywhere or the arrow keys zoom back,
+	/// The creature's room's targets: a click on one zooms to it, a press anywhere or the arrow keys zoom back,
 	/// and the exit, zoomed to, leaves the temple
 	void UpdateCaveTargets(float dt, const Input& input);
-	/// The place of a point of the creature's room's mesh (the room's object's vfunc +0x1CC)
+	/// The place of a point of the creature's room's mesh
 	[[nodiscard]] static std::optional<glm::vec3> CaveMeshPoint(uint32_t index);
-	/// fn_00789FA0: zooms the camera to a target of the creature's room
+	/// Zooms the camera to a target of the creature's room
 	void ZoomToCaveTarget(CreatureCaveTargets::Target target);
-	/// CreatureRoomCamera::UpdateState: zoomed back to no target at once
+	/// Zoomed back to no target at once
 	void ResetCaveTargets();
-	/// ChallengeRoomCamera::UpdateMain's work in every state: the turn, lean and height ease after their targets
+	/// A room of pictures' camera's work in every state: the turn, lean and height ease after their targets
 	void UpdatePictureCamera(float dt);
 	void UpdatePictureOrbit(float dt, const Input& input);
-	/// ChallengeRoomCamera::Reinit, as Temple::GoToRoom has it: back to looking along the end of the room's path
+	/// As when the temple cuts straight to a room: back to looking along the end of the room's path
 	void ResetPictureCamera(Room room);
 	/// Walks back to the main room through the door of it a room is behind
 	void WalkBackThrough(uint32_t door);
@@ -284,7 +283,6 @@ private:
 	bool _pressingPool {false};
 	bool _overWayBack {false};
 	/// How long a room of pictures' camera has had the player, which its turn under a dialog speeds up over
-	/// (ChallengeRoomCamera +0x3D0)
 	float _pictureOrbitTime {0.0f};
 	std::optional<RoomHit> _pressHit;
 	float _lastHitAngle {0.0f};
@@ -296,7 +294,7 @@ private:
 	bool _lookingAtSubMesh {false};
 	float _subMeshZoom {0.0f};
 	/// Holding the press on the pool's map: the point pressed, which the camera turns about, and the turn and tilt it
-	/// had from it as the press began (WorldRoomCamera +0x460, +0x4DC and +0x4E0)
+	/// had from it as the press began
 	glm::vec3 _mapFocus {0.0f};
 	float _mapYaw {0.0f};
 	float _mapPitch {0.0f};
@@ -305,15 +303,13 @@ private:
 	std::optional<uint32_t> _hoveredDoor;
 
 	// The creature's room's targets: the one the cursor is over, the one zoomed to and where the camera looks at it from,
-	// and how far it has zoomed, from 0 to 1, after the zoom's target (CreatureRoomCamera +0x4B0, +0x4AC, +0x49C and
-	// +0x490, +0x46C and +0x470)
+	// and how far it has zoomed, from 0 to 1, after the zoom's target
 	std::optional<CreatureCaveTargets::Target> _caveTarget;
 	std::optional<CreatureCaveTargets::Target> _caveZoomedTo;
 	Pose _caveLook {};
 	float _caveZoom {0.0f};
 	float _caveZoomTarget {0.0f};
 	/// Whether the mouse has moved since it was pressed, which makes the press a drag rather than a click
-	/// (CreatureRoomCamera +0x4A8)
 	bool _pressDragged {false};
 
 	// Through a door

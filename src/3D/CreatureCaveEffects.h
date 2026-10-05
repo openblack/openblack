@@ -25,17 +25,17 @@ namespace graphics
 struct BeamMesh;
 }
 
-/// The effects of the creature's room that CreatureRoom::InitEngine sets up and CreatureRoom::Draw and DrawAdditional
-/// move on each frame the room is drawn: the flames of its fire and the smoke over it, and the spray and mist at the
-/// foot of its waterfall. The flames and smoke are sprites and the mist domes of mist.l3d, which the renderer draws.
+/// The effects of the creature's room that the game sets up with the room and moves on each frame the room is drawn:
+/// the flames of its fire and the smoke over it, and the spray and mist at the foot of its waterfall. The flames and
+/// smoke are sprites and the mist domes of mist.l3d, which the renderer draws.
 class CreatureCaveEffects
 {
 public:
-	/// LH3DSmoke's particles each: they rise from the smoke's place over 900 steps of age, 255 a second
+	/// A smoke's particles each: they rise from the smoke's place over 900 steps of age, 255 a second
 	static constexpr size_t k_SmokeParticles = 10;
 	static constexpr int32_t k_SmokeLife = 900;
 
-	/// A smoke's particles and how they move (LH3DSmoke)
+	/// A smoke's particles and how they move
 	struct Smoke
 	{
 		struct Particle
@@ -59,7 +59,7 @@ public:
 		std::array<Particle, k_SmokeParticles> particles;
 	};
 
-	/// The flames on the fire, the place CreatureRoom::DrawAdditional plays its sound at
+	/// The flames on the fire, the place the room plays its sound at
 	explicit CreatureCaveEffects(glm::vec3 fire);
 	~CreatureCaveEffects();
 	CreatureCaveEffects(const CreatureCaveEffects&) = delete;
@@ -68,7 +68,7 @@ public:
 	/// A frame of the room drawn, of milliseconds, and the time in milliseconds the flames take their frames from
 	void Update(uint32_t milliseconds, uint32_t tickCount);
 
-	/// LH3DSmoke's step of its particles over milliseconds (fn_007F8E00), without drawing them
+	/// A smoke's step of its particles over milliseconds, without drawing them
 	static void StepSmoke(Smoke& smoke, uint32_t milliseconds);
 	/// The alpha, out of 255, of a smoke particle of an age
 	[[nodiscard]] static uint8_t SmokeAlpha(int32_t age, bool rising);

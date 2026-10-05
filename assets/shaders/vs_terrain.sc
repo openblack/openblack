@@ -37,7 +37,7 @@ void main()
 	v_texcoord0.zw = (handLightCell.yx + 0.5f) / 12.0f;
 
 	v_shadowCoord = mul(u_handShadowMatrix, vec4(transformedPosition, 1.0f));
-	// LH3D gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the
+	// The game gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the
 	// water's edge
 	v_shadowCoord.w = a_position.y > 1.0f ? 1.0f : 0.0f;
 

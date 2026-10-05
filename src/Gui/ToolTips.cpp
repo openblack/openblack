@@ -28,7 +28,6 @@ std::string ToolTips::TextName(uint32_t index)
 
 void ToolTips::Submit(uint32_t index, ToolTipAction action, uint32_t arrows, bool force)
 {
-	// ToolTips::SubmitToolTips
 	if (index >= k_Count || (_level == ToolTipLevel::Minimum && PriorityOf(index) < k_ImportantPriority))
 	{
 		return;
@@ -61,7 +60,7 @@ void ToolTips::Submit(uint32_t index, ToolTipAction action, uint32_t arrows, boo
 
 bool ToolTips::KeepIntelligently()
 {
-	// ToolTips::SmartIcon: once the tooltip has been shown its display time and has faded in, it fades out over a
+	// Once the tooltip has been shown its display time and has faded in, it fades out over a
 	// second, and isn't shown again until it is submitted afresh
 	if (_icon.has_value() && _icon->current != _icon->end)
 	{
@@ -88,7 +87,7 @@ bool ToolTips::KeepIntelligently()
 
 void ToolTips::ProcessTurn()
 {
-	// HelpSystem::ProcessToolTips and GetToolTipTextAndAnim, then HelpSystem::Process forgets this turn's submission
+	// The help system picks this turn's tooltip and its text, then forgets this turn's submission
 	const bool submitted = std::exchange(_submitted, false);
 	if (_level == ToolTipLevel::None)
 	{
@@ -139,7 +138,6 @@ void ToolTips::ProcessTurn()
 
 void ToolTips::Update(float seconds)
 {
-	// KMIcon::Draw
 	if (!_icon.has_value())
 	{
 		return;
