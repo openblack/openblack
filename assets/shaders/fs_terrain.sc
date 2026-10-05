@@ -22,6 +22,8 @@ SAMPLER2D(s8_landAlpha, 8);
 
 // x: the block's layer of s0_blockTextures
 uniform vec4 u_block;
+// y: how bright the land's light is, a half for the land mirrored under the sea
+// z: the small bump detail's strength
 // w: 1 to draw the land's textures alone, unlit and with no sea, as the temple's map is textured with
 uniform vec4 u_skyAndBump;
 // x: darkness of the objects' shadows where they fully cover a texel, 0 without them
@@ -66,6 +68,8 @@ void main()
 	float luminosity = floor(v_lightLevel * 255.0f + 0.5f);
 	vec3 light = texture2DLod(s7_landLight, vec2((luminosity + 0.5f) / 256.0f, 0.5f), 0.0f).rgb;
 	light = max(light, vec3_splat(texture2D(s6_handLight, v_texcoord0.zw).r * u_handLight.z));
+	// Each channel of the light scaled down, rounding down
+	light = floor(light * 255.0f * u_skyAndBump.y + 0.001f) / 255.0f;
 	col.rgb = col.rgb * light * v_haze.a;
 
 	// the hand's shadow, projected along the sunlight onto the land beyond it

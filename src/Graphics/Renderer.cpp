@@ -1811,6 +1811,9 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 			drawPassDesc.drawWater = false;
 			drawPassDesc.drawBoundingBoxes = false;
 			drawPassDesc.cullBack = true;
+			// The game mirrors the land under the sea without its small bump detail. Unlike the game, which mirrors
+			// only the sky, the land and a few moving things, everything is mirrored here.
+			drawPassDesc.smallBumpMapStrength = 0.0f;
 
 			DrawPass(drawPassDesc);
 		}
@@ -1932,7 +1935,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& textures = Locator::resources::value().GetTextures();
 			auto smallBump = textures.Handle(LandIslandInterface::k_SmallBumpTextureId);
 			auto smallBumpAlpha = textures.Handle(LandIslandInterface::k_SmallBumpAlphaTextureId);
-			const glm::vec4 u_skyAndBump = {skyType, 0.0f, desc.smallBumpMapStrength, 0.0f};
+			// The land mirrored under the sea is lit at half
+			const float lightScale = desc.viewId == RenderPass::Reflection ? 0.5f : 1.0f;
+			const glm::vec4 u_skyAndBump = {skyType, lightScale, desc.smallBumpMapStrength, 0.0f};
 
 			// The small bump detail fades out about a line across the ground: where the plane square to the camera's
 			// view, 50 units ahead of it, meets the ground at the camera's height, or at 110.55 if the camera is higher
