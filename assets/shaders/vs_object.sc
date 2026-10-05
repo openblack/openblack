@@ -22,6 +22,7 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze
 
 #include "haze.sh"
 #include "model_light.sh"
+#include "window_light.sh"
 
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
@@ -97,6 +98,16 @@ void main()
 		v_color0 = vec4(colour / 255.0f, 1.0f);
 	}
 #endif // USE_LIGHTMAP
+	// A house's window is drawn in the grey of its light, unlit, at night while someone is home, and not at all otherwise
+	bool hidden = false;
+#ifdef USE_INSTANCING
+	if (u_window.x > 0.5f)
+	{
+		float grey = (i_data4.x > 0.5f && u_window.z > 0.5f) ? WindowGrey(origin) : -1.0f;
+		hidden = grey < 0.0f;
+		v_color0 = vec4(vec3_splat(max(grey, 0.0f) / 255.0f), 1.0f);
+	}
+#endif // USE_INSTANCING
 
 #ifdef USE_HEIGHT_MAP
 #ifdef USE_INSTANCING
@@ -126,4 +137,9 @@ void main()
 	v_normal = a_normal;
 	gl_Position = mul(u_viewProj, v_position);
 	gl_Position.z *= 1.0f - u_depthBias.x;
+	if (hidden)
+	{
+		// Beyond the far plane, so nothing of it is drawn
+		gl_Position = vec4(0.0f, 0.0f, 2.0f, 1.0f);
+	}
 }

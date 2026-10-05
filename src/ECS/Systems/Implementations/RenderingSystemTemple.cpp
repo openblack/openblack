@@ -172,6 +172,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
 		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float)
 		    .end();
 		_renderContext.instanceUniformBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(instanceCount, layout));
 		_renderContext.instanceUniforms.resize(instanceCount);
@@ -266,12 +267,12 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    modelMatrix = glm::scale(modelMatrix, transform.scale);
 
 			    const uint32_t idx = desc->second.offset + offset.first->second;
-			    _renderContext.instanceUniforms[idx] = modelMatrix;
+			    _renderContext.instanceUniforms[idx] = {.model = modelMatrix};
 			    if (drawBoundingBox)
 			    {
 				    auto box = l3dMesh->GetBoundingBox();
 				    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
-				    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = boxMatrix;
+				    _renderContext.instanceUniforms[idx + _renderContext.instanceUniforms.size() / 2] = {.model = boxMatrix};
 			    }
 			    offset.first->second++;
 		    }
@@ -288,13 +289,13 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
-		    _renderContext.instanceUniforms[desc->second.offset + offset.first->second] = modelMatrix;
+		    _renderContext.instanceUniforms[desc->second.offset + offset.first->second] = {.model = modelMatrix};
 		    offset.first->second++;
 	    });
 
 	if (!_renderContext.instanceUniforms.empty())
 	{
-		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
+		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(RenderContext::ObjectInstance));
 		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
 		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
 	}

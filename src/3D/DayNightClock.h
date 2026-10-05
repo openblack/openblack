@@ -52,6 +52,8 @@ public:
 	[[nodiscard]] const std::array<float, 4>& GetVisualTimes() const { return _times; }
 	/// The sky at an hour of visual time: 0 at night, 1 at dusk and 2 by day, between them as it turns
 	[[nodiscard]] float SkyType(float visualHour) const;
+	/// Whether the visual time is night, as the game judges it for its houses' windows
+	[[nodiscard]] bool IsVisualNight() const { return SkyType(_visualTime) < 0.8f; }
 
 	[[nodiscard]] float ScriptToVisual(float hour) const;
 	[[nodiscard]] float VisualToScript(float hour) const;

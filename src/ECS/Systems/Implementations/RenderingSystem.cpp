@@ -102,6 +102,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
 		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float)
 		    .end();
 		_renderContext.instanceUniformBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(instanceCount, layout));
 		_renderContext.instanceUniforms.resize(instanceCount);
@@ -207,13 +208,16 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    }
 
 		    const uint32_t idx = desc->second.offset + offset.first->second;
-		    _renderContext.instanceUniforms[idx] = modelMatrix;
+		    // A home with someone in lights its windows at night
+		    const auto* abode = registry.TryGet<const Abode>(entity);
+		    const float someoneHome = abode != nullptr && abode->presentAtHome > 0 ? 1.0f : 0.0f;
+		    _renderContext.instanceUniforms[idx] = {.model = modelMatrix, .window = glm::vec4(someoneHome, 0.0f, 0.0f, 0.0f)};
 		    if (drawBoundingBox)
 		    {
 			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
 			    auto box = l3dMesh->GetBoundingBox();
 			    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
-			    _renderContext.instanceUniforms[idx + (_renderContext.instanceUniforms.size() / 2)] = boxMatrix;
+			    _renderContext.instanceUniforms[idx + (_renderContext.instanceUniforms.size() / 2)] = {.model = boxMatrix};
 		    }
 		    offset.first->second++;
 	    },
@@ -221,7 +225,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 	if (!_renderContext.instanceUniforms.empty())
 	{
-		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
+		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(RenderContext::ObjectInstance));
 		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
 		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
 	}

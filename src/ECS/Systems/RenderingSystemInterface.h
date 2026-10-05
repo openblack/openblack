@@ -74,7 +74,14 @@ struct RenderContext
 	/// but in practice, it should only grow its reserved memory.
 	/// If debug bounding boxes are enabled, it will double in size to fit all
 	/// bounding boxes in the second half of the list.
-	std::vector<glm::mat4> instanceUniforms;
+	/// An object's instance: its model matrix, and its windows
+	struct ObjectInstance
+	{
+		glm::mat4 model {1.0f};
+		/// x: 1 while someone is home, which lights its windows at night
+		glm::vec4 window {0.0f};
+	};
+	std::vector<ObjectInstance> instanceUniforms;
 
 	/// Tree instance data: the tree's matrix, swaying or bent
 	struct TreeInstanceData

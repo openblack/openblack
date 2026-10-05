@@ -412,8 +412,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
                            bool preserveState, const TextureHandle* subMeshTexture, glm::vec3 glow) const
 {
 	assert(&subMesh.GetMesh());
-	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high lod
-	if (!desc.drawAll && (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (subMesh.GetFlags().lodMask & 1) != 1))
+	// We don't draw physics meshes, we haven't implemented statuses (building and graves) and modern GPUs can handle high
+	// lod. Windows fail the game's lod test unless their house lights them, which the object shader decides.
+	const bool window = subMesh.GetFlags().isWindow;
+	if (!desc.drawAll &&
+	    (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (!window && (subMesh.GetFlags().lodMask & 1) != 1)))
 	{
 		return;
 	}
@@ -498,6 +501,18 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				const glm::vec4 u_uvOffset {desc.uvOffset, 0.0f, 0.0f};
 				program->SetUniformValue("u_uvOffset", &u_uvOffset);
+			}
+			if (program->HasUniform("u_window"))
+			{
+				// Window submeshes are lit by their houses at night
+				glm::vec4 u_window {subMesh.GetFlags().isWindow ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				if (Locator::skySystem::has_value())
+				{
+					const auto& clock = Locator::skySystem::value().GetClock();
+					u_window.y = clock.GetVisualTime();
+					u_window.z = clock.IsVisualNight() ? 1.0f : 0.0f;
+				}
+				program->SetUniformValue("u_window", &u_window);
 			}
 			if (program->HasUniform("s_diffuse"))
 			{
