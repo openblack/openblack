@@ -14,6 +14,7 @@
 #include <optional>
 #include <span>
 
+#include "3D/CreatureCaveTargets.h"
 #include "3D/TempleInteriorInterface.h"
 #include "3D/TempleScrolls.h"
 #include "3D/TempleToggles.h"
@@ -48,6 +49,10 @@ struct TempleToolTipInput
 	bool pressingPool;
 	std::optional<uint32_t> hoveredDoor;
 	bool overWayBack;
+	/// The creature's room's target the cursor is over, and whether the camera zooms to one (CreatureRoomCamera +0x4B0
+	/// and +0x470)
+	std::optional<CreatureCaveTargets::Target> caveTarget;
+	bool zoomingToCaveTarget;
 	/// The submesh of the room's mesh the cursor is over
 	std::optional<uint32_t> hoveredSubMesh;
 	std::span<const TempleScrolls::Control> scrolls;

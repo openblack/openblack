@@ -392,6 +392,8 @@ void TempleInterior::UpdateToolTips(float milliseconds)
 	    .pressingPool = _cameraModel->IsPressingPool(),
 	    .hoveredDoor = _cameraModel->GetHoveredDoor(),
 	    .overWayBack = _cameraModel->IsOverWayBack(),
+	    .caveTarget = _cameraModel->GetCaveTarget(),
+	    .zoomingToCaveTarget = _cameraModel->IsZoomingToCaveTarget(),
 	    .hoveredSubMesh = hit.has_value() && hit->room == _currentRoom ? hit->subMesh : std::nullopt,
 	    .scrolls = scrolls,
 	    .toggles = toggles,
@@ -453,6 +455,14 @@ void TempleInterior::LeaveForMapPoint(glm::vec3 point)
 	else
 	{
 		RequestLeave();
+	}
+}
+
+void TempleInterior::FadeToWhite()
+{
+	if (_interface != nullptr)
+	{
+		_interface->GetScreenFade().FadeThrough(glm::vec3(1.0f));
 	}
 }
 

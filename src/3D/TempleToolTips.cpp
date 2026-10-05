@@ -24,6 +24,8 @@ constexpr uint32_t k_ZoomIn = 0xE75 - 0xE73;
 constexpr uint32_t k_Move = 0xE7E - 0xE73;
 constexpr uint32_t k_ZoomOut = 0xE8B - 0xE73;
 constexpr uint32_t k_WorldRoom = 0xE9B - 0xE73;
+constexpr uint32_t k_ExitTemple = 0xE98 - 0xE73;
+constexpr uint32_t k_TattooCreature = 0xEDF - 0xE73;
 constexpr uint32_t k_Scroll = 0xEE2 - 0xE73;
 constexpr uint32_t k_WorldStats = 0xEE3 - 0xE73;
 constexpr uint32_t k_SaveGameStats = 0xEE4 - 0xE73;
@@ -152,8 +154,26 @@ void openblack::UpdateTempleToolTip(TempleToolTip& toolTip, const TempleToolTipI
 		{
 			toolTip.index = k_WorldRoom;
 		}
-		// TODO(raffclar): CreatureRoomCamera's targets (the creature, its belts and medals, and the exit) have tooltips
-		// too
+		// Zoomed, or zooming, to a target, the camera zooms back; the targets say what clicking them does
+		if (input.zoomingToCaveTarget)
+		{
+			toolTip.index = k_ZoomOut;
+		}
+		if (input.caveTarget.has_value())
+		{
+			switch (*input.caveTarget)
+			{
+			case CreatureCaveTargets::Target::Creature:
+				toolTip.index = k_TattooCreature;
+				break;
+			case CreatureCaveTargets::Target::Exit:
+				toolTip.index = k_ExitTemple;
+				break;
+			default:
+				toolTip.index = input.zoomingToCaveTarget ? k_ZoomOut : k_ZoomIn;
+				break;
+			}
+		}
 		// The scrolls' callbacks, in turn: hovered, a scroll sets its title, which isn't a tooltip, so none shows unless
 		// it is close and the one looked at; looked at, another lets the way back show unless one before was hovered
 		bool scrollHovered = false;

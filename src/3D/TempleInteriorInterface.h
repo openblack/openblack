@@ -127,6 +127,8 @@ public:
 	virtual void Escape() = 0;
 	/// Leaves the temple once the frame is done with it
 	virtual void RequestLeave() = 0;
+	/// Fades the screen to white over a second, as the temple does before the player leaves it for the island
+	virtual void FadeToWhite() = 0;
 	/// Carries out what the frame asked of the temple, and moves on what goes on in its rooms by themselves
 	virtual void Update(std::chrono::microseconds dt) = 0;
 	/// How far the creature's room's waterfall has slid down it, the offset of its texture (CreatureRoom::Draw)

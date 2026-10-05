@@ -66,6 +66,7 @@ public:
 	[[nodiscard]] float GetPoolTime() const override { return _poolTime; }
 	void Escape() override;
 	void RequestLeave() override { _leaveRequested = true; }
+	void FadeToWhite() override;
 	void Update(std::chrono::microseconds dt) override;
 	[[nodiscard]] glm::vec2 GetWaterfallSlide() const override;
 	void Activate() override { Activate(TempleRoom::Main); }

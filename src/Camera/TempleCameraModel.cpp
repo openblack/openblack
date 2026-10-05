@@ -20,6 +20,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/trigonometric.hpp>
 
+#include "3D/L3DMesh.h"
 #include "3D/TempleDoors.h"
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/AudioManagerInterface.h"
@@ -27,6 +28,7 @@
 #include "Camera.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
+#include "Resources/ResourcesInterface.h"
 #include "Windowing/WindowingInterface.h"
 
 using namespace openblack;
@@ -52,6 +54,9 @@ constexpr float k_StartLean = 0.7f;
 constexpr float k_MaxLean = 1.5f;
 /// How long the turn and lean take to catch up with the player
 constexpr float k_OrbitEaseTime = 0.3f;
+/// How far, in pixels, the mouse moves from where it was pressed before the press is a drag rather than a click
+/// (CreatureRoomCamera::UpdateMain)
+constexpr float k_DragDistance = 3.0f;
 /// Holding the press on the pool's map: how far from the point pressed the camera goes, how fast it gets there, how far
 /// it turns and tilts as the mouse crosses the screen, and between which tilts
 constexpr float k_MapDistance = 6.0f;
@@ -443,6 +448,7 @@ void TempleCameraModel::StartIntro(Room room, bool blendFromCurrent)
 	_lookingAtSubMesh = false;
 	_subMeshZoom = 0.0f;
 	_subMeshLook.reset();
+	ResetCaveTargets();
 	_state = State::Intro;
 	_nextState = State::Intro;
 	_introTime = 0.0f;
@@ -557,6 +563,25 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 			}
 		}
 	}
+	if (GetRoom() == Room::CreatureCave && Locator::windowing::has_value())
+	{
+		// CreatureRoomCamera::UpdateMain finds its targets where LH3DTech::ProjectPoint puts their points on the screen
+		using namespace CreatureCaveTargets;
+		const auto size = glm::vec2(Locator::windowing::value().GetSize());
+		for (size_t i = 0; i < k_Count; ++i)
+		{
+			// TODO(raffclar): the creature, found by picking its mesh, opens the tattoo editor
+			const auto target = static_cast<Target>(i);
+			const auto place = target == Target::Exit       ? std::optional<glm::vec3>(k_ExitPlace)
+			                   : target == Target::Creature ? std::nullopt
+			                                                : CaveMeshPoint(k_FirstLookPoint + static_cast<uint32_t>(i));
+			glm::vec3 screen;
+			if (place.has_value() && camera.ProjectWorldToScreen(*place, glm::vec4(0.0f, 0.0f, size), screen))
+			{
+				input.caveTargets.at(i) = glm::vec2(screen);
+			}
+		}
+	}
 	if (input.hit.has_value())
 	{
 		input.door = DoorAt(*input.hit);
@@ -576,6 +601,12 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> TempleCameraModel::Upd
 		const float along = (1.0f - std::cos(_subMeshZoom * glm::pi<float>())) * 0.5f;
 		origin = glm::mix(origin, _subMeshLook->origin, along);
 		focus = glm::mix(focus, _subMeshLook->focus, along);
+	}
+	// CreatureRoomCamera's: it goes over to the target zoomed to in a straight line
+	if (_caveZoom > 0.0f)
+	{
+		origin = glm::mix(origin, _caveLook.origin, _caveZoom);
+		focus = glm::mix(focus, _caveLook.focus, _caveZoom);
 	}
 	return CameraInterpolationUpdateInfo {origin, focus, std::chrono::microseconds::zero()};
 }
@@ -628,6 +659,11 @@ void TempleCameraModel::Step(float dt, const Input& input)
 		const auto* picture = PictureRoomOf(GetRoom());
 		_overWayBack = GetRoom() == Room::CreatureCave ? *input.doorBack == k_CreatureDoor
 		                                               : picture != nullptr && *input.doorBack == picture->door;
+	}
+
+	if (GetRoom() == Room::CreatureCave)
+	{
+		UpdateCaveTargets(dt, input);
 	}
 
 	if (!_lookingAtSubMesh)
@@ -878,6 +914,88 @@ void TempleCameraModel::UpdateLook(float dt, const Input& input)
 	}
 }
 
+std::optional<glm::vec3> TempleCameraModel::CaveMeshPoint(uint32_t index)
+{
+	// The room's object gives the place of its mesh's point
+	const entt::id_type creatureRoom = entt::hashed_string("temple/interior/creature_l3d").value();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	if (!meshes.Contains(creatureRoom) || index >= meshes.Handle(creatureRoom)->GetExtraMetrics().size())
+	{
+		return std::nullopt;
+	}
+	return glm::vec3(meshes.Handle(creatureRoom)->GetExtraMetrics()[index][3]);
+}
+
+void TempleCameraModel::UpdateCaveTargets(float dt, const Input& input)
+{
+	using namespace CreatureCaveTargets;
+	_caveTarget = _state == State::Look && !_lookingAtSubMesh ? TargetAt(input.caveTargets, input.mouse) : std::nullopt;
+
+	// A press anywhere zooms back, and a click on a target, while the camera is all the way back, zooms to it
+	if (input.button != 0 && !_wasPressed)
+	{
+		_caveZoomTarget = 0.0f;
+		_caveZoomedTo.reset();
+		_pressDragged = false;
+	}
+	if (input.button != 0 && glm::any(glm::greaterThan(glm::abs(input.mouse - _pressMouse), glm::vec2(k_DragDistance))))
+	{
+		_pressDragged = true;
+	}
+	const bool clicked = (input.button == 0 && _wasPressed) || input.button == 2;
+	if (clicked && !_pressDragged && _caveZoom == 0.0f && _caveTarget.has_value())
+	{
+		ZoomToCaveTarget(*_caveTarget);
+	}
+	const auto& actions = Locator::gameActionSystem::value();
+	if (actions.GetAny(BindableActionMap::MOVE_LEFT, BindableActionMap::MOVE_RIGHT, BindableActionMap::MOVE_FORWARDS,
+	                   BindableActionMap::MOVE_BACKWARDS))
+	{
+		_caveZoomTarget = 0.0f;
+		_caveZoomedTo.reset();
+	}
+
+	// It zooms in over a second and back in half that, and zoomed to the exit, the player leaves the temple
+	if (_caveZoom < _caveZoomTarget)
+	{
+		_caveZoom = std::min(_caveZoom + dt, _caveZoomTarget);
+		if (_caveZoom == 1.0f && _caveZoomedTo == Target::Exit)
+		{
+			Locator::temple::value().RequestLeave();
+		}
+	}
+	else if (_caveZoom > _caveZoomTarget)
+	{
+		_caveZoom = std::max(_caveZoom - 2.0f * dt, _caveZoomTarget);
+	}
+}
+
+void TempleCameraModel::ZoomToCaveTarget(CreatureCaveTargets::Target target)
+{
+	using namespace CreatureCaveTargets;
+	switch (target)
+	{
+	case Target::Exit:
+		// The camera goes to the exit as the temple fades to white
+		_caveLook = {k_ExitEye, k_ExitPlace};
+		Locator::temple::value().FadeToWhite();
+		break;
+	default:
+		// TODO(raffclar): the belts and medals zoom in, and the creature opens the tattoo editor
+		return;
+	}
+	_caveZoomTarget = 1.0f;
+	_caveZoomedTo = target;
+}
+
+void TempleCameraModel::ResetCaveTargets()
+{
+	_caveTarget.reset();
+	_caveZoomedTo.reset();
+	_caveZoom = 0.0f;
+	_caveZoomTarget = 0.0f;
+}
+
 void TempleCameraModel::ResetPictureCamera(Room room)
 {
 	// Looking along the end of the room's path, half leaning and low
@@ -1093,6 +1211,7 @@ void TempleCameraModel::ChangeState()
 		break;
 	case State::Look:
 	{
+		ResetCaveTargets();
 		// CreatureRoomCamera::UpdateState: the look starts along the end of the room's path
 		const auto end = PathEnd(GetRoom());
 		_lookFrom = end.origin;

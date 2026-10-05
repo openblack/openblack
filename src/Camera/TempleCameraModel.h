@@ -19,6 +19,7 @@
 #include <glm/vec3.hpp>
 
 #include "3D/CameraPath.h"
+#include "3D/CreatureCaveTargets.h"
 #include "3D/TempleInteriorInterface.h"
 #include "CameraModel.h"
 #include "Common/Zoomer.h"
@@ -146,6 +147,10 @@ public:
 	[[nodiscard]] bool IsOverWayBack() const { return _overWayBack; }
 	/// Whether the camera looks at a scroll from close by (InnerCamera's state 4)
 	[[nodiscard]] bool IsLookingAtSubMesh() const { return _lookingAtSubMesh; }
+	/// The creature's room's target the cursor is over, while the player has its camera (CreatureRoomCamera +0x4B0)
+	[[nodiscard]] std::optional<CreatureCaveTargets::Target> GetCaveTarget() const { return _caveTarget; }
+	/// Whether the camera is zooming to one of the creature's room's targets, or there (CreatureRoomCamera +0x470)
+	[[nodiscard]] bool IsZoomingToCaveTarget() const { return _caveZoomTarget == 1.0f; }
 	/// The point of the pool the island's map was double clicked at, once, in the camera's space: the player asks to
 	/// leave the temple for that place (WorldRoomCamera::UpdateMain)
 	[[nodiscard]] std::optional<glm::vec3> TakeMapDoubleClick() { return std::exchange(_mapDoubleClick, std::nullopt); }
@@ -183,12 +188,23 @@ private:
 		std::optional<uint32_t> door;
 		/// The door back to the main room the cursor is over, from the other rooms
 		std::optional<uint32_t> doorBack;
+		/// Where on the screen the creature's room's targets are, in pixels down from the top
+		std::array<std::optional<glm::vec2>, CreatureCaveTargets::k_Count> caveTargets;
 	};
 
 	void Step(float dt, const Input& input);
 	void UpdateIntro(float dt, const Input& input);
 	void UpdateOrbit(float dt, const Input& input);
 	void UpdateLook(float dt, const Input& input);
+	/// CreatureRoomCamera::UpdateMain's targets: a click on one zooms to it, a press anywhere or the arrow keys zoom back,
+	/// and the exit, zoomed to, leaves the temple
+	void UpdateCaveTargets(float dt, const Input& input);
+	/// The place of a point of the creature's room's mesh (the room's object's vfunc +0x1CC)
+	[[nodiscard]] static std::optional<glm::vec3> CaveMeshPoint(uint32_t index);
+	/// fn_00789FA0: zooms the camera to a target of the creature's room
+	void ZoomToCaveTarget(CreatureCaveTargets::Target target);
+	/// CreatureRoomCamera::UpdateState: zoomed back to no target at once
+	void ResetCaveTargets();
 	/// ChallengeRoomCamera::UpdateMain's work in every state: the turn, lean and height ease after their targets
 	void UpdatePictureCamera(float dt);
 	void UpdatePictureOrbit(float dt, const Input& input);
@@ -287,6 +303,18 @@ private:
 	std::optional<glm::vec3> _mapDoubleClick;
 	bool _leavingByMap {false};
 	std::optional<uint32_t> _hoveredDoor;
+
+	// The creature's room's targets: the one the cursor is over, the one zoomed to and where the camera looks at it from,
+	// and how far it has zoomed, from 0 to 1, after the zoom's target (CreatureRoomCamera +0x4B0, +0x4AC, +0x49C and
+	// +0x490, +0x46C and +0x470)
+	std::optional<CreatureCaveTargets::Target> _caveTarget;
+	std::optional<CreatureCaveTargets::Target> _caveZoomedTo;
+	Pose _caveLook {};
+	float _caveZoom {0.0f};
+	float _caveZoomTarget {0.0f};
+	/// Whether the mouse has moved since it was pressed, which makes the press a drag rather than a click
+	/// (CreatureRoomCamera +0x4A8)
+	bool _pressDragged {false};
 
 	// Through a door
 	float _doorTime {0.0f};

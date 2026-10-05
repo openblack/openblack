@@ -200,6 +200,28 @@ TEST(TempleToolTips, CreatureRoomKeepsTheScrollsArrows)
 	EXPECT_EQ(toolTip.index, k_WorldRoom);
 }
 
+TEST(TempleToolTips, CreatureRoomTargets)
+{
+	constexpr uint32_t k_ExitTemple = 0xE98 - 0xE73;
+	TempleToolTip toolTip = k_FirstTempleToolTip;
+	TempleToolTipInput input {.room = TempleRoom::CreatureCave, .inControl = true};
+	input.caveTarget = CreatureCaveTargets::Target::Exit;
+	UpdateTempleToolTip(toolTip, input);
+	EXPECT_EQ(toolTip.index, k_ExitTemple);
+
+	input.caveTarget = CreatureCaveTargets::Target::Belts;
+	UpdateTempleToolTip(toolTip, input);
+	EXPECT_EQ(toolTip.index, k_ZoomIn);
+
+	// Zoomed to one, the camera zooms back wherever the cursor is
+	input.zoomingToCaveTarget = true;
+	UpdateTempleToolTip(toolTip, input);
+	EXPECT_EQ(toolTip.index, k_ZoomOut);
+	input.caveTarget = std::nullopt;
+	UpdateTempleToolTip(toolTip, input);
+	EXPECT_EQ(toolTip.index, k_ZoomOut);
+}
+
 TEST(TempleToolTips, NoneOnTheWayIn)
 {
 	TempleToolTip toolTip = k_FirstTempleToolTip;
