@@ -358,6 +358,7 @@ Renderer::~Renderer() noexcept
 	_landLuminosityFrameBuffer.reset();
 	_landShadeFrameBuffer.reset();
 	_landColourFrameBuffer.reset();
+	_skyDomeFrameBuffer.reset();
 	if (_lightningGlowTexture)
 	{
 		bgfx::destroy(toBgfx(*_lightningGlowTexture));
@@ -2061,6 +2062,46 @@ const Texture2D& Renderer::GetLandColour() const
 	return Locator::terrainSystem::value().GetCellColourMap();
 }
 
+void Renderer::DrawSkyDomePass(const DrawSceneDesc& drawDesc) const
+{
+	if (!drawDesc.drawSky || !Locator::skySystem::has_value())
+	{
+		return;
+	}
+	auto& sky = Locator::skySystem::value();
+	const auto frame = sky.AdvanceDome();
+	if (frame.Get().empty())
+	{
+		return;
+	}
+	constexpr uint16_t k_Alignments = 3;
+	constexpr glm::u16vec2 k_Size {sky_dome::k_Rows, sky_dome::k_Rows * k_Alignments};
+	if (!_skyDomeFrameBuffer)
+	{
+		_skyDomeFrameBuffer = std::make_unique<FrameBuffer>("SkyDome", k_Size.x, k_Size.y, graphics::TextureFormat::RGBA8,
+		                                                    std::nullopt, 1, Wrapping::ClampEdge);
+	}
+	const auto viewId = SetUpLandView(RenderPass::SkyDome, *_skyDomeFrameBuffer, k_Size);
+	const auto& program = *_shaderManager->GetShader("SkyDome");
+	constexpr auto k_Rows = static_cast<float>(sky_dome::k_Rows);
+	for (const auto& rows : frame.Get())
+	{
+		const auto times = sky_dome::TimePair(rows.skyType);
+		const auto first = static_cast<float>(rows.first);
+		const auto last = static_cast<float>(rows.first + rows.count);
+		for (uint16_t alignment = 0; alignment < k_Alignments; ++alignment)
+		{
+			// The pictures are laid out a layer for each time of day within each alignment
+			const glm::vec4 u_skyDome {alignment * 3, times.lower, times.upper, times.weight};
+			program.SetTextureSampler("s_diffuse", 0, sky.GetTexture());
+			program.SetUniformValue("u_skyDome", &u_skyDome);
+			const auto top = static_cast<float>(alignment) * k_Rows;
+			SubmitLandQuad(viewId, program, {0.0f, top + first}, {k_Rows, top + last}, {0.0f, first / k_Rows},
+			               {1.0f, last / k_Rows}, BGFX_STATE_WRITE_RGB);
+		}
+	}
+}
+
 void Renderer::DrawLandColourPass(const DrawSceneDesc& drawDesc) const
 {
 	if (!drawDesc.drawIsland || !Locator::terrainSystem::has_value())
@@ -2371,6 +2412,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawLandLuminosityPass(drawDesc);
 	DrawLandColourPass(drawDesc);
+	DrawSkyDomePass(drawDesc);
 	DrawFootprintPass(drawDesc);
 	DrawLandAlphaPass(drawDesc);
 	UpdateLandLight();
@@ -2470,14 +2512,15 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	{
 		auto section = profiler.BeginScoped(desc.viewId == RenderPass::Reflection ? Profiler::Stage::ReflectionDrawSky
 		                                                                          : Profiler::Stage::MainPassDrawSky);
-		if (desc.drawSky)
+		if (desc.drawSky && _skyDomeFrameBuffer)
 		{
 			const auto modelMatrix = glm::mat4(1.0f);
-			// The sky's alignment from 0, evil, to 2, good
-			const glm::vec4 u_typeAlignment = {skyType, Locator::alignmentSystem::value().GetSkyAlignment() + 1.0f, 0.0f, 0.0f};
+			// The sky's alignment from 0, evil, to 2, good, mixes two of the alignments' domes
+			const auto alignments = sky_dome::AlignmentPair(Locator::alignmentSystem::value().GetSkyAlignment() + 1.0f);
+			const glm::vec4 u_skyAlignment {alignments.lower, alignments.upper, alignments.weight, 0.0f};
 
-			skyShader->SetTextureSampler("s_diffuse", 0, Locator::skySystem::value().GetTexture());
-			skyShader->SetUniformValue("u_typeAlignment", &u_typeAlignment);
+			skyShader->SetTextureSampler("s_diffuse", 0, _skyDomeFrameBuffer->GetColorAttachment());
+			skyShader->SetUniformValue("u_skyAlignment", &u_skyAlignment);
 
 			L3DMeshSubmitDesc submitDesc = {};
 			submitDesc.viewId = desc.viewId;

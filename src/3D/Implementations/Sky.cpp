@@ -34,6 +34,7 @@ Sky::Sky() noexcept
 	auto& fileSystem = Locator::filesystem::value();
 
 	_clock.Reset();
+	_dome = sky_dome::Follow(GetCurrentSkyType());
 
 	// load in the mesh
 	_mesh = std::make_unique<graphics::L3DMesh>("Sky");
@@ -74,6 +75,7 @@ Sky::~Sky() noexcept = default;
 void Sky::SetTime(float time) noexcept
 {
 	_clock.SetScriptTime(time);
+	_dome.Jump(GetCurrentSkyType());
 }
 
 float Sky::GetCurrentSkyType() const noexcept

@@ -50,6 +50,7 @@ public:
 	[[nodiscard]] const DayNightClock& GetClock() const noexcept override { return _clock; }
 	[[nodiscard]] graphics::L3DMesh& GetMesh() const noexcept override { return *_mesh; }
 	[[nodiscard]] graphics::Texture2D& GetTexture() const noexcept override { return *_texture; }
+	[[nodiscard]] sky_dome::FrameRows AdvanceDome() noexcept override { return _dome.Advance(GetCurrentSkyType()); }
 
 private:
 	static constexpr std::array<std::string_view, 3> k_Alignments = {
@@ -74,6 +75,7 @@ private:
 	std::array<uint16_t, k_TextureResolution[0] * k_TextureResolution[1] * k_TextureResolution[2]> _bitmaps;
 
 	DayNightClock _clock;
+	sky_dome::Follow _dome {2.0f};
 };
 
 } // namespace openblack

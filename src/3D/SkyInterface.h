@@ -11,6 +11,8 @@
 
 #include <entt/core/hashed_string.hpp>
 
+#include "3D/SkyDome.h"
+
 namespace openblack
 {
 
@@ -52,7 +54,11 @@ public:
 	[[nodiscard]] virtual DayNightClock& GetClock() noexcept = 0;
 	[[nodiscard]] virtual const DayNightClock& GetClock() const noexcept = 0;
 	[[nodiscard]] virtual graphics::L3DMesh& GetMesh() const noexcept = 0;
+	/// The pictures of the sky's dome, a layer for each alignment from evil to good and, in each, for each time of day
+	/// from night to day
 	[[nodiscard]] virtual graphics::Texture2D& GetTexture() const noexcept = 0;
+	/// Once a frame: the rows of the dome to blend again for the sky as it is now
+	[[nodiscard]] virtual sky_dome::FrameRows AdvanceDome() noexcept = 0;
 	/// Jumps to an hour of script time
 	virtual void SetTime(float time) noexcept = 0;
 };

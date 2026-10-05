@@ -1166,7 +1166,7 @@ void RemoveReference() // 111 REMOVE_REFERENCE
 void SetGameTime() // 112 SET_GAME_TIME
 {
 	const auto time = Popf();
-	Locator::skySystem::value().GetClock().SetScriptTime(time);
+	Locator::skySystem::value().SetTime(time);
 }
 
 void GetGameTime() // 113 GET_GAME_TIME

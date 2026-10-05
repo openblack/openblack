@@ -26,6 +26,8 @@ enum class RenderPass : uint8_t
 	LandLuminosity,
 	/// The land cells' colours this frame, which light the land and the models on it
 	LandColour,
+	/// The sky's dome for each alignment, blended for the time of day a band of rows at a time
+	SkyDome,
 	Footprint,
 	/// The rivers' channels, into the land's alpha
 	LandAlpha,
@@ -48,6 +50,7 @@ static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_
     "Land Shade Pass",      //
     "Land Luminosity Pass", //
     "Land Colour Pass",     //
+    "Sky Dome Pass",        //
     "Footprint Pass",       //
     "Land Alpha Pass",      //
     "Object Shadow Pass",   //

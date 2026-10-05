@@ -82,6 +82,8 @@ private:
 	[[nodiscard]] const Texture2D& GetLandLuminosity() const;
 	/// The land cells' colours this frame: as they were laid, with the frame's colour stamps (see land_colour_stamps)
 	void DrawLandColourPass(const DrawSceneDesc& drawDesc) const;
+	/// The sky's dome blended again where the sky has moved on, a band of rows a frame
+	void DrawSkyDomePass(const DrawSceneDesc& drawDesc) const;
 	[[nodiscard]] const Texture2D& GetLandColour() const;
 	/// The sun in the sky, after the sky's dome
 	void DrawSun(RenderPass viewId) const;
@@ -160,6 +162,8 @@ private:
 	mutable std::unique_ptr<FrameBuffer> _landShadeFrameBuffer;
 	/// The land cells' colours this frame, sized to the land's
 	mutable std::unique_ptr<FrameBuffer> _landColourFrameBuffer;
+	/// The sky's dome for each alignment, one above the other, kept from frame to frame
+	mutable std::unique_ptr<FrameBuffer> _skyDomeFrameBuffer;
 	/// The glow lightning stamps on the land, made the first time it is drawn
 	mutable std::optional<TextureHandle> _lightningGlowTexture;
 	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
