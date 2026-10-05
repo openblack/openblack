@@ -403,7 +403,8 @@ int WriteFile(const Arguments::Write& args) noexcept
 
 		auto blockIter = blockMap.emplace(key, openblack::lnd::LNDBlock {});
 		auto& block = blockIter.first->second;
-		if (!blockIter.second)
+		// Clear a block only when it is new: a later point in the same block must not erase the earlier ones.
+		if (blockIter.second)
 		{
 			memset(&block, 0, sizeof(block));
 		}
