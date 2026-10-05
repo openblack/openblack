@@ -632,8 +632,6 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 	{
 		const auto model = glm::translate(glm::mat4(1.0f), temple.GetPosition());
 		const auto* reflection = _shaderManager->GetShader("Reflection");
-		reflection->SetTextureSampler("s_reflection", 4,
-		                              Locator::oceanSystem::value().GetReflectionFramebuffer().GetColorAttachment());
 		L3DMeshSubmitDesc submitDesc = {};
 		submitDesc.viewId = desc.viewId;
 		submitDesc.program = reflection;
@@ -642,7 +640,14 @@ void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
 		submitDesc.useMaterialCulling = true;
 		submitDesc.modelMatrices = &model;
 		submitDesc.matrixCount = 1;
-		DrawMesh(*meshes.Handle(pool), submitDesc, std::numeric_limits<uint8_t>::max());
+		// Each submesh's draw lets go of the textures bound for it
+		const auto& mesh = *meshes.Handle(pool);
+		for (uint8_t subMesh = 0; subMesh < mesh.GetNumSubMeshes(); ++subMesh)
+		{
+			reflection->SetTextureSampler("s_reflection", 4,
+			                              Locator::oceanSystem::value().GetReflectionFramebuffer().GetColorAttachment());
+			DrawMesh(mesh, submitDesc, subMesh);
+		}
 	}
 	for (const auto& layer : layers)
 	{
