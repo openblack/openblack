@@ -9,56 +9,32 @@
 
 #pragma once
 
-#include <algorithm>
-#include <string>
 #include <vector>
 
-#include <glm/geometric.hpp>
+#include <entt/core/hashed_string.hpp>
 #include <glm/vec3.hpp>
-
-#include "Enums.h"
 
 namespace openblack::ecs::components
 {
 
+/// A river: its points in the order the land's script gives them. The river runs from each point to the next.
 struct Stream
 {
 	using Id = int;
 
-	// NOLINTNEXTLINE(misc-no-recursion): lint error, this isn't a function
-	class Node
-	{
-	public:
-		glm::vec3 position;
-		std::vector<Node> edges;
+	Id id;
+	std::vector<glm::vec3> points;
+};
 
-		Node(const glm::vec3& position, const std::vector<Node>& nodes)
-		    : position(position)
-		{
-			if (nodes.empty())
-			{
-				return;
-			}
-
-			auto element =
-			    std::min_element(std::cbegin(nodes), std::cend(nodes), [&position](const auto& first, const auto& second) {
-				    auto firstDistance = glm::distance(position, first.position);
-				    auto secondDistance = glm::distance(position, second.position);
-				    return firstDistance < secondDistance;
-			    });
-
-			if (glm::distance(position, element->position) < k_MaxNodeDistance)
-			{
-				edges.push_back(*element);
-			}
-		}
-
-	private:
-		const static auto k_MaxNodeDistance = 100;
-	};
-
-	Stream::Id id;
-	std::vector<Node> nodes;
+/// A stretch of river between two of its points, laid into the land at the first: its bed is blended into the land's
+/// colour like a building's footprint, and its channel clears the land's alpha so the sea drawn beneath shows through
+/// as the water. Both meshes are a stretch long along their x, turned and stretched to reach the next point.
+struct StreamSegment
+{
+	static constexpr entt::id_type k_ChannelMeshId = entt::hashed_string("river");
+	static constexpr entt::id_type k_BedMeshId = entt::hashed_string("river2");
+	/// The length of the meshes along their x
+	static constexpr float k_MeshLength = 30.0f;
 };
 
 } // namespace openblack::ecs::components

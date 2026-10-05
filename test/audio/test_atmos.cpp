@@ -192,6 +192,7 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { throw std::logic_error("unused"); }
+	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] U16Extent2 GetIndexExtent() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] glm::mat4 GetOrthoView() const override { throw std::logic_error("unused"); }
 	[[nodiscard]] glm::mat4 GetOrthoProj() const override { throw std::logic_error("unused"); }

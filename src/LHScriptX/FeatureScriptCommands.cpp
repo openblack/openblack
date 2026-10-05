@@ -33,6 +33,7 @@
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Archetypes/PotArchetype.h"
+#include "ECS/Archetypes/StreamSegmentArchetype.h"
 #include "ECS/Archetypes/StreetLanternArchetype.h"
 #include "ECS/Archetypes/TownArchetype.h"
 #include "ECS/Archetypes/TreeArchetype.h"
@@ -682,7 +683,11 @@ void FeatureScriptCommands::CreateStreamPoint(int32_t streamId, glm::vec3 positi
 	auto& registryContext = registry.Context();
 
 	Stream& stream = registry.Get<Stream>(registryContext.streams.at(streamId));
-	stream.nodes.emplace_back(position, stream.nodes);
+	stream.points.push_back(position);
+	if (stream.points.size() >= 2)
+	{
+		StreamSegmentArchetype::Create(stream.points[stream.points.size() - 2], stream.points.back());
+	}
 }
 
 void FeatureScriptCommands::CreateWaterfall([[maybe_unused]] glm::vec3 position)

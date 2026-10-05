@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <SDL.h>
+#include <entt/core/fwd.hpp>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
@@ -71,6 +72,9 @@ public:
 
 private:
 	void DrawFootprintPass(const DrawSceneDesc& drawDesc) const;
+	/// The rivers' beds or channels, a footprint for each stretch of river
+	void DrawStreamFootprints(graphics::RenderPass viewId, entt::id_type meshId) const;
+	void DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const;
 	/// Casts the shadows of the island's trees, rocks and buildings onto it (see ObjectShadows)
 	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
 	/// u_handLight of the land: where HandLight's map lies and how strongly it lights, loading the map the first time

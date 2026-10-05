@@ -91,6 +91,8 @@ struct RenderContext
 	/// Bone matrices of animated meshes, refilled at every \ref PrepareDraw. Boned meshes without an entry are drawn
 	/// in their rest pose.
 	std::map<entt::id_type, std::vector<glm::mat4>> animatedBoneMatrices;
+	/// The rivers' stretches, whose beds and channels are laid into the land (see components::StreamSegment)
+	std::vector<glm::mat4> streamSegments;
 	/// The hand is scaled by a negative factor to mirror it, which turns its faces round
 	bool handMirrored {false};
 

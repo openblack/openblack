@@ -17,6 +17,8 @@ SAMPLER2D(s5_objectShadows, 5);
 SAMPLER2D(s6_handLight, 6);
 // The land's light: a colour for each level of the cells' luminosity (LandLightTable)
 SAMPLER2D(s7_landLight, 7);
+// What of the land's alpha the rivers' channels leave, laid out as the footprints are
+SAMPLER2D(s8_landAlpha, 8);
 
 // x: the block's layer of s0_blockTextures
 uniform vec4 u_block;
@@ -84,7 +86,8 @@ void main()
 	float bumpAlpha = texture2D(s1_smallBumpAlpha, smallBumpUv).r * v_smallBumpFade.y * smallBumpMapStrength;
 	vec3 land = min(col.rgb + v_haze.rgb, vec3_splat(1.0f));
 	vec3 detail = min(smallBump + v_haze.rgb, vec3_splat(1.0f));
-	float landAlpha = block.a;
+	// The rivers' channels lower the coast alpha where they run, so the sea shows through as their water
+	float landAlpha = min(block.a, texture2D(s8_landAlpha, v_texcoord1.xy).r);
 	gl_FragColor = vec4(land * landAlpha * (1.0f - bumpAlpha) + detail * bumpAlpha,
 	                    1.0f - (1.0f - landAlpha) * (1.0f - bumpAlpha));
 }

@@ -20,6 +20,8 @@ namespace openblack::graphics
 enum class RenderPass : uint8_t
 {
 	Footprint,
+	/// The rivers' channels, into the land's alpha
+	LandAlpha,
 	ObjectShadow,
 	/// The land seen from above, which the map in the temple's pool is textured with
 	TempleMap,
@@ -37,6 +39,7 @@ enum class RenderPass : uint8_t
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
     "Footprint Pass",     //
+    "Land Alpha Pass",    //
     "Object Shadow Pass", //
     "Temple Map Pass",    //
     "Hand Shadow Pass",   //

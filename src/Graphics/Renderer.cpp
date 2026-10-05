@@ -43,6 +43,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MistDome.h"
 #include "ECS/Components/Sprite.h"
+#include "ECS/Components/Stream.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
@@ -1334,7 +1335,76 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			bgfx::setState(state);
 			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(footprintShaderInstanced->GetRawHandle()));
 		}
+
+		// The rivers' beds are laid after the land's other footprints, blended into its colour like them
+		DrawStreamFootprints(viewId, ecs::components::StreamSegment::k_BedMeshId);
 	}
+}
+
+void Renderer::DrawStreamFootprints(RenderPass viewId, entt::id_type meshId) const
+{
+	const auto& segments = Locator::rendereringSystem::value().GetContext().streamSegments;
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	if (segments.empty() || !meshes.Contains(meshId))
+	{
+		return;
+	}
+	const auto mesh = meshes.Handle(meshId);
+	if (mesh->GetFootprints().empty())
+	{
+		return;
+	}
+	const auto count = static_cast<uint32_t>(segments.size());
+	constexpr uint16_t k_Stride = sizeof(glm::mat4);
+	if (bgfx::getAvailInstanceDataBuffer(count, k_Stride) < count)
+	{
+		return;
+	}
+	bgfx::InstanceDataBuffer instances;
+	bgfx::allocInstanceDataBuffer(&instances, count, k_Stride);
+	std::memcpy(instances.data, segments.data(), segments.size() * sizeof(glm::mat4));
+
+	const auto& footprint = mesh->GetFootprints()[0];
+	const bool channel = meshId == ecs::components::StreamSegment::k_ChannelMeshId;
+	const auto* program = _shaderManager->GetShader(channel ? "LandAlphaInstanced" : "FootprintInstanced");
+	program->SetTextureSampler("s_footprint", 0, *footprint.texture);
+	if (channel)
+	{
+		const auto size = footprint.texture->GetResolution();
+		const glm::vec4 u_footprintSize {size.x, size.y, 0.0f, 0.0f};
+		program->SetUniformValue("u_footprintSize", &u_footprintSize);
+	}
+	footprint.mesh->GetVertexBuffer().Bind();
+	bgfx::setInstanceDataBuffer(&instances);
+	// A channel leaves the land's alpha at the lower of the two
+	const uint64_t state = channel ? BGFX_STATE_WRITE_R | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE) |
+	                                     BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_MIN)
+	                               : BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA;
+	bgfx::setState(state);
+	bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+}
+
+void Renderer::DrawLandAlphaPass(const DrawSceneDesc& drawDesc) const
+{
+	if (!drawDesc.drawIsland)
+	{
+		return;
+	}
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::LandAlpha);
+	const auto& island = Locator::terrainSystem::value();
+	const auto& frameBuffer = island.GetLandAlphaFramebuffer();
+	frameBuffer.Bind(RenderPass::LandAlpha);
+	uint16_t width = 0;
+	uint16_t height = 0;
+	frameBuffer.GetSize(width, height);
+	bgfx::setViewRect(viewId, 0, 0, width, height);
+	// The land is opaque but where a channel runs
+	bgfx::setViewClear(viewId, BGFX_CLEAR_COLOR, 0xFFFFFFFF);
+	bgfx::touch(viewId);
+	const auto view = island.GetOrthoView();
+	const auto proj = island.GetOrthoProj();
+	bgfx::setViewTransform(viewId, &view, &proj);
+	DrawStreamFootprints(RenderPass::LandAlpha, ecs::components::StreamSegment::k_ChannelMeshId);
 }
 
 void Renderer::DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const
@@ -1573,6 +1643,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
+	DrawLandAlphaPass(drawDesc);
 	UpdateLandLight();
 	DrawObjectShadowPass(drawDesc);
 	DrawTempleMapPass();
@@ -1759,6 +1830,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 			terrainShader->SetTextureSampler("s0_blockTextures", 0, island.GetBlockTextures());
 			terrainShader->SetTextureSampler("s1_smallBumpAlpha", 1, *smallBumpAlpha);
+			terrainShader->SetTextureSampler("s8_landAlpha", 8, island.GetLandAlphaFramebuffer().GetColorAttachment());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *smallBump);
 			terrainShader->SetUniformValue("u_smallBumpLine", &u_smallBumpLine);
 			terrainShader->SetUniformValue("u_smallBump", &u_smallBump);

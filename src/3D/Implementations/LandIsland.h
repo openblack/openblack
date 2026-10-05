@@ -59,6 +59,7 @@ public:
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { return *_luminosityMap; }
 	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override { return *_blockTextures; }
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override { return *_footprintFrameBuffer; }
+	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override { return *_landAlphaFrameBuffer; }
 
 	[[nodiscard]] glm::mat4 GetOrthoView() const override { return _view; }
 	[[nodiscard]] glm::mat4 GetOrthoProj() const override { return _proj; }
@@ -73,6 +74,7 @@ private:
 	std::unique_ptr<graphics::Texture2D> _blockTextures;
 
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
+	std::unique_ptr<graphics::FrameBuffer> _landAlphaFrameBuffer;
 	glm::mat4 _proj;
 	glm::mat4 _view;
 	glm::u16vec2 _extentIndexMin;

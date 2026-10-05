@@ -64,6 +64,8 @@ public:
 	/// The blocks' painted textures (see block_texture), a layer for each block in the order of GetBlocks
 	[[nodiscard]] virtual const graphics::Texture2D& GetBlockTextures() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
+	/// What of the land's alpha the rivers' channels leave, laid out as the footprints are
+	[[nodiscard]] virtual const graphics::FrameBuffer& GetLandAlphaFramebuffer() const = 0;
 
 	[[nodiscard]] virtual U16Extent2 GetIndexExtent() const = 0;
 	[[nodiscard]] virtual glm::mat4 GetOrthoView() const = 0;

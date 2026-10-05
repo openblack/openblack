@@ -78,6 +78,11 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
+	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
 	[[nodiscard]] glm::mat4 GetOrthoView() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");

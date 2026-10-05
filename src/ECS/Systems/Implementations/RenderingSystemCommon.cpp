@@ -70,6 +70,14 @@ void RenderingSystemCommon::PrepareDraw(bool drawBoundingBox, bool drawFootpaths
 		    }
 	    });
 
+	_renderContext.streamSegments.clear();
+	registry.Each<const StreamSegment, const Transform>(
+	    // The segment tag is empty, so only the transform is passed
+	    [this](const Transform& transform) {
+		    _renderContext.streamSegments.push_back(glm::translate(transform.position) * glm::mat4(transform.rotation) *
+		                                            glm::scale(transform.scale));
+	    });
+
 	if (_renderContext.dirty || _renderContext.hasBoundingBoxes != drawBoundingBox ||
 	    (_renderContext.footpaths != nullptr) != drawFootpaths || (_renderContext.streams != nullptr) != drawStreams)
 	{
@@ -110,24 +118,13 @@ void RenderingSystemCommon::PrepareDraw(bool drawBoundingBox, bool drawFootpaths
 		_renderContext.streams.reset();
 		if (drawStreams)
 		{
-			uint32_t edgeCount = 0;
-			registry.Each<const Stream>([&edgeCount](const Stream& ent) {
-				for (const auto& from : ent.nodes)
-				{
-					edgeCount += static_cast<uint32_t>(from.edges.size());
-				}
-			});
 			std::vector<graphics::DebugLines::Vertex> edges;
-			edges.reserve(edgeCount * 2);
 			registry.Each<const Stream>([&edges](const Stream& ent) {
 				const auto color = glm::vec4(1, 0, 0, 1);
-				for (const auto& from : ent.nodes)
+				for (size_t i = 1; i < ent.points.size(); ++i)
 				{
-					for (const auto& to : from.edges)
-					{
-						edges.push_back({glm::vec4(from.position, 1.0f), color});
-						edges.push_back({glm::vec4(to.position, 1.0f), color});
-					}
+					edges.push_back({glm::vec4(ent.points[i - 1], 1.0f), color});
+					edges.push_back({glm::vec4(ent.points[i], 1.0f), color});
 				}
 			});
 
