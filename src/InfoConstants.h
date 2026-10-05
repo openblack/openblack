@@ -429,7 +429,7 @@ struct GWorshipSiteInfo: GCitadelPartInfo
 	uint32_t maxDancersVisible;
 	float chantsToFillBattery;
 	float eachVillagerAddToFillBattery;
-	float chantsToReserveForMaintaining; ///< a float in the code; the file holds an int, so it reads as ~7e-43 (kept)
+	float chantsToReserveForMaintaining; ///< read as a float; the file holds an int, so it reads as ~7e-43 (kept)
 	float artifactPowerupMultiplier;
 };
 
@@ -1424,7 +1424,7 @@ struct GEffectInfo
 struct GMagicEffectInfo: GEffectInfo
 {
 	std::array<char, 0x30> debugString;
-	// seconds (the code reads them with fld: 0x5FB7A0..0x5FB7D0); -1 = no time limit. MAGIC_TYPE 0 holds the int 10.
+	// seconds, read as floats; -1 = no time limit. MAGIC_TYPE 0 holds the int 10.
 	float timerWhenOneShot;
 	float timerWhenPlayerCasting;
 	float timerWhenCreatureCasting;
@@ -1514,40 +1514,40 @@ struct GPFootballInfo: GMultiMapFixedInfo
 
 struct GSpellSeedInfo: GObjectInfo
 {
-	// Names from the code, which reads each field 0x10 further on than the file holds it
+	// Named by how the game uses them
 	GestureType selectionGesture; ///< 0xF0: stage 0 of the selection, 1 SPIRAL (player) / 2 INVERSE_SPIRAL (creature)
 	GestureType gesture;          ///< 0xF4: the miracle's gesture (stage 1)
 	GestureType gestureStage2;    ///< 0xF8: 0 in every entry
-	GestureType sizingGesture;    ///< 0xFC: 4 CIRCLE for STORM, SHIELD, PHYSICAL_SHIELD (fn_00729AC0)
-	SpellCastType castType;       ///< 0x100: SpellSeed::IsSpellCastInHand 0x729820, ApplyOnlyAfterRecSystem 0x7286B0
-	uint32_t isKeptInHand;        ///< 0x104: IsSpellKeptInHand 0x729840
-	uint32_t castOnObject;        ///< 0x108: 1 = InitWithObject (CanCast(Object) 0x729190)
-	uint32_t unknown0x10C;        ///< 0 for NATURE and TELEPORT, else 1 (UNVERIFIED: no reader found)
-	uint32_t seedFollowsSpell;    ///< 0x110: the seed is bound to the live spell (fn_00728FC0)
-	/// 0x114: the magic of POWER_UP_TYPE_NONE (-1), then of PU 0, 1, 2 (GetMagicTypeFromPULevel 0x72AFC0)
+	GestureType sizingGesture;    ///< 0xFC: 4 CIRCLE for STORM, SHIELD, PHYSICAL_SHIELD
+	SpellCastType castType;       ///< 0x100: whether the spell is cast in the hand
+	uint32_t isKeptInHand;        ///< 0x104: whether the spell stays in the hand once cast
+	uint32_t castOnObject;        ///< 0x108: 1 = cast on an object
+	uint32_t unknown0x10C;        ///< 0 for NATURE and TELEPORT, else 1 (unused by the game)
+	uint32_t seedFollowsSpell;    ///< 0x110: the seed is bound to the live spell
+	/// 0x114: the magic of no power-up (-1), then of power-ups 0, 1 and 2
 	std::array<MagicType, 4> magicTypes;
-	/// 0x124: the gesture that powers the seed up to PU 0, 1, 2 (0 = none; SetupPowerUpGestures 0x5CEE80)
+	/// 0x124: the gesture that powers the seed up to power-ups 0, 1 and 2 (0 = none)
 	std::array<GestureType, 3> powerUpGestures;
-	MeshId mesh;                       ///< 0x130: SpellSeed::GetMesh 0x729850
-	float scale;                       ///< 0x134: the seed's scale (SpellSeed ctors)
-	float unknown0x138;                ///< equals scale except for the flocks (UNVERIFIED: no reader found)
-	float holdLoweringMultiplier;      ///< 0x13C (0x728660)
-	float holdRadius;                  ///< 0x140: x the scale (0x728640)
-	float holdYRotate;                 ///< 0x144 (0x728670)
-	HoldType holdType;                 ///< 0x148: MAGIC (2) is forced until the seed is ready (0x728680)
-	uint32_t attachInHandEffectToBone; ///< 0x14C: copied to CHand+0x4954 with the in-hand PSys (fn_0046E7B0)
-	float unknown0x150;                ///< -1.5 in most entries (UNVERIFIED: no reader found)
-	float unknown0x154;                ///< (UNVERIFIED: no reader found)
-	uint32_t deleteSeedOnceCast;       ///< 0x158: IsThisSeedDeletedOnceCast 0x7281F0
-	float unknown0x15C;                ///< 0.1 in every entry (UNVERIFIED: no reader found)
-	uint32_t unknown0x160;             ///< 1 in every entry (UNVERIFIED: no reader found)
+	MeshId mesh;                       ///< 0x130
+	float scale;                       ///< 0x134: the seed's scale
+	float unknown0x138;                ///< equals scale except for the flocks (unused by the game)
+	float holdLoweringMultiplier;      ///< 0x13C
+	float holdRadius;                  ///< 0x140: times the scale
+	float holdYRotate;                 ///< 0x144
+	HoldType holdType;                 ///< 0x148: MAGIC (2) is forced until the seed is ready
+	uint32_t attachInHandEffectToBone; ///< 0x14C: attaches the in-hand particle effect to a bone
+	float unknown0x150;                ///< -1.5 in most entries (unused by the game)
+	float unknown0x154;                ///< (unused by the game)
+	uint32_t deleteSeedOnceCast;       ///< 0x158
+	float unknown0x15C;                ///< 0.1 in every entry (unused by the game)
+	uint32_t unknown0x160;             ///< 1 in every entry (unused by the game)
 	ParticleType holderParticle;       ///< 0x164: the effect on the worship icon's holder
 	uint32_t useMesh;                  ///< 0x168 (inferred)
-	uint32_t exists;                   ///< 0x16C: 1 = a real spell, 0 = unused slot (fn_004E1E20)
-	uint32_t iconIndex;                ///< 0x170: looked up by fn_0072B0D0 (icon slot, inf)
+	uint32_t exists;                   ///< 0x16C: 1 = a real spell, 0 = unused slot
+	uint32_t iconIndex;                ///< 0x170: icon slot (inferred)
 	HelpText tooltip;                  ///< 0x174
-	uint32_t unknown0x178;             ///< (UNVERIFIED: no reader found)
-	uint32_t unknown0x17C;             ///< 1 for FIRE, LIGHTNING_BOLT, HEAL, WEAK, STRONG (UNVERIFIED: no reader found)
+	uint32_t unknown0x178;             ///< (unused by the game)
+	uint32_t unknown0x17C;             ///< 1 for FIRE, LIGHTNING_BOLT, HEAL, WEAK, STRONG (unused by the game)
 };
 
 struct GCitadelHeartInfo: GCitadelPartInfo

@@ -65,7 +65,7 @@ enum class L3DMeshFlags : uint32_t
 	Unknown8 = 1U << 7U,                  // 0x80     (24)
 	HasBones = 1U << 8U,                  // 0x100    (23)
 	Unknown10 = 1U << 9U,                 // 0x200    (22) the object goes to the Z-sorter whole (L3DMesh::IsZSorted)
-	HasChimney = 1U << 10U,               // 0x400    (21) extra point [1] (LH3DStaticObject::GetChimneyPos 0x7F9F10)
+	HasChimney = 1U << 10U,               // 0x400    (21) extra point [1] is where its chimney smokes
 	HasDoorPosition = 1U << 11U,          // 0x800    (20)
 	Packed = 1U << 12U,                   // 0x1000   (19)
 	NoDraw = 1U << 13U,                   // 0x2000   (18)
@@ -353,8 +353,8 @@ bool DecodeSubmeshNames(std::span<const uint8_t> data, uint32_t dataOffset, uint
 bool DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize, uint32_t vertexCount,
                      uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates, std::vector<L3DLightmap>& lightmaps) noexcept;
 
-/// EBone block (ContainsEBone), after the extra metrics: up to 16 points attached to bones. The original's animal ground
-/// blobs (fn_0081FFF0) use the positions of the first 2 or 4, in the space of the bone they name (-1 = unused).
+/// EBone block (ContainsEBone), after the extra metrics: up to 16 points attached to bones. The game's animal ground
+/// blobs use the positions of the first 2 or 4, in the space of the bone they name (-1 = unused).
 struct L3DEBone
 {
 	uint32_t size;                                     ///< 836

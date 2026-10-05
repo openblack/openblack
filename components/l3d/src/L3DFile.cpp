@@ -860,7 +860,7 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	}
 
 	// EBone data: after the footprint, UV2, name and extra metrics blocks, each starting with its size
-	// (GetSizeEBone 0x4038E0; the footprint block keeps its size at +8)
+	// (the footprint block keeps its size at +8)
 	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsEBone)) != 0u)
 	{
 		stream.seekg(0x48, std::istream::beg);

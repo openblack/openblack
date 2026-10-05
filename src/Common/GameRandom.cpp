@@ -15,13 +15,13 @@ using namespace openblack;
 
 namespace
 {
-/// fcomp 0.0; fnstsw; test ah, 0x40 (0x5106FE, 0x6DE53C, 0x6DE59F): C3 is set for +-0 and for NaN (unordered)
+/// The game compares with 0 in a way that a NaN also passes
 bool ZeroOrNaN(float x) noexcept
 {
 	return x == 0.0f || std::isnan(x);
 }
 
-/// PSys's (u * k) * x (0x672AD7 and 0x672ADD, 0x672B2D and 0x672B33), the other way round from GData's
+/// Particles' (u * k) * x, the other way round from the game's (u * x) * k
 float ParticleFloat(uint32_t u, float x) noexcept
 {
 	float r = static_cast<float>(u);
@@ -37,7 +37,6 @@ float game_random::FloatRand(float x, uint32_t& seed) noexcept
 	{
 		return 0.0f;
 	}
-	// fild qword (exact), fmul x (0x510732), fmul [0x8D6050] (0x510736)
 	float r = static_cast<float>(LHRand(k_FloatRandRange, seed));
 	r = r * x;
 	r = r * k_FloatRandScale;
@@ -53,7 +52,6 @@ float GameRandomInterface::GameFloatRange(float a, float b)
 
 float GameRandomInterface::CrtRandom(float a, float b)
 {
-	// fild rand(); fmul [0x9A3700]; fld b; fsub a; fmulp; fadd a
 	float r = static_cast<float>(CrtRand());
 	r = r * game_random::k_CrtRandomScale;
 	const float range = b - a;
@@ -66,15 +64,12 @@ float GameRandomInterface::ParticleFloatRand(float x)
 	switch (GetParticleStream())
 	{
 	case ParticleRandomStream::Synced:
-		// 0x672AB0
 		return ParticleFloat(GameRand(game_random::k_FloatRandRange), x);
 	case ParticleRandomStream::Local:
-		// 0x672B10
 		return ParticleFloat(LocalRand(static_cast<int32_t>(game_random::k_FloatRandRange)), x);
 	case ParticleRandomStream::None:
 		break;
 	}
-	// 0x672990
 	return 0.0f;
 }
 
@@ -90,15 +85,12 @@ int32_t GameRandomInterface::ParticleRand(int32_t n)
 	switch (GetParticleStream())
 	{
 	case ParticleRandomStream::Synced:
-		// 0x672AF0
 		return static_cast<int32_t>(GameRand(static_cast<uint32_t>(n)));
 	case ParticleRandomStream::Local:
-		// 0x672B40
 		return static_cast<int32_t>(LocalRand(n));
 	case ParticleRandomStream::None:
 		break;
 	}
-	// 0x6729A0
 	return 0;
 }
 
@@ -115,7 +107,7 @@ glm::vec3 GameRandomInterface::ParticleRandR3()
 		p.x = ParticleFloatRand(2.0f) - 1.0f;
 		p.y = ParticleFloatRand(2.0f) - 1.0f;
 		p.z = ParticleFloatRand(2.0f) - 1.0f;
-		// 0x672A3E..0x672A57: (z z + y y) + x x
+		// (z z + y y) + x x
 		const float zz = p.z * p.z;
 		const float yy = p.y * p.y;
 		const float xx = p.x * p.x;

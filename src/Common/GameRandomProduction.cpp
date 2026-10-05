@@ -15,7 +15,6 @@ using namespace openblack;
 
 uint32_t GameRandomProduction::GameRand(uint32_t n)
 {
-	// 0x510693: 0 for 0, no draw
 	return n == 0 ? 0 : game_random::LHRand(n, _seeds.synced);
 }
 
@@ -26,7 +25,6 @@ float GameRandomProduction::GameFloatRand(float x)
 
 uint32_t GameRandomProduction::LocalRand(int32_t n)
 {
-	// 0x6DE574: 0 for 0, no draw
 	return n == 0 ? 0 : game_random::LHRand(static_cast<uint32_t>(n), _seeds.local);
 }
 

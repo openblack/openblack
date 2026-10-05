@@ -150,7 +150,7 @@ bool openblack::InitializeGame() noexcept
 
 void openblack::InitializeLevel(const std::filesystem::path& path)
 {
-	// GGame::ClearMap -> GData::Reset 0x510750: both seeds go to 0 with every map
+	// Both seeds go to 0 with every map, as the game clears them
 	Locator::gameRandom::value().SetSeeds({0, 0});
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();

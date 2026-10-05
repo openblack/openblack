@@ -477,8 +477,8 @@ PackResult PackFile::ExtractAnimationsFromBlock() noexcept
 
 PackResult PackFile::ResolveFileSegmentBankInfoBlock() noexcept
 {
-	// LHBankRegister (LHaudiodllR 0x10002240) fails without this block (0x10002368); here it stays optional so that the
-	// packs that only have a sample table keep loading.
+	// The game won't load a sound bank without this block; here it stays optional so that the packs that only have a
+	// sample table keep loading.
 	_audioBankInfo = {};
 	if (!HasBlock("LHFileSegmentBankInfo"))
 	{
@@ -486,14 +486,12 @@ PackResult PackFile::ResolveFileSegmentBankInfoBlock() noexcept
 	}
 
 	const auto& data = GetBlock("LHFileSegmentBankInfo");
-	// (defensive, not in the original: LHBankRegister reads the 3 u32 without checking the block size; every .sad of
-	// the installation has 532 bytes)
+	// The game doesn't check the block is long enough; every .sad of the game has 532 bytes
 	if (data.size() < sizeof(_audioBankInfo))
 	{
 		return PackResult::ErrFileTooSmall;
 	}
 
-	// 3 u32 read one after the other (0x10002383..0x100023BD)
 	std::memcpy(&_audioBankInfo, data.data(), sizeof(_audioBankInfo));
 
 	return PackResult::Success;

@@ -627,9 +627,7 @@ uint32_t LHVM::GetTicksCount()
 
 void LHVM::PushElaspedTime()
 {
-	// 0x1000ABD0: fild of the tick count, fmul 0.1f [0x1001F140], fstp float. The DLL runs on the game thread with the
-	// exe's FPU at 24 bits (fn_007DEE00; the DLL never sets the control word): the product is rounded once to a float,
-	// as the double product (exact below 2^29 ticks) cast to float
+	// The game's script time is the tick count times 0.1f, rounded once to a float by its 24-bit FPU
 	const auto time = static_cast<float>(static_cast<double>(GetTicksCount()) * static_cast<double>(0.1f));
 	Pushf(time);
 }
@@ -1352,14 +1350,13 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 	}
 	else // Mode::CAST
 	{
-		// The original's cast (ScriptLibraryR.dll 0x10008EE0, switch table 0x100090E4 on type - 1) converts the value
-		// for two types and only retags it for the others
+		// The game's cast converts the value for two types and only retags it for the others
 		switch (instruction.type)
 		{
 		case DataType::Int:
 		{
-			// 0x10008F0A: the bits read as a float, __ftol (fistp qword with truncation, the low dword); out of range
-			// and NaN give the indefinite integer, whose low dword is 0
+			// The bits read as a float, truncated through a 64-bit integer and its low 32 bits kept: out of range and NaN
+			// give 0
 			const auto f = Pop().floatVal;
 			constexpr auto k_Limit = 9.2233720368547758e18f; // 2^63
 			const auto truncated = std::isfinite(f) && std::fabs(f) < k_Limit ? static_cast<int64_t>(f) : 0;
@@ -1367,17 +1364,17 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 			break;
 		}
 		case DataType::Float:
-			// 0x10008F6F: the bits read as an unsigned 32-bit integer (fild qword with a zero high dword)
+			// The bits read as an unsigned 32-bit integer
 			Push(VMValue(static_cast<float>(Pop().uintVal)), DataType::Float);
 			break;
 		case DataType::Vector:
 		case DataType::Object:
 		case DataType::Boolean:
-			// 0x10008F32 / 0x10008FA2 / 0x10008F57: the same bits, the new type
+			// The same bits, the new type
 			Push(Pop(), instruction.type);
 			break;
 		default:
-			// 0x100090DE (Unk5, and the types outside the table): nothing, the value stays as it was
+			// Nothing: the value stays as it was
 			break;
 		}
 	}

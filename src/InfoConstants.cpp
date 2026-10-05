@@ -23,7 +23,7 @@ using namespace openblack;
 
 namespace
 {
-/// _stricmp
+/// Equal ignoring case, as the game compares names
 bool EqualNoCase(std::string_view a, std::string_view b)
 {
 	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char x, char y) {
@@ -57,9 +57,8 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 
 AbodeInfo GAbodeInfo::Find(const std::string& name)
 {
-	// GAbodeInfo::GetInfoFromText 0x405A70: "<tribe>_<abode>", the tribe prefix with _strnicmp and the abode's
-	// description with _stricmp, the first match; -1 if none. The original then uses the info without a check;
-	// here the miss is logged and the command skipped.
+	// "<tribe>_<abode>", both parts ignoring case, the first match; None if there is none. The game then uses the info
+	// without a check; here the miss is logged and the command skipped.
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& abode : Locator::infoConstants::value().abode)
 	{
@@ -108,8 +107,7 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& feature : Locator::infoConstants::value().feature)
 	{
-		// fn_00527740: _stricmp with the description; the count (0x4C) if none, then used without a check (here
-		// logged and the command skipped)
+		// Ignoring case; the game uses a missing info without a check, here it is logged and the command skipped
 		if (EqualNoCase(name, feature.debugString.data()))
 		{
 			return static_cast<FeatureInfo>(i);
@@ -125,8 +123,7 @@ AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& as : Locator::infoConstants::value().animatedStatic)
 	{
-		// fn_00422600: _stricmp with the description; the count (0x10) if none, then used without a check (here
-		// logged and the command skipped)
+		// Ignoring case; the game uses a missing info without a check, here it is logged and the command skipped
 		if (EqualNoCase(name, as.debugString.data()))
 		{
 			return static_cast<AnimatedStaticInfo>(i);

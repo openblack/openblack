@@ -18,7 +18,7 @@
 namespace openblack
 {
 
-/// The game's random state (GData +8 and +0xC, PSysManager's draws and the game thread's CRT seed). It has no lock, as
+/// The game's random state (its two seeds, the particles' stream and the game thread's C runtime seed). It has no lock, as
 /// in the game: only the game thread draws
 class GameRandomProduction final: public GameRandomInterface
 {
