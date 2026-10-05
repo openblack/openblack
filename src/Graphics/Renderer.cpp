@@ -514,7 +514,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				// insides have lights of their own
 				const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 				const bool landLit = !desc.isSky && !desc.drawAll && !inTemple && _landLightTexture.has_value();
-				const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, desc.landLightScale, 0.0f, 0.0f};
+				const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, desc.landLightScale, desc.unlit ? 1.0f : 0.0f, 0.0f};
 				program->SetTextureSampler("s_landLuminosity", 6, island.GetLuminosityMap());
 				program->SetTextureSampler("s_landLight", 7, _landLightTexture.value_or(GetHandLightTexture()));
 				program->SetUniformValue("u_islandExtent", &islandExtent);
@@ -1830,6 +1830,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.lightMultiply = light.multiply;
 				submitDesc.lightAdd = light.add;
 				submitDesc.landLightScale = meshId == ecs::components::Hand::k_MeshId ? 1.5f : 1.0f;
+				submitDesc.unlit = placers.unlit;
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
 				if (mesh->IsBoned())

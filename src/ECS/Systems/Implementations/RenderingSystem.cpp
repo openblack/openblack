@@ -30,6 +30,7 @@
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
+#include "ECS/Components/Unlit.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -57,16 +58,19 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		uint32_t count;
 		bool morphWithTerrain;
 		bool castsShadow;
+		bool unlit;
 	};
 	std::unordered_map<entt::id_type, MeshInstances> meshIds;
 
 	auto prep = [&registry, &meshIds, &instanceCount](entt::entity entity, const Mesh& mesh, bool morphWithTerrain) {
 		auto count = meshIds.insert(std::make_pair(mesh.id, MeshInstances {.count = static_cast<uint32_t>(mesh.submeshId),
 		                                                                   .morphWithTerrain = morphWithTerrain,
-		                                                                   .castsShadow = false}));
+		                                                                   .castsShadow = false,
+		                                                                   .unlit = false}));
 		count.first->second.count++;
 		// The things whose shadows Black & White bakes into the land (IsCastShadowAtNight), and its features
 		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
+		count.first->second.unlit |= registry.AnyOf<Unlit>(entity);
 		instanceCount++;
 	};
 
@@ -107,9 +111,10 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	_renderContext.instancedDrawDescs.clear();
 	for (const auto& [meshId, desc] : meshIds)
 	{
-		_renderContext.instancedDrawDescs.emplace(
+		const auto [drawDesc, inserted] = _renderContext.instancedDrawDescs.emplace(
 		    std::piecewise_construct, std::forward_as_tuple(meshId),
 		    std::forward_as_tuple(offset, desc.count, desc.morphWithTerrain, desc.castsShadow));
+		drawDesc->second.unlit = desc.unlit;
 		offset += desc.count;
 	}
 

@@ -16,6 +16,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Unlit.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -40,6 +41,7 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	registry.Assign<Forest>(entity);
 	registry.Assign<BigForest>(entity);
 	registry.Assign<MorphWithTerrain>(entity);
+	registry.Assign<Unlit>(entity);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 

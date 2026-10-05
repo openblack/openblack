@@ -118,6 +118,8 @@ public:
 		/// How much brighter than the land's light where it stands the mesh is, at most white: the god hand is half as
 		/// bright again
 		float landLightScale {1.0f};
+		/// The mesh isn't shaded by the sun, only coloured by the land's light where it stands
+		bool unlit {false};
 		glm::vec3 lightAdd {0.0f};
 	};
 

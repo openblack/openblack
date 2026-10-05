@@ -82,6 +82,13 @@ void main()
 	colour = HazeDiffuse(colour, HazeFactor(hazeT));
 	v_haze = vec4(HazeColour(hazeT) / 255.0f, 0.0f);
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
+#ifndef USE_LIGHTMAP
+	if (u_landLight.z > 0.0f)
+	{
+		// Unlit meshes keep the land's colour, unshaded by the sun
+		v_color0 = vec4(colour / 255.0f, 1.0f);
+	}
+#endif // USE_LIGHTMAP
 
 #ifdef USE_HEIGHT_MAP
 #ifdef USE_INSTANCING

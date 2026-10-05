@@ -7,7 +7,7 @@
 SAMPLER2D(s_landLuminosity, 6);
 SAMPLER2D(s_landLight, 7);
 // x: 1 to colour the object by the land's light where it stands, 0 for white. y: how much brighter than the land's light
-// the object is, at most white
+// the object is, at most white. z: 1 for an object the sun doesn't shade
 uniform vec4 u_landLight;
 
 // The colour of a luminosity, 0 to 255

@@ -43,6 +43,8 @@ struct RenderContext
 		bool morphWithTerrain;
 		/// The instances cast their shadows onto the land (see graphics::ObjectShadows)
 		bool castsShadow;
+		/// The instances aren't shaded by the sun (see components::Unlit)
+		bool unlit {false};
 		/// The instances aren't seen in the reflection pass
 		bool hiddenFromReflection {false};
 		/// The instances show the reflection pass through them, as the temple's floor does
