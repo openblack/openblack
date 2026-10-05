@@ -18,6 +18,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Graphics/IndexBuffer.h"
+#include "Graphics/RenderModes.h"
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/VertexBuffer.h"
 #include "L3DMesh.h"
@@ -177,51 +178,33 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 			indices[startIndex + j] = indexSpan[startIndex + j] + startVertex;
 		}
 
-		struct MaterialTypeLutEntry
-		{
-			bool depthWrite;
-			bool alphaTest;
-			L3DSubMesh::Primitive::BlendMode blend;
-			bool modulateAlpha;  ///< Multiply ouput alpha by a uniform
-			bool thresholdAlpha; ///< Dismiss fragments below a certain threshold
-		};
-		static const std::array<MaterialTypeLutEntry, static_cast<uint32_t>(l3d::L3DMaterial::Type::_Count)> materialTypeLut = {
-		    {
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false},  // Smooth
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false},  // SmoothAlpha
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false},  // Textured
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},   // TexturedAlpha
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false},  // AlphaTextured
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},   // AlphaTexturedAlpha
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},  // AlphaTexturedAlphaNz
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, false, false}, // SmoothAlphaNz
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Standard, true, false},  // TexturedAlphaNz
-		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, false, true},    // TexturedChroma
-		        {true, true, L3DSubMesh::Primitive::BlendMode::Additive, true, true},     // AlphaTexturedAlphaAdditiveChroma
-		        {false, true, L3DSubMesh::Primitive::BlendMode::Additive, true, true},    // AlphaTexturedAlphaAdditiveChromaNz
-		        {true, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},   // AlphaTexturedAlphaAdditive
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Additive, true, false},  // AlphaTexturedAlphaAdditiveNz
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false}, // 0xe
-		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},     // TexturedChromaAlpha
-		        {false, true, L3DSubMesh::Primitive::BlendMode::Standard, true, true},    // TexturedChromaAlphaNz
-		        {false, false, L3DSubMesh::Primitive::BlendMode::Disabled, false, false}, // 0x11
-		        {true, true, L3DSubMesh::Primitive::BlendMode::Standard, false, true},    // ChromaJustZ
-		    }};
-
-		assert(static_cast<uint32_t>(primitive.material.type) != 0xe);
-		assert(static_cast<uint32_t>(primitive.material.type) != 0x11);
-		const auto& lutEntry = materialTypeLut.at(static_cast<uint32_t>(primitive.material.type));
+		const auto& mode = graphics::render_modes::Desc(static_cast<graphics::render_modes::Mode>(primitive.material.type));
+		const auto blend = [&mode] {
+			using graphics::render_modes::Blend;
+			switch (mode.blend)
+			{
+			case Blend::Standard:
+				return Primitive::BlendMode::Standard;
+			case Blend::Additive:
+				return Primitive::BlendMode::Additive;
+			case Blend::JustZ:
+				return Primitive::BlendMode::JustZ;
+			case Blend::Disabled:
+				break;
+			}
+			return Primitive::BlendMode::Disabled;
+		}();
 
 		// TODO(bwrsandman): Interpret cull mode, color byte ordering and render mode, then store in primitive
 		_primitives.emplace_back(Primitive {
 		    primitive.material.skinID,
 		    startIndex,
 		    primitive.numTriangles * 3,
-		    lutEntry.depthWrite,
-		    lutEntry.alphaTest,
-		    lutEntry.blend,
-		    lutEntry.modulateAlpha,
-		    lutEntry.thresholdAlpha,
+		    mode.zWrite,
+		    mode.alphaTest,
+		    blend,
+		    mode.alphaModulate,
+		    mode.alphaTest,
 		    primitive.material.alphaCutoutThreshold / 255.0f,
 		    (primitive.material.cullMode & 1U) != 0,
 		});

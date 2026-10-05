@@ -44,6 +44,7 @@ class L3DSubMesh
 			Disabled,
 			Standard, ///< src_alpha, 1 - src_alpha
 			Additive, ///< src_alpha, 1
+			JustZ,    ///< only the depth is written
 		};
 
 		uint32_t skinID;
