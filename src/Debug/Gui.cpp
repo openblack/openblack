@@ -67,6 +67,7 @@
 #include "Profiler.h"
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
+#include "TestbedScenarios.h"
 #include "TextureViewer.h"
 #include "Weather.h"
 #include "Windowing/WindowingInterface.h"
@@ -123,7 +124,9 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new TempleInterior);
 	debugWindows.emplace_back(new gui::Camera);
 	debugWindows.emplace_back(new Weather);
-	debugWindows.emplace_back(new CreatureSpawner);
+	auto spawner = std::make_unique<CreatureSpawner>();
+	debugWindows.emplace_back(new TestbedScenarios(*spawner));
+	debugWindows.emplace_back(std::move(spawner));
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
@@ -241,6 +244,17 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 		break;
 	}
 	return _stealsFocus;
+}
+
+void Gui::OpenWindow(std::string_view name) noexcept
+{
+	for (auto& window : _debugWindows)
+	{
+		if (window->GetName() == name)
+		{
+			window->Open();
+		}
+	}
 }
 
 bool Gui::CreateFontsTextureBgfx() noexcept

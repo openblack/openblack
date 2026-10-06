@@ -45,6 +45,7 @@ void Window::Toggle() noexcept
 
 void Window::WindowUpdate() noexcept
 {
+	UpdateAlways();
 	if (_open)
 	{
 		Update();

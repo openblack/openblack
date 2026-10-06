@@ -146,6 +146,12 @@ void CreatureSpawner::Close() noexcept
 	Window::Close();
 }
 
+void CreatureSpawner::Select(entt::entity entity) noexcept
+{
+	_selected = entity;
+	Open();
+}
+
 void CreatureSpawner::Draw() noexcept
 {
 	DrawSettings();

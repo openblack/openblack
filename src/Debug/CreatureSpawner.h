@@ -33,6 +33,8 @@ public:
 	CreatureSpawner() noexcept;
 
 	void Close() noexcept override;
+	/// Picks a creature, as its Select button in the list does, and opens the window on it
+	void Select(entt::entity entity) noexcept;
 
 protected:
 	void Draw() noexcept override;

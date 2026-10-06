@@ -1531,7 +1531,11 @@ bool Game::Run() noexcept
 		try
 		{
 			lhvm.LoadBinary(fileSystem.ReadAll(challengePath));
-			lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
+			// The story's scripts run the first land; on the testbed they would set its time of day and stop its clock
+			if (!_startTestbed)
+			{
+				lhvm.StartScript("LandControlAll", lhvm::ScriptType::All);
+			}
 		}
 		catch (const std::runtime_error& err)
 		{
@@ -1685,6 +1689,11 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 
 void Game::LoadTestbed(bool water) noexcept
 {
+	// No script runs on the testbed: the story's would set its time of day and stop its clock a few turns in
+	if (Locator::vm::has_value())
+	{
+		Locator::vm::value().StopAllTasks();
+	}
 	PrepareNewLand();
 	InitializeLevel(flat_land::Build(water));
 	SetUpLandscape();
@@ -1698,6 +1707,12 @@ void Game::LoadTestbed(bool water) noexcept
 	    .SetFocus({middle.x, ground, middle.y});
 
 	StartNewLand();
+
+	// The testbed comes with its window of scenarios to try out on it
+	if (Locator::debugGui::has_value())
+	{
+		Locator::debugGui::value().OpenWindow(debug::gui::k_TestbedScenariosWindow);
+	}
 }
 
 void Game::PrepareNewLand()

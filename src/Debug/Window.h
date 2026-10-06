@@ -38,6 +38,8 @@ public:
 protected:
 	virtual void Draw() noexcept = 0;
 	virtual void Update() noexcept = 0;
+	/// Once a frame whether the window is open or not, for what goes on with it closed
+	virtual void UpdateAlways() noexcept {}
 	virtual void ProcessEventOpen(const SDL_Event& event) noexcept = 0;
 	virtual void ProcessEventAlways(const SDL_Event& event) noexcept = 0;
 	/// Whether the open window takes the event for itself, such as a click on the land it acts on
