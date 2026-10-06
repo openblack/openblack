@@ -37,6 +37,7 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
+#include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 
 using namespace openblack;
@@ -201,7 +202,7 @@ void LandIsland::Build(const LandData& data)
 	const auto heightMapData = CreateHeightMap();
 	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::RG8,
 	                   Wrapping::ClampEdge, Filter::Nearest,
-	                   bgfx::makeRef(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
+	                   bgfx::copy(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
 
 	_luminosityMap = std::make_unique<Texture2D>("Luminosity Map");
 	const auto luminosityMapData = CreateLuminosityMap();
@@ -256,10 +257,20 @@ void LandIsland::Build(const LandData& data)
 	_blockTextures->Create(block_texture::k_Side, block_texture::k_Side, static_cast<uint16_t>(_landBlocks.size()),
 	                       TextureFormat::RGBA8, Wrapping::ClampEdge, Filter::Linear, blockTexels);
 
-	// build the meshes (we could move this elsewhere)
-	for (auto& block : _landBlocks)
+	// The blocks' vertices, one after another in one buffer
+	const auto vertexCount = _landBlocks.size() * LandBlock::k_VertexCount;
+	const auto* vertexMemory = bgfx::alloc(static_cast<uint32_t>(vertexCount * sizeof(LandVertex)));
+	const auto vertices = std::span(reinterpret_cast<LandVertex*>(vertexMemory->data), vertexCount);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
 	{
-		block.BuildMesh(*this);
+		_landBlocks[i].BuildMesh(*this, vertices.subspan(i * LandBlock::k_VertexCount, LandBlock::k_VertexCount));
+	}
+	VertexDecl decl;
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
+	_blockVertices = std::make_unique<VertexBuffer>("LandBlocks", vertexMemory, decl);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
+	{
+		_landBlocks[i].SetVertices(*_blockVertices, static_cast<uint32_t>(i * LandBlock::k_VertexCount));
 	}
 	bgfx::frame();
 }

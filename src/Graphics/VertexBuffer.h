@@ -85,6 +85,8 @@ public:
 	/// Whether bgfx made the buffer; one it couldn't make isn't drawn
 	[[nodiscard]] bool IsValid() const noexcept;
 	void Bind() const;
+	/// Binds a run of the buffer's vertices
+	void Bind(uint32_t firstVertex, uint32_t count) const;
 	/// Binds the buffer to another stream, its vertices read by a layout of its own: a creature's variant meshes, whose
 	/// positions and normals come in as other attributes than the base mesh's
 	void BindStream(uint8_t stream, VertexLayoutHandle layout) const;

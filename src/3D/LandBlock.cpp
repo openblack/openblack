@@ -19,27 +19,14 @@
 #include <bgfx/bgfx.h>
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
-#include "Graphics/Mesh.h"
 #include "Graphics/VertexBuffer.h"
 
 using namespace openblack;
 using namespace openblack::graphics;
 
-void LandBlock::BuildMesh(LandIslandInterface& island)
+void LandBlock::BuildMesh(LandIslandInterface& island, std::span<LandVertex> vertices)
 {
-	if (_mesh != nullptr)
-	{
-		_mesh.reset();
-	}
-
-	VertexDecl decl;
-	decl.reserve(1);
-	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
-
-	// reserve 16*16 quads of 2 tris with 3 verts = 1536
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * k_VertexCount);
-	auto vertices = std::span(reinterpret_cast<LandVertex*>(verticesMem->data), k_VertexCount);
-
+	assert(vertices.size() == k_VertexCount);
 	BuildVertexList(vertices, island);
 
 	// The physics shape keeps every cell: it copies the positions before the open sea's are taken away
@@ -64,9 +51,6 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 		}
 	}
 
-	auto* vertexBuffer = new VertexBuffer("LandBlock", verticesMem, decl);
-	_mesh = std::make_unique<Mesh>(vertexBuffer);
-
 	_physicsMesh = std::make_unique<btBvhTriangleMeshShape>(_dynamicsMeshInterface.get(), true);
 	_rigidBody = std::make_unique<btRigidBody>(0.0f, nullptr, _physicsMesh.get());
 	btTransform transform;
@@ -75,6 +59,20 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 	_rigidBody->setWorldTransform(transform);
 	_rigidBody->setContactStiffnessAndDamping(300, 10);
 	_rigidBody->setUserIndex(-1);
+}
+
+void LandBlock::SetVertices(const VertexBuffer& buffer, uint32_t firstVertex)
+{
+	_vertices = &buffer;
+	_firstVertex = firstVertex;
+}
+
+void LandBlock::BindVertices() const
+{
+	if (_vertices != nullptr)
+	{
+		_vertices->Bind(_firstVertex, k_VertexCount);
+	}
 }
 
 void LandBlock::BuildVertexList(std::span<LandVertex> vertices, LandIslandInterface& island)

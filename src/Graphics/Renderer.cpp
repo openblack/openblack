@@ -1121,7 +1121,7 @@ void Renderer::DrawTempleMapPass() const
 		terrainShader->SetUniformValue("u_blockPositionAndSize", &mapPositionAndSize);
 		const glm::vec4 u_block {static_cast<float>(i++), 0.0f, 0.0f, 0.0f};
 		terrainShader->SetUniformValue("u_block", &u_block);
-		block.GetMesh().GetVertexBuffer().Bind();
+		block.BindVertices();
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 		// The textures stay bound from one block to the next
 		terrainShader->Submit(viewId, 0,
@@ -3905,7 +3905,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				const glm::vec4 u_block {static_cast<float>(i++), 0.0f, 0.0f, 0.0f};
 				terrainShader->SetUniformValue("u_block", &u_block);
 
-				block.GetMesh().GetVertexBuffer().Bind();
+				block.BindVertices();
 
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
 				// The game draws the land's blocks the nearest first, which bgfx keeps by their distance

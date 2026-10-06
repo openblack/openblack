@@ -25,6 +25,10 @@
 namespace openblack
 {
 struct LandData;
+namespace graphics
+{
+class VertexBuffer;
+}
 
 class LandIsland final: public LandIslandInterface
 {
@@ -83,6 +87,8 @@ private:
 	std::unique_ptr<graphics::Texture2D> _luminosityMap;
 	std::unique_ptr<graphics::Texture2D> _cellColourMap;
 	std::unique_ptr<graphics::Texture2D> _blockTextures;
+	/// Every block's vertices, a run of them each
+	std::unique_ptr<graphics::VertexBuffer> _blockVertices;
 
 	std::unique_ptr<graphics::FrameBuffer> _footprintFrameBuffer;
 	std::unique_ptr<graphics::FrameBuffer> _landAlphaFrameBuffer;
