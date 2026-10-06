@@ -34,8 +34,14 @@
 #include "ECS/Systems/Implementations/ChimneySmokeSystem.h"
 #include "ECS/Systems/Implementations/CinematicDirectorSystem.h"
 #include "ECS/Systems/Implementations/CloudSystem.h"
+#include "ECS/Systems/Implementations/CreatureAnimationSystem.h"
+#include "ECS/Systems/Implementations/CreatureAudioSystem.h"
+#include "ECS/Systems/Implementations/CreatureHairSystem.h"
+#include "ECS/Systems/Implementations/CreaturePhysiologySystem.h"
+#include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
+#include "ECS/Systems/Implementations/FootprintSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -86,8 +92,14 @@ using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::ChimneySmokeSystem;
 using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
+using openblack::ecs::systems::CreatureAnimationSystem;
+using openblack::ecs::systems::CreatureAudioSystem;
+using openblack::ecs::systems::CreatureHairSystem;
+using openblack::ecs::systems::CreaturePhysiologySystem;
+using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::FieldSystem;
+using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -182,6 +194,12 @@ bool openblack::InitializeGame() noexcept
 	Locator::snowSystem::emplace<SnowSystem>();
 	Locator::snowfallSystem::emplace<SnowfallSystem>();
 	Locator::waterRingSystem::emplace<WaterRingSystem>();
+	Locator::creatureAnimationSystem::emplace<CreatureAnimationSystem>();
+	Locator::creaturePhysiologySystem::emplace<CreaturePhysiologySystem>();
+	Locator::creatureHairSystem::emplace<CreatureHairSystem>();
+	Locator::creatureAudioSystem::emplace<CreatureAudioSystem>();
+	Locator::footprintSystem::emplace<FootprintSystem>();
+	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
@@ -244,6 +262,12 @@ void openblack::ShutDownServices()
 	Locator::rainSystem::reset();
 	Locator::snowfallSystem::reset();
 	Locator::waterRingSystem::reset();
+	Locator::creaturePhysiologySystem::reset();
+	Locator::creatureSkinSystem::reset();
+	Locator::creatureHairSystem::reset();
+	Locator::footprintSystem::reset();
+	Locator::creatureAudioSystem::reset();
+	Locator::creatureAnimationSystem::reset();
 	Locator::snowSystem::reset();
 	Locator::fieldSystem::reset();
 	Locator::soundTagSystem::reset();
