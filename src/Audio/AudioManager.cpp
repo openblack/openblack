@@ -63,11 +63,7 @@ void AudioManager::Stop()
 void AudioManager::Update()
 {
 	auto& camera = Locator::camera::value();
-	auto pos = camera.GetOrigin();
-	auto vel = camera.GetOriginVelocity();
-	auto forward = camera.GetForward();
-	auto top = camera.GetUp();
-	_audioPlayer->UpdateListener(pos, vel, forward, top);
+	_audioPlayer->UpdateListener(camera.GetOrigin(), camera.GetForward(), camera.GetUp());
 	auto& registry = Locator::entitiesRegistry::value();
 	registry.Each<Transform, AudioEmitter>(
 	    [this](entt::entity entity, const Transform& transform, const AudioEmitter& emitter) {

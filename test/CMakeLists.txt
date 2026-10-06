@@ -49,6 +49,7 @@ openblack_setup_and_add_json_test(
 )
 openblack_setup_and_add_json_test(test_camera camera/test_camera.cpp)
 openblack_setup_and_add_test(test_sound_decoding audio/test_sound_decoding.cpp)
+openblack_setup_and_add_test(test_music_decoding audio/test_music_decoding.cpp)
 target_link_libraries(test_sound_decoding PRIVATE pack)
 openblack_setup_and_add_test(test_hand_shadow hand/test_hand_shadow.cpp)
 openblack_setup_and_add_test(
