@@ -36,6 +36,8 @@ TEST(SoundDecoding, EveryGameSampleDecodes)
 
 	size_t decoded = 0;
 	size_t trimmed = 0;
+	size_t silent = 0;
+	size_t gaps = 0;
 	std::map<std::string, size_t> containers;
 	std::vector<std::string> problems;
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(audioPath))
@@ -57,6 +59,12 @@ TEST(SoundDecoding, EveryGameSampleDecodes)
 		const auto& samples = pack.GetAudioSamplesData();
 		for (size_t i = 0; i < headers.size(); ++i)
 		{
+			// Banks have gaps between their samples: blank headers with no data, which the game skips when loading
+			if (samples[i].empty())
+			{
+				++gaps;
+				continue;
+			}
 			const auto name = entry.path().filename().string() + "/" + std::to_string(headers[i].id) + " " +
 			                  std::filesystem::path(std::string(headers[i].name.data())).filename().string();
 			const auto sound = audio::DecodeSound(samples[i], static_cast<int>(headers[i].sampleRate));
@@ -67,6 +75,7 @@ TEST(SoundDecoding, EveryGameSampleDecodes)
 				continue;
 			}
 			++decoded;
+			silent += sound.sound->frames == 0 ? 1 : 0;
 			trimmed += sound.trimmedFrames != 0 ? 1 : 0;
 			for (const auto& warning : sound.warnings)
 			{
@@ -79,8 +88,8 @@ TEST(SoundDecoding, EveryGameSampleDecodes)
 	{
 		std::cout << count << " " << container << " samples\n";
 	}
-	std::cout << decoded << " samples decoded, " << trimmed << " with block padding removed, " << problems.size()
-	          << " problems\n";
+	std::cout << decoded << " samples decoded, " << silent << " silent placeholders, " << trimmed
+	          << " with block padding removed, " << gaps << " gaps skipped, " << problems.size() << " problems\n";
 	for (const auto& problem : problems)
 	{
 		ADD_FAILURE() << problem;

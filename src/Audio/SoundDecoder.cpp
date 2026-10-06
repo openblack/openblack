@@ -306,7 +306,9 @@ DecodeResult DecodeSound(std::span<const uint8_t> data, int expectedSampleRate)
 		}
 	}
 
-	if (sound.frames == 0)
+	// Banks fill their unused ids with a placeholder WAV whose data chunk is empty, which correctly decodes to silence
+	const auto declaredSilent = result.expectedFrames && *result.expectedFrames == 0;
+	if (sound.frames == 0 && !declaredSilent)
 	{
 		result.error = "decoded to no audio";
 		result.sound.reset();

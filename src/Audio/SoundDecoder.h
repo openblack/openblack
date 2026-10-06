@@ -47,7 +47,7 @@ struct DecodedSound
 struct DecodeResult
 {
 	SoundContainer container {SoundContainer::Unknown};
-	/// Empty when the sample could not be decoded at all
+	/// Empty when the sample could not be decoded at all, has no frames when the container declares no audio
 	std::optional<DecodedSound> sound;
 	/// Length the container declares, when it does
 	std::optional<float> expectedDuration;
