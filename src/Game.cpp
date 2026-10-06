@@ -78,6 +78,7 @@
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
+#include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -423,6 +424,11 @@ bool Game::GameLogicLoop() noexcept
 		Locator::creatureMindSystem::value().ProcessTurn();
 	}
 	{
+		// They plan their routes and walk, run and turn
+		auto creatureLocomotion = profiler.BeginScoped(Profiler::Stage::CreatureLocomotionUpdate);
+		Locator::creatureLocomotionSystem::value().ProcessTurn();
+	}
+	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
 	}
@@ -661,6 +667,11 @@ bool Game::Update() noexcept
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
 	// The rings on the water grow and fade
 	Locator::waterRingSystem::value().Update(gameTime);
+	{
+		// The creatures are drawn moving between the last two turns
+		auto creatureLocomotion = profiler.BeginScoped(Profiler::Stage::CreatureLocomotionUpdate);
+		Locator::creatureLocomotionSystem::value().Update(clock.GetTurnFraction());
+	}
 	{
 		// The creatures breathe, act, pull faces and look about
 		auto creatureAnimation = profiler.BeginScoped(Profiler::Stage::CreatureAnimationUpdate);

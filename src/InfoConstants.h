@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include <array>
@@ -863,9 +864,19 @@ struct GCreatureInfo: GLivingInfo
 	/// How big a new creature of the species is, and how fat, 0 to 1
 	float startScale;
 	float startFatness;
-	std::array<uint8_t, 400> field0x1f4;
+	std::array<uint8_t, 0x4c> field0x1f4;
+	/// How fast the creature goes, each a fraction of its top speed: slowly (when exhausted), walking and running
+	float slowSpeed;
+	float walkSpeed;
+	float runSpeed;
+	std::array<uint8_t, 0x8c> field0x24c;
+	/// Running away, the creature goes at least this far from what it flees, and up to 40 further
+	float runAwayDistance;
+	std::array<uint8_t, 0xa8> field0x2dc;
 };
 static_assert(sizeof(GCreatureInfo) == 0x384);
+static_assert(offsetof(GCreatureInfo, slowSpeed) == 0x240);
+static_assert(offsetof(GCreatureInfo, runAwayDistance) == 0x2d8);
 
 struct GMagicRadiusSpellInfo: GMagicInfo
 {

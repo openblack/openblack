@@ -18,23 +18,28 @@
 
 #include <SDL_events.h>
 #include <fmt/format.h>
+#include <glm/gtx/vec_swizzle.hpp>
 #include <glm/trigonometric.hpp>
 
 #include "3D/CreatureBody.h"
+#include "3D/LandIslandInterface.h"
 #include "Camera/Camera.h"
 #include "Creature/CreatureDesires.h"
 #include "Creature/CreatureIdleMind.h"
 #include "Creature/CreatureLayers.h"
+#include "Creature/CreatureLocomotion.h"
 #include "Creature/CreatureLook.h"
 #include "Creature/CreatureMorph.h"
 #include "Creature/CreatureSkin.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
+#include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -45,6 +50,7 @@ using namespace openblack::debug::gui;
 using openblack::ecs::archetypes::CreatureArchetype;
 using openblack::ecs::components::Creature;
 using openblack::ecs::components::CreatureAnimation;
+using openblack::ecs::components::CreatureLocomotion;
 using openblack::ecs::components::CreatureMindState;
 using openblack::ecs::components::CreatureMorph;
 using openblack::ecs::components::Transform;
@@ -95,6 +101,28 @@ std::string_view LookKindName(creature_look::Interest kind)
 	return k_Names.at(static_cast<size_t>(kind));
 }
 
+std::string_view MotionName(CreatureLocomotion::Motion motion)
+{
+	constexpr std::array<std::string_view, 6> k_Names {"Standing", "Planning a route", "Confused",
+	                                                   "Turning",  "Stepping off",     "Walking"};
+	return k_Names.at(static_cast<size_t>(motion));
+}
+
+std::string_view MoveResultName(ecs::systems::CreatureLocomotionSystemInterface::MoveResult result)
+{
+	using MoveResult = ecs::systems::CreatureLocomotionSystemInterface::MoveResult;
+	switch (result)
+	{
+	case MoveResult::InvalidDestination:
+		return "nowhere to stand there";
+	case MoveResult::Busy:
+		return "it can't walk";
+	case MoveResult::Started:
+	default:
+		return "on its way";
+	}
+}
+
 bool IsRightButton(const SDL_Event& event)
 {
 	return (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) && event.button.button == SDL_BUTTON_RIGHT;
@@ -110,6 +138,8 @@ void CreatureSpawner::Close() noexcept
 {
 	_placing = false;
 	_placeAt.reset();
+	_commanding = false;
+	_commandAt.reset();
 	Window::Close();
 }
 
@@ -265,7 +295,140 @@ void CreatureSpawner::DrawSelected() noexcept
 	if (_selected.has_value())
 	{
 		DrawAppearance(*_selected);
+		DrawMovement(*_selected);
 		DrawMind(*_selected);
+	}
+}
+
+void CreatureSpawner::DrawMovement(entt::entity entity) noexcept
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* self = registry.TryGet<CreatureLocomotion>(entity);
+	if (self == nullptr || !Locator::creatureLocomotionSystem::has_value())
+	{
+		return;
+	}
+	auto& locomotion = Locator::creatureLocomotionSystem::value();
+
+	ImGui::SeparatorText("Movement");
+	ImGui::Text("%s%s", MotionName(self->motion).data(), self->failed ? ", the last move failed" : "");
+	ImGui::Text("Speed %.1f of walk %.1f, run %.1f units/s", static_cast<double>(self->speed),
+	            static_cast<double>(self->speeds.walk), static_cast<double>(self->speeds.run));
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Asked for %.2f of its top speed, %.1f units/s", static_cast<double>(self->fraction),
+		                  static_cast<double>(creature_locomotion::TargetSpeed(self->fraction, self->speeds.run)));
+	}
+	ImGui::Text("Heading %.0f degrees, radius %.1f, scale %.3f", static_cast<double>(glm::degrees(self->heading)),
+	            static_cast<double>(self->radius), static_cast<double>(self->scale));
+	if (!self->route.points.empty())
+	{
+		ImGui::Text("Route of %zu points, on segment %zu, %.1f units left", self->route.points.size(), self->route.segment + 1,
+		            static_cast<double>(self->route.RemainingTotal()));
+	}
+	else if (self->planner.has_value())
+	{
+		ImGui::Text("Planning, %zu points searched", self->planner->GetSearched());
+	}
+	std::string legs;
+	for (const auto& track : self->tracks)
+	{
+		legs += fmt::format("{}{} {:.2f}", legs.empty() ? "" : ", ", AnimationLabel(track.animation), track.weight);
+	}
+	ImGui::TextWrapped("Legs: %s", legs.empty() ? "as the body plays" : legs.c_str());
+
+	const auto colour = _commanding ? k_PlacingColour : k_StartColour;
+	ImGui::PushStyleColor(ImGuiCol_Button, colour);
+	if (ImGui::Button(_commanding ? "Stop commanding" : "Command it", ImVec2(-1.0f, 0.0f)))
+	{
+		_commanding = !_commanding;
+		_commandAt.reset();
+		if (_commanding)
+		{
+			_placing = false;
+			_placeAt.reset();
+		}
+	}
+	ImGui::PopStyleColor();
+	if (_commanding)
+	{
+		ImGui::TextWrapped("Right click on the land:");
+		auto order = static_cast<int>(_order);
+		ImGui::RadioButton("Walk here", &order, static_cast<int>(Order::Walk));
+		ImGui::SameLine();
+		ImGui::RadioButton("Run here", &order, static_cast<int>(Order::Run));
+		ImGui::SameLine();
+		ImGui::RadioButton("Flee from", &order, static_cast<int>(Order::Flee));
+		ImGui::SameLine();
+		ImGui::RadioButton("Face", &order, static_cast<int>(Order::Face));
+		_order = static_cast<Order>(order);
+		if (!_lastOrder.empty())
+		{
+			ImGui::TextUnformatted(_lastOrder.c_str());
+		}
+	}
+	if (ImGui::Button("Stop"))
+	{
+		locomotion.Stop(entity);
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Face the camera"))
+	{
+		locomotion.TurnToFace(entity, glm::xz(Locator::camera::value().GetOrigin()));
+	}
+	ImGui::SameLine();
+	ImGui::Checkbox("Show route", &_showRoute);
+	if (_showRoute)
+	{
+		DrawRoute(entity);
+	}
+}
+
+void CreatureSpawner::DrawRoute(entt::entity entity) noexcept
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* self = registry.TryGet<const CreatureLocomotion>(entity);
+	if (self == nullptr || self->route.points.size() < 2 || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	const auto& land = Locator::terrainSystem::value();
+	const auto& camera = Locator::camera::value();
+	const auto display = ImGui::GetIO().DisplaySize;
+	const glm::vec4 viewport {0.0f, 0.0f, display.x, display.y};
+	auto* drawList = ImGui::GetBackgroundDrawList();
+	const auto project = [&](glm::vec2 point) -> std::optional<ImVec2> {
+		glm::vec3 screen;
+		// A little above the ground, so the line isn't hidden in it
+		const glm::vec3 world {point.x, land.GetHeightAt(point) + 0.5f, point.y};
+		if (!camera.ProjectWorldToScreen(world, viewport, screen))
+		{
+			return std::nullopt;
+		}
+		return ImVec2(screen.x, screen.y);
+	};
+	const auto& points = self->route.points;
+	for (size_t i = 1; i < points.size(); ++i)
+	{
+		const auto from = project(points[i - 1]);
+		const auto to = project(points[i]);
+		if (from && to)
+		{
+			// Gone over already in grey, still to go in yellow
+			const auto colour = i <= self->route.segment ? IM_COL32(160, 160, 160, 200) : IM_COL32(255, 220, 60, 255);
+			drawList->AddLine(*from, *to, colour, 2.5f);
+		}
+	}
+	if (const auto end = project(points.back()))
+	{
+		drawList->AddCircle(*end, 6.0f, IM_COL32(255, 120, 40, 255), 16, 2.0f);
+	}
+	if (self->destination.has_value())
+	{
+		if (const auto destination = project(*self->destination))
+		{
+			drawList->AddCircleFilled(*destination, 3.0f, IM_COL32(255, 80, 40, 255));
+		}
 	}
 }
 
@@ -471,6 +634,11 @@ void CreatureSpawner::DrawPlacing() noexcept
 	{
 		_placing = !_placing;
 		_placeAt.reset();
+		if (_placing)
+		{
+			_commanding = false;
+			_commandAt.reset();
+		}
 	}
 	ImGui::PopStyleColor(2);
 	if (_placing)
@@ -569,6 +737,45 @@ void CreatureSpawner::Update() noexcept
 		Spawn(*_placeAt);
 		_placeAt.reset();
 	}
+	if (_commandAt.has_value())
+	{
+		Command(*_commandAt);
+		_commandAt.reset();
+	}
+}
+
+void CreatureSpawner::Command(glm::vec2 screenCoord) noexcept
+{
+	if (!_selected.has_value() || !Locator::creatureLocomotionSystem::has_value())
+	{
+		return;
+	}
+	const auto hit = Locator::camera::value().RaycastScreenCoordToLand(screenCoord, false);
+	if (!hit.has_value())
+	{
+		return;
+	}
+	using Pace = ecs::systems::CreatureLocomotionSystemInterface::Pace;
+	auto& locomotion = Locator::creatureLocomotionSystem::value();
+	const auto point = glm::xz(hit->position);
+	switch (_order)
+	{
+	case Order::Walk:
+	case Order::Run:
+	{
+		const auto result = locomotion.MoveTo(*_selected, point, _order == Order::Run ? Pace::Run : Pace::Walk, 0.0f, 1.0f);
+		_lastOrder = fmt::format("To {:.0f}, {:.0f}: {}", point.x, point.y, MoveResultName(result));
+		break;
+	}
+	case Order::Flee:
+		_lastOrder = fmt::format("Away from {:.0f}, {:.0f}: {}", point.x, point.y,
+		                         MoveResultName(locomotion.FleeFrom(*_selected, point)));
+		break;
+	case Order::Face:
+		_lastOrder = fmt::format("Facing {:.0f}, {:.0f}: {}", point.x, point.y,
+		                         locomotion.TurnToFace(*_selected, point) ? "turning" : "can't");
+		break;
+	}
 }
 
 void CreatureSpawner::Spawn(glm::vec2 screenCoord) noexcept
@@ -589,8 +796,8 @@ void CreatureSpawner::Spawn(glm::vec2 screenCoord) noexcept
 
 bool CreatureSpawner::TakesEvent(const SDL_Event& event) const noexcept
 {
-	// While placing, a right click on the land is the window's rather than the hand's
-	return _placing && IsRightButton(event) && !ImGui::GetIO().WantCaptureMouse;
+	// While placing or commanding, a right click on the land is the window's rather than the hand's
+	return (_placing || (_commanding && _selected.has_value())) && IsRightButton(event) && !ImGui::GetIO().WantCaptureMouse;
 }
 
 void CreatureSpawner::ProcessEventOpen(const SDL_Event& event) noexcept
@@ -600,7 +807,15 @@ void CreatureSpawner::ProcessEventOpen(const SDL_Event& event) noexcept
 		return;
 	}
 	const auto size = static_cast<glm::vec2>(Locator::windowing::value().GetSize());
-	_placeAt = glm::vec2(static_cast<float>(event.button.x), static_cast<float>(event.button.y)) / size;
+	const auto at = glm::vec2(static_cast<float>(event.button.x), static_cast<float>(event.button.y)) / size;
+	if (_placing)
+	{
+		_placeAt = at;
+	}
+	else
+	{
+		_commandAt = at;
+	}
 }
 
 void CreatureSpawner::ProcessEventAlways([[maybe_unused]] const SDL_Event& event) noexcept {}

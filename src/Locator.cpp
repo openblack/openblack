@@ -37,6 +37,7 @@
 #include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/CreatureAnimationSystem.h"
 #include "ECS/Systems/Implementations/CreatureHairSystem.h"
+#include "ECS/Systems/Implementations/CreatureLocomotionSystem.h"
 #include "ECS/Systems/Implementations/CreatureMindSystem.h"
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -91,6 +92,7 @@ using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::CreatureAnimationSystem;
 using openblack::ecs::systems::CreatureHairSystem;
+using openblack::ecs::systems::CreatureLocomotionSystem;
 using openblack::ecs::systems::CreatureMindSystem;
 using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -215,6 +217,8 @@ void InitializeLevelWith(const LandSource& land)
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::weatherSystem::emplace<WeatherSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
+	// Where creatures can walk is sorted anew for each land
+	Locator::creatureLocomotionSystem::emplace<CreatureLocomotionSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(land);
 	Locator::cameraPathSystem::emplace<CameraPathSystem>();
@@ -264,6 +268,7 @@ void openblack::ShutDownServices()
 	Locator::weatherSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
+	Locator::creatureLocomotionSystem::reset();
 	Locator::cinematicDirectorSystem::reset();
 	Locator::influenceSystem::reset();
 	Locator::chimneySmokeSystem::reset();

@@ -122,11 +122,10 @@ void PrintAnimation(const openblack::morph::Animation& animation)
 	std::printf("\tHeader:\n");
 	std::printf("\t\tduration: %u ms\n", animation.header.duration);
 	std::printf("\t\tlooping: %u\n", animation.header.looping);
-	std::printf("\t\tunknown0x8: %f\n", animation.header.unknown0x8);
-	std::printf("\t\tunknown0xc: %f\n", animation.header.unknown0xc);
-	std::printf("\t\tunknown0x10: %f\n", animation.header.unknown0x10);
-	std::printf("\t\tunknown0x14: %f\n", animation.header.unknown0x14);
-	std::printf("\t\tunknown0x18: %f\n", animation.header.unknown0x18);
+	std::printf("\t\tstrideRate: %f\n", static_cast<double>(animation.header.strideRate));
+	std::printf("\t\tstrideLength: %f\n", static_cast<double>(animation.header.strideLength));
+	std::printf("\t\tdisplacement: %f, %f, %f\n", static_cast<double>(animation.header.displacement[0]),
+	            static_cast<double>(animation.header.displacement[1]), static_cast<double>(animation.header.displacement[2]));
 	std::printf("\t\tframeCount: %u\n", animation.header.frameCount);
 	std::printf("\t\tmeshBoneCount: %u\n", animation.header.meshBoneCount);
 	std::printf("\t\trotatedJointCount: %u\n", animation.header.rotatedJointCount);

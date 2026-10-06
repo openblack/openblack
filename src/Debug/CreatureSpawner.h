@@ -11,6 +11,7 @@
 
 #include <optional>
 #include <random>
+#include <string>
 
 #include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
@@ -22,7 +23,9 @@ namespace openblack::debug::gui
 {
 
 /// Spawns creatures for trying them out: pick the species, owner, alignment, physique and size, then right click on
-/// the land to place one there, until placing is stopped. Lists the creatures on the land, to remove them again.
+/// the land to place one there, until placing is stopped. Lists the creatures on the land, to remove them again. The
+/// selected creature can be commanded: while commanding, a right click on the land sends it walking or running there,
+/// running away from there or turning to face it, and its route is drawn over the land.
 class CreatureSpawner final: public Window
 {
 public:
@@ -46,6 +49,11 @@ private:
 	/// The picked creature's tattoos and marks, to put on and take off, and how its shadow and seams are drawn
 	void DrawAppearance(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
+	/// The picked creature's movement: its speed and route, and the command mode
+	void DrawMovement(entt::entity entity) noexcept;
+	/// The picked creature's route, over the land
+	void DrawRoute(entt::entity entity) noexcept;
+	void Command(glm::vec2 screenCoord) noexcept;
 	void DrawCreatures() noexcept;
 	void Spawn(glm::vec2 screenCoord) noexcept;
 	/// Starts the body as a new creature of the species is: its size, fatness and strength
@@ -65,6 +73,20 @@ private:
 	bool _placing {false};
 	/// Where on the screen, 0 to 1, the land was right clicked to place a creature, until it is placed
 	std::optional<glm::vec2> _placeAt;
+	/// What a right click on the land tells the selected creature to do while commanding, and where it was clicked
+	enum class Order : uint8_t
+	{
+		Walk,
+		Run,
+		Flee,
+		Face,
+	};
+	bool _commanding {false};
+	Order _order {Order::Walk};
+	std::optional<glm::vec2> _commandAt;
+	bool _showRoute {true};
+	/// What became of the last order
+	std::string _lastOrder;
 	std::mt19937 _random {std::random_device {}()};
 	std::optional<entt::entity> _selected;
 	/// The action and gesture picked to play on the selected creature

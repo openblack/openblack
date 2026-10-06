@@ -49,11 +49,12 @@ struct AnimationHeader
 	uint32_t duration;
 	/// 1 for cycles (type C), 0 for pose ranges (type L)
 	uint32_t looping;
-	float unknown0x8;  // TODO(#459):
-	float unknown0xc;  // TODO(#459):
-	float unknown0x10; // TODO(#459):
-	float unknown0x14; // TODO(#459):
-	float unknown0x18; // TODO(#459):
+	/// The stride length over the duration, in mesh units a millisecond, for information only
+	float strideRate;
+	/// How far the root moves over one cycle, the length of the displacement below: a walk's or run's stride
+	float strideLength;
+	/// Where the root ends up after one cycle, in the mesh's units and space, where ahead is -z
+	std::array<float, 3> displacement;
 	uint32_t frameCount;
 	uint32_t meshBoneCount;
 	uint32_t rotatedJointCount;

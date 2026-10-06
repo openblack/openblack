@@ -35,6 +35,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -219,6 +220,54 @@ void ApplyEyes(CreatureEyes* eyes, creature_mind::Eyes look)
 	eyes->blink.intervalMs = sleepy ? k_SleepyBlinkIntervalMs : creature_eyes::k_BlinkIntervalMs;
 }
 
+/// Sends the creature where its mind wants it to go
+void Move(entt::entity creature, const creature_mind::Commands& commands)
+{
+	if (!Locator::creatureLocomotionSystem::has_value())
+	{
+		return;
+	}
+	auto& locomotion = Locator::creatureLocomotionSystem::value();
+	if (commands.stopMoving)
+	{
+		locomotion.Stop(creature);
+	}
+	if (!commands.move.has_value())
+	{
+		return;
+	}
+	using Kind = creature_mind::Movement::Kind;
+	using Pace = CreatureLocomotionSystemInterface::Pace;
+	const auto& move = *commands.move;
+	const auto pace = move.run ? Pace::Run : Pace::Walk;
+	const auto object = move.object.has_value() ? std::optional(static_cast<entt::entity>(*move.object)) : std::nullopt;
+	switch (move.kind)
+	{
+	case Kind::ToPoint:
+	case Kind::Nearby:
+		locomotion.MoveTo(creature, move.point, pace, move.minDistance, move.maxDistance);
+		break;
+	case Kind::ToObject:
+		if (object.has_value())
+		{
+			locomotion.MoveToObject(creature, *object, pace, move.maxDistance);
+		}
+		break;
+	case Kind::Follow:
+		if (object.has_value())
+		{
+			locomotion.Follow(creature, *object, move.maxDistance, pace);
+		}
+		break;
+	case Kind::FleeFrom:
+		locomotion.FleeFrom(creature, move.point);
+		break;
+	case Kind::TurnToFace:
+		locomotion.TurnToFace(creature, move.point);
+		break;
+	}
+}
+
 void Apply(const creature_mind::Commands& commands, CreatureAnimation& animation, CreatureEyes* eyes)
 {
 	if (commands.endSit)
@@ -288,16 +337,21 @@ void CreatureMindSystem::ProcessTurn()
 		    {
 			    return;
 		    }
+		    const bool moving =
+		        Locator::creatureLocomotionSystem::has_value() && Locator::creatureLocomotionSystem::value().IsMoving(entity);
 		    const creature_mind::Senses senses {
 		        .seconds = k_TurnSeconds,
-		        .bodyBusy = creature_layers::IsPlaying(animation.body),
+		        .bodyBusy = creature_layers::IsPlaying(animation.body) || moving,
 		        .bodyLooping = creature_layers::IsLooping(animation.body),
+		        .moving = moving,
+		        .position = glm::vec2(transform.position.x, transform.position.z),
 		        .strongest = creature_desires::StrongestShowable(*mind.desires, creature_mind::k_MinDesireShown),
 		        .feedbackSeconds = mind.feedbackSeconds,
 		        .feedbackWasStroke = mind.feedbackWasStroke,
 		    };
 		    const auto commands = creature_mind::Think(mind.idle, senses, random);
 		    Apply(commands, animation, eyes);
+		    Move(entity, commands);
 
 		    // Looking about, the head turns to the most interesting thing in sight, or ahead
 		    mind.lookingAbout = commands.lookAbout;

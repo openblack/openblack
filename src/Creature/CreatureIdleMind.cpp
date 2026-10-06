@@ -9,7 +9,10 @@
 
 #include "CreatureIdleMind.h"
 
+#include <cmath>
+
 #include <algorithm>
+#include <numbers>
 
 #include "Creature/CreatureLayers.h"
 
@@ -46,6 +49,8 @@ std::string_view creature_mind::Name(Activity activity)
 		return "Sitting";
 	case Activity::ShowDesire:
 		return "Showing a desire";
+	case Activity::HangAround:
+		return "Hanging around";
 	case Activity::Told:
 		return "Doing as told";
 	case Activity::None:
@@ -74,6 +79,24 @@ Step creature_mind::SitDown(const Random& random)
 	        .seconds = static_cast<float>(k_SitSeconds + random(k_SitExtraSeconds)),
 	        .animation = animations::k_Sit,
 	        .sleepyEyes = false};
+}
+
+std::vector<Step> creature_mind::HangAround(const Random& random)
+{
+	constexpr uint32_t k_Degrees = 360;
+	const auto angle = static_cast<float>(random(k_Degrees)) * std::numbers::pi_v<float> / 180.0f;
+	const auto distance = k_HangAroundDistance + static_cast<float>(random(k_HangAroundExtra));
+	return {{.kind = Step::Kind::Move,
+	         .seconds = 0.0f,
+	         .animation = 0,
+	         .sleepyEyes = false,
+	         .movement = {.kind = Movement::Kind::Nearby,
+	                      .point = distance * glm::vec2(std::cos(angle), std::sin(angle)),
+	                      .object = std::nullopt,
+	                      .run = false,
+	                      .minDistance = 0.0f,
+	                      .maxDistance = 1.0f}},
+	        SitDown(random)};
 }
 
 void creature_mind::Plan(IdleMind& mind, Activity activity, std::vector<Step> agenda)
@@ -109,9 +132,14 @@ void creature_mind::ChooseNext(IdleMind& mind, const Senses& senses, const Rando
 			return;
 		}
 	}
-	if (random(k_SitOdds) == 0)
+	const auto lot = random(k_ActivityLots);
+	if (lot == 0)
 	{
 		Plan(mind, Activity::Sit, {SitDown(random)});
+	}
+	else if (lot == k_ActivityLots - 1)
+	{
+		Plan(mind, Activity::HangAround, HangAround(random));
 	}
 	else
 	{
@@ -173,6 +201,14 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 		case Step::Kind::Sit:
 			commands.startSit = true;
 			break;
+		case Step::Kind::Move:
+			commands.move = step.movement;
+			if (step.movement.kind == Movement::Kind::Nearby)
+			{
+				commands.move->kind = Movement::Kind::ToPoint;
+				commands.move->point = senses.position + step.movement.point;
+			}
+			break;
 		case Step::Kind::Wait:
 			break;
 		}
@@ -209,6 +245,18 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 		{
 			commands.endSit = true;
 			mind.sitEnding = true;
+		}
+		break;
+	case Step::Kind::Move:
+		// Done once it has arrived or given up, or its time is up
+		if (!senses.moving)
+		{
+			FinishStep(mind);
+		}
+		else if (step.seconds > 0.0f && mind.stepSeconds >= step.seconds)
+		{
+			commands.stopMoving = true;
+			FinishStep(mind);
 		}
 		break;
 	}

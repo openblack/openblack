@@ -16,13 +16,15 @@
 #include <string_view>
 #include <vector>
 
+#include <glm/vec2.hpp>
+
 #include "Creature/CreatureDesires.h"
 
 /// What a creature does with itself while it has nothing better to do, decided once a game turn. It works through an
-/// agenda of steps: waiting while it looks about, playing an action, sitting for a while. When the agenda runs out it
-/// picks the next: showing the player its strongest desire, at most once a minute; else sitting down for a while; else
-/// being idle, which is waiting a second or two then a tired yawn, twice. At the start of each step it pulls a face
-/// for three seconds.
+/// agenda of steps: waiting while it looks about, playing an action, sitting for a while, going somewhere. When the
+/// agenda runs out it picks the next: showing the player its strongest desire, at most once a minute; else sitting down
+/// for a while; else hanging around, which is walking somewhere nearby and sitting there; else being idle, which is
+/// waiting a second or two then a tired yawn, twice. At the start of each step it pulls a face for three seconds.
 ///
 /// Only this choice of the next agenda is the idle policy; a planner that weighs desires against the actions that
 /// satisfy them can choose agendas in its place, and the steps play out the same way.
@@ -44,9 +46,13 @@ constexpr uint32_t k_SitExtraSeconds = 5;
 /// A desire weaker than this isn't worth showing. The game shows desires when its planner picks the desire to show how
 /// it is over all others; this stands in for that.
 constexpr float k_MinDesireShown = 0.2f;
-/// One choice in this many is to sit down rather than be idle. The game chooses between its idle activities by the
-/// strength of the desire to rest and what the creature has learnt; this stands in for that.
-constexpr uint32_t k_SitOdds = 3;
+/// The idle activities are chosen at random among this many lots: the first is sitting down, the last hanging
+/// around, the rest being idle. The game chooses between its idle activities by the strength of the desire to rest and
+/// what the creature has learnt; this stands in for that.
+constexpr uint32_t k_ActivityLots = 4;
+/// Hanging around, the creature walks this far away and up to this much further, in a random direction
+constexpr float k_HangAroundDistance = 20.0f;
+constexpr uint32_t k_HangAroundExtra = 21;
 
 /// What the creature is doing
 enum class Activity : uint8_t
@@ -55,10 +61,37 @@ enum class Activity : uint8_t
 	BeIdle,
 	Sit,
 	ShowDesire,
+	/// Walking somewhere nearby and sitting there
+	HangAround,
 	/// Something it was told to do
 	Told,
 };
 [[nodiscard]] std::string_view Name(Activity activity);
+
+/// Going somewhere, or turning to face something
+struct Movement
+{
+	enum class Kind : uint8_t
+	{
+		/// To a point, or to a point as far from where the creature is as the point is from the origin
+		ToPoint,
+		Nearby,
+		/// Up to an object, or following it until the step's time is up
+		ToObject,
+		Follow,
+		/// Running away from a point
+		FleeFrom,
+		TurnToFace,
+	};
+	Kind kind {Kind::ToPoint};
+	glm::vec2 point {0.0f};
+	/// The object walked up to or followed, by its entity's number
+	std::optional<uint32_t> object;
+	bool run {false};
+	/// Arriving anywhere from min to max from the point, or keeping within max of what it follows
+	float minDistance {0.0f};
+	float maxDistance {0.0f};
+};
 
 struct Step
 {
@@ -70,12 +103,15 @@ struct Step
 		Action,
 		/// Sitting down, sitting for a while while looking about, and getting up
 		Sit,
+		/// Going somewhere until it arrives or gives up, or for the step's seconds when they are more than 0
+		Move,
 	};
 	Kind kind {Kind::Wait};
 	float seconds {0.0f};
 	size_t animation {0};
 	/// Played with drooping, slowly blinking eyes, as if just woken up
 	bool sleepyEyes {false};
+	Movement movement {};
 };
 
 struct IdleMind
@@ -98,9 +134,12 @@ struct IdleMind
 struct Senses
 {
 	float seconds {0.0f};
-	/// Whether the body plays an action, and whether it is in the loop of one, such as sitting
+	/// Whether the body plays an action or is on the move, and whether it is in the loop of an action, such as sitting
 	bool bodyBusy {false};
 	bool bodyLooping {false};
+	/// Whether it is on its way somewhere or turning, and where it stands
+	bool moving {false};
+	glm::vec2 position {0.0f};
 	std::optional<creature_desires::Desire> strongest;
 	/// Seconds since the player last stroked or slapped it, and which
 	std::optional<float> feedbackSeconds;
@@ -128,6 +167,9 @@ struct Commands
 	Eyes eyes {Eyes::Unchanged};
 	/// Whether the head turns to whatever is interesting this turn
 	bool lookAbout {false};
+	/// Where to go, or to stop going
+	std::optional<Movement> move;
+	bool stopMoving {false};
 };
 
 /// random(n) is a whole number from 0 to n - 1
@@ -137,6 +179,8 @@ using Random = std::function<uint32_t(uint32_t)>;
 [[nodiscard]] std::vector<Step> BeIdle(const Random& random);
 /// Sitting for ten to fourteen seconds
 [[nodiscard]] Step SitDown(const Random& random);
+/// Hanging around: walking 20 to 40 units away in a random direction, then sitting there
+[[nodiscard]] std::vector<Step> HangAround(const Random& random);
 /// A new agenda in place of the current one
 void Plan(IdleMind& mind, Activity activity, std::vector<Step> agenda);
 /// The next agenda when the current runs out

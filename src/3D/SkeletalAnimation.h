@@ -47,6 +47,9 @@ struct Animation
 		std::vector<glm::vec3> translations;
 	};
 	std::vector<Frame> frames;
+	/// Where the root ends up after one cycle, in the mesh's units, ahead being -z: a walk's or run's stride, a step's
+	/// move
+	glm::vec3 displacement {0.0f};
 };
 
 /// A bone's pose relative to its parent: a row-major rotation and a translation, used with row vectors

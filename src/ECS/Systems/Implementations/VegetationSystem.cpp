@@ -24,6 +24,7 @@
 #include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
 #include "Common/RandomNumberManager.h"
+#include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Swayable.h"
 #include "ECS/Components/Transform.h"
@@ -54,6 +55,8 @@ constexpr float k_FieldLean = 1.75f;
 constexpr float k_MaxBend = 0.47123894f;
 // The bend falls from (1 - k_BendCore / radius) at the trunk to nothing at the radius
 constexpr float k_BendCore = 1.5f;
+/// A creature bends the trees within this many times its radius of its feet
+constexpr float k_CreatureBendReach = 1.5f;
 } // namespace
 
 void VegetationSystem::Update(std::chrono::duration<float, std::milli> gameTime)
@@ -80,11 +83,17 @@ void VegetationSystem::Update(std::chrono::duration<float, std::milli> gameTime)
 // The game marks the trees around the hand to bend away from it, within its bounding sphere
 void VegetationSystem::UpdateBendPoints()
 {
-	_hand.reset();
+	_bendPoints.clear();
+	const auto& registry = Locator::entitiesRegistry::value();
+	// Creatures walk through the trees too small for them to walk round, and bend them as they go
+	registry.Each<const CreatureLocomotion, const Transform>(
+	    [this](const CreatureLocomotion& creature, const Transform& transform) {
+		    _bendPoints.push_back({.position = transform.position, .radius = creature.radius * k_CreatureBendReach});
+	    });
+
 	auto& handSystem = Locator::handSystem::value();
 	const auto handEntity = handSystem.GetPlayerHands()[static_cast<size_t>(HandSystemInterface::Side::Left)];
 	const auto position = handSystem.GetPlayerHandPositions()[static_cast<size_t>(HandSystemInterface::Side::Left)];
-	const auto& registry = Locator::entitiesRegistry::value();
 	const auto* transform = registry.TryGet<const Transform>(handEntity);
 	const auto* mesh = registry.TryGet<const Mesh>(handEntity);
 	if (!position || transform == nullptr || mesh == nullptr)
@@ -98,32 +107,36 @@ void VegetationSystem::UpdateBendPoints()
 	}
 	// The mesh's diagonal length: half the diagonal of the mesh's bounding box
 	const auto halfDiagonal = glm::length(meshes.Handle(mesh->id)->GetBoundingBox().Size()) * 0.5f;
-	_hand = BendPoint {
+	_bendPoints.push_back({
 	    .position = *position,
 	    .radius = std::abs(transform->scale.y) * halfDiagonal,
-	};
+	});
 }
 
 std::optional<VegetationSystem::Bend> VegetationSystem::GetBend(const glm::vec3& position, float height) const
 {
-	// The hand bends the trees it is among, from below their tops
-	if (!_hand || _hand->position.y > position.y + height || _hand->radius <= 0.0f)
+	std::optional<Bend> most;
+	for (const auto& point : _bendPoints)
 	{
-		return std::nullopt;
+		// The hand bends the trees it is among, from below their tops
+		if (point.position.y > position.y + height || point.radius <= 0.0f)
+		{
+			continue;
+		}
+		const auto away = glm::xz(position) - glm::xz(point.position);
+		const auto distance = glm::length(away);
+		if (distance >= point.radius || distance <= 0.0f)
+		{
+			continue;
+		}
+		const auto radius = point.radius;
+		const auto amount = 1.0f - (((((radius - k_BendCore) * distance) / radius) + k_BendCore) / radius);
+		if (amount > 0.0f && (!most || amount > most->amount))
+		{
+			most = Bend {.direction = glm::vec3(away.x, 0.0f, away.y) / distance, .amount = amount};
+		}
 	}
-	const auto away = glm::xz(position) - glm::xz(_hand->position);
-	const auto distance = glm::length(away);
-	if (distance >= _hand->radius || distance <= 0.0f)
-	{
-		return std::nullopt;
-	}
-	const auto radius = _hand->radius;
-	const auto amount = 1.0f - (((((radius - k_BendCore) * distance) / radius) + k_BendCore) / radius);
-	if (amount <= 0.0f)
-	{
-		return std::nullopt;
-	}
-	return Bend {.direction = glm::vec3(away.x, 0.0f, away.y) / distance, .amount = amount};
+	return most;
 }
 
 void VegetationSystem::Rustle(std::chrono::duration<float, std::milli> gameTime)

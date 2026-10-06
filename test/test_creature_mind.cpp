@@ -7,7 +7,10 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <cmath>
+
 #include <array>
+#include <numbers>
 #include <optional>
 #include <vector>
 
@@ -459,4 +462,69 @@ TEST(CreatureLook, WithNothingToSeeItLooksAhead)
 	EXPECT_NEAR(point.x, 60.0f, k_Tolerance);
 	EXPECT_NEAR(point.y, 30.0f, k_Tolerance);
 	EXPECT_NEAR(point.z, 0.0f, k_Tolerance);
+}
+
+TEST(CreatureIdleMind, HangingAroundWalksSomewhereNearbyThenSits)
+{
+	creature_mind::IdleMind mind;
+	// Draws of 5: the last lot, which is hanging around, 5 degrees round and 25 units away
+	const auto random = Always(5);
+	auto senses = FakeBody {}.Senses();
+	senses.position = {100.0f, 200.0f};
+	const auto first = creature_mind::Think(mind, senses, random);
+	EXPECT_EQ(mind.activity, creature_mind::Activity::HangAround);
+	ASSERT_TRUE(first.move.has_value());
+	EXPECT_EQ(first.move->kind, creature_mind::Movement::Kind::ToPoint);
+	const auto angle = 5.0f * std::numbers::pi_v<float> / 180.0f;
+	EXPECT_NEAR(first.move->point.x, 100.0f + (25.0f * std::cos(angle)), k_Tolerance);
+	EXPECT_NEAR(first.move->point.y, 200.0f + (25.0f * std::sin(angle)), k_Tolerance);
+
+	// On its way, it keeps going
+	senses.moving = true;
+	senses.bodyBusy = true;
+	for (int i = 0; i < 10; ++i)
+	{
+		const auto commands = creature_mind::Think(mind, senses, random);
+		EXPECT_FALSE(commands.move.has_value());
+		EXPECT_FALSE(commands.startSit);
+		EXPECT_EQ(mind.step, 0u);
+	}
+	// Arrived, it sits down
+	senses.moving = false;
+	senses.bodyBusy = false;
+	EXPECT_FALSE(creature_mind::Think(mind, senses, random).startSit);
+	EXPECT_EQ(mind.step, 1u);
+	EXPECT_TRUE(creature_mind::Think(mind, senses, random).startSit);
+}
+
+TEST(CreatureIdleMind, AFollowStepStopsWhenItsTimeIsUp)
+{
+	creature_mind::IdleMind mind;
+	creature_mind::Plan(mind, creature_mind::Activity::Told,
+	                    {{.kind = creature_mind::Step::Kind::Move,
+	                      .seconds = 1.0f,
+	                      .animation = 0,
+	                      .sleepyEyes = false,
+	                      .movement = {.kind = creature_mind::Movement::Kind::Follow,
+	                                   .point = {0.0f, 0.0f},
+	                                   .object = 7u,
+	                                   .run = false,
+	                                   .minDistance = 0.0f,
+	                                   .maxDistance = 10.0f}}});
+	auto senses = FakeBody {}.Senses();
+	const auto first = creature_mind::Think(mind, senses, Always(0));
+	ASSERT_TRUE(first.move.has_value());
+	EXPECT_EQ(first.move->object, 7u);
+	senses.moving = true;
+	senses.bodyBusy = true;
+	int stoppedAt = -1;
+	for (int turn = 1; turn < 30 && stoppedAt < 0; ++turn)
+	{
+		if (creature_mind::Think(mind, senses, Always(0)).stopMoving)
+		{
+			stoppedAt = turn;
+		}
+	}
+	EXPECT_GE(stoppedAt, 10);
+	EXPECT_LE(stoppedAt, 11);
 }
