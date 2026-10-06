@@ -67,6 +67,10 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		("screenshot-path", "Path of the request a screenshot of the backbuffer.", cxxopts::value<std::filesystem::path>()->default_value("screenshot.png"))
 		("frame-stats", "Log the average and 95th percentile frame time and the profiler stages every so many frames (0 for never).", cxxopts::value<uint32_t>()->default_value("0"))
 		("frame-stats-views", "With --frame-stats, also profile and log the GPU time of each render view.")
+		("scenario", "Start on the testbed and run the testbed scenario of this id, such as benchmark.creatures_100.", cxxopts::value<std::string>())
+		("benchmark-warmup", "With --scenario, the frames a benchmark's crowd settles for once spawned, before it is measured.", cxxopts::value<uint32_t>()->default_value("120"))
+		("benchmark-frames", "With --scenario, the frames of a benchmark measured.", cxxopts::value<uint32_t>()->default_value("600"))
+		("benchmark-out", "With --scenario, where a benchmark writes its results (with .json and .csv after it); the game quits once they are written.", cxxopts::value<std::string>())
 		("crash-dialogs", "Show the system's and C runtime's crash dialogs (Abort/Retry/Ignore) instead of writing a crash report to crashes/ and exiting.")
 	;
 	// clang-format on
@@ -196,6 +200,18 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 		args.startTestbed = result.count("testbed") != 0;
 		args.frameStatsInterval = result["frame-stats"].as<uint32_t>();
 		args.frameStatsViews = result.count("frame-stats-views") != 0;
+		if (result.count("scenario") != 0)
+		{
+			args.scenario = openblack::ScenarioRequest {
+			    .id = result["scenario"].as<std::string>(),
+			    .warmUpFrames = result["benchmark-warmup"].as<uint32_t>(),
+			    .frames = std::max<uint32_t>(result["benchmark-frames"].as<uint32_t>(), 1),
+			};
+			if (result.count("benchmark-out") != 0)
+			{
+				args.scenario->results = std::filesystem::path(result["benchmark-out"].as<std::string>());
+			}
+		}
 	}
 	catch (cxxopts::exceptions::parsing& err)
 	{

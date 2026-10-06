@@ -153,7 +153,8 @@ Game* Game::sInstance = nullptr;
 Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
-    , _startTestbed(args.startTestbed)
+    , _startTestbed(args.startTestbed || args.scenario.has_value())
+    , _scenarioRequest(args.scenario)
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());

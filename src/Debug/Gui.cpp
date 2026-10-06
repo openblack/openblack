@@ -73,6 +73,7 @@
 #include "Profiler.h"
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
+#include "TestbedScenarios.h"
 #include "TextureViewer.h"
 #include "Weather.h"
 #include "Windowing/WindowingInterface.h"
@@ -131,6 +132,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Magic);
 	debugWindows.emplace_back(new KeyBindingsWindow);
 	auto spawner = std::make_unique<CreatureSpawner>();
+	auto scenarios = std::make_unique<TestbedScenarios>(*spawner);
+	debugWindows.emplace_back(std::move(scenarios));
 	debugWindows.emplace_back(std::move(spawner));
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(

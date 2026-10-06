@@ -68,6 +68,16 @@ constexpr static std::array<std::string_view, static_cast<size_t>(LoggingSubsyst
     "ai",          //
 };
 
+/// A testbed scenario asked for on the command line: its id, and for a benchmark the frames to let settle, the frames to
+/// measure and where to write the results, after which the game quits
+struct ScenarioRequest
+{
+	std::string id;
+	uint32_t warmUpFrames {120};
+	uint32_t frames {600};
+	std::optional<std::filesystem::path> results;
+};
+
 struct Arguments
 {
 	std::string executablePath;
@@ -90,6 +100,8 @@ struct Arguments
 	uint32_t frameStatsInterval {0};
 	/// With the frame statistics, the GPU time of each render view
 	bool frameStatsViews {false};
+	/// A testbed scenario to run as the game starts, by its id, and how to measure its crowd if it has one
+	std::optional<ScenarioRequest> scenario;
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> requestScreenshot;
 };
 
@@ -147,9 +159,11 @@ public:
 
 	[[nodiscard]] uint32_t GetTurn() const;
 	[[nodiscard]] bool IsPaused() const;
+	/// The scenario asked for on the command line, once: the scenarios' window runs it as the game starts
 	/// The game ends after this frame. Unlike the window's events, which say each time whether to go on, nothing takes
 	/// it back
 	void RequestQuit() { _quitRequested = true; }
+	[[nodiscard]] std::optional<ScenarioRequest> TakeScenarioRequest() { return std::exchange(_scenarioRequest, std::nullopt); }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
 	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
@@ -176,6 +190,7 @@ private:
 
 	std::filesystem::path _startMap;
 	bool _startTestbed {false};
+	std::optional<ScenarioRequest> _scenarioRequest;
 	bool _quitRequested {false};
 
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
