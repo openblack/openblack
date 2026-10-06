@@ -53,9 +53,12 @@
 #include "3D/VillageLights.h"
 #include "3D/WaterRings.h"
 #include "Camera/Camera.h"
+#include "Creature/CreatureMorph.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/ChimneySmoke.h"
 #include "ECS/Components/Cloud.h"
+#include "ECS/Components/Creature.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
@@ -114,6 +117,57 @@
 using namespace openblack;
 using namespace openblack::graphics;
 using namespace openblack::ecs::systems;
+
+namespace openblack::graphics
+{
+/// The layouts a creature's variant meshes are read with as the second to fourth vertex streams: their positions and
+/// normals as the attributes the morphing vertex shader takes them in, the rest of each vertex skipped
+class MorphStreamLayouts
+{
+public:
+	MorphStreamLayouts()
+	{
+		constexpr std::array<std::pair<bgfx::Attrib::Enum, bgfx::Attrib::Enum>, 3> k_Attributes {{
+		    {bgfx::Attrib::Tangent, bgfx::Attrib::Bitangent},
+		    {bgfx::Attrib::Color1, bgfx::Attrib::Color2},
+		    {bgfx::Attrib::Color3, bgfx::Attrib::Weight},
+		}};
+		// As L3DSubMesh packs a vertex: position, texture coordinates, normal and bone indices
+		constexpr uint8_t k_TexCoordBytes = 2 * sizeof(float);
+		constexpr uint8_t k_IndicesBytes = 2 * sizeof(int16_t);
+		for (size_t axis = 0; axis < k_Attributes.size(); ++axis)
+		{
+			bgfx::VertexLayout layout;
+			layout.begin()
+			    .add(k_Attributes.at(axis).first, 3, bgfx::AttribType::Float)
+			    .skip(k_TexCoordBytes)
+			    .add(k_Attributes.at(axis).second, 3, bgfx::AttribType::Float)
+			    .skip(k_IndicesBytes)
+			    .end();
+			_layouts.at(axis) = fromBgfx(bgfx::createVertexLayout(layout));
+		}
+	}
+	~MorphStreamLayouts()
+	{
+		for (const auto& layout : _layouts)
+		{
+			if (bgfx::isValid(toBgfx(layout)))
+			{
+				bgfx::destroy(toBgfx(layout));
+			}
+		}
+	}
+	MorphStreamLayouts(const MorphStreamLayouts&) = delete;
+	MorphStreamLayouts& operator=(const MorphStreamLayouts&) = delete;
+	MorphStreamLayouts(MorphStreamLayouts&&) = delete;
+	MorphStreamLayouts& operator=(MorphStreamLayouts&&) = delete;
+
+	[[nodiscard]] VertexLayoutHandle Get(size_t axis) const { return _layouts.at(axis); }
+
+private:
+	std::array<VertexLayoutHandle, 3> _layouts {};
+};
+} // namespace openblack::graphics
 
 namespace openblack
 {
@@ -368,6 +422,7 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 {
 	_shaderManager->LoadShaders();
 	_plane = Primitive::CreatePlane();
+	_morphStreamLayouts = std::make_unique<MorphStreamLayouts>();
 	{
 		constexpr uint32_t k_White = 0xFFFFFFFF;
 		_whiteTexture = fromBgfx(bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, BGFX_SAMPLER_NONE,
@@ -392,6 +447,7 @@ Renderer::~Renderer() noexcept
 {
 	_snowDepth.reset();
 	_plane.reset();
+	_morphStreamLayouts.reset();
 	_handShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
 	_templeMapFrameBuffer.reset();
@@ -473,6 +529,34 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 
 	return texture;
 }
+
+namespace
+{
+/// Binds the submeshes of a creature's variant meshes that match one of its base mesh as the second to fourth vertex
+/// streams; the base's own where a variant's doesn't match
+void BindMorphTargets(const L3DMesh& mesh, const L3DSubMesh& subMesh,
+                      const RendererInterface::L3DMeshSubmitDesc::MorphTargets& targets, const MorphStreamLayouts& layouts)
+{
+	const auto& subMeshes = mesh.GetSubMeshes();
+	const auto found = std::ranges::find_if(subMeshes, [&subMesh](const auto& other) { return other.get() == &subMesh; });
+	const auto index = static_cast<size_t>(std::distance(subMeshes.begin(), found));
+	const auto& base = subMesh.GetMesh().GetVertexBuffer();
+	for (size_t axis = 0; axis < targets.meshes.size(); ++axis)
+	{
+		const auto* target = targets.meshes.at(axis);
+		const auto* buffer = &base;
+		if (target != nullptr && index < target->GetSubMeshes().size())
+		{
+			const auto& candidate = target->GetSubMeshes()[index]->GetMesh().GetVertexBuffer();
+			if (candidate.GetCount() == base.GetCount() && candidate.GetStrideBytes() == base.GetStrideBytes())
+			{
+				buffer = &candidate;
+			}
+		}
+		buffer->BindStream(static_cast<uint8_t>(axis + 1), layouts.Get(axis));
+	}
+}
+} // namespace
 
 void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
                            bool preserveState, const TextureHandle* subMeshTexture, glm::vec3 glow) const
@@ -564,6 +648,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				const glm::vec4 u_darkening {1.0f - desc.lightMultiply, 0.0f};
 				program->SetUniformValue("u_darkening", &u_darkening);
+			}
+			if (desc.morphTargets != nullptr && program->HasUniform("u_morphWeights"))
+			{
+				const glm::vec4 u_morphWeights {desc.morphTargets->weights, 0.0f};
+				program->SetUniformValue("u_morphWeights", &u_morphWeights);
 			}
 			if (program->HasUniform("u_uvOffset"))
 			{
@@ -696,6 +785,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if ((skip & Mesh::SkipState::SkipVertexBuffer) == 0)
 			{
 				subMesh.GetMesh().GetVertexBuffer().Bind();
+				if (desc.morphTargets != nullptr && _morphStreamLayouts)
+				{
+					BindMorphTargets(mesh, subMesh, *desc.morphTargets, *_morphStreamLayouts);
+				}
 			}
 			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
 			{
@@ -1180,6 +1273,45 @@ void Renderer::DrawCaveTrophies(const DrawSceneDesc& desc) const
 		submitDesc.tint = glm::vec4(light.Colour(colour / 255.0f), 0.0f);
 		submitDesc.lightAdd = light.add;
 		DrawMesh(*meshes.Handle(trophy.mesh), submitDesc, std::numeric_limits<uint8_t>::max());
+	}
+}
+
+void Renderer::DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, const L3DMeshSubmitDesc& bodyDesc) const
+{
+	using ecs::components::CreatureEyes;
+	const auto* eyes = desc.entities.TryGet<const CreatureEyes>(entity);
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	if (eyes == nullptr || !meshes.Contains(CreatureEyes::k_EyeballMeshId) || !meshes.Contains(CreatureEyes::k_EyelidMeshId))
+	{
+		return;
+	}
+	const auto eyeball = meshes.Handle(CreatureEyes::k_EyeballMeshId);
+	const auto eyelid = meshes.Handle(CreatureEyes::k_EyelidMeshId);
+
+	// Each eye is drawn on its own, in the creature's light: its eyeball, then its eyelid in the colour of the skin under it
+	L3DMeshSubmitDesc submitDesc = {};
+	submitDesc.viewId = bodyDesc.viewId;
+	submitDesc.program = _shaderManager->GetShader("Object");
+	submitDesc.state = bodyDesc.state;
+	submitDesc.matrixCount = 1;
+	submitDesc.lightMultiply = bodyDesc.lightMultiply;
+	submitDesc.lightAdd = bodyDesc.lightAdd;
+	submitDesc.sortDepth = bodyDesc.sortDepth;
+	const auto tint = glm::vec4(bodyDesc.tint.r, bodyDesc.tint.g, bodyDesc.tint.b, 0.0f);
+	for (const auto& eye : eyes->drawn)
+	{
+		if (eye.eyeball.has_value())
+		{
+			submitDesc.modelMatrices = &*eye.eyeball;
+			submitDesc.tint = tint;
+			DrawMesh(*eyeball, submitDesc, std::numeric_limits<uint8_t>::max());
+		}
+		if (eye.eyelid.has_value())
+		{
+			submitDesc.modelMatrices = &*eye.eyelid;
+			submitDesc.tint = tint * glm::vec4(eyes->lidColour, 1.0f);
+			DrawMesh(*eyelid, submitDesc, std::numeric_limits<uint8_t>::max());
+		}
 	}
 }
 
@@ -3129,6 +3261,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto* spriteShader = _shaderManager->GetShader("Sprite");
 	const auto* debugShaderInstanced = _shaderManager->GetShader("DebugLineInstanced");
 	const auto* objectShaderInstanced = _shaderManager->GetShader("ObjectInstanced");
+	const auto* objectShaderMorphInstanced = _shaderManager->GetShader("ObjectMorphInstanced");
 	const auto* objectShaderStaticInstanced = _shaderManager->GetShader("ObjectStaticInstanced");
 	const auto* objectShaderHeightMapInstanced = _shaderManager->GetShader("ObjectHeightMapInstanced");
 	const auto* objectShaderLightmapInstanced = _shaderManager->GetShader("ObjectLightmapInstanced");
@@ -3336,8 +3469,15 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
 			// Instance meshes
+			// A creature is drawn with its own pose, and its body blended from its meshes
+			struct EntityPose
+			{
+				std::span<const glm::mat4> bones;
+				const L3DMeshSubmitDesc::MorphTargets* morphTargets;
+			};
 			const auto drawInstances = [&](entt::id_type meshId, const RenderContext::InstancedDrawDesc& placers,
-			                               bool useMaterialBlending, uint32_t first, uint32_t count) {
+			                               bool useMaterialBlending, uint32_t first, uint32_t count,
+			                               const EntityPose* pose = nullptr) {
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
@@ -3401,16 +3541,71 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					    "s_reflection", 4, Locator::oceanSystem::value().GetReflectionFramebuffer().GetColorAttachment());
 				}
 
+				submitDesc.morphTargets = nullptr;
+				if (pose != nullptr)
+				{
+					submitDesc.modelMatrices = pose->bones.data();
+					submitDesc.matrixCount = static_cast<uint8_t>(pose->bones.size());
+					if (pose->morphTargets != nullptr)
+					{
+						submitDesc.program = objectShaderMorphInstanced;
+						submitDesc.morphTargets = pose->morphTargets;
+					}
+				}
+
 				// TODO(bwrsandman): choose the correct LOD
 				DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+				submitDesc.morphTargets = nullptr;
 			};
 			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
 			{
-				if (meshId != ecs::components::Hand::k_MeshId && !placers.translucent &&
+				if (meshId != ecs::components::Hand::k_MeshId && !placers.translucent && !placers.perEntity &&
 				    !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
 					drawInstances(meshId, placers, placers.materialBlending, placers.offset, placers.count);
 				}
+			}
+			// The creatures, each posed and shaped as it is, then its eyes
+			for (const auto& [entity, instance] : renderCtx.entityDraws)
+			{
+				const auto* mesh = desc.entities.TryGet<const ecs::components::Mesh>(entity);
+				const auto* creature = desc.entities.TryGet<const ecs::components::Creature>(entity);
+				const auto* morph = desc.entities.TryGet<const ecs::components::CreatureMorph>(entity);
+				const auto* animation = desc.entities.TryGet<const ecs::components::CreatureAnimation>(entity);
+				if (mesh == nullptr || !meshManager.Contains(mesh->id))
+				{
+					continue;
+				}
+				const auto placers = renderCtx.instancedDrawDescs.find(mesh->id);
+				if (placers == renderCtx.instancedDrawDescs.end() ||
+				    (desc.viewId == RenderPass::Reflection && placers->second.hiddenFromReflection))
+				{
+					continue;
+				}
+				const auto bodyMesh = meshManager.Handle(mesh->id);
+				std::optional<L3DMeshSubmitDesc::MorphTargets> targets;
+				if (creature != nullptr && morph != nullptr)
+				{
+					const auto ids = creature_morph::MeshesOf(
+					    creature->species, morph->drawn, [&meshManager](entt::id_type id) { return meshManager.Contains(id); });
+					targets = L3DMeshSubmitDesc::MorphTargets {
+					    .meshes = {&*meshManager.Handle(ids.evilGood), &*meshManager.Handle(ids.thinFat),
+					               &*meshManager.Handle(ids.weakStrong)},
+					    .weights = glm::abs(glm::vec3(morph->drawn.evilGood, morph->drawn.thinFat, morph->drawn.weakStrong)),
+					};
+				}
+				const bool posed = animation != nullptr && animation->boneMatrices.size() == bodyMesh->GetBoneMatrices().size();
+				const EntityPose pose {
+				    .bones = posed ? std::span<const glm::mat4>(animation->boneMatrices)
+				                   : std::span<const glm::mat4>(bodyMesh->GetBoneMatrices()),
+				    .morphTargets = targets ? &*targets : nullptr,
+				};
+				if (pose.bones.empty())
+				{
+					continue;
+				}
+				drawInstances(mesh->id, placers->second, placers->second.materialBlending, instance, 1, &pose);
+				DrawCreatureEyes(desc, entity, submitDesc);
 			}
 			DrawTempleUnderside(desc);
 			// In the temple, whose draws keep their order, the sun's glare comes after its solid parts, which hide it, and

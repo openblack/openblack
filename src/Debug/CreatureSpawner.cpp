@@ -9,6 +9,7 @@
 
 #include "CreatureSpawner.h"
 
+#include <algorithm>
 #include <array>
 #include <string_view>
 #include <vector>
@@ -21,6 +22,7 @@
 #include "Creature/CreatureMorph.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Creature.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
@@ -31,6 +33,7 @@ using namespace openblack;
 using namespace openblack::debug::gui;
 using openblack::ecs::archetypes::CreatureArchetype;
 using openblack::ecs::components::Creature;
+using openblack::ecs::components::CreatureMorph;
 using openblack::ecs::components::Transform;
 
 namespace
@@ -44,9 +47,6 @@ constexpr std::array<std::string_view, static_cast<size_t>(CreatureType::_COUNT)
 constexpr std::array<std::string_view, static_cast<size_t>(PlayerNames::_COUNT)> k_OwnerNames {
     "Player One", "Player Two", "Player Three", "Player Four", "Player Five", "Player Six", "Player Seven", "Neutral",
 };
-
-constexpr std::array<std::string_view, 8> k_AppearanceNames {"Unknown", "Base", "Good", "Evil",
-                                                             "Strong",  "Weak", "Fat",  "Thin"};
 
 const ImVec4 k_PlacingColour {0.85f, 0.30f, 0.25f, 1.0f};
 const ImVec4 k_StartColour {0.25f, 0.60f, 0.30f, 1.0f};
@@ -169,17 +169,68 @@ void CreatureSpawner::DrawSettings() noexcept
 	    _alignment, _fatness, _strength, info != nullptr ? info->strength : creature_morph::k_UnknownSpeciesStrength);
 	ImGui::Text("Evil-good %+.2f, thin-fat %+.2f, weak-strong %+.2f", static_cast<double>(morph.evilGood),
 	            static_cast<double>(morph.thinFat), static_cast<double>(morph.weakStrong));
-	ImGui::Text("Drawn with the %s mesh", k_AppearanceNames.at(static_cast<size_t>(creature_morph::NearestMesh(morph))).data());
 	if (ImGui::IsItemHovered())
 	{
-		ImGui::SetTooltip("Bodies aren't blended between their meshes yet: the nearest whole mesh is drawn");
+		ImGui::SetTooltip("How far the body is pulled from its base mesh towards each axis' mesh, -1 to 1");
 	}
+
+	DrawSelected();
 
 	ImGui::SeparatorText("Facing");
 	ImGui::Checkbox("Random", &_randomFacing);
 	if (!_randomFacing)
 	{
 		ImGui::SliderFloat("Degrees", &_facingDegrees, 0.0f, 360.0f, "%.0f");
+	}
+}
+
+void CreatureSpawner::DrawSelected() noexcept
+{
+	if (!_selected.has_value() || !Locator::entitiesRegistry::has_value())
+	{
+		return;
+	}
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* creature = registry.TryGet<Creature>(*_selected);
+	auto* transform = registry.TryGet<Transform>(*_selected);
+	if (creature == nullptr || transform == nullptr)
+	{
+		_selected.reset();
+		return;
+	}
+
+	ImGui::SeparatorText("Selected creature");
+	ImGui::Text("%s at %.0f, %.0f", SpeciesName(creature->species).data(), static_cast<double>(transform->position.x),
+	            static_cast<double>(transform->position.z));
+	ImGui::SliderFloat("Its alignment", &creature->alignment, -1.0f, 1.0f, "%.2f");
+	ImGui::SliderFloat("Its fatness", &creature->fatness, 0.0f, 1.0f, "%.2f");
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Its body follows its fatness by at most %.2f a game turn",
+		                  static_cast<double>(creature_morph::k_MaxFatnessStep));
+	}
+	ImGui::SliderFloat("Its strength", &creature->strength, 0.0f, 1.0f, "%.2f");
+	if (ImGui::SliderFloat("Its size", &creature->size, creature_morph::k_MinScale, creature_morph::k_MaxScale, "%.2f",
+	                       ImGuiSliderFlags_Logarithmic))
+	{
+		creature->size = creature_morph::ClampScale(creature->size);
+		transform->scale = glm::vec3(CreatureArchetype::DrawnScale(creature->species, creature->size));
+		registry.SetDirty();
+	}
+	if (auto* morph = registry.TryGet<CreatureMorph>(*_selected); morph != nullptr)
+	{
+		ImGui::Text("Drawn: evil-good %+.2f, thin-fat %+.2f, weak-strong %+.2f", static_cast<double>(morph->drawn.evilGood),
+		            static_cast<double>(morph->drawn.thinFat), static_cast<double>(morph->drawn.weakStrong));
+		ImGui::Text("Fatness shown %.2f", static_cast<double>(morph->shownFatness));
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Show now"))
+		{
+			morph->shownFatness = creature->fatness;
+		}
+	}
+	if (ImGui::Button("Deselect"))
+	{
+		_selected.reset();
 	}
 }
 
@@ -213,22 +264,28 @@ void CreatureSpawner::DrawCreatures() noexcept
 
 	ImGui::SeparatorText("On the land");
 	ImGui::Text("%zu creature%s", creatures.size(), creatures.size() == 1 ? "" : "s");
+	if (_selected.has_value() && std::ranges::find(creatures, *_selected) == creatures.end())
+	{
+		_selected.reset();
+	}
 	ImGui::SameLine();
 	ImGui::BeginDisabled(creatures.empty());
 	if (ImGui::Button("Remove all"))
 	{
 		registry.Destroy(creatures.begin(), creatures.end());
 		creatures.clear();
+		_selected.reset();
 	}
 	ImGui::EndDisabled();
 
 	std::optional<entt::entity> remove;
-	if (ImGui::BeginTable("Creatures", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
+	if (ImGui::BeginTable("Creatures", 5, ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
 	                      ImVec2(0.0f, 0.0f)))
 	{
 		ImGui::TableSetupColumn("Species");
 		ImGui::TableSetupColumn("Owner");
 		ImGui::TableSetupColumn("Where");
+		ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 		ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 		ImGui::TableHeadersRow();
 		for (const auto entity : creatures)
@@ -244,6 +301,12 @@ void CreatureSpawner::DrawCreatures() noexcept
 			ImGui::TableNextColumn();
 			ImGui::Text("%.0f, %.0f", static_cast<double>(transform.position.x), static_cast<double>(transform.position.z));
 			ImGui::TableNextColumn();
+			const bool selected = _selected == entity;
+			if (ImGui::SmallButton(selected ? "Selected" : "Select"))
+			{
+				_selected = entity;
+			}
+			ImGui::TableNextColumn();
 			if (ImGui::SmallButton("Remove"))
 			{
 				remove = entity;
@@ -254,6 +317,10 @@ void CreatureSpawner::DrawCreatures() noexcept
 	}
 	if (remove.has_value())
 	{
+		if (_selected == *remove)
+		{
+			_selected.reset();
+		}
 		registry.Destroy(*remove);
 	}
 }

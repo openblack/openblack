@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <span>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 #include "InstanceDesc.h"
 #include "RenderPass.h"
@@ -124,6 +126,14 @@ public:
 		/// The snow lying where the mesh stands shows on it
 		bool snow {false};
 		glm::vec3 lightAdd {0.0f};
+		/// A creature's body, blended from its base mesh, which is drawn, towards other meshes of the same shape: the
+		/// mesh each of the evil to good, thin to fat and weak to strong axes pulls towards, and how far
+		struct MorphTargets
+		{
+			std::array<const L3DMesh*, 3> meshes;
+			glm::vec3 weights;
+		};
+		const MorphTargets* morphTargets {nullptr};
 	};
 
 	static std::unique_ptr<RendererInterface> Create(GraphicsBackend backend, bool vsync) noexcept;

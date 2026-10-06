@@ -29,5 +29,7 @@ struct Creature
 	float alignment {0.0f};
 	float fatness {0.5f};
 	float strength {0.5f};
+	/// How big the creature is: 1 is about 15 units tall, whatever its species' mesh
+	float size {1.0f};
 };
 } // namespace openblack::ecs::components

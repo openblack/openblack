@@ -10,6 +10,7 @@
 #include "Game.h"
 
 #include <cstdlib>
+#include <cstring>
 
 #include <algorithm>
 #include <chrono>
@@ -61,6 +62,7 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mist.h"
 #include "ECS/Components/Town.h"
@@ -73,6 +75,7 @@
 #include "ECS/Systems/ChimneySmokeSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
+#include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -406,6 +409,8 @@ bool Game::GameLogicLoop() noexcept
 	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	// The crops in the fields grow
 	Locator::fieldSystem::value().ProcessTurn(Locator::time::value().GetTurn());
+	// The creatures' bodies follow their fatness
+	Locator::creatureAnimationSystem::value().ProcessTurn();
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
@@ -645,6 +650,8 @@ bool Game::Update() noexcept
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
 	// The rings on the water grow and fade
 	Locator::waterRingSystem::value().Update(gameTime);
+	// The creatures breathe and look about
+	Locator::creatureAnimationSystem::value().Update(gameTime);
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
 	                                        Locator::rainSystem::value().GetFall());
@@ -1103,7 +1110,17 @@ bool Game::Initialize() noexcept
 		using LFromDiskTag = resources::L3DLoader::FromDiskTag;
 		meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
 		LoadHandAnimation();
+		LoadCreatureRigs();
 		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+		// The eyes every creature is drawn with
+		for (const auto& [id, file] : {std::pair {ecs::components::CreatureEyes::k_EyeballMeshId, "Eyeball.l3d"},
+		                               std::pair {ecs::components::CreatureEyes::k_EyelidMeshId, "Eyelid.l3d"}})
+		{
+			if (const auto path = fileSystem.GetPath<Path::Data>() / file; fileSystem.Exists(path))
+			{
+				meshManager.Load(id, LFromDiskTag {}, path);
+			}
+		}
 		meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
 		meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
 		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
@@ -1684,6 +1701,56 @@ void Game::LoadHandAnimation()
 	}
 	_handAnimation = std::move(animation);
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loaded the hand animations of {}", path.string());
+}
+
+void Game::LoadCreatureRigs()
+{
+	auto& fileSystem = Locator::filesystem::value();
+	const auto directory = fileSystem.GetPath<filesystem::Path::Data>() / "CTR";
+	const auto specPath = fileSystem.GetPath<filesystem::Path::Data>() / "ctrspec27.txt";
+	if (!fileSystem.Exists(specPath))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "The creatures are not animated: {} is missing", specPath.string());
+		return;
+	}
+	const auto specDirectory = fileSystem.FindPath(specPath).parent_path();
+	const auto meshDirectory = fileSystem.GetPath<filesystem::Path::CreatureMesh>();
+	auto& rigs = Locator::resources::value().GetCreatureRigs();
+	fileSystem.Iterate(directory, false, [&](const std::filesystem::path& path) {
+		if (string_utils::LowerCase(path.extension().string()) != ".cbn")
+		{
+			return;
+		}
+		pack::PackFile pack;
+		if (pack.ReadFile(*fileSystem.GetData(path)) != pack::PackResult::Success || !pack.HasBlock("Creature"))
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Unable to read the Creature block of {}", path.string());
+			return;
+		}
+		const auto& block = pack.GetBlock("Creature");
+		if (block.size() < sizeof(morph::MorphHeader))
+		{
+			return;
+		}
+		// The species is the one the base mesh named in the header is of
+		morph::MorphHeader header {};
+		std::memcpy(&header, block.data(), sizeof(header));
+		const auto species = creature::GetSpeciesFromMeshName(header.baseMeshName.data());
+		if (species == CreatureType::Unknown)
+		{
+			return;
+		}
+		try
+		{
+			rigs.Load(creature::GetRigId(species), resources::CreatureRigLoader::FromBufferTag {}, block, specDirectory,
+			          meshDirectory);
+			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loaded the creature animations of {}", path.string());
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}: {}", path.string(), err.what());
+		}
+	});
 }
 
 void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds)

@@ -22,6 +22,7 @@ using TextureManager = ResourceManager<Texture2DLoader>;
 using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
+using CreatureRigManager = ResourceManager<CreatureRigLoader>;
 using SoundManager = ResourceManager<SoundLoader>;
 using GlowManager = ResourceManager<LightLoader>;
 using CameraPathManager = ResourceManager<CameraPathLoader>;
@@ -38,6 +39,8 @@ public:
 	virtual AnimationManager& GetAnimations() = 0;
 	virtual LevelManager& GetLevels() = 0;
 	virtual CreatureMindManager& GetCreatureMinds() = 0;
+	/// What moves each species' body, by creature::GetRigId
+	virtual CreatureRigManager& GetCreatureRigs() = 0;
 	virtual SoundManager& GetSounds() = 0;
 	virtual GlowManager& GetGlows() = 0;
 	virtual CameraPathManager& GetCameraPaths() = 0;

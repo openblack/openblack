@@ -18,6 +18,7 @@
 #include "3D/Light.h"
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
+#include "Creature/CreatureRig.h"
 #include "Level.h"
 
 namespace openblack
@@ -112,6 +113,15 @@ struct LevelLoader final: BaseLoader<Level>
 struct CreatureMindLoader final: BaseLoader<creature::CreatureMind>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& creatureMindPath) const;
+};
+
+/// What moves a species' body, from the Creature block of its .cbn file. The species' meshes are read from
+/// meshDirectory for where its eyes sit; the animations are named by the creature spec file in specDirectory.
+struct CreatureRigLoader final: BaseLoader<creature::CreatureRig>
+{
+	[[nodiscard]] result_type operator()(FromBufferTag, const std::vector<uint8_t>& block,
+	                                     const std::filesystem::path& specDirectory,
+	                                     const std::filesystem::path& meshDirectory) const;
 };
 
 struct SoundLoader final: BaseLoader<audio::Sound>

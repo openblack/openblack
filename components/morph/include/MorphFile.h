@@ -11,6 +11,7 @@
 
 #include <array>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -167,6 +168,40 @@ struct HairGroup
 	std::vector<Hair> hairs;
 };
 
+/// A point on a triangle of the base mesh's first submesh, which follows the mesh as it is morphed and posed
+struct MeshIntersect
+{
+	/// The primitive of the submesh the triangle is in
+	uint32_t primitive;
+	/// The triangle's vertices, counted in the primitive
+	std::array<uint32_t, 3> vertices;
+	/// The vertex group, counted in the primitive, of each of the triangle's vertices, whose bone moves it
+	std::array<uint32_t, 3> vertexGroups;
+	/// How far the point is from the first vertex towards the second and towards the third
+	float u;
+	float v;
+};
+static_assert(sizeof(MeshIntersect) == 0x24);
+
+/// Where a creature's eyes sit on its body, from the creature block of a .cbn file
+struct CreatureEyes
+{
+	struct Point
+	{
+		MeshIntersect intersect;
+		bool enabled;
+		/// How far the point is sunk into the body along the triangle's normal
+		float depth;
+	};
+	/// How big the eyes are for the species
+	float scale;
+	/// The left and right eyes, then the points the left and right eyelids are turned towards
+	std::array<Point, 4> points;
+	/// The eyelids' angles, in units of pi, as [mode][k]: open, closed, and the base the lid follows the pupil from.
+	/// Only k = 1 is used.
+	std::array<std::array<float, 3>, 3> lidAngles;
+};
+
 /**
   This class is used to read the Creature block of CBN and the Hand block of HBN files.
  */
@@ -182,15 +217,21 @@ protected:
 	/// For every animation of the spec file in order, its index in _baseAnimation or -1 when the file has none
 	std::vector<int32_t> _baseAnimationIndices;
 	std::array<std::vector<Animation>, 4> _variantAnimations; // last 2 mesh variants don't have animations
+	/// For each variant, as _baseAnimationIndices for its animations
+	std::array<std::vector<int32_t>, 4> _variantAnimationIndices;
 	HairHeader _hairHeader;
 	std::vector<HairGroup> _hairGroups;
 	std::vector<std::vector<ExtraData>> _extraData; ///< related to \ref _base_animation
+	/// The creature's eyes, in creature files from version 14 on
+	std::optional<CreatureEyes> _creatureEyes;
 
 	/// Read file from the input source
 	MorphResult ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept;
 	MorphResult ReadSpecFile(const std::filesystem::path& specFilePath) noexcept;
 	std::vector<Animation> ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets) noexcept;
 	HairGroup ReadHairGroup(std::istream& stream) noexcept;
+	/// The creature block that follows the morph data in creature files, as far as the eyes
+	void ReadCreatureEyes(std::istream& stream) noexcept;
 
 public:
 	MorphFile() noexcept;
@@ -218,8 +259,19 @@ public:
 	{
 		return _variantAnimations.at(index);
 	}
+	/// A variant's animation (0 evil, 1 good, 2 thin, 3 fat) for an animation of the spec file, or null when absent
+	[[nodiscard]] const Animation* GetVariantAnimation(uint32_t variant, size_t specIndex) const noexcept
+	{
+		const auto& indices = _variantAnimationIndices.at(variant);
+		if (specIndex >= indices.size() || indices[specIndex] < 0)
+		{
+			return nullptr;
+		}
+		return &_variantAnimations.at(variant)[static_cast<size_t>(indices[specIndex])];
+	}
 	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const noexcept { return _hairGroups; }
 	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const noexcept { return _extraData; }
+	[[nodiscard]] const std::optional<CreatureEyes>& GetCreatureEyes() const noexcept { return _creatureEyes; }
 };
 
 } // namespace openblack::morph

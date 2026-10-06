@@ -12,14 +12,17 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "3D/CreatureBody.h"
+#include "3D/L3DMesh.h"
 #include "Creature/CreatureMorph.h"
 #include "ECS/Components/Creature.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
@@ -42,12 +45,22 @@ const GCreatureInfo* SpeciesInfo(CreatureType species)
 	return row < creatures.size() ? &creatures.at(row) : nullptr;
 }
 
-float SpeciesStrength(CreatureType species)
+} // namespace
+
+float CreatureArchetype::DrawnScale(CreatureType species, float size)
+{
+	const auto meshId = creature::GetIdFromType(species, CreatureBody::Appearance::Base);
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto restHeight =
+	    meshes.Contains(meshId) ? creature_morph::RestHeight(meshes.Handle(meshId)->GetBoneMatrices()) : 0.0f;
+	return creature_morph::DrawnScale(size, restHeight);
+}
+
+float CreatureArchetype::SpeciesStrength(CreatureType species)
 {
 	const auto* info = SpeciesInfo(species);
 	return info != nullptr ? info->strength : creature_morph::k_UnknownSpeciesStrength;
 }
-} // namespace
 
 float CreatureArchetype::StartScale(CreatureType species)
 {
@@ -72,9 +85,14 @@ entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames pl
 	const auto entity = registry.Create();
 	const auto morph =
 	    creature_morph::FromAttributes(body.alignment, body.fatness, body.strength, SpeciesStrength(creatureType));
-	auto meshId = creature::GetIdFromType(creatureType, creature_morph::NearestMesh(morph));
-	registry.Assign<Creature>(entity, playerName, creatureType, creatureMindId, body.alignment, body.fatness, body.strength);
-	registry.Assign<Mesh>(entity, meshId);
-	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(creature_morph::ClampScale(scale)));
+	const auto size = creature_morph::ClampScale(scale);
+	registry.Assign<Creature>(entity, playerName, creatureType, creatureMindId, body.alignment, body.fatness, body.strength,
+	                          size);
+	// The body is drawn with the base mesh's skins, its shape blended towards the other meshes
+	registry.Assign<Mesh>(entity, creature::GetIdFromType(creatureType, CreatureBody::Appearance::Base));
+	registry.Assign<CreatureMorph>(entity, CreatureMorph {.shownFatness = body.fatness, .drawn = morph, .revision = 0});
+	registry.Assign<CreatureAnimation>(entity);
+	registry.Assign<CreatureEyes>(entity);
+	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(DrawnScale(creatureType, size)));
 	return entity;
 }

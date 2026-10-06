@@ -28,6 +28,7 @@ public:
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
+	CreatureRigManager& GetCreatureRigs() override { return _creatureRigs; }
 	SoundManager& GetSounds() override { return _sounds; }
 	GlowManager& GetGlows() override { return _glows; }
 	CameraPathManager& GetCameraPaths() override { return _cameraPaths; }
@@ -41,6 +42,7 @@ private:
 	AnimationManager _animations;
 	LevelManager _levels;
 	CreatureMindManager _creatureMinds;
+	CreatureRigManager _creatureRigs;
 	SoundManager _sounds;
 	GlowManager _glows;
 	CameraPathManager _cameraPaths;

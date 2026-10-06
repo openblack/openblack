@@ -12,6 +12,7 @@
 #include <optional>
 #include <random>
 
+#include <entt/entity/fwd.hpp>
 #include <glm/vec2.hpp>
 
 #include "Enums.h"
@@ -38,6 +39,8 @@ protected:
 
 private:
 	void DrawSettings() noexcept;
+	/// The creature picked in the list: its alignment, physique and size, changed as it stands
+	void DrawSelected() noexcept;
 	void DrawPlacing() noexcept;
 	void DrawCreatures() noexcept;
 	void Spawn(glm::vec2 screenCoord) noexcept;
@@ -59,6 +62,7 @@ private:
 	/// Where on the screen, 0 to 1, the land was right clicked to place a creature, until it is placed
 	std::optional<glm::vec2> _placeAt;
 	std::mt19937 _random {std::random_device {}()};
+	std::optional<entt::entity> _selected;
 };
 
 } // namespace openblack::debug::gui

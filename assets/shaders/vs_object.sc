@@ -1,4 +1,6 @@
-#if defined(USE_INSTANCING) && defined(USE_LIGHTMAP)
+#if defined(USE_INSTANCING) && defined(USE_MORPH)
+$input a_position, a_texcoord0, a_normal, a_indices, a_tangent, a_bitangent, a_color1, a_color2, a_color3, a_weight, i_data0, i_data1, i_data2, i_data3, i_data4
+#elif defined(USE_INSTANCING) && defined(USE_LIGHTMAP)
 $input a_position, a_texcoord0, a_normal, a_indices, a_texcoord3, i_data0, i_data1, i_data2, i_data3, i_data4
 #elif defined(USE_INSTANCING)
 $input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3, i_data4
@@ -30,6 +32,11 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 uniform vec4 u_depthBias;
 // Slides the texture across the mesh, as the game does the creature's waterfall
 uniform vec4 u_uvOffset;
+#ifdef USE_MORPH
+// How far a creature's body is pulled towards its evil or good, thin or fat and weak or strong mesh, whose vertices
+// come in the second to fourth streams
+uniform vec4 u_morphWeights;
+#endif // USE_MORPH
 
 #ifdef USE_HEIGHT_MAP
 SAMPLER2D(s_heightmap, 1);
@@ -68,7 +75,18 @@ void main()
 #define TO_WORLD(p) mul(u_model[modelIndex], p)
 #endif // USE_INSTANCING
 
-	v_position = TO_WORLD(vec4(a_position.xyz, 1.0f));
+	vec3 position = a_position.xyz;
+	vec3 normal = a_normal;
+#ifdef USE_MORPH
+	// The body is the base moved towards each mesh, and its normal moved alike and made unit length again
+	position += u_morphWeights.x * (a_tangent - a_position.xyz) + u_morphWeights.y * (a_color1 - a_position.xyz) +
+	            u_morphWeights.z * (a_color3 - a_position.xyz);
+	normal += u_morphWeights.x * (a_bitangent - a_normal) + u_morphWeights.y * (a_color2 - a_normal) +
+	          u_morphWeights.z * (a_weight.xyz - a_normal);
+	normal = normalize(normal);
+#endif // USE_MORPH
+
+	v_position = TO_WORLD(vec4(position, 1.0f));
 
 	// The game's light, from the origin of the mesh's bone, meets the vertex's normal in the bone's own space
 	vec3 origin = TO_WORLD(vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
@@ -113,13 +131,13 @@ void main()
 		float snowLevel = SnowObjectLevel(origin.xz, snowCap, snowCap);
 		if (snowLevel > 0.0f)
 		{
-			vec3 worldNormal = normalize(TO_WORLD(vec4(a_normal, 0.0f)).xyz);
-			v_snow = vec4(SnowUv(a_position.xyz, worldNormal), snowLevel / 255.0f, 0.0f);
-			v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(a_normal, localLight));
+			vec3 worldNormal = normalize(TO_WORLD(vec4(normal, 0.0f)).xyz);
+			v_snow = vec4(SnowUv(position, worldNormal), snowLevel / 255.0f, 0.0f);
+			v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(normal, localLight));
 		}
 	}
 #endif // USE_INSTANCING
-	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(a_normal, localLight)), 1.0f);
+	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(normal, localLight)), 1.0f);
 #ifndef USE_LIGHTMAP
 	if (u_landLight.z > 0.0f)
 	{
@@ -168,13 +186,13 @@ void main()
 #elif defined(USE_ENVIRONMENT)
 	// The environment-mapped mode: the environment map's coordinates are where the normal points across and up
 	// the camera's view, from 0 to 0.498
-	vec3 viewNormal = normalize(mul(u_view, mul(u_model[modelIndex], vec4(a_normal, 0.0f))).xyz);
+	vec3 viewNormal = normalize(mul(u_view, mul(u_model[modelIndex], vec4(normal, 0.0f))).xyz);
 	v_texcoord0 = vec4(a_texcoord0, (viewNormal.xy + 1.0f) * 0.498046875f);
 #else
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
 #endif // USE_LIGHTMAP
 	v_texcoord0.xy += u_uvOffset.xy;
-	v_normal = a_normal;
+	v_normal = normal;
 	gl_Position = mul(u_viewProj, v_position);
 	gl_Position.z *= 1.0f - u_depthBias.x;
 	if (hidden)

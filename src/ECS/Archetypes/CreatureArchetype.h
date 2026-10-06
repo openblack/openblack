@@ -31,6 +31,10 @@ public:
 	/// How a new creature of the species starts: neutral, as big, fat and strong as the species starts
 	[[nodiscard]] static float StartScale(CreatureType species);
 	[[nodiscard]] static Body StartBody(CreatureType species);
+	/// The scale a creature of the species is drawn at for its size, by its base mesh's rest pose
+	[[nodiscard]] static float DrawnScale(CreatureType species, float size);
+	/// The species' own strength, 0 to 1, which counts a little towards how strong its creatures look
+	[[nodiscard]] static float SpeciesStrength(CreatureType species);
 
 	static entt::entity Create(const glm::vec3& position, PlayerNames playerName, CreatureType creatureType,
 	                           entt::id_type creatureMindId, float yAngleRadians, float scale, const Body& body = {});

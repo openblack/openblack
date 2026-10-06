@@ -20,6 +20,7 @@
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Mesh.h"
@@ -61,6 +62,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		bool morphWithTerrain;
 		bool castsShadow;
 		bool unlit;
+		bool perEntity;
 	};
 	std::unordered_map<entt::id_type, MeshInstances> meshIds;
 
@@ -68,11 +70,13 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		auto count = meshIds.insert(std::make_pair(mesh.id, MeshInstances {.count = static_cast<uint32_t>(mesh.submeshId),
 		                                                                   .morphWithTerrain = morphWithTerrain,
 		                                                                   .castsShadow = false,
-		                                                                   .unlit = false}));
+		                                                                   .unlit = false,
+		                                                                   .perEntity = false}));
 		count.first->second.count++;
 		// The things whose shadows Black & White bakes into the land (IsCastShadowAtNight), and its features
 		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
 		count.first->second.unlit |= registry.AnyOf<Unlit>(entity);
+		count.first->second.perEntity |= registry.AnyOf<CreatureMorph>(entity);
 		instanceCount++;
 	};
 
@@ -118,6 +122,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		    std::piecewise_construct, std::forward_as_tuple(meshId),
 		    std::forward_as_tuple(offset, desc.count, desc.morphWithTerrain, desc.castsShadow));
 		drawDesc->second.unlit = desc.unlit;
+		drawDesc->second.perEntity = desc.perEntity;
 		offset += desc.count;
 	}
 
@@ -192,6 +197,7 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	const auto& vegetation = Locator::vegetation::value();
 
 	// Set transforms for instanced draw at offsets
+	_renderContext.entityDraws.clear();
 	registry.Each<const Mesh, const Transform>(
 	    [this, &registry, &vegetation, &uniformOffsets, drawBoundingBox](entt::entity entity, const Mesh& mesh,
 	                                                                     const Transform& transform) {
@@ -229,6 +235,10 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 		    const uint32_t idx = desc->second.offset + offset.first->second;
 		    _renderContext.instanceUniforms[idx] = {.model = modelMatrix, .look = look};
+		    if (desc->second.perEntity)
+		    {
+			    _renderContext.entityDraws.push_back({.entity = entity, .instance = idx});
+		    }
 		    if (drawBoundingBox)
 		    {
 			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);

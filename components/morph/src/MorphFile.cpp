@@ -292,6 +292,76 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	return animations;
 }
 
+void MorphFile::ReadCreatureEyes(std::istream& stream) noexcept
+{
+	// The creature block's version is the header's first field. Each field below came in at a version, and the eyes
+	// at version 14.
+	const auto version = _header.unknown0x0;
+	constexpr uint32_t k_EyesVersion = 14;
+	if (version < k_EyesVersion)
+	{
+		return;
+	}
+
+	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
+	constexpr std::streamoff k_Field = sizeof(uint32_t);
+	// Older morph data ends with a name
+	if (_header.binaryVersion <= 5)
+	{
+		skip(0x20);
+	}
+	// The creature's bones and sizes that come before the eyes, as many as the version has
+	std::streamoff fields = 2 + 1 + 1 + 1 + 1 + 4;
+	fields += version > 2 ? 2 : 0;
+	fields += version > 11 ? 1 : 0;
+	fields += version > 4 ? 2 : 0;
+	fields += version > 8 ? 2 : 0;
+	fields += version > 9 ? 1 : 0;
+	fields += version > 15 ? 1 : 0;
+	fields += version > 7 ? 1 : 0;
+	skip(fields * k_Field);
+	// Then up to two points on the body, each after whether it is there
+	const auto skipOptionalPoint = [&stream, &skip]() {
+		uint32_t present = 0;
+		stream.read(reinterpret_cast<char*>(&present), sizeof(present));
+		if (present != 0)
+		{
+			skip(sizeof(MeshIntersect));
+		}
+	};
+	if (version > 7)
+	{
+		skipOptionalPoint();
+	}
+	if (version > 17)
+	{
+		skipOptionalPoint();
+	}
+
+	CreatureEyes eyes {};
+	stream.read(reinterpret_cast<char*>(&eyes.scale), sizeof(eyes.scale));
+	for (auto& point : eyes.points)
+	{
+		uint32_t enabled = 0;
+		stream.read(reinterpret_cast<char*>(&point.intersect), sizeof(point.intersect));
+		stream.read(reinterpret_cast<char*>(&enabled), sizeof(enabled));
+		stream.read(reinterpret_cast<char*>(&point.depth), sizeof(point.depth));
+		point.enabled = enabled != 0;
+	}
+	// Stored a column at a time
+	for (size_t k = 0; k < 3; ++k)
+	{
+		for (auto& row : eyes.lidAngles)
+		{
+			stream.read(reinterpret_cast<char*>(&row.at(k)), sizeof(float));
+		}
+	}
+	if (stream.good())
+	{
+		_creatureEyes = eyes;
+	}
+}
+
 HairGroup MorphFile::ReadHairGroup(std::istream& stream) noexcept
 {
 	HairGroup hairGroup;
@@ -382,6 +452,16 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 			stream.read(reinterpret_cast<char*>(&extraOffset), sizeof(extraOffset));
 
 			_variantAnimations.at(i) = ReadAnimations(stream, variantAnimationOffsets);
+			auto& indices = _variantAnimationIndices.at(i);
+			indices.assign(numAnimations, -1);
+			int32_t variantIndex = 0;
+			for (size_t j = 0; j < numAnimations; ++j)
+			{
+				if (variantAnimationOffsets[j] > 0)
+				{
+					indices[j] = variantIndex++;
+				}
+			}
 		}
 	}
 
@@ -407,6 +487,12 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 			auto& data = _extraData[i].emplace_back();
 			stream.read(reinterpret_cast<char*>(&data), sizeof(data));
 		}
+	}
+
+	// Creature files go on with the creature's own block
+	if (_header.unknown0x0 != 0u)
+	{
+		ReadCreatureEyes(stream);
 	}
 
 	_isLoaded = true;

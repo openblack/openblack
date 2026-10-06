@@ -15,15 +15,20 @@
 #include <limits>
 
 #include <MorphFile.h>
-#include <glm/mat3x3.hpp>
-#include <glm/matrix.hpp>
 
 namespace openblack
 {
 
 namespace
 {
-using Matrix = std::array<std::array<float, 3>, 3>;
+using skeletal_animation::FindFrames;
+using skeletal_animation::k_Identity;
+using skeletal_animation::k_NoParent;
+using skeletal_animation::Lerp;
+using skeletal_animation::Multiply;
+using skeletal_animation::NormaliseRows;
+using skeletal_animation::RotationYXZ;
+using skeletal_animation::Transpose;
 
 /// How far the smoothed cursor may trail the real one, in pixels. It is also the lag that leans the hand fully.
 constexpr float k_MaxCursorLag = 80.0f;
@@ -43,114 +48,6 @@ constexpr float k_MinDistance = 2.0f;
 constexpr float k_ShrinkDistance = 10.0f;
 constexpr float k_GrowDistance = 150.0f;
 constexpr float k_MaxDistance = 1800.0f;
-constexpr uint32_t k_NoParent = std::numeric_limits<uint32_t>::max();
-
-constexpr Matrix k_Identity {{{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}};
-
-/// A rotation matrix from y, x and z angles, combined in that order as the game does
-Matrix RotationYXZ(float y, float x, float z)
-{
-	const auto cy = std::cos(y);
-	const auto sy = std::sin(y);
-	const auto cx = std::cos(x);
-	const auto sx = std::sin(x);
-	const auto cz = std::cos(z);
-	const auto sz = std::sin(z);
-	return {{
-	    {(cy * cz) - (sy * sx * sz), -sz * cx, (sy * cz) + (cy * sx * sz)},
-	    {(cy * sz) + (sy * sx * cz), cx * cz, (sy * sz) - (cy * sx * cz)},
-	    {-sy * cx, sx, cy * cx},
-	}};
-}
-
-/// The keyframe angles are stored x, y, z
-Matrix RotationYXZ(const glm::vec3& euler)
-{
-	return RotationYXZ(euler.y, euler.x, euler.z);
-}
-
-/// Row vector product a * b
-Matrix Multiply(const Matrix& a, const Matrix& b)
-{
-	Matrix result {};
-	for (size_t r = 0; r < 3; ++r)
-	{
-		for (size_t c = 0; c < 3; ++c)
-		{
-			result.at(r).at(c) = (a.at(r)[0] * b.at(0).at(c)) + (a.at(r)[1] * b.at(1).at(c)) + (a.at(r)[2] * b.at(2).at(c));
-		}
-	}
-	return result;
-}
-
-Matrix Transpose(const Matrix& m)
-{
-	Matrix result {};
-	for (size_t r = 0; r < 3; ++r)
-	{
-		for (size_t c = 0; c < 3; ++c)
-		{
-			result.at(r).at(c) = m.at(c).at(r);
-		}
-	}
-	return result;
-}
-
-Matrix Lerp(const Matrix& a, const Matrix& b, float t)
-{
-	Matrix result {};
-	for (size_t r = 0; r < 3; ++r)
-	{
-		for (size_t c = 0; c < 3; ++c)
-		{
-			result.at(r).at(c) = ((b.at(r).at(c) - a.at(r).at(c)) * t) + a.at(r).at(c);
-		}
-	}
-	return result;
-}
-
-/// Keyframe rotations are blended element-wise, then each row is made unit length again
-Matrix NormaliseRows(Matrix m)
-{
-	for (auto& row : m)
-	{
-		const auto length = std::sqrt((row[0] * row[0]) + (row[1] * row[1]) + (row[2] * row[2]));
-		if (length > 0.0f)
-		{
-			for (auto& value : row)
-			{
-				value /= length;
-			}
-		}
-	}
-	return m;
-}
-
-/// The two keyframes around a time and how far between them it is. Cycles wrap from their last frame to the
-/// first, pose ranges end on their last frame.
-struct FrameSpan
-{
-	size_t from;
-	size_t to;
-	float t;
-};
-
-FrameSpan FindFrames(const HandAnimation::Animation& animation, uint32_t timeMs)
-{
-	const auto count = static_cast<int32_t>(animation.frames.size());
-	auto duration = static_cast<int32_t>(animation.duration);
-	if (!animation.looping && count > 1)
-	{
-		duration = (duration * count) / (count - 1);
-	}
-	duration = std::max(duration, 1);
-	const auto time = static_cast<int32_t>(timeMs);
-	const auto frame = std::clamp((count * time) / duration, 0, count - 1);
-	const auto next = frame + 1 == count ? 0 : frame + 1;
-	const auto t =
-	    ((static_cast<float>(count) / static_cast<float>(duration)) * static_cast<float>(time)) - static_cast<float>(frame);
-	return {.from = static_cast<size_t>(frame), .to = static_cast<size_t>(next), .t = t};
-}
 
 /// The time of a pose range that leans fully one way at -k_MaxCursorLag and the other at k_MaxCursorLag
 uint32_t LeanTime(float lag, uint32_t duration)
@@ -180,23 +77,7 @@ bool HandAnimation::Load(const morph::MorphFile& file, const std::vector<uint32_
 		{
 			continue;
 		}
-		auto& animation = _animations[i].emplace();
-		animation.duration = source->header.duration;
-		animation.looping = (source->header.looping & 1u) != 0;
-		animation.rotatedJoints = source->rotatedJointIndices;
-		animation.translatedJoints = source->translatedJointIndices;
-		for (const auto& keyframe : source->keyframes)
-		{
-			auto& frame = animation.frames.emplace_back();
-			for (const auto& angles : keyframe.eulerAngles)
-			{
-				frame.eulerAngles.emplace_back(angles[0], angles[1], angles[2]);
-			}
-			for (const auto& translation : keyframe.translations)
-			{
-				frame.translations.emplace_back(translation[0], translation[1], translation[2]);
-			}
-		}
+		const auto& animation = _animations[i].emplace(skeletal_animation::FromMorph(*source));
 		if (animation.frames.empty())
 		{
 			_animations[i].reset();
@@ -207,7 +88,7 @@ bool HandAnimation::Load(const morph::MorphFile& file, const std::vector<uint32_
 		return false;
 	}
 
-	_boneParents = boneParents;
+	_skeleton = skeletal_animation::Skeleton::FromRestMatrices(boneParents, restMatrices);
 	float lowest = restMatrices.front()[3].y;
 	float highest = lowest;
 	for (const auto& matrix : restMatrices)
@@ -216,31 +97,6 @@ bool HandAnimation::Load(const morph::MorphFile& file, const std::vector<uint32_
 		highest = std::max(highest, matrix[3].y);
 	}
 	_restHeight = std::max(highest - lowest, 0.001f);
-	_restRotations.resize(restMatrices.size());
-	_inverseRestRotations.resize(restMatrices.size());
-	for (size_t i = 0; i < restMatrices.size(); ++i)
-	{
-		// The matrices are the transposes of the game's: column r holds row r
-		Matrix rotation {};
-		for (size_t r = 0; r < 3; ++r)
-		{
-			for (size_t c = 0; c < 3; ++c)
-			{
-				rotation.at(r).at(c) = restMatrices[i][static_cast<glm::length_t>(r)][static_cast<glm::length_t>(c)];
-			}
-		}
-		_restRotations[i] = rotation;
-
-		const auto inverse = glm::inverse(glm::mat3(restMatrices[i]));
-		for (size_t r = 0; r < 3; ++r)
-		{
-			for (size_t c = 0; c < 3; ++c)
-			{
-				_inverseRestRotations.at(i).at(r).at(c) = inverse[static_cast<glm::length_t>(r)][static_cast<glm::length_t>(c)];
-			}
-		}
-	}
-
 	_cycleTimes = {};
 	_springStarted = false;
 	_fadeTime.reset();
@@ -282,56 +138,7 @@ const HandAnimation::Animation* HandAnimation::GetAnimation(size_t specIndex) co
 // frame of the wiggle cycle.
 void HandAnimation::ApplyCycle(const Animation& animation, uint32_t timeMs, std::vector<Pose>& poses) const
 {
-	const auto& stand = *_animations[static_cast<size_t>(Cycle::Wiggle)];
-	const auto& standFrame = stand.frames.front();
-	const auto [from, to, t] = FindFrames(animation, timeMs);
-
-	size_t rotated = 0;
-	size_t translated = 0;
-	for (uint32_t joint = 0; joint < poses.size(); ++joint)
-	{
-		auto& pose = poses[joint];
-		const auto parent = _boneParents[joint];
-
-		// Keyframe rotations are in the rest pose's model space, the joint's own rotation is relative to its
-		// parent's rest rotation
-		Matrix rotation = k_Identity;
-		if (rotated < animation.rotatedJoints.size() && animation.rotatedJoints[rotated] == joint)
-		{
-			rotation = NormaliseRows(Lerp(RotationYXZ(animation.frames[from].eulerAngles[rotated]),
-			                              RotationYXZ(animation.frames[to].eulerAngles[rotated]), t));
-			++rotated;
-		}
-		else
-		{
-			const auto iter = std::ranges::find(stand.rotatedJoints, joint);
-			if (iter != stand.rotatedJoints.end())
-			{
-				rotation = RotationYXZ(standFrame.eulerAngles[static_cast<size_t>(iter - stand.rotatedJoints.begin())]);
-			}
-		}
-		pose.rotation = Multiply(_restRotations[joint], rotation);
-		if (joint != 0 && parent != k_NoParent)
-		{
-			pose.rotation = Multiply(pose.rotation, _inverseRestRotations[parent]);
-		}
-
-		if (translated < animation.translatedJoints.size() && animation.translatedJoints[translated] == joint)
-		{
-			const auto& a = animation.frames[from].translations[translated];
-			const auto& b = animation.frames[to].translations[translated];
-			pose.translation = (b - a) * t + a;
-			++translated;
-		}
-		else
-		{
-			const auto iter = std::ranges::find(stand.translatedJoints, joint);
-			if (iter != stand.translatedJoints.end())
-			{
-				pose.translation = standFrame.translations[static_cast<size_t>(iter - stand.translatedJoints.begin())];
-			}
-		}
-	}
+	poses = skeletal_animation::SampleCycle(animation, *_animations[static_cast<size_t>(Cycle::Wiggle)], timeMs, _skeleton);
 }
 
 // An L animation adds how far its pose at a time differs from its middle frame
@@ -347,7 +154,7 @@ void HandAnimation::ApplyLean(const Animation& animation, uint32_t timeMs, std::
 		{
 			continue;
 		}
-		const auto parent = _boneParents[joint];
+		const auto parent = _skeleton.parents[joint];
 		const auto rotation = NormaliseRows(
 		    Lerp(RotationYXZ(animation.frames[from].eulerAngles[i]), RotationYXZ(animation.frames[to].eulerAngles[i]), t));
 		const auto inverseReference = Transpose(RotationYXZ(reference.eulerAngles[i]));
@@ -356,12 +163,12 @@ void HandAnimation::ApplyLean(const Animation& animation, uint32_t timeMs, std::
 		const bool hasParent = joint != 0 && parent != k_NoParent;
 		if (hasParent)
 		{
-			pose.rotation = Multiply(pose.rotation, _restRotations[parent]);
+			pose.rotation = Multiply(pose.rotation, _skeleton.restRotations[parent]);
 		}
 		pose.rotation = Multiply(Multiply(pose.rotation, inverseReference), rotation);
 		if (hasParent)
 		{
-			pose.rotation = Multiply(pose.rotation, _inverseRestRotations[parent]);
+			pose.rotation = Multiply(pose.rotation, _skeleton.inverseRestRotations[parent]);
 		}
 	}
 
@@ -380,7 +187,7 @@ void HandAnimation::ApplyLean(const Animation& animation, uint32_t timeMs, std::
 
 std::vector<HandAnimation::Pose> HandAnimation::EvaluatePoses(Cycle cycle, uint32_t timeMs, std::optional<glm::vec2> lean) const
 {
-	std::vector<Pose> poses(_boneParents.size(), Pose {.rotation = k_Identity, .translation = glm::vec3(0.0f)});
+	std::vector<Pose> poses(_skeleton.parents.size(), Pose {.rotation = k_Identity, .translation = glm::vec3(0.0f)});
 	const auto* animation = GetAnimation(static_cast<size_t>(cycle));
 	if (animation == nullptr)
 	{
@@ -409,21 +216,7 @@ std::vector<HandAnimation::Pose> HandAnimation::EvaluatePoses(Cycle cycle, uint3
 
 void HandAnimation::ComposeBoneMatrices(const std::vector<Pose>& poses)
 {
-	_boneMatrices.resize(poses.size());
-	for (size_t i = 0; i < poses.size(); ++i)
-	{
-		glm::mat4 local(1.0f);
-		for (size_t r = 0; r < 3; ++r)
-		{
-			for (size_t c = 0; c < 3; ++c)
-			{
-				local[static_cast<glm::length_t>(r)][static_cast<glm::length_t>(c)] = poses.at(i).rotation.at(r).at(c);
-			}
-		}
-		local[3] = glm::vec4(poses[i].translation, 1.0f);
-		const auto parent = _boneParents[i];
-		_boneMatrices[i] = parent != k_NoParent && parent < i ? _boneMatrices[parent] * local : local;
-	}
+	_boneMatrices = skeletal_animation::ComposeBoneMatrices(poses, _skeleton.parents);
 }
 
 void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycle, glm::ivec2 cursor)

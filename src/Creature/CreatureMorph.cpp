@@ -39,6 +39,23 @@ float creature_morph::ClampScale(float scale)
 	return std::clamp(scale, k_MinScale, k_MaxScale);
 }
 
+float creature_morph::RestHeight(std::span<const glm::mat4> rest)
+{
+	float highest = 0.0f;
+	float lowest = 0.0f;
+	for (const auto& bone : rest)
+	{
+		highest = std::max(highest, bone[3].y);
+		lowest = std::min(lowest, bone[3].y);
+	}
+	return highest - lowest;
+}
+
+float creature_morph::DrawnScale(float size, float restHeight)
+{
+	return restHeight > 0.0f ? size * k_HeightAtSizeOne / restHeight : size;
+}
+
 Appearance creature_morph::EvilGoodMesh(float value)
 {
 	return value < 0.0f ? Appearance::Evil : Appearance::Good;
@@ -54,24 +71,28 @@ Appearance creature_morph::WeakStrongMesh(float value)
 	return value < 0.0f ? Appearance::Weak : Appearance::Strong;
 }
 
-Appearance creature_morph::NearestMesh(const Morph& morph)
+float creature_morph::EaseFatness(float shown, float fatness)
 {
-	constexpr float k_Halfway = 0.5f;
-	const auto evilGood = std::abs(morph.evilGood);
-	const auto thinFat = std::abs(morph.thinFat);
-	const auto weakStrong = std::abs(morph.weakStrong);
-	const auto furthest = std::max({evilGood, thinFat, weakStrong});
-	if (furthest < k_Halfway)
+	return shown + std::clamp(fatness - shown, -k_MaxFatnessStep, k_MaxFatnessStep);
+}
+
+creature_morph::Refresh creature_morph::RefreshDrawn(const Morph& drawn, const Morph& target)
+{
+	if (std::abs(target.evilGood - drawn.evilGood) >= k_RefreshThreshold)
 	{
-		return Appearance::Base;
+		return {.drawn = target, .animations = true, .vertices = true};
 	}
-	if (furthest == evilGood)
+	if (std::abs(target.thinFat - drawn.thinFat) >= k_RefreshThreshold)
 	{
-		return EvilGoodMesh(morph.evilGood);
+		return {.drawn = {.evilGood = drawn.evilGood, .thinFat = target.thinFat, .weakStrong = target.weakStrong},
+		        .animations = true,
+		        .vertices = true};
 	}
-	if (furthest == thinFat)
+	if (std::abs(target.weakStrong - drawn.weakStrong) >= k_RefreshThreshold)
 	{
-		return ThinFatMesh(morph.thinFat);
+		return {.drawn = {.evilGood = drawn.evilGood, .thinFat = drawn.thinFat, .weakStrong = target.weakStrong},
+		        .animations = false,
+		        .vertices = true};
 	}
-	return WeakStrongMesh(morph.weakStrong);
+	return {.drawn = drawn, .animations = false, .vertices = false};
 }

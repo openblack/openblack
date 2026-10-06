@@ -59,6 +59,8 @@ struct RenderContext
 		bool materialBlending {false};
 		/// The instances are all blended by their materials, so they are drawn after the opaque ones
 		bool translucent {false};
+		/// The instances are drawn one by one, each posed and shaped as its entity is: the creatures
+		bool perEntity {false};
 		/// How far the instances' textures have slid across them
 		glm::vec2 uvOffset {0.0f};
 		/// Textures some of the submeshes are drawn with in place of their skins, by submesh: the temple's scrolls
@@ -100,6 +102,13 @@ struct RenderContext
 	/// Bone matrices of animated meshes, refilled at every \ref PrepareDraw. Boned meshes without an entry are drawn
 	/// in their rest pose.
 	std::map<entt::id_type, std::vector<glm::mat4>> animatedBoneMatrices;
+	/// The entities drawn one by one, and where each one's instance is (see InstancedDrawDesc::perEntity)
+	struct EntityDraw
+	{
+		entt::entity entity;
+		uint32_t instance;
+	};
+	std::vector<EntityDraw> entityDraws;
 	/// The rivers' stretches, whose beds and channels are laid into the land (see components::StreamSegment)
 	std::vector<glm::mat4> streamSegments;
 	/// The hand is scaled by a negative factor to mirror it, which turns its faces round

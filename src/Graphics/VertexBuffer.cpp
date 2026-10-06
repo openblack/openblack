@@ -147,6 +147,22 @@ void VertexBuffer::Bind() const
 	}
 }
 
+void VertexBuffer::BindStream(uint8_t stream, VertexLayoutHandle layout) const
+{
+	if (!IsValid())
+	{
+		return;
+	}
+	if (_dynamic)
+	{
+		bgfx::setVertexBuffer(stream, toBgfx(_dynamicHandle), 0, _vertexCount, toBgfx(layout));
+	}
+	else
+	{
+		bgfx::setVertexBuffer(stream, toBgfx(_handle), 0, _vertexCount, toBgfx(layout));
+	}
+}
+
 void VertexBuffer::Update(const void* memory) const
 {
 	assert(_dynamic);

@@ -43,6 +43,10 @@ public:
  */
 entt::id_type GetIdFromMeshName(const std::string& fileName);
 entt::id_type GetIdFromType(CreatureType species, CreatureBody::Appearance appearance);
+/// The species a creature mesh file name is of, as GetIdFromMeshName reads it, or Unknown
+[[nodiscard]] CreatureType GetSpeciesFromMeshName(const std::string& fileName);
+/// The id of what moves the species' body (creature::CreatureRig)
+[[nodiscard]] entt::id_type GetRigId(CreatureType species);
 
 /// The species' row in the game's creature tables, which start with the Giant Ape and then follow the species in order
 [[nodiscard]] constexpr size_t InfoRow(CreatureType species)

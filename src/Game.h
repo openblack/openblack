@@ -197,6 +197,8 @@ private:
 	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
 	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh
 	void LoadHandAnimation();
+	/// What moves each species' body, from Data/CTR's .cbn files, by the species their base mesh names
+	static void LoadCreatureRigs();
 	/// Acts on what the player chose in the game's menu: continuing restores the pause it had before it opened
 	void HandleInterfaceAction();
 

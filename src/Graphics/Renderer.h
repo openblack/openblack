@@ -21,6 +21,7 @@
 
 #include <SDL.h>
 #include <entt/core/fwd.hpp>
+#include <entt/entity/fwd.hpp>
 #include <glm/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
@@ -49,6 +50,7 @@ namespace graphics
 {
 class FrameBuffer;
 class L3DSubMesh;
+class MorphStreamLayouts;
 class ShaderProgram;
 class Mesh;
 
@@ -152,6 +154,8 @@ private:
 	void DrawTempleMapMarkers(const DrawSceneDesc& desc) const;
 	/// The creature's room's belts and medals
 	void DrawCaveTrophies(const DrawSceneDesc& desc) const;
+	/// A creature's eyes and eyelids, after its body
+	void DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, const L3DMeshSubmitDesc& bodyDesc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -160,6 +164,8 @@ private:
 	bool _bgfxProfile = false;
 
 	std::unique_ptr<FrameBuffer> _handShadowFrameBuffer;
+	/// How a creature's variant meshes are read to blend its body
+	std::unique_ptr<MorphStreamLayouts> _morphStreamLayouts;
 	/// Where the objects' shadows cover the island, laid out as its footprints are and made for the island's size
 	mutable std::unique_ptr<FrameBuffer> _objectShadowFrameBuffer;
 	/// The land seen from above for the temple's map, and the visit to the temple it was drawn for

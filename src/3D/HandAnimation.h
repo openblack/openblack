@@ -20,6 +20,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "3D/SkeletalAnimation.h"
+
 namespace openblack
 {
 namespace morph
@@ -65,32 +67,13 @@ public:
 		Camera,
 	};
 
-	/// A keyframe pose: per joint YXZ Euler angles and translations of the joints an animation moves
-	struct Animation
-	{
-		uint32_t duration;
-		bool looping;
-		std::vector<uint32_t> rotatedJoints;
-		std::vector<uint32_t> translatedJoints;
-		struct Frame
-		{
-			std::vector<glm::vec3> eulerAngles;
-			std::vector<glm::vec3> translations;
-		};
-		std::vector<Frame> frames;
-	};
-
-	/// The game's matrix: a row-major rotation and a translation, used with row vectors
-	struct Pose
-	{
-		std::array<std::array<float, 3>, 3> rotation;
-		glm::vec3 translation;
-	};
+	using Animation = skeletal_animation::Animation;
+	using Pose = skeletal_animation::Pose;
 
 	/// boneParents and restMatrices are those of the hand mesh, Hand_Boned_Base2.l3d
 	bool Load(const morph::MorphFile& file, const std::vector<uint32_t>& boneParents,
 	          const std::vector<glm::mat4>& restMatrices);
-	[[nodiscard]] bool IsLoaded() const { return !_boneParents.empty(); }
+	[[nodiscard]] bool IsLoaded() const { return !_skeleton.Empty(); }
 
 	/// Advances the animation by a frame. cursor is the mouse position in window pixels.
 	void Update(std::chrono::microseconds dt, State state, Cycle cycle, glm::ivec2 cursor);
@@ -120,10 +103,7 @@ private:
 	void ComposeBoneMatrices(const std::vector<Pose>& poses);
 
 	std::vector<std::optional<Animation>> _animations;
-	std::vector<uint32_t> _boneParents;
-	/// Rest pose rotations of the bones in model space and their inverses
-	std::vector<std::array<std::array<float, 3>, 3>> _restRotations;
-	std::vector<std::array<std::array<float, 3>, 3>> _inverseRestRotations;
+	skeletal_animation::Skeleton _skeleton;
 	std::vector<glm::mat4> _boneMatrices;
 	/// Height of the rest pose's bones in mesh units, as the game measures it when posing the hand
 	float _restHeight {1.0f};
