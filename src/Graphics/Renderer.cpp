@@ -53,6 +53,7 @@
 #include "3D/VillageLights.h"
 #include "3D/WaterRings.h"
 #include "Camera/Camera.h"
+#include "Common/CrashHandler.h"
 #include "Creature/CreatureHair.h"
 #include "Creature/CreatureMorph.h"
 #include "Creature/CreatureSkin.h"
@@ -248,7 +249,13 @@ struct BgfxCallback: public bgfx::CallbackI
 		          str);
 #endif
 
-		// Must terminate, continuing will cause crash anyway.
+		// Must terminate, continuing will cause crash anyway. This can come from bgfx's render thread, where nothing
+		// would catch an exception, so it is reported and the game exits from here.
+		if (crash_handler::IsInstalled())
+		{
+			crash_handler::ReportFatal(crash_report::CrashKind::GraphicsFatal, str, filePath, line,
+			                           std::string("bgfx ") + codeStr);
+		}
 		throw std::runtime_error(std::string("bgfx: ") + filePath + ":" + std::to_string(line) + ": FATAL (" + codeStr +
 		                         "): " + str);
 	}

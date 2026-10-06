@@ -127,6 +127,11 @@ target_link_libraries(
 )
 target_include_directories(openblack_lib PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
+if (WIN32)
+  # The crash handler's stack traces and minidumps
+  target_link_libraries(openblack_lib PRIVATE dbghelp)
+endif ()
+
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)
     if (MSVC)
