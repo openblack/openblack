@@ -9,6 +9,11 @@
 
 #pragma once
 
+#include <optional>
+#include <span>
+#include <string>
+#include <vector>
+
 #include "AudioManagerInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -31,24 +36,41 @@ public:
 	void PauseEmitter([[maybe_unused]] entt::entity emitter) override {}
 	void StopEmitter([[maybe_unused]] entt::entity emitter) override {}
 	void DestroyEmitter([[maybe_unused]] entt::entity emitter) override {}
-	entt::entity CreateEmitter([[maybe_unused]] entt::id_type id, [[maybe_unused]] PlayType playType,
-	                           [[maybe_unused]] glm::vec3 position, [[maybe_unused]] glm::vec3 direction,
-	                           [[maybe_unused]] glm::vec2 radius, [[maybe_unused]] float volume,
-	                           [[maybe_unused]] AudioStatus status, [[maybe_unused]] bool relative) override
+	entt::entity CreateEmitter([[maybe_unused]] entt::id_type id, [[maybe_unused]] std::optional<glm::vec3> worldPosition,
+	                           [[maybe_unused]] PlayType playType) override
 	{
-		return {};
+		return entt::null;
 	};
 	[[nodiscard]] bool EmitterExists([[maybe_unused]] entt::entity emitter) override { return false; }
 	[[nodiscard]] float GetProgress([[maybe_unused]] entt::entity emitter) override { return 1.0f; }
 	[[nodiscard]] AudioStatus GetStatus([[maybe_unused]] entt::entity emitter) override { return {}; }
 	void PlayMusic([[maybe_unused]] const std::string& packPath, [[maybe_unused]] PlayType type) override {}
 	void StopMusic() override {}
+	bool MusicPlay([[maybe_unused]] const std::string& bankPath, [[maybe_unused]] const MusicPlayOptions& options) override
+	{
+		return false;
+	}
+	void MusicStop([[maybe_unused]] bool fadeOut) override {}
+	[[nodiscard]] bool MusicIsActive() const override { return false; }
+	[[nodiscard]] std::optional<MusicBankInfo> GetMusicBankInfo([[maybe_unused]] const std::string& bankPath) override
+	{
+		return std::nullopt;
+	}
+	[[nodiscard]] const MusicPlayer* GetMusic() const override { return nullptr; }
 	const Sound& GetSound([[maybe_unused]] entt::id_type id) override
 	{
 		static const Sound result {};
 		return result;
 	}
 	void PlaySound([[maybe_unused]] entt::id_type id, [[maybe_unused]] PlayType type) override {}
+	void AddAnimEffects([[maybe_unused]] const std::string& bankName, [[maybe_unused]] AnimEffectTable table) override {}
+	AnimEffectPlay PlayAnimEffect([[maybe_unused]] const std::string& bankName, [[maybe_unused]] std::span<const int32_t> keys,
+	                              [[maybe_unused]] entt::entity owner, [[maybe_unused]] const glm::vec3& position) override
+	{
+		return {};
+	}
+	void PlaySoundEffect([[maybe_unused]] entt::id_type id, [[maybe_unused]] std::optional<glm::vec3> worldPosition) override {}
+	void StopSoundEffect([[maybe_unused]] entt::id_type id) override {}
 	void SetGlobalVolume([[maybe_unused]] float volume) override {}
 	void SetSfxVolume([[maybe_unused]] float volume) override {}
 	void SetMusicVolume([[maybe_unused]] float volume) override {}
@@ -75,6 +97,17 @@ public:
 		static const std::map<std::string, SoundGroup> result;
 		return result;
 	}
+	uint32_t AtmosRegisterBank([[maybe_unused]] const std::string& bankName,
+	                           [[maybe_unused]] const std::vector<pack::AudioBankSampleHeader>& headers,
+	                           [[maybe_unused]] uint16_t atmosCount) override
+	{
+		return 0;
+	}
+	void AtmosReleaseBank([[maybe_unused]] uint32_t bank) override {}
+	void AtmosSetBankVolume([[maybe_unused]] uint32_t bank, [[maybe_unused]] int32_t volume) override {}
+	void AtmosSetGroup([[maybe_unused]] uint32_t bank, [[maybe_unused]] uint32_t group) override {}
+	void AtmosProcess([[maybe_unused]] bool active) override {}
+	[[nodiscard]] const AtmosPlayer* GetAtmos() const override { return nullptr; }
 };
 
 } // namespace openblack::audio

@@ -20,6 +20,11 @@ extern "C" {
 #include <AL/alc.h>
 }
 
+namespace openblack::pack
+{
+enum class AudioBankLoop : uint16_t;
+}
+
 namespace openblack::audio
 {
 using SourceId = ALuint;
@@ -89,6 +94,8 @@ enum class SoundId : entt::id_type
 	G_ScrollSqueak_06 = entt::hashed_string("InGame.sad/59").value(),
 	G_CitadelDoorOpen_01 = entt::hashed_string("InGame.sad/60").value(),
 	G_CitadelDoorClose_02 = entt::hashed_string("InGame.sad/61").value(),
+	G_FireCreatureCave_01 = entt::hashed_string("InGame.sad/175").value(),
+	G_WaterCreatureCave_01 = entt::hashed_string("InGame.sad/177").value(),
 	G_CitadelButtonUp_01 = entt::hashed_string("InGame.sad/62").value(),
 	G_CitadelButtonDown_01 = entt::hashed_string("InGame.sad/63").value(),
 	G_FireballPast_01 = entt::hashed_string("InGame.sad/64").value(),
@@ -226,8 +233,18 @@ public:
 	float volume;
 	int pitch;
 	int pitchDeviation;
+	/// Play parameters of the bank header, used where the game plays the sample (see pack::AudioBankOverride)
+	uint32_t overrideFlags;
+	uint16_t headerVolume;
+	int32_t loop;
+	float minDistance;
+	float maxDistance;
+	float distanceScale;
 	ChannelLayout channelLayout;
-	PlayType playType;
+	/// What playing the sample does about instances of it already playing, applied with AudioBankOverride::LoopType
+	pack::AudioBankLoop loopType;
+	/// Samples of a bank in the same voice group count as the same sample for loopType, 0 for none
+	uint16_t group;
 	BufferId bufferId;
 	float duration;
 	std::vector<std::vector<uint8_t>> buffer;

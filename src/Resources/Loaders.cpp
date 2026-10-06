@@ -192,7 +192,14 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->volume = 1.f;
 	sound->pitch = header.pitch;
 	sound->pitchDeviation = header.pitchDeviation;
-	sound->playType = static_cast<audio::PlayType>(header.loopType);
+	sound->overrideFlags = header.overrideFlags;
+	sound->headerVolume = header.volume;
+	sound->loop = header.loop;
+	sound->minDistance = header.minDist;
+	sound->maxDistance = header.maxDist;
+	sound->distanceScale = header.scale;
+	sound->loopType = header.loopType;
+	sound->group = static_cast<uint16_t>(header.group);
 	sound->buffer = buffer;
 	return sound;
 }
