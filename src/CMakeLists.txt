@@ -131,6 +131,7 @@ target_link_libraries(
           imgui::imgui
           imgui_user
           ScriptLibrary
+          lhvmdecompiler
           glm::glm
           EnTT::EnTT
           bgfx::bgfx

@@ -62,3 +62,5 @@ openblack_setup_and_add_test(
 target_link_libraries(test_l3d_submesh_names PRIVATE l3d)
 openblack_setup_and_add_test(test_chl_language lhvm/test_chl_language.cpp)
 target_link_libraries(test_chl_language PRIVATE lhvmlang)
+openblack_setup_and_add_test(test_lhvm_decompiler lhvm/test_lhvm_decompiler.cpp)
+target_link_libraries(test_lhvm_decompiler PRIVATE lhvmdecompiler)
