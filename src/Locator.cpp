@@ -30,7 +30,9 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
+#include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/ChimneySmokeSystem.h"
+#include "ECS/Systems/Implementations/CinematicDirectorSystem.h"
 #include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
@@ -45,6 +47,7 @@
 #include "ECS/Systems/Implementations/SnowSystem.h"
 #include "ECS/Systems/Implementations/SnowfallSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
+#include "ECS/Systems/Implementations/TempleExteriorSystem.h"
 #include "ECS/Systems/Implementations/TimeSystem.h"
 #include "ECS/Systems/Implementations/TownDesireSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
@@ -77,7 +80,9 @@ using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::ChimneySmokeSystem;
+using openblack::ecs::systems::CinematicDirectorSystem;
 using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::FieldSystem;
@@ -92,6 +97,7 @@ using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::SnowfallSystem;
 using openblack::ecs::systems::SnowSystem;
 using openblack::ecs::systems::SoundTagSystem;
+using openblack::ecs::systems::TempleExteriorSystem;
 using openblack::ecs::systems::TimeSystem;
 using openblack::ecs::systems::TownDesireSystem;
 using openblack::ecs::systems::TownSystem;
@@ -162,6 +168,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
 	Locator::alignmentSystem::emplace<AlignmentSystem>();
+	Locator::templeExteriorSystem::emplace<TempleExteriorSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
 	Locator::mistSystem::emplace<MistSystem>();
@@ -171,6 +178,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::snowSystem::emplace<SnowSystem>();
 	Locator::snowfallSystem::emplace<SnowfallSystem>();
 	Locator::waterRingSystem::emplace<WaterRingSystem>();
+	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
 	Locator::chimneySmokeSystem::emplace<ChimneySmokeSystem>();
@@ -189,6 +197,7 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
+	Locator::cameraPathSystem::emplace<CameraPathSystem>();
 }
 
 void openblack::ShutDownServices()
@@ -223,6 +232,7 @@ void openblack::ShutDownServices()
 	Locator::weatherSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
+	Locator::cinematicDirectorSystem::reset();
 	Locator::influenceSystem::reset();
 	Locator::chimneySmokeSystem::reset();
 	Locator::rainSystem::reset();
