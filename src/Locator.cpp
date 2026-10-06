@@ -30,19 +30,28 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
+#include "ECS/Systems/Implementations/ChimneySmokeSystem.h"
+#include "ECS/Systems/Implementations/CloudSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
+#include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
+#include "ECS/Systems/Implementations/RainSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/Implementations/SnowSystem.h"
+#include "ECS/Systems/Implementations/SnowfallSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
 #include "ECS/Systems/Implementations/TimeSystem.h"
 #include "ECS/Systems/Implementations/TownDesireSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
+#include "ECS/Systems/Implementations/VillageLightSystem.h"
+#include "ECS/Systems/Implementations/WaterRingSystem.h"
+#include "ECS/Systems/Implementations/WeatherSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
 #include "LHVM.h"
@@ -68,19 +77,28 @@ using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::ChimneySmokeSystem;
+using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
+using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
+using openblack::ecs::systems::RainSystem;
 using openblack::ecs::systems::RenderingSystem;
+using openblack::ecs::systems::SnowfallSystem;
+using openblack::ecs::systems::SnowSystem;
 using openblack::ecs::systems::SoundTagSystem;
 using openblack::ecs::systems::TimeSystem;
 using openblack::ecs::systems::TownDesireSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
+using openblack::ecs::systems::VillageLightSystem;
+using openblack::ecs::systems::WaterRingSystem;
+using openblack::ecs::systems::WeatherSystem;
 using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
 using openblack::lhvm::LHVM;
@@ -146,8 +164,16 @@ bool openblack::InitializeGame() noexcept
 	Locator::alignmentSystem::emplace<AlignmentSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
+	Locator::mistSystem::emplace<MistSystem>();
+	Locator::cloudSystem::emplace<CloudSystem>();
+	Locator::villageLightSystem::emplace<VillageLightSystem>();
 	Locator::fieldSystem::emplace<FieldSystem>();
+	Locator::snowSystem::emplace<SnowSystem>();
+	Locator::snowfallSystem::emplace<SnowfallSystem>();
+	Locator::waterRingSystem::emplace<WaterRingSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
+	Locator::rainSystem::emplace<RainSystem>();
+	Locator::chimneySmokeSystem::emplace<ChimneySmokeSystem>();
 	Locator::influenceSystem::emplace<InfluenceSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	return true;
@@ -159,6 +185,7 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
+	Locator::weatherSystem::emplace<WeatherSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
@@ -193,9 +220,15 @@ void openblack::ShutDownServices()
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
+	Locator::weatherSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::influenceSystem::reset();
+	Locator::chimneySmokeSystem::reset();
+	Locator::rainSystem::reset();
+	Locator::snowfallSystem::reset();
+	Locator::waterRingSystem::reset();
+	Locator::snowSystem::reset();
 	Locator::fieldSystem::reset();
 	Locator::soundTagSystem::reset();
 	Locator::townDesireSystem::reset();
