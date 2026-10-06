@@ -3493,6 +3493,7 @@ void SetObjectFadeIn() // 384 SET_OBJECT_FADE_IN
 
 void IsAffectedBySpell() // 385 IS_AFFECTED_BY_SPELL
 {
+	// const auto spell = Pop().intVal;
 	// const auto object = Pop().uintVal;
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
@@ -4530,7 +4531,7 @@ void CHLApi::InitFunctionsTable3()
 	CREATE_FUNCTION_BINDING("SET_PLAYER_ALLY", 3, 0, SetPlayerAlly);
 	CREATE_FUNCTION_BINDING("CALL_FLYING", 7, 1, CallFlying);
 	CREATE_FUNCTION_BINDING("SET_OBJECT_FADE_IN", 2, 0, SetObjectFadeIn);
-	CREATE_FUNCTION_BINDING("IS_AFFECTED_BY_SPELL", 1, 1, IsAffectedBySpell);
+	CREATE_FUNCTION_BINDING("IS_AFFECTED_BY_SPELL", 2, 1, IsAffectedBySpell);
 	CREATE_FUNCTION_BINDING("SET_MAGIC_IN_OBJECT", 3, 0, SetMagicInObject);
 	CREATE_FUNCTION_BINDING("ID_ADULT_SIZE", 1, 1, IdAdultSize);
 	CREATE_FUNCTION_BINDING("OBJECT_CAPACITY", 1, 1, ObjectCapacity);
