@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <limits>
 #include <optional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -19,6 +20,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "AxisAlignedBoundingBox.h"
+#include "Graphics/LightBeams.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
 
@@ -88,38 +90,69 @@ public:
 		std::unique_ptr<graphics::Texture2D> texture;
 		std::unique_ptr<graphics::Mesh> mesh;
 	};
-	explicit L3DMesh(std::string debugName = "") noexcept;
+	/// The light a window submesh sheds, drawn with one of the mesh's skins
+	struct VolumeLight
+	{
+		SkinId skinID;
+		BeamMesh mesh;
+	};
+	/// A dynamic mesh's vertices and skins can be changed after it is loaded
+	explicit L3DMesh(std::string debugName = "", bool dynamic = false) noexcept;
 	virtual ~L3DMesh() noexcept;
 
 	bool Load(const l3d::L3DFile& l3d) noexcept;
 	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
 	bool LoadFromFile(const std::filesystem::path& path) noexcept;
 	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
+	/// A dynamic mesh takes its vertices afresh from a file of the same shape
+	void UpdateVertices(const l3d::L3DFile& l3d) noexcept;
+	/// A dynamic mesh's skin takes its texels afresh
+	void UpdateSkin(SkinId skin, std::span<const uint16_t> texels) noexcept;
+	[[nodiscard]] bool IsDynamic() const { return _dynamic; }
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	/// The skins' ids in the order the file lists them
+	[[nodiscard]] const std::vector<SkinId>& GetSkinOrder() const { return _skinOrder; }
 	[[nodiscard]] const std::vector<Footprint>& GetFootprints() const { return _footprints; }
+	[[nodiscard]] const std::vector<VolumeLight>& GetVolumeLights() const { return _volumeLights; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _bonesDefaultMatrices; }
 	[[nodiscard]] const std::optional<glm::vec3>& GetDoorPos() const { return _doorPos; }
+	/// The top of the chimney the smoke rises from, in the mesh
+	[[nodiscard]] const std::optional<glm::vec3>& GetChimneyPos() const { return _chimneyPos; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetExtraMetrics() const { return _extraMetrics; }
 	[[nodiscard]] bool HasPhysicsMesh() const { return _physicsMesh != nullptr; }
 	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
 	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
+	/// How far along a ray, in the mesh's space, it first meets a submesh drawn of the mesh (as the game picks the
+	/// triangle under the mouse while it draws), other than the submeshes left undrawn. Only the temple's rooms keep
+	/// their triangles to be picked.
+	struct PickHit
+	{
+		float distance;
+		uint32_t subMesh;
+	};
+	[[nodiscard]] std::optional<PickHit> Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints = false,
+	                                          bool withoutJoints = false, std::span<const uint32_t> hidden = {}) const;
 
 private:
 	l3d::L3DMeshFlags _flags;
 	std::string _debugName;
+	bool _dynamic;
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
+	std::vector<SkinId> _skinOrder;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
+	std::vector<VolumeLight> _volumeLights;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;
 	std::vector<uint32_t> _bonesParents;
 	std::vector<glm::mat4> _bonesDefaultMatrices;
 	std::optional<glm::vec3> _doorPos;
+	std::optional<glm::vec3> _chimneyPos;
 	std::vector<glm::mat4> _extraMetrics;
 	/// Bounding box if no physics mesh was found
 	std::unique_ptr<btConvexShape> _physicsMesh;
@@ -138,6 +171,7 @@ public:
 
 	[[nodiscard]] bool IsBoned() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::HasBones); }
 	[[nodiscard]] bool HasDoorPosition() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::HasDoorPosition); }
+	[[nodiscard]] bool HasChimney() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::HasChimney); }
 	[[nodiscard]] bool IsPacked() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::Packed); }
 	[[nodiscard]] bool IsNoDraw() const { return static_cast<bool>(_flags & l3d::L3DMeshFlags::NoDraw); }
 	[[nodiscard]] bool ContainsLandscapeFeature() const

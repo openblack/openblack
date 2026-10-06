@@ -55,8 +55,9 @@ struct VertexAttrib
 	Type type;           ///< Data type of each attribute component in the array.
 	bool normalized;     /// < When using fixed point values, range will be
 	                     /// normalized to 0.0-1.0 in shader.
-	bool asInt;          /// < Should not be altered. Unpacking will have to be done in
-	                     /// vertex shader.
+	bool asInt;          /// < The values reach the shader unconverted, as integers: the shader
+	                     /// must declare the input as an ivec/uvec. Only meaningful when not
+	                     /// normalized.
 
 	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false) noexcept
 	    : attribute(attribute)
@@ -73,14 +74,24 @@ using VertexDecl = std::vector<VertexAttrib>;
 class VertexBuffer
 {
 public:
-	VertexBuffer(std::string name, const void* memory, VertexDecl decl) noexcept;
+	/// A dynamic buffer's vertices can be changed after, by Update
+	VertexBuffer(std::string name, const void* memory, VertexDecl decl, bool dynamic = false) noexcept;
 	~VertexBuffer() noexcept;
 
 	[[nodiscard]] uint32_t GetCount() const noexcept;
 	[[nodiscard]] uint32_t GetStrideBytes() const noexcept;
 	[[nodiscard]] uint32_t GetSizeInBytes() const noexcept;
 
+	/// Whether bgfx made the buffer; one it couldn't make isn't drawn
+	[[nodiscard]] bool IsValid() const noexcept;
 	void Bind() const;
+	/// Binds a run of the buffer's vertices
+	void Bind(uint32_t firstVertex, uint32_t count) const;
+	/// Binds the buffer to another stream, its vertices read by a layout of its own: a creature's variant meshes, whose
+	/// positions and normals come in as other attributes than the base mesh's
+	void BindStream(uint8_t stream, VertexLayoutHandle layout) const;
+	/// Replaces a dynamic buffer's vertices, from the start, with bgfx memory of as many or fewer
+	void Update(const void* memory) const;
 
 private:
 	std::string _name;
@@ -89,6 +100,8 @@ private:
 	uint32_t _strideBytes;
 	std::vector<uint32_t> _vertexDeclOffsets;
 	VertexBufferHandle _handle;
+	DynamicVertexBufferHandle _dynamicHandle;
+	bool _dynamic;
 	VertexLayoutHandle _layoutHandle;
 };
 

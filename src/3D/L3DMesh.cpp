@@ -9,6 +9,8 @@
 
 #include "L3DMesh.h"
 
+#include <cassert>
+
 #include <filesystem>
 #include <stdexcept>
 
@@ -29,9 +31,10 @@
 using namespace openblack;
 using namespace openblack::graphics;
 
-L3DMesh::L3DMesh(std::string debugName) noexcept
+L3DMesh::L3DMesh(std::string debugName, bool dynamic) noexcept
     : _flags(static_cast<l3d::L3DMeshFlags>(0))
     , _debugName(std::move(debugName))
+    , _dynamic(dynamic)
 {
 }
 
@@ -45,15 +48,27 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	_nameData = l3d.GetNameData();
 	for (const auto& skin : l3d.GetSkins())
 	{
+		_skinOrder.push_back(skin.id);
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
-		_skins[skin.id]->Create(
-		    l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4, Wrapping::Repeat, Filter::Linear,
-		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]))));
+		const auto size = static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]));
+		// bgfx only lets a texture created without texels have them changed
+		_skins[skin.id]->Create(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4, Wrapping::Repeat,
+		                        Filter::Linear, _dynamic ? nullptr : bgfx::makeRef(skin.texels.data(), size));
+		if (_dynamic)
+		{
+			_skins[skin.id]->Update(skin.texels.data(), size);
+		}
 	}
 
 	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
 	{
 		_doorPos = glm::vec3(l3d.GetExtraPoints()[0].x, l3d.GetExtraPoints()[0].y, l3d.GetExtraPoints()[0].z);
+	}
+
+	// A chimney is always the second extra point, the first being the door
+	if (HasChimney() && l3d.GetExtraPoints().size() >= 2)
+	{
+		_chimneyPos = glm::vec3(l3d.GetExtraPoints()[1].x, l3d.GetExtraPoints()[1].y, l3d.GetExtraPoints()[1].z);
 	}
 
 	if (ContainsLandscapeFeature() && l3d.GetFootprint().has_value())
@@ -167,12 +182,88 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 
 		_subMeshes.emplace_back(std::move(subMesh));
 	}
+
+	// The windows of the temple shed volumes of light, with the texture of their first primitive. The temple's windows
+	// are each a single primitive.
+	const auto& names = l3d.GetSubmeshNames();
+	for (uint32_t i = 0; i < names.size() && i < submeshCount; ++i)
+	{
+		const auto& name = names[i];
+		const auto& primitives = l3d.GetPrimitiveSpan(i);
+		if ((name.flags & l3d::L3DSubmeshName::VolumeLight) == 0 || primitives.empty())
+		{
+			continue;
+		}
+		const auto& primitive = primitives.front();
+		const auto vertices = l3d.GetVertexSpan(i).first(std::min<size_t>(primitive.numVertices, l3d.GetVertexSpan(i).size()));
+		const auto indices =
+		    l3d.GetIndexSpan(i).first(std::min<size_t>(primitive.numTriangles * 3, l3d.GetIndexSpan(i).size()));
+		const glm::vec3 source {name.volumeLightSource.x, name.volumeLightSource.y, name.volumeLightSource.z};
+		_volumeLights.push_back({
+		    .skinID = primitive.material.skinID,
+		    .mesh = MakeVolumeLight(vertices, indices, source, name.volumeLightLength),
+		});
+	}
 	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
 	bgfx::frame();
 
 	return result;
+}
+
+std::optional<L3DMesh::PickHit> L3DMesh::Pick(glm::vec3 origin, glm::vec3 direction, bool onlyJoints, bool withoutJoints,
+                                              std::span<const uint32_t> hidden) const
+{
+	std::optional<PickHit> nearest;
+	for (uint32_t i = 0; i < _subMeshes.size(); ++i)
+	{
+		const auto& subMesh = _subMeshes[i];
+		// The submeshes drawn: no physics, statuses or low levels of detail
+		if (subMesh->IsPhysics() || subMesh->GetFlags().status != 0 || (subMesh->GetFlags().lodMask & 1) != 1)
+		{
+			continue;
+		}
+		if (onlyJoints && !subMesh->GetJoint().has_value())
+		{
+			continue;
+		}
+		if ((withoutJoints && subMesh->GetJoint().has_value()) || std::ranges::find(hidden, i) != hidden.end())
+		{
+			continue;
+		}
+		if (const auto distance = subMesh->Pick(origin, direction);
+		    distance.has_value() && (!nearest.has_value() || *distance < nearest->distance))
+		{
+			nearest = PickHit {.distance = *distance, .subMesh = i};
+		}
+	}
+	return nearest;
+}
+
+void L3DMesh::UpdateVertices(const l3d::L3DFile& l3d) noexcept
+{
+	assert(_dynamic);
+	_boundingBox = {
+	    glm::vec3(std::numeric_limits<float>::max()),
+	    glm::vec3(std::numeric_limits<float>::lowest()),
+	};
+	for (const auto& subMesh : _subMeshes)
+	{
+		subMesh->UpdateVertices(l3d);
+		const auto& bb = subMesh->GetBoundingBox();
+		_boundingBox.minima = glm::min(_boundingBox.minima, bb.minima);
+		_boundingBox.maxima = glm::max(_boundingBox.maxima, bb.maxima);
+	}
+}
+
+void L3DMesh::UpdateSkin(SkinId skin, std::span<const uint16_t> texels) noexcept
+{
+	assert(_dynamic);
+	if (const auto found = _skins.find(skin); found != _skins.end())
+	{
+		found->second->Update(texels.data(), static_cast<uint32_t>(texels.size_bytes()));
+	}
 }
 
 bool L3DMesh::LoadFromFilesystem(const std::filesystem::path& path) noexcept

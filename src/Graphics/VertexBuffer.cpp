@@ -13,6 +13,8 @@
 
 #include <array>
 
+#include <spdlog/spdlog.h>
+
 #include "GraphicsHandleBgfx.h"
 
 using namespace openblack::graphics;
@@ -35,12 +37,14 @@ constexpr std::array<bgfx::Attrib::Enum, 18> k_Attributes {
 
 } // namespace
 
-VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) noexcept
+VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl, bool dynamic) noexcept
     : _name(std::move(name))
     , _vertexCount(0)
     , _vertexDecl(std::move(decl))
     , _strideBytes(0)
     , _handle(BGFX_INVALID_HANDLE)
+    , _dynamicHandle(BGFX_INVALID_HANDLE)
+    , _dynamic(dynamic)
     , _layoutHandle(BGFX_INVALID_HANDLE)
 {
 	// assert(vertices != nullptr);
@@ -70,9 +74,25 @@ VertexBuffer::VertexBuffer(std::string name, const void* mem, VertexDecl decl) n
 
 	_vertexCount = bgfxMem->size / _strideBytes;
 
-	_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	if (_dynamic)
+	{
+		_dynamicHandle = fromBgfx(bgfx::createDynamicVertexBuffer(bgfxMem, layout));
+	}
+	else
+	{
+		_handle = fromBgfx(bgfx::createVertexBuffer(bgfxMem, layout));
+	}
 	_layoutHandle = fromBgfx(bgfx::createVertexLayout(layout));
-	bgfx::setName(toBgfx(_handle), _name.c_str());
+	if (!IsValid())
+	{
+		// Out of handles, setting a name would write past bgfx's own arrays; the buffer is left empty and isn't drawn
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "{}: out of bgfx buffer handles, not created", _name);
+		return;
+	}
+	if (!_dynamic)
+	{
+		bgfx::setName(toBgfx(_handle), _name.c_str());
+	}
 }
 
 VertexBuffer::~VertexBuffer() noexcept
@@ -80,6 +100,10 @@ VertexBuffer::~VertexBuffer() noexcept
 	if (bgfx::isValid(toBgfx(_handle)))
 	{
 		bgfx::destroy(toBgfx(_handle));
+	}
+	if (bgfx::isValid(toBgfx(_dynamicHandle)))
+	{
+		bgfx::destroy(toBgfx(_dynamicHandle));
 	}
 	if (bgfx::isValid(toBgfx(_layoutHandle)))
 	{
@@ -102,7 +126,65 @@ uint32_t VertexBuffer::GetSizeInBytes() const noexcept
 	return _vertexCount * _strideBytes;
 }
 
+bool VertexBuffer::IsValid() const noexcept
+{
+	return _dynamic ? bgfx::isValid(toBgfx(_dynamicHandle)) : bgfx::isValid(toBgfx(_handle));
+}
+
 void VertexBuffer::Bind() const
 {
-	bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
+	if (!IsValid())
+	{
+		return;
+	}
+	if (_dynamic)
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_dynamicHandle), 0, _vertexCount, toBgfx(_layoutHandle));
+	}
+	else
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_handle), 0, _vertexCount, toBgfx(_layoutHandle));
+	}
+}
+
+void VertexBuffer::Bind(uint32_t firstVertex, uint32_t count) const
+{
+	if (!IsValid())
+	{
+		return;
+	}
+	if (_dynamic)
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_dynamicHandle), firstVertex, count, toBgfx(_layoutHandle));
+	}
+	else
+	{
+		bgfx::setVertexBuffer(0, toBgfx(_handle), firstVertex, count, toBgfx(_layoutHandle));
+	}
+}
+
+void VertexBuffer::BindStream(uint8_t stream, VertexLayoutHandle layout) const
+{
+	if (!IsValid())
+	{
+		return;
+	}
+	if (_dynamic)
+	{
+		bgfx::setVertexBuffer(stream, toBgfx(_dynamicHandle), 0, _vertexCount, toBgfx(layout));
+	}
+	else
+	{
+		bgfx::setVertexBuffer(stream, toBgfx(_handle), 0, _vertexCount, toBgfx(layout));
+	}
+}
+
+void VertexBuffer::Update(const void* memory) const
+{
+	assert(_dynamic);
+	if (!IsValid())
+	{
+		return;
+	}
+	bgfx::update(toBgfx(_dynamicHandle), 0, reinterpret_cast<const bgfx::Memory*>(memory));
 }
