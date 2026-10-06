@@ -27,12 +27,14 @@
 #include "Creature/CreatureLayers.h"
 #include "Creature/CreatureLook.h"
 #include "Creature/CreatureMorph.h"
+#include "Creature/CreatureSkin.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -246,6 +248,9 @@ void CreatureSpawner::DrawSelected() noexcept
 	{
 		ImGui::Text("Drawn: evil-good %+.2f, thin-fat %+.2f, weak-strong %+.2f", static_cast<double>(morph->drawn.evilGood),
 		            static_cast<double>(morph->drawn.thinFat), static_cast<double>(morph->drawn.weakStrong));
+		const auto skinWeight = creature_skin::BlendWeight(morph->drawn.evilGood);
+		ImGui::Text("Skin %u of %u towards %s", static_cast<uint32_t>(skinWeight),
+		            static_cast<uint32_t>(creature_skin::k_MaxWeight), morph->drawn.evilGood < 0.0f ? "evil" : "good");
 		ImGui::Text("Fatness shown %.2f", static_cast<double>(morph->shownFatness));
 		ImGui::SameLine();
 		if (ImGui::SmallButton("Show now"))
@@ -485,6 +490,15 @@ void CreatureSpawner::DrawCreatures() noexcept
 	registry.Each<const Creature>([&creatures](entt::entity entity, const Creature&) { creatures.push_back(entity); });
 
 	ImGui::SeparatorText("On the land");
+	if (Locator::creatureHairSystem::has_value())
+	{
+		auto& hair = Locator::creatureHairSystem::value();
+		bool shown = hair.IsShown();
+		if (ImGui::Checkbox("Show hair", &shown))
+		{
+			hair.SetShown(shown);
+		}
+	}
 	ImGui::Text("%zu creature%s", creatures.size(), creatures.size() == 1 ? "" : "s");
 	if (_selected.has_value() && std::ranges::find(creatures, *_selected) == creatures.end())
 	{

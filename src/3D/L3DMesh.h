@@ -113,6 +113,8 @@ public:
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
 	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	/// The skins' ids in the order the file lists them
+	[[nodiscard]] const std::vector<SkinId>& GetSkinOrder() const { return _skinOrder; }
 	[[nodiscard]] const std::vector<Footprint>& GetFootprints() const { return _footprints; }
 	[[nodiscard]] const std::vector<VolumeLight>& GetVolumeLights() const { return _volumeLights; }
 	[[nodiscard]] const std::vector<uint32_t>& GetBoneParents() const { return _bonesParents; }
@@ -143,6 +145,7 @@ private:
 	bool _dynamic;
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
+	std::vector<SkinId> _skinOrder;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
 	std::vector<VolumeLight> _volumeLights;
 	std::vector<std::unique_ptr<L3DSubMesh>> _subMeshes;

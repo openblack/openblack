@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <iostream>
 #include <ranges>
+#include <span>
 #include <utility>
 
 #include <GLWFile.h>
@@ -350,6 +351,91 @@ std::optional<CreatureRig::Eyes> LoadEyes(const morph::CreatureEyes& eyes,
 	}
 	return result;
 }
+/// A triangle's vertices in every mesh, in the space of the bone that moves each, and those bones. Variants share the
+/// base's vertices and their order; a missing one is the base.
+struct MeshTriangle
+{
+	std::array<std::array<glm::vec3, 3>, CreatureRig::k_MeshCount> vertices;
+	std::array<uint32_t, 3> bones;
+};
+
+std::optional<MeshTriangle> TriangleInMeshes(const morph::MeshIntersect& intersect,
+                                             const std::array<std::optional<l3d::L3DFile>, CreatureRig::k_MeshCount>& meshes)
+{
+	const auto& base = meshes.front();
+	const auto baseTriangle = base.has_value() ? FindTriangle(*base, intersect) : std::nullopt;
+	if (!baseTriangle)
+	{
+		return std::nullopt;
+	}
+	MeshTriangle result {.vertices = {}, .bones = baseTriangle->bones};
+	for (size_t m = 0; m < meshes.size(); ++m)
+	{
+		const auto triangle = meshes.at(m).has_value() ? FindTriangle(*meshes.at(m), intersect) : std::nullopt;
+		const auto& from = triangle ? *triangle : *baseTriangle;
+		for (size_t i = 0; i < 3; ++i)
+		{
+			const auto& position = from.vertices.at(i)->position;
+			result.vertices.at(m).at(i) = glm::vec3(position.x, position.y, position.z);
+		}
+	}
+	return result;
+}
+
+std::vector<CreatureRig::HairGroup> LoadHair(std::span<const morph::HairGroup> groups,
+                                             const std::array<std::optional<l3d::L3DFile>, CreatureRig::k_MeshCount>& meshes)
+{
+	std::vector<CreatureRig::HairGroup> result;
+	for (const auto& group : groups)
+	{
+		// A group without segments has no strands to draw
+		if (group.header.segmentCount == 0 || group.hairs.empty())
+		{
+			continue;
+		}
+		auto& hair = result.emplace_back();
+		hair.segmentCount = group.header.segmentCount;
+		hair.textured = group.header.mappingIndex == 1;
+		for (size_t v = 0; v < hair.looks.size(); ++v)
+		{
+			const auto& variant = group.header.variants.at(v);
+			hair.looks.at(v) = {
+			    .colour = {variant.red, variant.green, variant.blue},
+			    .length = variant.length,
+			    .damping = variant.damping,
+			    .stiffness = variant.stiffness,
+			    .thickness = variant.thickness,
+			};
+		}
+		for (const auto& source : group.hairs)
+		{
+			const auto triangle = TriangleInMeshes(source.intersection, meshes);
+			if (!triangle)
+			{
+				continue;
+			}
+			CreatureRig::HairStrand strand {
+			    .turned = (source.flags & 1u) != 0,
+			    .angles = {},
+			    .vertices = triangle->vertices,
+			    .bones = triangle->bones,
+			    .u = source.intersection.u,
+			    .v = source.intersection.v,
+			};
+			for (size_t v = 0; v < strand.angles.size(); ++v)
+			{
+				const auto& angles = source.angles.at(v);
+				strand.angles.at(v) = glm::vec3(angles[0], angles[1], angles[2]);
+			}
+			hair.strands.push_back(strand);
+		}
+		if (hair.strands.empty())
+		{
+			result.pop_back();
+		}
+	}
+	return result;
+}
 } // namespace
 
 CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, const std::vector<uint8_t>& block,
@@ -395,7 +481,9 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 		}
 	}
 
-	if (const auto& eyes = file.GetCreatureEyes())
+	// The eyes and the hair sit on triangles of the meshes
+	const auto& eyes = file.GetCreatureEyes();
+	if (eyes.has_value() || !file.GetHairGroups().empty())
 	{
 		auto& fileSystem = Locator::filesystem::value();
 		std::array<std::optional<l3d::L3DFile>, CreatureRig::k_MeshCount> meshes;
@@ -412,7 +500,11 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 				meshes.at(i).reset();
 			}
 		}
-		rig->eyes = LoadEyes(*eyes, meshes);
+		if (eyes.has_value())
+		{
+			rig->eyes = LoadEyes(*eyes, meshes);
+		}
+		rig->hairGroups = LoadHair(file.GetHairGroups(), meshes);
 	}
 	return rig;
 }

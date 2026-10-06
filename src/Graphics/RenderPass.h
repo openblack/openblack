@@ -20,6 +20,8 @@ namespace openblack::graphics
 
 enum class RenderPass : uint8_t
 {
+	/// A creature's skin blended towards its evil or good skin, when that has changed
+	CreatureSkin,
 	/// The clouds' shadows over the land this frame, and the lights at night
 	LandShade,
 	/// The land's luminosity this frame: as it was laid, shaded by the clouds and lit by the lights
@@ -55,6 +57,7 @@ enum class RenderPass : uint8_t
 };
 
 static constexpr std::array<std::string_view, static_cast<uint8_t>(RenderPass::_count)> k_RenderPassNames {
+    "Creature Skin Pass",          //
     "Land Shade Pass",             //
     "Land Luminosity Pass",        //
     "Land Colour Pass",            //

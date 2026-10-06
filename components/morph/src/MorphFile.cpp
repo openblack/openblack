@@ -56,18 +56,17 @@
  *
  * - 4 bytes 1 unknown int used if the binary version is greater than 4
  * - 4 bytes containing the number of hair groups
- * - 100 bytes header * number of groups, containing:
- *         1 unknown int, TODO:
+ * - for each group, a 100 byte header containing:
+ *         segments version
  *         hair count
- *         1 unknown int, TODO: a count of some sort
- *         1 unknown int, TODO:
- *         3 unknown struct of 28 bytes each, TODO
- * - 76 byte hair structure * hair count per hair group, containing:
- *         1 unknown int, TODO:
- *         36 struct containing intersection data
- *         3 floats representing 3 x values
- *         3 floats representing 3 y values
- *         3 floats representing 3 z values
+ *         segment count (points per strand)
+ *         mapping index (1 when drawn with the hair texture)
+ *         neutral, evil and good looks of 28 bytes each: red, green, blue
+ *         as ints 0 to 255, then length, damping, stiffness and thickness
+ *   followed by its 76 byte hairs, each containing:
+ *         flags (bit 0: turned by its angles)
+ *         36 byte point on a triangle of the base mesh
+ *         neutral, evil and good x, y and z angles
  * - 4 byte offset to the next block (extra)
  *
  * ------------------------ start of extra animation block --------------------

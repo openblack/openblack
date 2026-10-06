@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <memory>
 #include <span>
+#include <utility>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -132,6 +133,9 @@ public:
 		{
 			std::array<const L3DMesh*, 3> meshes;
 			glm::vec3 weights;
+			/// The skins the body is drawn with in place of its base mesh's, by skin id: blended towards how evil or
+			/// good it is
+			std::span<const std::pair<uint32_t, const Texture2D*>> skins;
 		};
 		const MorphTargets* morphTargets {nullptr};
 	};

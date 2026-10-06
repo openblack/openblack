@@ -63,6 +63,7 @@
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/CreatureHair.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mist.h"
 #include "ECS/Components/Town.h"
@@ -76,6 +77,7 @@
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
@@ -660,6 +662,11 @@ bool Game::Update() noexcept
 		// The creatures breathe, act, pull faces and look about
 		auto creatureAnimation = profiler.BeginScoped(Profiler::Stage::CreatureAnimationUpdate);
 		Locator::creatureAnimationSystem::value().Update(gameTime);
+	}
+	{
+		// Their hair swings from the posed bodies
+		auto creatureHair = profiler.BeginScoped(Profiler::Stage::CreatureHairUpdate);
+		Locator::creatureHairSystem::value().Update(gameTime);
 	}
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
@@ -1321,6 +1328,25 @@ bool Game::Initialize() noexcept
 			}
 		}
 	});
+
+	// The texture every creature's hair is drawn with, and its alpha beside it
+	for (const auto& [id, name] : {std::pair {ecs::components::CreatureHair::k_TextureId, "C_Ape_Hair.raw"},
+	                               std::pair {ecs::components::CreatureHair::k_AlphaTextureId, "C_Ape_Haira.raw"}})
+	{
+		const auto path = fileSystem.GetPath<Path::Data>() / name;
+		if (!fileSystem.Exists(path))
+		{
+			continue;
+		}
+		try
+		{
+			textureManager.Load(id, resources::Texture2DLoader::FromDiskTag {}, path);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	}
 
 	// The noise that makes the snow's edges on the land ragged
 	try

@@ -17,6 +17,8 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <SDL.h>
@@ -156,6 +158,11 @@ private:
 	void DrawCaveTrophies(const DrawSceneDesc& desc) const;
 	/// A creature's eyes and eyelids, after its body
 	void DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, const L3DMeshSubmitDesc& bodyDesc) const;
+	/// A creature's strands of hair, as ribbons facing the camera blended over the scene
+	void DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) const;
+	/// Blends the creatures' skins towards their evil or good skins where that has changed, one skin a frame; drops
+	/// those of creatures no longer on the land
+	void DrawCreatureSkinPass(const DrawSceneDesc& drawDesc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -202,6 +209,22 @@ private:
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};
+	/// A creature's skins: each of its base mesh's, blended towards the matching skin of its evil or good mesh
+	struct CreatureSkins
+	{
+		struct Skin
+		{
+			uint32_t id;
+			std::unique_ptr<FrameBuffer> target;
+			/// The variant skin and weight the target was last blended with, before which it is not drawn with
+			std::optional<std::pair<const Texture2D*, uint8_t>> blended;
+		};
+		entt::id_type baseMesh;
+		std::vector<Skin> skins;
+		/// The blended skins the body is drawn with in place of its base mesh's, by skin id
+		std::vector<std::pair<uint32_t, const Texture2D*>> drawn;
+	};
+	mutable std::unordered_map<entt::entity, CreatureSkins> _creatureSkins;
 	/// Sampled by the primitives without a skin, as Direct3D's texture stages read white with no texture set
 	std::optional<TextureHandle> _whiteTexture;
 	/// u_modelLight: where the game's model light is this frame, and its ambient

@@ -66,50 +66,61 @@ struct HairHeader
 };
 static_assert(sizeof(HairHeader) == 0x8);
 
-// TODO(#461): Function unknown
-struct HairGroupHeaderMember
+/// How a hair group looks at one end of the evil to good axis, or in the middle
+struct HairGroupVariant
 {
-	uint32_t unknown0x0; // TODO(#461)
-	uint32_t unknown0x4; // TODO(#461)
-	uint32_t unknown0x8; // TODO(#461)
-	float unknown0xc;    // TODO(#461)
-	float unknown0x10;   // TODO(#461)
-	float unknown0x14;   // TODO(#461)
-	float unknown0x18;   // TODO(#461)
+	/// The strands' colour, 0 to 255 a channel
+	int32_t red;
+	int32_t green;
+	int32_t blue;
+	/// How long a strand is, in units of the creature's hair scale
+	float length;
+	/// With the length, how much of its speed a strand keeps over a second: (damping * length) squared
+	float damping;
+	/// How hard each segment springs back in line with the one before it
+	float stiffness;
+	/// How wide a strand is drawn, and how far its root is sunk into the body, in units of the hair scale
+	float thickness;
 };
-static_assert(sizeof(HairGroupHeaderMember) == 0x1c);
+static_assert(sizeof(HairGroupVariant) == 0x1c);
 
 struct HairGroupHeader
 {
-	uint32_t unknown0x0; // TODO(#462)
+	uint32_t segmentsVersion;
 	uint32_t hairCount;
-	uint32_t unknown0x8; // TODO(#462): some count
-	uint32_t unknown0xc; // TODO(#462)
-	std::array<HairGroupHeaderMember, 3> unknown0x10;
+	/// The points each strand is simulated and drawn with, its root first
+	uint32_t segmentCount;
+	/// 1 when the strands are drawn with the hair texture, otherwise in their colour alone
+	uint32_t mappingIndex;
+	/// Neutral, evil and good
+	std::array<HairGroupVariant, 3> variants;
 };
 static_assert(sizeof(HairGroupHeader) == 0x64);
 
-struct HairIntersection
+/// A point on a triangle of the base mesh's first submesh, which follows the mesh as it is morphed and posed
+struct MeshIntersect
 {
-	uint32_t unknown0x0;  // TODO(#463)
-	uint32_t unknown0x4;  // TODO(#463)
-	uint32_t unknown0x8;  // TODO(#463)
-	uint32_t unknown0xc;  // TODO(#463)
-	uint32_t unknown0x10; // TODO(#463)
-	uint32_t unknown0x14; // TODO(#463)
-	uint32_t unknown0x18; // TODO(#463)
-	float unknown0x1c;    // TODO(#463)
-	float unknown0x20;    // TODO(#463)
+	/// The primitive of the submesh the triangle is in
+	uint32_t primitive;
+	/// The triangle's vertices, counted in the primitive
+	std::array<uint32_t, 3> vertices;
+	/// The vertex group, counted in the primitive, of each of the triangle's vertices, whose bone moves it
+	std::array<uint32_t, 3> vertexGroups;
+	/// How far the point is from the first vertex towards the second and towards the third
+	float u;
+	float v;
 };
-static_assert(sizeof(HairIntersection) == 0x24);
+static_assert(sizeof(MeshIntersect) == 0x24);
 
+/// One strand of a hair group, rooted on a triangle of the body
 struct Hair
 {
-	uint32_t unknown0x0; // TODO(#464)
-	HairIntersection intersection;
-	std::array<float, 3> xs;
-	std::array<float, 3> ys;
-	std::array<float, 3> zs;
+	/// Bit 0: the strand grows out turned from the surface by its angles, rather than straight out of it
+	uint32_t flags;
+	MeshIntersect intersection;
+	/// For neutral, evil and good, the x, y and z angles in radians the strand is turned by, combined y, x then z, in
+	/// the space of the bones that move its triangle
+	std::array<std::array<float, 3>, 3> angles;
 };
 static_assert(sizeof(Hair) == 0x4c);
 
@@ -167,21 +178,6 @@ struct HairGroup
 	HairGroupHeader header;
 	std::vector<Hair> hairs;
 };
-
-/// A point on a triangle of the base mesh's first submesh, which follows the mesh as it is morphed and posed
-struct MeshIntersect
-{
-	/// The primitive of the submesh the triangle is in
-	uint32_t primitive;
-	/// The triangle's vertices, counted in the primitive
-	std::array<uint32_t, 3> vertices;
-	/// The vertex group, counted in the primitive, of each of the triangle's vertices, whose bone moves it
-	std::array<uint32_t, 3> vertexGroups;
-	/// How far the point is from the first vertex towards the second and towards the third
-	float u;
-	float v;
-};
-static_assert(sizeof(MeshIntersect) == 0x24);
 
 /// Where a creature's eyes sit on its body, from the creature block of a .cbn file
 struct CreatureEyes

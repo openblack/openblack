@@ -48,6 +48,7 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	_nameData = l3d.GetNameData();
 	for (const auto& skin : l3d.GetSkins())
 	{
+		_skinOrder.push_back(skin.id);
 		_skins[skin.id] = std::make_unique<Texture2D>(_debugName.c_str());
 		const auto size = static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0]));
 		// bgfx only lets a texture created without texels have them changed

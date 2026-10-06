@@ -30,6 +30,7 @@ public:
 		LivingActionUpdate,
 		CreatureMindUpdate,
 		CreatureAnimationUpdate,
+		CreatureHairUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -66,6 +67,7 @@ public:
 	    "Living Action Update", //
 	    "Creature Mind",        //
 	    "Creature Animation",   //
+	    "Creature Hair",        //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //

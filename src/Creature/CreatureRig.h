@@ -21,6 +21,7 @@
 
 #include "3D/SkeletalAnimation.h"
 #include "Creature/CreatureEyes.h"
+#include "Creature/CreatureHair.h"
 
 namespace openblack::creature
 {
@@ -73,6 +74,32 @@ struct CreatureRig
 		creature_eyes::LidAngles lidAngles;
 	};
 	std::optional<Eyes> eyes;
+
+	/// A strand of hair, rooted on a triangle of the body
+	struct HairStrand
+	{
+		/// Whether the strand grows out turned from the surface by its angles, rather than straight out of it
+		bool turned;
+		/// The x, y and z angles it is turned by when neutral, evil and good
+		std::array<glm::vec3, 3> angles;
+		/// The triangle's vertices in each mesh, in the space of the bone that moves each, and where between them
+		std::array<std::array<glm::vec3, 3>, k_MeshCount> vertices;
+		std::array<uint32_t, 3> bones;
+		float u;
+		float v;
+	};
+	/// A tuft of strands that look and move alike
+	struct HairGroup
+	{
+		/// The points each strand is made of
+		uint32_t segmentCount;
+		/// Drawn with the hair texture rather than in the strands' colour alone
+		bool textured;
+		creature_hair::Variants looks;
+		std::vector<HairStrand> strands;
+	};
+	/// The species' hair, none for most
+	std::vector<HairGroup> hairGroups;
 
 	/// An animated mesh's animation, falling back on the base's when the mesh has none of its own
 	[[nodiscard]] const skeletal_animation::Animation* GetAnimation(Mesh mesh, size_t index) const;
