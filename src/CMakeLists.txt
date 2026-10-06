@@ -120,11 +120,13 @@ target_link_libraries(
   openblack_lib
   PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
           l3d
+          cam
           pack
           lnd
           anm
           glw
           morph
+          rawimage
           imgui::imgui
           imgui_user
           ScriptLibrary
@@ -139,6 +141,8 @@ target_link_libraries(
           LinearMath
           minizip::minizip
   PUBLIC spdlog::spdlog
+         # The mind file's types are part of the creature mind component
+         creaturemind
 )
 target_include_directories(openblack_lib PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
