@@ -49,6 +49,7 @@
 #include "Camera.h"
 #include "Camera/Camera.h"
 #include "Console.h"
+#include "CreatureSpawner.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -129,6 +130,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Weather);
 	debugWindows.emplace_back(new Magic);
 	debugWindows.emplace_back(new KeyBindingsWindow);
+	auto spawner = std::make_unique<CreatureSpawner>();
+	debugWindows.emplace_back(std::move(spawner));
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
