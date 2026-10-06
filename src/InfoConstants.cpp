@@ -9,11 +9,28 @@
 
 #include "InfoConstants.h"
 
+#include <cctype>
 #include <cstring>
+
+#include <algorithm>
+#include <string_view>
+
+#include <spdlog/spdlog.h>
 
 #include "Locator.h"
 
 using namespace openblack;
+
+namespace
+{
+/// Equal ignoring case, as the game compares names
+bool EqualNoCase(std::string_view a, std::string_view b)
+{
+	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char x, char y) {
+		       return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y));
+	       });
+}
+} // namespace
 
 VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 {
@@ -40,19 +57,26 @@ VillagerInfo GVillagerInfo::Find(Tribe tribe, VillagerNumber villagerNumber)
 
 AbodeInfo GAbodeInfo::Find(const std::string& name)
 {
+	// "<tribe>_<abode>", both parts ignoring case, the first match; None if there is none. The game then uses the info
+	// without a check; here the miss is logged and the command skipped.
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& abode : Locator::infoConstants::value().abode)
 	{
-		const auto tribeName = k_TribeStrs.at(static_cast<uint8_t>(abode.tribeType));
-		const auto abodeName = std::string(abode.debugString.data());
-		if (std::string(tribeName.data()) + "_" + abodeName == name)
+		if (abode.tribeType != Tribe::NONE && static_cast<size_t>(abode.tribeType) < k_TribeStrs.size())
 		{
-			return static_cast<AbodeInfo>(i);
+			const auto tribeName = k_TribeStrs.at(static_cast<size_t>(abode.tribeType));
+			const std::string_view text(name);
+			if (text.size() > tribeName.size() && text[tribeName.size()] == '_' &&
+			    EqualNoCase(text.substr(0, tribeName.size()), tribeName) &&
+			    EqualNoCase(text.substr(tribeName.size() + 1), abode.debugString.data()))
+			{
+				return static_cast<AbodeInfo>(i);
+			}
 		}
 		++i;
 	}
-
-	throw std::runtime_error("Could not find info for " + name);
+	SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "No abode info named \"{}\"; the command is skipped", name);
+	return AbodeInfo::None;
 }
 
 AbodeInfo GAbodeInfo::Find(Tribe tribe, AbodeNumber abodeNumber)
@@ -83,13 +107,15 @@ FeatureInfo GFeatureInfo::Find(const std::string& name)
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& feature : Locator::infoConstants::value().feature)
 	{
-		if (name == feature.debugString.data())
+		// Ignoring case; the game uses a missing info without a check, here it is logged and the command skipped
+		if (EqualNoCase(name, feature.debugString.data()))
 		{
 			return static_cast<FeatureInfo>(i);
 		}
 		++i;
 	}
-	throw std::runtime_error("Could not find info for " + name);
+	SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "No feature info named \"{}\"; the command is skipped", name);
+	return FeatureInfo::None;
 }
 
 AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
@@ -97,13 +123,15 @@ AnimatedStaticInfo GAnimatedStaticInfo::Find(const std::string& name)
 	// TODO (#749) use std::views::enumerate
 	for (size_t i = 0; const auto& as : Locator::infoConstants::value().animatedStatic)
 	{
-		if (name == as.debugString.data())
+		// Ignoring case; the game uses a missing info without a check, here it is logged and the command skipped
+		if (EqualNoCase(name, as.debugString.data()))
 		{
 			return static_cast<AnimatedStaticInfo>(i);
 		}
 		++i;
 	}
-	throw std::runtime_error("Could not find info for " + name);
+	SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "No animated static info named \"{}\"; the command is skipped", name);
+	return AnimatedStaticInfo::None;
 }
 
 void openblack::UpdateInfo(CreatureActionInfo& info, const v100::CreatureActionInfo& old)
