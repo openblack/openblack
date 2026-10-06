@@ -1,0 +1,86 @@
+/******************************************************************************
+ * Copyright (c) 2018-2026 openblack developers
+ *
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
+ *
+ * openblack is licensed under the GNU General Public License version 3.
+ *******************************************************************************/
+
+#pragma once
+
+#include <cstdint>
+
+#include <array>
+#include <utility>
+
+#include <glm/vec3.hpp>
+
+#include "3D/SkyInterface.h"
+#include "SoundMap.h"
+
+namespace openblack::audio
+{
+
+/// Port of the game's ambient audio: one atmosphere bank per AtmosType whose volume follows the SoundMap.
+///
+/// Each game turn the SoundMap's volumes become the banks' targets and every bank moves towards its target by
+/// 0.02 (0.04 between 0.1 and 0.8), so a full fade takes 30 to 50 turns. Banks switch to their second sample
+/// group on land owned by an evil god.
+class AtmosAudio
+{
+public:
+	struct TurnInputs
+	{
+		/// Listener position
+		glm::vec3 camera;
+		/// Weather at the camera
+		AtmosWeather weather;
+		bool paused;
+		uint32_t turn;
+		/// Inside the temple: every bank fades out to silence
+		bool inCitadel;
+		bool videoPlaying;
+	};
+
+	/// Loads the ambience banks, when a level has finished loading
+	void Init();
+	/// Releases the ambience banks
+	void Release();
+
+	/// Alignment of the most influential player at the camera, -1 (evil) to 1 (good). Updated by the game every
+	/// turn before EndTurn.
+	void SetAlignment(float alignment);
+
+	/// The ambience part of the end of a game turn
+	void EndTurn(const TurnInputs& inputs);
+	/// The audio's game turn without the sound map moving on, as the temple has it. The world is paused in the temple,
+	/// so the world's turn doesn't end, and the banks fade out there: the temple has no ambience.
+	void ContinueTurn(const TurnInputs& inputs);
+
+	[[nodiscard]] const SoundMap& GetSoundMap() const { return _soundMap; }
+	[[nodiscard]] const std::array<float, k_AtmosTypeCount>& GetTargets() const { return _targets; }
+	[[nodiscard]] const std::array<float, k_AtmosTypeCount>& GetVolumes() const { return _current; }
+	[[nodiscard]] float GetAlignmentValue() const { return _alignment; }
+	[[nodiscard]] uint32_t GetGroup() const;
+
+	/// The sky type at a time of day: 0 day, 1 dusk, 2 night
+	[[nodiscard]] static float CalculateSkyType(float time, const SkyInterface::DayNightTimes& times);
+	/// The value the game's audio keeps for an alignment, -1 (evil) to 1 (good)
+	[[nodiscard]] static float CalculateAlignmentValue(float alignment);
+	/// One turn of a bank's fade towards its target: the new volume and what is sent to the bank (0-127)
+	[[nodiscard]] static std::pair<float, int32_t> StepBankVolume(float current, float target);
+
+private:
+	void CopyTargets(bool inCitadel);
+	void ProcessAtmosBanks();
+
+	SoundMap _soundMap;
+	std::array<uint32_t, k_AtmosTypeCount> _banks {};
+	std::array<float, k_AtmosTypeCount> _targets {};
+	std::array<float, k_AtmosTypeCount> _current {};
+	float _alignment {0.0f};
+	bool _registered {false};
+};
+
+} // namespace openblack::audio

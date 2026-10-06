@@ -133,6 +133,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 			}
 		}
 	}
+	// The system's cursor stays hidden: the game shows the hand, and its menu its own pointer
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
 	return gui;
 }
@@ -186,6 +188,11 @@ bool Gui::StealsFocus() const noexcept
 	return _stealsFocus;
 }
 
+bool Gui::IsMouseOverWindow() const noexcept
+{
+	return ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
+}
+
 void Gui::SetScale(float scale) noexcept
 {
 	ImGui::GetStyle().ScaleAllSizes(scale);
@@ -227,6 +234,17 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 		break;
 	}
 	return _stealsFocus;
+}
+
+void Gui::OpenWindow(std::string_view name) noexcept
+{
+	for (auto& window : _debugWindows)
+	{
+		if (window->GetName() == name)
+		{
+			window->Open();
+		}
+	}
 }
 
 bool Gui::CreateFontsTextureBgfx() noexcept
@@ -287,7 +305,7 @@ bool Gui::Loop() noexcept
 		window->WindowUpdate();
 	}
 	NewFrame();
-	if (ShowMenu())
+	if (_menuBarVisible && ShowMenu())
 	{
 		// Exit option selected
 		return true;
