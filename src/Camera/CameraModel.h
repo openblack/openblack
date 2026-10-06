@@ -45,6 +45,14 @@ public:
 		std::optional<glm::vec3> midpoint;
 	};
 
+	/// A projection a model looks through instead of the configured one
+	struct Lens
+	{
+		/// In degrees
+		float horizontalFieldOfView;
+		float nearClip;
+	};
+
 	static std::unique_ptr<CameraModel> CreateModel(Model model);
 
 	static FlightPath CharterFlight(glm::vec3 origin, glm::vec3 focus, glm::vec3 currentOrigin, float heightFactor);
@@ -57,6 +65,7 @@ public:
 	[[nodiscard]] virtual glm::vec3 GetTargetOrigin() const = 0;
 	[[nodiscard]] virtual glm::vec3 GetTargetFocus() const = 0;
 	[[nodiscard]] virtual std::chrono::seconds GetIdleTime() const = 0;
+	[[nodiscard]] virtual std::optional<Lens> GetLens() const { return std::nullopt; }
 };
 
 } // namespace openblack

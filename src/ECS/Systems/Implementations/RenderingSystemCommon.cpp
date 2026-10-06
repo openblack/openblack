@@ -14,6 +14,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "3D/L3DMesh.h"
+#include "ECS/Components/Hand.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Stream.h"
@@ -64,8 +65,42 @@ void RenderingSystemCommon::PrepareDraw(bool drawBoundingBox, bool drawFootpaths
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
-	if (_renderContext.dirty || _renderContext.hasBoundingBoxes != drawBoundingBox ||
-	    (_renderContext.footpaths != nullptr) != drawFootpaths || (_renderContext.streams != nullptr) != drawStreams)
+	_renderContext.animatedBoneMatrices.clear();
+	_renderContext.handMirrored = false;
+	registry.Each<const Hand, const Mesh, const Transform>(
+	    [this](const Hand& hand, const Mesh& mesh, const Transform& transform) {
+		    if (!hand.boneMatrices.empty())
+		    {
+			    _renderContext.animatedBoneMatrices.insert_or_assign(mesh.id, hand.boneMatrices);
+			    _renderContext.handMirrored = transform.scale.x * transform.scale.y * transform.scale.z < 0.0f;
+		    }
+	    });
+
+	_renderContext.streamSegments.clear();
+	registry.Each<const StreamSegment, const Transform>(
+	    // The segment tag is empty, so only the transform is passed
+	    [this](const Transform& transform) {
+		    _renderContext.streamSegments.push_back(glm::translate(transform.position) * glm::mat4(transform.rotation) *
+		                                            glm::scale(transform.scale));
+	    });
+
+	const bool optionsChanged = _renderContext.hasBoundingBoxes != drawBoundingBox ||
+	                            (_renderContext.footpaths != nullptr) != drawFootpaths ||
+	                            (_renderContext.streams != nullptr) != drawStreams;
+	// While things only move, the draw lists stay as they are and only the instances are uploaded again
+	if (!_renderContext.layoutDirty && !optionsChanged)
+	{
+		if (_renderContext.dirty && !UploadUniformsKeepingDescs(drawBoundingBox))
+		{
+			_renderContext.layoutDirty = true;
+		}
+		else
+		{
+			_renderContext.dirty = false;
+		}
+	}
+
+	if (_renderContext.layoutDirty || optionsChanged)
 	{
 		PrepareDrawDescs(drawBoundingBox);
 		PrepareDrawUploadUniforms(drawBoundingBox);
@@ -122,6 +157,7 @@ void RenderingSystemCommon::PrepareDraw(bool drawBoundingBox, bool drawFootpaths
 		}
 
 		_renderContext.dirty = false;
+		_renderContext.layoutDirty = false;
 		_renderContext.hasBoundingBoxes = drawBoundingBox;
 	}
 }

@@ -41,7 +41,9 @@ public:
 	static constexpr int32_t k_MapCellsPerSide = 512;
 	static const float k_HeightUnit;
 	static const float k_CellSize;
-	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbumpa");
+	/// The small bump detail drawn over the land near the camera: its colour and its alpha
+	static constexpr entt::hashed_string k_SmallBumpTextureId = entt::hashed_string("raw/smallbump");
+	static constexpr entt::hashed_string k_SmallBumpAlphaTextureId = entt::hashed_string("raw/smallbumpa");
 
 	/// The height of the land at a world position, as the game works it out
 	[[nodiscard]] virtual float GetHeightAt(glm::vec2) const = 0;
@@ -62,10 +64,17 @@ public:
 	/// made of, for its sounds. Empty when no land is loaded.
 	[[nodiscard]] virtual std::span<const uint16_t> GetMaterialTypes() const { return {}; }
 
-	[[nodiscard]] virtual const graphics::Texture2D& GetAlbedoArray() const = 0;
-	[[nodiscard]] virtual const graphics::Texture2D& GetBump() const = 0;
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
+	/// Each cell corner's luminosity, laid out as the height map, 255 where there is no block
+	[[nodiscard]] virtual const graphics::Texture2D& GetLuminosityMap() const = 0;
+	/// Each cell corner's colour, laid out as the height map and black where there is no block. The game reads a
+	/// cell's colour bytes with red and blue swapped, as Direct3D's colours keep them, and so does this.
+	[[nodiscard]] virtual const graphics::Texture2D& GetCellColourMap() const = 0;
+	/// The blocks' painted textures (see block_texture), a layer for each block in the order of GetBlocks
+	[[nodiscard]] virtual const graphics::Texture2D& GetBlockTextures() const = 0;
 	[[nodiscard]] virtual const graphics::FrameBuffer& GetFootprintFramebuffer() const = 0;
+	/// What of the land's alpha the rivers' channels leave, laid out as the footprints are
+	[[nodiscard]] virtual const graphics::FrameBuffer& GetLandAlphaFramebuffer() const = 0;
 
 	[[nodiscard]] virtual U16Extent2 GetIndexExtent() const = 0;
 	[[nodiscard]] virtual glm::mat4 GetOrthoView() const = 0;

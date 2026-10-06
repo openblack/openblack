@@ -10,28 +10,40 @@
 #include "FieldArchetype.h"
 
 #include "AbodeArchetype.h"
+#include "Common/GameRandom.h"
+#include "Common/RandomNumberManager.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Field.h"
+#include "ECS/Components/Swayable.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/VegetationInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 
 using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
+using openblack::ecs::systems::VegetationInterface;
 
 entt::entity FieldArchetype::Create(int townId, const glm::vec3& position, FieldTypeInfo type, float yAngleRadians)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 
-	[[maybe_unused]] const auto& info = Locator::infoConstants::value().fieldType.at(static_cast<size_t>(type));
+	const auto& info = Locator::infoConstants::value().fieldType.at(static_cast<size_t>(type));
 
 	auto townTribe = registry.Get<Tribe>(registry.Context().towns[townId]);
 	auto abodeInfo = GAbodeInfo::Find(townTribe, AbodeNumber::Field);
 
 	auto entity = AbodeArchetype::Create(townId, position, abodeInfo, yAngleRadians, 1.0f, 0, 0);
-	registry.Assign<Field>(entity, townId);
+	// TODO(raffclar): the town's farmers sow their fields; until they do, a field starts sown and empty
+	const field_crop::Crop crop {.timesSown = static_cast<uint8_t>(info.timesToSow)};
+	registry.Assign<Field>(entity, townId, type, crop, Locator::gameRandom::value().GameRand(field_crop::k_TurnsPerGrowth),
+	                       field_crop::Settle {});
+	// The crop follows one of the trees' sways, picked by where the field happens to be in memory, so as
+	// good as at random
+	registry.Assign<Swayable>(
+	    entity, static_cast<uint8_t>(Locator::rng::value().NextValue<uint32_t>(0, VegetationInterface::k_SwayCount - 1)));
 
 	return entity;
 }

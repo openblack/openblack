@@ -9,25 +9,16 @@
 
 #pragma once
 
-#include <glm/vec2.hpp>
+#include <cstdint>
 
 namespace openblack::ecs::components
 {
 
+/// A tree or a field's crop, which sways with the wind. Trees also bend away from the hand (see VegetationSystem).
 struct Swayable
 {
-	// Flag to indicate that the object is swayed by the player's hand
-	bool swayedByHand;
-	// Time offset for animation. This randomises the swaying for a more natural effect
-	float swayOffset;
-	// Timer for animation
-	float swayTime;
-	// Sway strength base
-	float swayStrengthBase;
-	// Current sway strength
-	float swayStrength;
-	// Normalized sway direction (x,z)
-	glm::vec2 swayDirection;
+	/// Which of the 16 sways it follows: a tree's is picked by its facing, a field's at random
+	uint8_t swaySlot;
 };
 
 } // namespace openblack::ecs::components

@@ -1,37 +1,30 @@
-$input v_position, v_texcoord0, v_normal
+$input v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 #include <bgfx_shader.sh>
+
+#include "snow_object.sh"
 
 SAMPLER2D(s_diffuse, 0);
 uniform vec4 u_skyAlphaThreshold;
 
 void main()
 {
-	// constants
-	const vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-	const vec4 lightPos = vec4(-4000.0f, 1300.0f, -1435.0f, 1.0f);
-	const float ambientStrength = 0.75f;
-
-	// unpack uniforms
-	float skyType = u_skyAlphaThreshold.x;
 	float alphaThreshold = u_skyAlphaThreshold.y;
 
-	float skyBrightness = skyType / 2.0f;
-
-	// ambient
-	vec3 ambient = (skyBrightness * 0.25f + ambientStrength) * lightColor;
-
-	// diffuse
-	vec3 norm = normalize(v_normal);
-	vec4 lightDir = normalize(lightPos - v_position);
-	float diff = max(dot(v_normal, lightDir.xyz), 0.0);
-	vec3 diffuse = skyBrightness * diff * lightColor * ( 1.0f - ambientStrength);
+	vec3 light = v_color0.rgb;
 
 	vec4 diffuseTex = texture2D(s_diffuse, v_texcoord0.xy);
-	diffuseTex.rgb = diffuseTex.rgb * (ambient + diffuse);
+	diffuseTex.rgb = diffuseTex.rgb * light;
 	if (diffuseTex.a <= alphaThreshold)
 	{
 		discard;
 	}
-	gl_FragColor = diffuseTex;
+	// Snow covers the tree where it shows, in its own light, over its own texture
+	float snowLevel = floor(v_snow.z * 255.0f + 0.5f);
+	if (snowLevel > 0.0f && SnowShows(snowLevel, texture2D(s_snowAlpha, v_snow.xy).r))
+	{
+		diffuseTex.rgb = texture2D(s_snow, v_snow.xy).rgb * v_snowLight;
+	}
+	// The distance haze is added after the texture
+	gl_FragColor = vec4(min(diffuseTex.rgb + v_haze.rgb, vec3_splat(1.0f)), diffuseTex.a);
 }

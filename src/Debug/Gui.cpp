@@ -49,6 +49,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "EngineConfig.h"
@@ -525,7 +526,15 @@ bool Gui::ShowMenu() noexcept
 			}
 
 			ImGui::Text("Sky Type Index %f", Locator::skySystem::value().GetCurrentSkyType());
-			ImGui::SliderFloat("Sky alignment", &config.skyAlignment, -1.0f, 1.0f, "%.3f");
+			// The player's alignment, which the sky turns to and the temple shows
+			auto& alignment = Locator::alignmentSystem::value();
+			float player = alignment.GetPlayerAlignment(PlayerNames::PLAYER_ONE);
+			if (ImGui::SliderFloat("Player alignment", &player, -1.0f, 1.0f, "%.3f"))
+			{
+				alignment.SetPlayerAlignment(PlayerNames::PLAYER_ONE, player);
+			}
+			ImGui::Text("Camera alignment %.3f, sky alignment %.3f", alignment.GetCameraAlignment(),
+			            alignment.GetSkyAlignment());
 
 			ImGui::EndMenu();
 		}

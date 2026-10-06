@@ -12,6 +12,7 @@
 #include <set>
 
 #include "3D/AllMeshes.h"
+#include "3D/TempleInteriorInterface.h"
 #include "ECS/Components/Temple.h"
 #include "RenderingSystemCommon.h"
 

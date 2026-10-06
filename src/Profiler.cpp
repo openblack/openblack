@@ -30,11 +30,20 @@ void openblack::Profiler::End(Stage stage)
 	assert(entry.level == _currentLevel);
 	entry.end = std::chrono::system_clock::now();
 	entry.finalized = true;
+	entry.total += entry.end - entry.start;
+	++entry.calls;
 }
 
 void openblack::Profiler::Frame()
 {
 	auto& prevEntry = _entries.at(_currentEntry);
 	_currentEntry = (_currentEntry + 1) % k_BufferSize;
-	prevEntry.frameEnd = _entries.at(_currentEntry).frameStart = std::chrono::system_clock::now();
+	auto& entry = _entries.at(_currentEntry);
+	prevEntry.frameEnd = entry.frameStart = std::chrono::system_clock::now();
+	// The new frame's stages have taken no time yet
+	for (auto& stage : entry.stages)
+	{
+		stage.total = {};
+		stage.calls = 0;
+	}
 }

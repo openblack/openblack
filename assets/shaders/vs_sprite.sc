@@ -4,6 +4,9 @@ $output v_texcoord0
 #include <bgfx_shader.sh>
 
 uniform vec4 u_sampleRect;
+// x: 1 when the sprite turns to face the camera, 0 when it lies as its model matrix turns it
+// y: whether the texture has a separate alpha (fs)
+uniform vec4 u_spriteParams;
 
 void main()
 {
@@ -17,7 +20,10 @@ void main()
 	// Apply scaling
 	position.xyz = mul(u_model[0], vec4(position.xyz, 0.0)).xyz;
 	// Undo camera rotation so sprite faces camera
-	position.xyz = mul(u_invView, vec4(position.xyz, 0.0)).xyz;
+	if (u_spriteParams.x > 0.5f)
+	{
+		position.xyz = mul(u_invView, vec4(position.xyz, 0.0)).xyz;
+	}
 	// Apply translation
 	position.xyz += translation;
 	gl_Position = mul(u_viewProj, position);

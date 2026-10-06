@@ -11,6 +11,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <map>
@@ -27,15 +28,38 @@ public:
 		PhysicsUpdate,
 		PathfindingUpdate,
 		LivingActionUpdate,
+		CreatureMindUpdate,
+		CreaturePlannerUpdate,
+		CreatureLearningUpdate,
+		CreaturePhysiologyUpdate,
+		CreatureLocomotionUpdate,
+		CreatureAnimationUpdate,
+		CreatureHairUpdate,
+		CreatureSkinUpdate,
+		CreatureAudioUpdate,
+		CreatureObjectActionUpdate,
+		CreatureHandUpdate,
+		CreatureFootprintsUpdate,
+		CreatureLeashUpdate,
+		CreatureCombatUpdate,
 		VegetationUpdate,
+		ParticlesUpdate,
+		MagicUpdate,
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
+		UpdateEntitiesDescs,
+		UpdateEntitiesUniforms,
+		UpdateEntitiesTrees,
 		UpdateAudio,
 		GuiLoop,
+		EditorUpdate,
 		GameLogic,
 		SceneDraw,
 		FootprintPass,
+		ObjectShadowPass,
+		CreatureShadowPass,
+		ParticlesGather,
 		ReflectionPass,
 		ReflectionDrawSky,
 		ReflectionDrawWater,
@@ -43,6 +67,7 @@ public:
 		ReflectionDrawModels,
 		ReflectionDrawVegetation,
 		ReflectionDrawSprites,
+		ReflectionDrawParticles,
 		MainPass,
 		MainPassDrawSky,
 		MainPassDrawWater,
@@ -50,6 +75,7 @@ public:
 		MainPassDrawModels,
 		MainPassDrawVegetation,
 		MainPassDrawSprites,
+		MainPassDrawParticles,
 		GuiDraw,
 		RendererFrame,
 
@@ -60,31 +86,59 @@ public:
 	    "Physics Update",       //
 	    "Pathfinding Update",   //
 	    "Living Action Update", //
+	    "Creature Mind",        //
+	    "Creature Planner",     //
+	    "Creature Learning",    //
+	    "Creature Physiology",  //
+	    "Creature Locomotion",  //
+	    "Creature Animation",   //
+	    "Creature Hair",        //
+	    "Creature Skin",        //
+	    "Creature Audio",       //
+	    "Creature Objects",     //
+	    "Creature Hand",        //
+	    "Creature Footprints",  //
+	    "Creature Leash",       //
+	    "Creature Combat",      //
 	    "Vegetation Update",    //
+	    "Particles",            //
+	    "Magic",                //
 	    "SDL Input",            //
 	    "Update Uniforms",      //
 	    "Entities",             //
+	    "Entity Draw Lists",    //
+	    "Entity Instances",     //
+	    "Tree Instances",       //
 	    "Audio",                //
 	    "GUI Loop",             //
+	    "Editor",               //
 	    "Game Logic",           //
 	    "Encode Draw Scene",    //
 	    "Footprint Pass",       //
+	    "Object Shadow Pass",   //
+	    "Creature Shadow Pass", //
+	    "Gather Particles",     //
 	    "Reflection Pass",      //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
+	    "Draw Particles",       //
 	    "Main Pass",            //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
-	    "Draw Vegetation"       //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
+	    "Draw Particles",       //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
 	};
+	// Every stage has a name: a short list would leave the last ones empty
+	static_assert(std::ranges::none_of(k_StageNames, &std::string_view::empty));
 
 private:
 	struct ScopedSection
@@ -108,6 +162,10 @@ public:
 		std::chrono::system_clock::time_point start;
 		std::chrono::system_clock::time_point end;
 		bool finalized = false;
+		/// The time spent in the stage over the whole frame, and how often it ran: a stage may run more than once a
+		/// frame, as in a game turn and again for the frame, where start and end only hold the last run
+		std::chrono::system_clock::duration total {};
+		uint16_t calls = 0;
 	};
 
 	struct Entry

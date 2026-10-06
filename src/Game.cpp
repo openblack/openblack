@@ -25,6 +25,7 @@
 #include "3D/CreatureBody.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/LandLightTable.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
@@ -36,6 +37,7 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/Mist.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
@@ -352,9 +354,13 @@ bool Game::Update() noexcept
 		}
 	}
 
+	// The frame's game time: none while paused, quicker or slower with the game speed
+	auto& clock = Locator::time::value();
+	clock.UpdateFrame();
+	const auto gameTime = std::chrono::duration<float, std::milli>(clock.GetFrameGameTime());
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::VegetationUpdate);
-		Locator::vegetation::value().Sway();
+		Locator::vegetation::value().Update(gameTime);
 	}
 
 	// Update Uniforms
@@ -413,7 +419,6 @@ bool Game::Update() noexcept
 				Locator::entitiesRegistry::value().SetDirty();
 			}
 		}
-		Locator::handSystem::value().Update();
 
 		// Update Entities
 		{
@@ -533,6 +538,13 @@ bool Game::Initialize() noexcept
 		    }
 	    });
 
+	// The land's light is built from this every frame
+	if (const auto palette = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw"; fileSystem.Exists(palette))
+	{
+		resources.GetLandLightPalettes().Load(LandLightPalette::k_Id.value(), resources::LandLightPaletteLoader::FromDiskTag {},
+		                                      palette);
+	}
+
 	fileSystem.Iterate( //
 	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
 	    [&meshManager, &glowManager](const std::filesystem::path& f) {
@@ -642,6 +654,11 @@ bool Game::Initialize() noexcept
 		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
 		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
 		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+		meshManager.Load(SkyInterface::k_SunMeshId.value(), LFromDiskTag {},
+		                 fileSystem.GetPath<Path::WeatherSystem>() / "sun.l3d");
+		meshManager.Load(SkyInterface::k_MoonMeshId.value(), LFromDiskTag {},
+		                 fileSystem.GetPath<Path::WeatherSystem>() / "moon.l3d");
+		meshManager.Load(ecs::components::Mist::k_MeshId, LFromDiskTag {}, fileSystem.GetPath<Path::Landscape>() / "mist.l3d");
 	}
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
@@ -865,7 +882,6 @@ bool Game::Run() noexcept
 			    .entities = Locator::entitiesRegistry::value(),
 			    .time = milliseconds.count(), // TODO(#481): get actual time
 			    .timeOfDay = config.timeOfDay,
-			    .bumpMapStrength = config.bumpMapStrength,
 			    .smallBumpMapStrength = config.smallBumpMapStrength,
 			    .viewId = graphics::RenderPass::Main,
 			    .drawSky = config.drawSky,

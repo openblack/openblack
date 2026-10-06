@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <span>
 #include <stdexcept>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -26,7 +27,9 @@
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
 
+#include "3D/BlockTexture.h"
 #include "3D/LandBlock.h"
+#include "3D/LandData.h"
 #include "3D/LandNormal.h"
 #include "3D/MapCoords.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
@@ -34,6 +37,7 @@
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/Texture2D.h"
+#include "Graphics/VertexBuffer.h"
 #include "Locator.h"
 
 using namespace openblack;
@@ -129,6 +133,11 @@ LandIsland::LandIsland(const std::filesystem::path& path)
 	LoadFromFile(path);
 }
 
+LandIsland::LandIsland(const LandData& data)
+{
+	Build(data);
+}
+
 LandIsland::~LandIsland() noexcept = default;
 
 void LandIsland::LoadFromFile(const std::filesystem::path& path)
@@ -143,10 +152,14 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		                    lnd::ResultToStr(result));
 		throw lnd::ResultToStr(result);
 	}
+	Build(LandData::FromLnd(lnd));
+}
 
-	_blockIndexLookup = lnd.GetHeader().lookUpTable;
+void LandIsland::Build(const LandData& data)
+{
+	_blockIndexLookup = data.blockIndexLookup;
 
-	const auto& lndBlocks = lnd.GetBlocks();
+	const auto& lndBlocks = data.blocks;
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} blocks", lndBlocks.size());
 	_landBlocks.resize(lndBlocks.size());
 	for (size_t i = 0; i < _landBlocks.size(); i++)
@@ -187,56 +200,77 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	_heightMap = std::make_unique<Texture2D>("Height Map");
 	const auto heightMapData = CreateHeightMap();
-	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::R8,
-	                   Wrapping::ClampEdge, Filter::Linear,
-	                   bgfx::makeRef(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
+	_heightMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::RG8,
+	                   Wrapping::ClampEdge, Filter::Nearest,
+	                   bgfx::copy(heightMapData.data(), static_cast<uint32_t>(heightMapData.size())));
+
+	_luminosityMap = std::make_unique<Texture2D>("Luminosity Map");
+	const auto luminosityMapData = CreateLuminosityMap();
+	_luminosityMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::R8,
+	                       Wrapping::ClampEdge, Filter::Nearest,
+	                       bgfx::copy(luminosityMapData.data(), static_cast<uint32_t>(luminosityMapData.size())));
+
+	_cellColourMap = std::make_unique<Texture2D>("Cell Colour Map");
+	const auto cellColourMapData = CreateCellColourMap();
+	_cellColourMap->Create(indexSize.x * k_CellCount + 1, indexSize.y * k_CellCount + 1, 1, graphics::TextureFormat::RGBA8,
+	                       Wrapping::ClampEdge, Filter::Nearest,
+	                       bgfx::copy(cellColourMapData.data(), static_cast<uint32_t>(cellColourMapData.size())));
 
 	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
 	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::TextureFormat::RGBA8);
+	_landAlphaFrameBuffer = std::make_unique<FrameBuffer>("LandAlpha", res.x, res.y, graphics::TextureFormat::R8);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
-	_countries = lnd.GetCountries();
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", data.countries.size());
+	_countries = data.countries;
 	_materialTypes.clear();
-	std::ranges::transform(lnd.GetMaterials(), std::back_inserter(_materialTypes),
+	std::ranges::transform(data.materials, std::back_inserter(_materialTypes),
 	                       [](const lnd::LNDMaterial& material) { return material.type; });
 
-	auto materialCount = static_cast<uint16_t>(lnd.GetMaterials().size());
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", data.materials.size());
 	std::vector<uint16_t> rgba5TextureData;
-	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * lnd.GetMaterials().size());
-	for (size_t i = 0; i < lnd.GetMaterials().size(); i++)
+	rgba5TextureData.resize(lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * data.materials.size());
+	for (size_t i = 0; i < data.materials.size(); i++)
 	{
 		std::memcpy(&rgba5TextureData[lnd::LNDMaterial::k_Width * lnd::LNDMaterial::k_Height * i],
-		            lnd.GetMaterials()[i].texels.data(),
-		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
+		            data.materials[i].texels.data(), sizeof(data.materials[i].texels[0]) * data.materials[i].texels.size());
 	}
-	_materialArray = std::make_unique<Texture2D>("LandIslandMaterialArray");
-	_materialArray->Create(
-	    lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height, materialCount, TextureFormat::BGR5A1, Wrapping::ClampEdge,
-	    Filter::Linear,
-	    bgfx::makeRef(rgba5TextureData.data(), static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0]))));
+	std::ranges::copy(data.noise, _noiseMap.begin());
 
-	// read noise map into Texture2D
-	_noiseMap = lnd.GetExtra().noise.texels;
-	_textureNoiseMap = std::make_unique<Texture2D>("LandIslandNoiseMap");
-	_textureNoiseMap->Create(lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, TextureFormat::R8, Wrapping::ClampEdge,
-	                         Filter::Linear,
-	                         bgfx::makeRef(_noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0]))));
-
-	// read bump map into Texture2D
-	_textureBumpMap = std::make_unique<Texture2D>("LandIslandBumpMap");
-	_textureBumpMap->Create(
-	    lnd::LNDBumpMap::k_Width, lnd::LNDBumpMap::k_Height, 1, TextureFormat::R8, Wrapping::Repeat, Filter::Linear,
-	    bgfx::makeRef(lnd.GetExtra().bump.texels.data(),
-	                  static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size())));
-
-	// build the meshes (we could move this elsewhere)
-	for (auto& block : _landBlocks)
+	// Paint each block's texture from the countries, the materials, the noise and the bump map
+	const block_texture::Sources sources {
+	    .countries = _countries,
+	    .materials = rgba5TextureData,
+	    .noise = _noiseMap,
+	    .bump = data.bump,
+	};
+	const auto* blockTexels = bgfx::alloc(static_cast<uint32_t>(_landBlocks.size() * block_texture::k_BlockBytes));
+	const auto blockTexelSpan = std::span(blockTexels->data, blockTexels->size);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
 	{
-		block.BuildMesh(*this);
+		block_texture::BuildBlock(_landBlocks[i].GetLndBlock()->cells, sources,
+		                          blockTexelSpan.subspan(i * block_texture::k_BlockBytes, block_texture::k_BlockBytes));
+	}
+	_blockTextures = std::make_unique<Texture2D>("LandIslandBlockTextures");
+	_blockTextures->Create(block_texture::k_Side, block_texture::k_Side, static_cast<uint16_t>(_landBlocks.size()),
+	                       TextureFormat::RGBA8, Wrapping::ClampEdge, Filter::Linear, blockTexels);
+
+	// The blocks' vertices, one after another in one buffer
+	const auto vertexCount = _landBlocks.size() * LandBlock::k_VertexCount;
+	const auto* vertexMemory = bgfx::alloc(static_cast<uint32_t>(vertexCount * sizeof(LandVertex)));
+	const auto vertices = std::span(reinterpret_cast<LandVertex*>(vertexMemory->data), vertexCount);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
+	{
+		_landBlocks[i].BuildMesh(*this, vertices.subspan(i * LandBlock::k_VertexCount, LandBlock::k_VertexCount));
+	}
+	VertexDecl decl;
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
+	_blockVertices = std::make_unique<VertexBuffer>("LandBlocks", vertexMemory, decl);
+	for (size_t i = 0; i < _landBlocks.size(); ++i)
+	{
+		_landBlocks[i].SetVertices(*_blockVertices, static_cast<uint32_t>(i * LandBlock::k_VertexCount));
 	}
 	bgfx::frame();
 }
@@ -301,24 +335,8 @@ constexpr lnd::LNDCell k_EmptyCell = EmptyCell();
 
 const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 {
-	if (coordinates.x > 511 || coordinates.y > 511)
-	{
-		return k_EmptyCell;
-	}
-
-	const auto mapCoordinates = coordinates >> static_cast<uint16_t>(0x4);
-	const auto cellCoordinates = static_cast<glm::u8vec2>(coordinates) & static_cast<uint8_t>(0xF);
-	const auto lookupIndex = mapCoordinates.x << 5u | mapCoordinates.y;
-	const auto cellIndex = cellCoordinates.x * 0x11u + cellCoordinates.y;
-
-	const uint8_t blockIndex = _blockIndexLookup.at(lookupIndex);
-
-	if (blockIndex == 0)
-	{
-		return k_EmptyCell;
-	}
-	assert(_landBlocks.size() >= blockIndex);
-	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
+	const auto* cell = FindCell(coordinates);
+	return cell != nullptr ? *cell : k_EmptyCell;
 }
 
 const lnd::LNDCell* LandIsland::FindCell(const glm::u16vec2& coordinates) const
@@ -345,7 +363,7 @@ const lnd::LNDCell* LandIsland::FindCell(const glm::u16vec2& coordinates) const
 
 void LandIsland::DumpTextures() const
 {
-	_materialArray->DumpTexture();
+	_blockTextures->DumpTexture();
 }
 
 std::vector<uint8_t> LandIsland::CreateHeightMap() const
@@ -357,7 +375,8 @@ std::vector<uint8_t> LandIsland::CreateHeightMap() const
 	std::vector<uint8_t> data;
 	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
 	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
-	data.resize(resolution.x * resolution.y, 0);
+	// Two bytes a corner: its altitude, and whether its cell is split the other way
+	data.resize(static_cast<size_t>(resolution.x) * resolution.y * 2, 0);
 
 	for (const auto& block : _landBlocks)
 	{
@@ -370,10 +389,64 @@ std::vector<uint8_t> LandIsland::CreateHeightMap() const
 				const auto offset = glm::u16vec2(x, y);
 				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
 				const auto& cell = GetCell(blockOffset + offset);
-				if ((cellPos.y * resolution.x) + cellPos.x < static_cast<int>(data.size()))
+				const auto texel = static_cast<size_t>((cellPos.y * resolution.x) + cellPos.x) * 2;
+				if (texel + 1 < data.size())
 				{
-					data.at((cellPos.y * resolution.x) + cellPos.x) = cell.altitude;
+					data.at(texel) = cell.altitude;
+					data.at(texel + 1) = cell.properties.split != 0 ? 255 : 0;
 				}
+			}
+		}
+	}
+	return data;
+}
+
+std::vector<uint8_t> LandIsland::CreateLuminosityMap() const
+{
+	// As the height map: a texel for each cell's corner, with the far edge's from the next block's cells
+	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
+	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
+	std::vector<uint8_t> data(static_cast<size_t>(resolution.x) * resolution.y, 0xFF);
+	for (const auto& block : _landBlocks)
+	{
+		const auto blockOffset = static_cast<glm::u16vec2>(block.GetBlockPosition() * 16);
+		const auto mapPos = block.GetBlockPosition() - static_cast<glm::ivec2>(_extentIndexMin);
+		for (int y = 0; y < k_CellCount; y++)
+		{
+			for (int x = 0; x < k_CellCount; x++)
+			{
+				const auto offset = glm::u16vec2(x, y);
+				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
+				data.at(static_cast<size_t>(cellPos.y * resolution.x + cellPos.x)) = GetCell(blockOffset + offset).luminosity;
+			}
+		}
+	}
+	return data;
+}
+
+std::vector<uint8_t> LandIsland::CreateCellColourMap() const
+{
+	// As the luminosity map, four bytes a texel
+	const auto extentSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
+	const auto resolution = extentSize * static_cast<uint16_t>(k_CellCount) + static_cast<uint16_t>(1);
+	std::vector<uint8_t> data(static_cast<size_t>(resolution.x) * resolution.y * 4, 0);
+	for (const auto& block : _landBlocks)
+	{
+		const auto blockOffset = static_cast<glm::u16vec2>(block.GetBlockPosition() * 16);
+		const auto mapPos = block.GetBlockPosition() - static_cast<glm::ivec2>(_extentIndexMin);
+		for (int y = 0; y < k_CellCount; y++)
+		{
+			for (int x = 0; x < k_CellCount; x++)
+			{
+				const auto offset = glm::u16vec2(x, y);
+				const auto cellPos = mapPos * static_cast<int>(k_CellCount) + static_cast<glm::ivec2>(offset);
+				const auto& cell = GetCell(blockOffset + offset);
+				const auto at = static_cast<size_t>(cellPos.y * resolution.x + cellPos.x) * 4;
+				// Red and blue swapped, as the game reads them
+				data.at(at) = cell.b;
+				data.at(at + 1) = cell.g;
+				data.at(at + 2) = cell.r;
+				data.at(at + 3) = 0xFF;
 			}
 		}
 	}

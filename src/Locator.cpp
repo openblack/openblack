@@ -18,6 +18,7 @@
 #include "3D/Implementations/Sky.h"
 #include "3D/Implementations/TempleInterior.h"
 #include "3D/Implementations/UnloadedIsland.h"
+#include "3D/LandData.h"
 #include "Audio/AudioManager.h"
 #include "Audio/AudioManagerNoOp.h"
 #include "CHLApi.h"
@@ -231,8 +232,15 @@ bool openblack::InitializeGame() noexcept
 	return true;
 }
 
-void openblack::InitializeLevel(const std::filesystem::path& path)
+namespace openblack
 {
+namespace
+{
+template <typename LandSource>
+void InitializeLevelWith(const LandSource& land)
+{
+	// Both seeds go to 0 with every map, as the game clears them
+	Locator::gameRandom::value().SetSeeds({0, 0});
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
@@ -242,8 +250,20 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	// Where creatures can walk is sorted anew for each land
 	Locator::creatureLocomotionSystem::emplace<CreatureLocomotionSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
-	Locator::terrainSystem::emplace<LandIsland>(path);
+	Locator::terrainSystem::emplace<LandIsland>(land);
 	Locator::cameraPathSystem::emplace<CameraPathSystem>();
+}
+} // namespace
+} // namespace openblack
+
+void openblack::InitializeLevel(const std::filesystem::path& path)
+{
+	InitializeLevelWith(path);
+}
+
+void openblack::InitializeLevel(const LandData& land)
+{
+	InitializeLevelWith(land);
 }
 
 void openblack::ShutDownServices()

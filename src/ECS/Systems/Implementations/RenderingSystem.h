@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/mat4x4.hpp>
@@ -33,7 +34,23 @@ public:
 private:
 	void PrepareDrawDescs(bool drawBoundingBox) override;
 	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
+	bool UploadUniformsKeepingDescs(bool drawBoundingBox) override;
 	void PrepareTreeDrawDescs(bool drawBoundingBox);
-	void PrepareTreeDrawUploadUniforms(bool drawBoundingBox);
+	/// Each returns false when an instance had no room left in its mesh's draw list, which must then be made again
+	bool UploadInstances(bool drawBoundingBox);
+	bool UploadTreeInstances(bool drawBoundingBox);
+
+	/// Where the next instance of a mesh goes in the instance buffer
+	struct InstanceSlots
+	{
+		uint32_t offset;
+		uint32_t count;
+		uint32_t filled;
+		bool perEntity;
+		/// The height of the mesh's bounding box, for the trees
+		float height;
+	};
+	std::unordered_map<entt::id_type, InstanceSlots> _instanceSlots;
+	std::unordered_map<entt::id_type, InstanceSlots> _treeSlots;
 };
 } // namespace openblack::ecs::systems

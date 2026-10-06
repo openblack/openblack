@@ -35,9 +35,14 @@ static const std::map<std::string_view, GraphicsBackend> k_GraphicsBackendString
 struct EngineConfig
 {
 	bool wireframe {false};
+	/// The villagers' names over their heads, as the Show Villager Names key toggles
 	bool showVillagerNames {false};
+	/// What the villagers are doing, their age, health and hunger, as the Show Villager Details key toggles
+	bool showVillagerDetails {false};
 	bool debugVillagerNames {false};
 	bool debugVillagerStates {false};
+	/// Each miracle dispenser is labelled with its miracle
+	bool showDispenserNames {true};
 
 	bool viewDetailOverlay {false};
 	bool drawSky {true};
@@ -49,13 +54,18 @@ struct EngineConfig
 	bool drawBoundingBoxes {false};
 	bool drawFootpaths {false};
 	bool drawStreams {false};
+	/// The hand mesh is a left hand, which Black & White mirrors into a right hand unless the player profile asks for
+	/// a left hand
+	bool rightHandedHand {true};
+	/// Creatures' vertices at the seams between their bones are blended towards their partners, as the game draws them
+	bool blendCreatureSeams {true};
+	/// Creatures cast their shadows onto the land and what stands on it
+	bool drawCreatureShadows {true};
 
 	bool vsync {false};
 	bool running {false};
 
 	float timeOfDay {12.0f};
-	float skyAlignment {0.0f};
-	float bumpMapStrength {1.0f};
 	float smallBumpMapStrength {1.0f};
 
 	float cameraXFov {70.0f};
@@ -71,5 +81,9 @@ struct EngineConfig
 	windowing::DisplayMode displayMode {windowing::DisplayMode::Windowed};
 
 	uint32_t numFramesToSimulate {0};
+	/// Log frame time statistics every so many frames, never when 0
+	uint32_t frameStatsInterval {0};
+	/// With the frame statistics, the GPU time of each render view
+	bool frameStatsViews {false};
 };
 } // namespace openblack

@@ -9,6 +9,9 @@
 
 #include "TreeArchetype.h"
 
+#include <cmath>
+
+#include <glm/gtc/constants.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Common/RandomNumberManager.h"
@@ -38,13 +41,13 @@ entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, transform);
 	registry.Assign<Fixed>(entity, point, radius);
-	// A value of 0 disables time-based swaying via wind
-	auto swayOffset = Locator::rng::value().NextValue<float>(0.0f, 1.0f);
-	auto swayStrength = Locator::rng::value().NextValue<float>(0.3f, 1.0f);
 	registry.Assign<Tree>(entity, type, maxSize);
 	const auto resourceId = resources::HashIdentifier(info.normal);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(-1));
-	registry.Assign<Swayable>(entity, false, swayOffset, 0.0f, swayStrength, swayStrength, glm::vec2(1.0f, 1.0f));
+	// As a tree is made, one of 16 sways by the tree's facing, so neighbours facing alike sway alike.
+	// The game truncates towards zero.
+	const auto swaySlot = static_cast<int32_t>(std::trunc((yAngleRadians * 8.0f / glm::pi<float>()) + 0.5f)) & 0xF;
+	registry.Assign<Swayable>(entity, static_cast<uint8_t>(swaySlot));
 
 	return entity;
 }

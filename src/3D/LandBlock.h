@@ -34,21 +34,12 @@ struct LNDCell;
 
 namespace graphics
 {
-class Mesh;
+class VertexBuffer;
 }
 
 struct LandVertex
 {
 	glm::vec3 position;
-	glm::vec3 weight;                     // interpolated
-	glm::u8vec4 firstMaterialID;          // force alignment 4 bytes to prevent packing
-	glm::u8vec4 secondMaterialID;         // force alignment 4 bytes to prevent packing
-	glm::u8vec4 materialBlendCoefficient; // force alignment 4 bytes to prevent packing
-	glm::u8vec4 lightLevel;               // aligned to 4 bytes
-	float waterAlpha;
-
-	LandVertex(const glm::vec3& position, const glm::vec3& weight, const std::array<uint32_t, 6>& mat, const glm::uvec3& blend,
-	           uint8_t lightLevel, float alpha);
 };
 
 class LandIslandInterface;
@@ -66,9 +57,13 @@ public:
 	static constexpr uint16_t k_VertexCount = k_Resolution.x * k_Resolution.y * 2 * 3;
 
 	LandBlock() = default;
-	void BuildMesh(LandIslandInterface& island);
-
-	[[nodiscard]] const graphics::Mesh& GetMesh() const { return *_mesh; }
+	/// Fills the block's k_VertexCount vertices, and builds its shape for the physics
+	void BuildMesh(LandIslandInterface& island, std::span<LandVertex> vertices);
+	/// Where the block's vertices are on the GPU: a run of the vertex buffer the island's blocks share, so a land of a
+	/// thousand blocks takes one of bgfx's buffers rather than a thousand
+	void SetVertices(const graphics::VertexBuffer& buffer, uint32_t firstVertex);
+	/// Binds the block's vertices for a draw
+	void BindVertices() const;
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 	[[nodiscard]] glm::vec2 GetMapPosition() const;
@@ -78,7 +73,8 @@ public:
 
 private:
 	std::unique_ptr<lnd::LNDBlock> _block;
-	std::unique_ptr<graphics::Mesh> _mesh;
+	const graphics::VertexBuffer* _vertices {nullptr};
+	uint32_t _firstVertex {0};
 	std::unique_ptr<dynamics::LandBlockBulletMeshInterface> _dynamicsMeshInterface;
 	std::unique_ptr<btBvhTriangleMeshShape> _physicsMesh;
 	std::unique_ptr<btRigidBody> _rigidBody;
