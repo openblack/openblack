@@ -16,11 +16,7 @@ uniform vec4 u_shadowSun;
 // textures (ObjectShadows::Project): each vertex is cast from the sun onto the flat plane through the object's origin.
 void main()
 {
-#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV
-	uint modelIndex = uint(max(0, asint(a_indices.x)));
-#else
 	uint modelIndex = uint(max(0, a_indices.x));
-#endif
 
 	mat4 model;
 	model[0] = i_data0;

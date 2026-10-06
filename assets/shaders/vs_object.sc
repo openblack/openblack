@@ -65,19 +65,11 @@ void main()
 	vec2 extentMax = u_islandExtent.zw;
 #endif // USE_HEIGHT_MAP
 
-#if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV
-	uint modelIndex = uint(max(0, asint(a_indices.x)));
-#ifdef USE_MORPH
-	float blendPartner = float(asint(a_indices.y));
-	float blendWeight = float(asint(a_indices.z)) / 32767.0f;
-#endif // USE_MORPH
-#else
 	uint modelIndex = uint(max(0, a_indices.x));
 #ifdef USE_MORPH
-	float blendPartner = a_indices.y;
-	float blendWeight = a_indices.z / 32767.0f;
+	float blendPartner = float(a_indices.y);
+	float blendWeight = float(a_indices.z) / 32767.0f;
 #endif // USE_MORPH
-#endif
 
 #ifdef USE_INSTANCING
 	mat4 model;

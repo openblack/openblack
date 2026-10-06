@@ -55,8 +55,9 @@ struct VertexAttrib
 	Type type;           ///< Data type of each attribute component in the array.
 	bool normalized;     /// < When using fixed point values, range will be
 	                     /// normalized to 0.0-1.0 in shader.
-	bool asInt;          /// < Should not be altered. Unpacking will have to be done in
-	                     /// vertex shader.
+	bool asInt;          /// < The values reach the shader unconverted, as integers: the shader
+	                     /// must declare the input as an ivec/uvec. Only meaningful when not
+	                     /// normalized.
 
 	VertexAttrib(Attribute attribute, uint8_t num, Type type, bool normalized = false, bool asInt = false) noexcept
 	    : attribute(attribute)
