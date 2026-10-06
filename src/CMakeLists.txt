@@ -84,6 +84,23 @@ target_sources(
 )
 set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 
+# The script API's natives that are still stubs, which the editor's Scripts panel shows
+set(OPENBLACK_UNIMPLEMENTED_NATIVES
+    ${CMAKE_BINARY_DIR}/include/generated/scripting/UnimplementedNatives.h
+)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/generated/scripting)
+add_custom_command(
+  OUTPUT ${OPENBLACK_UNIMPLEMENTED_NATIVES}
+  COMMAND
+    ${CMAKE_COMMAND} -DSOURCE=${CMAKE_CURRENT_LIST_DIR}/CHLApi.cpp
+    -DOUTPUT=${OPENBLACK_UNIMPLEMENTED_NATIVES} -P
+    ${CMAKE_SOURCE_DIR}/CMakeModules/GenerateUnimplementedNatives.cmake
+  DEPENDS ${CMAKE_CURRENT_LIST_DIR}/CHLApi.cpp
+          ${CMAKE_SOURCE_DIR}/CMakeModules/GenerateUnimplementedNatives.cmake
+  COMMENT "Listing the script API's unwritten natives"
+)
+target_sources(openblack_lib PRIVATE ${OPENBLACK_UNIMPLEMENTED_NATIVES})
+
 target_include_directories(
   openblack_lib
   PUBLIC ${CMAKE_CURRENT_LIST_DIR}
