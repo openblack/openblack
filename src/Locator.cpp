@@ -37,6 +37,8 @@
 #include "ECS/Systems/Implementations/CreatureAnimationSystem.h"
 #include "ECS/Systems/Implementations/CreatureAudioSystem.h"
 #include "ECS/Systems/Implementations/CreatureHairSystem.h"
+#include "ECS/Systems/Implementations/CreatureLocomotionSystem.h"
+#include "ECS/Systems/Implementations/CreatureObjectActionSystem.h"
 #include "ECS/Systems/Implementations/CreaturePhysiologySystem.h"
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -95,6 +97,8 @@ using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::CreatureAnimationSystem;
 using openblack::ecs::systems::CreatureAudioSystem;
 using openblack::ecs::systems::CreatureHairSystem;
+using openblack::ecs::systems::CreatureLocomotionSystem;
+using openblack::ecs::systems::CreatureObjectActionSystem;
 using openblack::ecs::systems::CreaturePhysiologySystem;
 using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -198,6 +202,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::creaturePhysiologySystem::emplace<CreaturePhysiologySystem>();
 	Locator::creatureHairSystem::emplace<CreatureHairSystem>();
 	Locator::creatureAudioSystem::emplace<CreatureAudioSystem>();
+	Locator::creatureObjectActionSystem::emplace<CreatureObjectActionSystem>();
 	Locator::footprintSystem::emplace<FootprintSystem>();
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
@@ -219,6 +224,8 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::weatherSystem::emplace<WeatherSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
+	// Where creatures can walk is sorted anew for each land
+	Locator::creatureLocomotionSystem::emplace<CreatureLocomotionSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
 	Locator::cameraPathSystem::emplace<CameraPathSystem>();
@@ -256,6 +263,7 @@ void openblack::ShutDownServices()
 	Locator::weatherSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
+	Locator::creatureLocomotionSystem::reset();
 	Locator::cinematicDirectorSystem::reset();
 	Locator::influenceSystem::reset();
 	Locator::chimneySmokeSystem::reset();
@@ -267,6 +275,7 @@ void openblack::ShutDownServices()
 	Locator::creatureHairSystem::reset();
 	Locator::footprintSystem::reset();
 	Locator::creatureAudioSystem::reset();
+	Locator::creatureObjectActionSystem::reset();
 	Locator::creatureAnimationSystem::reset();
 	Locator::snowSystem::reset();
 	Locator::fieldSystem::reset();
