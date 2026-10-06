@@ -210,15 +210,9 @@ LightLoader::result_type LightLoader::operator()(BaseLoader<Lights>::FromDiskTag
 		throw glw::ResultToStr(result);
 	}
 	auto lights = std::make_shared<Lights>();
-	for (auto entry : glw.GetGlows())
+	for (const auto& entry : glw.GetGlows())
 	{
-		Glow glow;
-		glow.backgroundColour = glm::vec4(entry.red * 0.5f, entry.green * 0.5f, entry.blue * 0.5f, 1.0f);
-		glow.brightSpotColour = glm::vec4 {100.0f / 256.0f, 172 / 256.0f, 146.0f / 256.0f, 1.0f};
-		glow.backgroundScale = (1.0f / 3) * 2.0f;
-		glow.brightSpotScale = 1.3f;
-		glow.position = glm::vec3(entry.posX, entry.posY, entry.posZ);
-		lights->emitters.emplace_back(LightEmitter {glow});
+		lights->emitters.emplace_back(MakeLightEmitter(entry));
 	}
 	return lights;
 }

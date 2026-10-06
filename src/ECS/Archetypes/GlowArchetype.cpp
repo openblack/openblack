@@ -35,18 +35,18 @@ std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, c
 	{
 		registry.Assign<ecs::components::TempleInteriorPart>(glowEntity, room);
 		registry.Assign<Sprite>(glowEntity, texture->GetNativeHandle(), glm::vec2 {.75f, .25f}, extent,
-		                        emitter.glow.backgroundColour);
+		                        emitter.glow.haloColour);
 		registry.Assign<ecs::components::Transform>(glowEntity, emitter.glow.position, glm::mat3(1.0f),
-		                                            glm::vec3(emitter.glow.backgroundScale));
+		                                            glm::vec3(emitter.glow.haloSize));
 	}
 	// A small bright shine at the center
 	auto shineEntity = registry.Create();
 	{
 		registry.Assign<ecs::components::TempleInteriorPart>(shineEntity, room);
 		registry.Assign<Sprite>(shineEntity, texture->GetNativeHandle(), glm::vec2 {.75f, .25f}, extent,
-		                        emitter.glow.brightSpotColour);
+		                        emitter.glow.centreColour);
 		registry.Assign<ecs::components::Transform>(shineEntity, emitter.glow.position, glm::mat3(1.0f),
-		                                            glm::vec3(emitter.glow.brightSpotScale));
+		                                            glm::vec3(emitter.glow.centreSize));
 	}
 	return {glowEntity, shineEntity};
 }

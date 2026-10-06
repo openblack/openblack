@@ -14,13 +14,10 @@
 #include <array>
 #include <span>
 
+#include <LNDFile.h>
+
 namespace openblack
 {
-namespace lnd
-{
-struct LNDCell;
-struct LNDCountry;
-} // namespace lnd
 
 /// The texture Black & White paints each block of land with: 16 by 16 texels a cell, 4 bits a channel. Each texel
 /// takes the materials of its country for its height, lifted by the land's noise, shaded by its bump map, and an alpha
