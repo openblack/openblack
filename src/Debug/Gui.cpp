@@ -65,6 +65,7 @@
 #include "KeyBindingsWindow.h"
 #include "LandIsland.h"
 #include "Locator.h"
+#include "Magic.h"
 #include "Magic/MagicTables.h"
 #include "MeshViewer.h"
 #include "PathFinding.h"
@@ -72,6 +73,7 @@
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
 #include "TextureViewer.h"
+#include "Weather.h"
 #include "Windowing/WindowingInterface.h"
 
 // Turn off formatting because it adds spaces which break the stringifying
@@ -124,6 +126,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
 	debugWindows.emplace_back(new gui::Camera);
+	debugWindows.emplace_back(new Weather);
+	debugWindows.emplace_back(new Magic);
 	debugWindows.emplace_back(new KeyBindingsWindow);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
