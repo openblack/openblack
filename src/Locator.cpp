@@ -28,14 +28,19 @@
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
+#include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
+#include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/Implementations/SoundTagSystem.h"
 #include "ECS/Systems/Implementations/TimeSystem.h"
+#include "ECS/Systems/Implementations/TownDesireSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
 #include "Graphics/RendererInterface.h"
@@ -61,14 +66,19 @@ using openblack::chlapi::CHLApi;
 using openblack::debug::gui::DebugGuiInterface;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
+using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::DynamicsSystem;
+using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::HandSystem;
+using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RenderingSystem;
+using openblack::ecs::systems::SoundTagSystem;
 using openblack::ecs::systems::TimeSystem;
+using openblack::ecs::systems::TownDesireSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
 using openblack::graphics::RendererInterface;
@@ -133,8 +143,13 @@ bool openblack::InitializeGame() noexcept
 	Locator::temple::emplace<TempleInterior>();
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
+	Locator::alignmentSystem::emplace<AlignmentSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();
+	Locator::fieldSystem::emplace<FieldSystem>();
+	Locator::soundTagSystem::emplace<SoundTagSystem>();
+	Locator::influenceSystem::emplace<InfluenceSystem>();
+	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	return true;
 }
 
@@ -180,6 +195,10 @@ void openblack::ShutDownServices()
 	Locator::townSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
+	Locator::influenceSystem::reset();
+	Locator::fieldSystem::reset();
+	Locator::soundTagSystem::reset();
+	Locator::townDesireSystem::reset();
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
