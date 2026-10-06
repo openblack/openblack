@@ -26,10 +26,12 @@
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Locator.h"
+#include "VillagerHome.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
+namespace villager_home = openblack::ecs::villager_home;
 
 uint32_t VillagerInvalidState(LivingAction& action)
 {
@@ -53,84 +55,11 @@ uint32_t VillagerCreated(LivingAction& action)
 	return 0;
 }
 
-// Wander behaviour: how far (in world units) an idle villager may roam from
-// its village centre when picking a destination.
-static constexpr float k_WanderRadius = 40.0f;
-// Idle pause (in turns) before an arrived/abandoned villager picks a new destination.
-static constexpr uint16_t k_WanderCooldownTurns = 20;
-// Keep goals clear of the map edges so the pathfinder's neighbouring-cell lookups stay in
-// bounds (the movement grid is MapInterface::k_GridSize cells, each 10 world units wide).
-static constexpr float k_WanderWorldBoundMin = 30.0f;
-static constexpr float k_WanderWorldBoundMax = 5090.0f;
-
-namespace
-{
-// Pick a random nearby point and hand it to the PathfindingSystem the same way the
-// debug "Move To Point" tool does (see Debug/PathFinding.cpp), then wait in MoveToPos.
-uint32_t VillagerDecideWhatToDo(LivingAction& action)
-{
-	if (action.turnsSinceStateChange < k_WanderCooldownTurns)
-	{
-		// TODO(#863): play a "catch breath" idle animation here (lean forward, breathe) during the cooldown
-		// once villager animation playback exists. The transitionAnimation hook in k_VillagerStateTable
-		// is the intended home for it; the Mesh component has no animation state today.
-		return 0;
-	}
-
-	auto& registry = Locator::entitiesRegistry::value();
-	const auto entity = registry.ToEntity(action);
-
-	const auto& transform = registry.Get<Transform>(entity);
-	auto& wallHug = registry.Get<WallHug>(entity);
-	auto& rng = Locator::rng::value();
-
-	const float angle = rng.NextValue(0.0f, glm::two_pi<float>());
-	const float distance = rng.NextValue(0.0f, k_WanderRadius);
-	const auto& villager = registry.Get<Villager>(entity);
-	auto origin = glm::xz(transform.position); // fallback if the villager has no valid town
-	if (villager.town != entt::null && registry.Valid(villager.town) && registry.AllOf<Transform>(villager.town))
-	{
-		origin = glm::xz(registry.Get<Transform>(villager.town).position);
-	}
-	auto goal = origin + glm::vec2(glm::cos(angle), glm::sin(angle)) * distance;
-	goal = glm::clamp(goal, glm::vec2(k_WanderWorldBoundMin), glm::vec2(k_WanderWorldBoundMax));
-
-	wallHug.goal = goal;
-	wallHug.step = glm::vec2(0.0f); // force a fresh step to be computed on the next pathfinding turn
-	registry.Remove<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag,
-	                MoveStateFinalStepTag, MoveStateArrivedTag>(entity);
-	registry.Remove<WallHugObjectReference>(entity);
-	registry.Assign<MoveStateLinearTag>(entity);
-
-	Locator::livingActionSystem::value().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::MoveToPos, true);
-	return 0;
-}
-
-// Wait until the PathfindingSystem has walked us to the goal, then decide again.
-uint32_t VillagerMoveToPos(LivingAction& action)
-{
-	auto& registry = Locator::entitiesRegistry::value();
-	const auto entity = registry.ToEntity(action);
-
-	// The PathfindingSystem removes the "in transit" move-state tags once the goal is reached
-	// (leaving only a FinalStep tag). When none of them remain, we've arrived.
-	const bool stillMoving =
-	    registry.AnyOf<MoveStateLinearTag, MoveStateOrbitTag, MoveStateExitCircleTag, MoveStateStepThroughTag>(entity);
-	if (!stillMoving)
-	{
-		registry.Remove<MoveStateFinalStepTag, MoveStateArrivedTag>(entity);
-		Locator::livingActionSystem::value().VillagerSetState(action, LivingAction::Index::Top, VillagerStates::DecideWhatToDo,
-		                                                      true);
-	}
-	return 0;
-}
-} // namespace
-
 struct VillagerStateTableEntry
 {
 	std::function<uint32_t(LivingAction&)> state = nullptr;
 	std::function<bool(LivingAction&, VillagerStates, VillagerStates)> entryState = nullptr;
-	std::function<bool(LivingAction&)> exitState = nullptr;
+	std::function<bool(LivingAction&, VillagerStates)> exitState = nullptr;
 	std::function<bool(LivingAction&)> saveState = nullptr;
 	std::function<bool(LivingAction&)> loadState = nullptr;
 	std::function<bool(LivingAction&)> field0x50 = nullptr;
@@ -154,7 +83,7 @@ static const VillagerStateTableEntry k_TodoEntry = {
 	                       k_VillagerStateStrings.at(static_cast<size_t>(dst)));
 	    return false;
     },
-    .exitState = [](LivingAction& action) -> bool {
+    .exitState = [](LivingAction& action, [[maybe_unused]] VillagerStates next) -> bool {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented exit state function)",
 	                       static_cast<uint32_t>(Locator::entitiesRegistry::value().ToEntity(action)));
 	    return false;
@@ -209,7 +138,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     },
     /* MOVE_TO_POS */
     VillagerStateTableEntry {
-        .state = &VillagerMoveToPos,
+        .state = &villager_home::MoveToPos,
     },
     /* MOVE_TO_OBJECT */ k_TodoEntry,
     /* MOVE_ON_STRUCTURE */ k_TodoEntry,
@@ -245,9 +174,21 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* GOTO_STORAGE_PIT_FOR_FOOD */ k_TodoEntry,
     /* ARRIVES_AT_STORAGE_PIT_FOR_FOOD */ k_TodoEntry,
     /* ARRIVES_AT_HOME_WITH_FOOD */ k_TodoEntry,
-    /* GO_HOME */ k_TodoEntry,
-    /* ARRIVES_HOME */ k_TodoEntry,
-    /* AT_HOME */ k_TodoEntry,
+    /* GO_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::GoHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
+    /* ARRIVES_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::ArrivesHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
+    /* AT_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::AtHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
     /* ARRIVES_AT_STORAGE_PIT_FOR_BUILDING_MATERIALS */ k_TodoEntry,
     /* ARRIVES_AT_BUILDING_SITE */ k_TodoEntry,
     /* BUILDING */ k_TodoEntry,
@@ -332,9 +273,21 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* SITS_DOWN_TO_DINNER */ k_TodoEntry,
     /* EAT_FOOD */ k_TodoEntry,
     /* EAT_FOOD_AT_HOME */ k_TodoEntry,
-    /* GOTO_BED_AT_HOME */ k_TodoEntry,
-    /* SLEEPING_AT_HOME */ k_TodoEntry,
-    /* WAKE_UP_AT_HOME */ k_TodoEntry,
+    /* GOTO_BED_AT_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::GotoBedAtHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
+    /* SLEEPING_AT_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::SleepingAtHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
+    /* WAKE_UP_AT_HOME */
+    VillagerStateTableEntry {
+        .state = &villager_home::GoHome,
+        .exitState = &villager_home::ExitAtHome,
+    },
     /* START_HAVING_SEX */ k_TodoEntry,
     /* HAVING_SEX */ k_TodoEntry,
     /* STOP_HAVING_SEX */ k_TodoEntry,
@@ -378,7 +331,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* POINT_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* DECIDE_WHAT_TO_DO */
     VillagerStateTableEntry {
-        .state = &VillagerDecideWhatToDo,
+        .state = &villager_home::DecideWhatToDo,
     },
     /* INTERACT_DECIDE_WHAT_TO_DO */ k_TodoEntry,
     /* EAT_OUTSIDE */ k_TodoEntry,
@@ -521,7 +474,7 @@ void LivingActionSystem::VillagerSetState(LivingAction& action, LivingAction::In
 
 	// Exit the previous state before switching. A truthy return means it isn't ready to be
 	// left yet, so abort the transition without changing state.
-	if (runTransition && VillagerCallExitState(action, index))
+	if (runTransition && VillagerCallExitState(action, index, state))
 	{
 		return;
 	}
@@ -563,7 +516,7 @@ bool LivingActionSystem::VillagerCallEntryState(LivingAction& action, LivingActi
 	return callback(action, src, dst);
 }
 
-bool LivingActionSystem::VillagerCallExitState(LivingAction& action, LivingAction::Index index) const
+bool LivingActionSystem::VillagerCallExitState(LivingAction& action, LivingAction::Index index, VillagerStates next) const
 {
 	const auto& state = action.states.at(static_cast<size_t>(index));
 	const auto& entry = k_VillagerStateTable.at(static_cast<size_t>(state));
@@ -572,7 +525,7 @@ bool LivingActionSystem::VillagerCallExitState(LivingAction& action, LivingActio
 	{
 		return false;
 	}
-	return callback(action);
+	return callback(action, next);
 }
 
 int LivingActionSystem::VillagerCallOutOfAnimation(LivingAction& action, LivingAction::Index index) const
