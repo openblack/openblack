@@ -46,6 +46,7 @@
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
+#include "ECS/Systems/Implementations/FootprintSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
@@ -105,6 +106,7 @@ using openblack::ecs::systems::CreaturePhysiologySystem;
 using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
 using openblack::ecs::systems::FieldSystem;
+using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
@@ -204,6 +206,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::creatureAudioSystem::emplace<CreatureAudioSystem>();
 	Locator::creatureObjectActionSystem::emplace<CreatureObjectActionSystem>();
 	Locator::creatureHandSystem::emplace<CreatureHandSystem>();
+	Locator::footprintSystem::emplace<FootprintSystem>();
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
@@ -291,6 +294,7 @@ void openblack::ShutDownServices()
 	Locator::creaturePhysiologySystem::reset();
 	Locator::creatureSkinSystem::reset();
 	Locator::creatureHairSystem::reset();
+	Locator::footprintSystem::reset();
 	Locator::creatureAudioSystem::reset();
 	Locator::creatureObjectActionSystem::reset();
 	Locator::creatureHandSystem::reset();

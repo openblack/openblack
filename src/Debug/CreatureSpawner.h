@@ -54,6 +54,8 @@ private:
 	void DrawAppearance(entt::entity entity) noexcept;
 	/// The mute for every creature's sounds and the switch for other players' creatures' voices
 	void DrawAudioSettings() noexcept;
+	/// Whether the creatures' footprints are drawn, how many there are, and a switch to leave smiley faces
+	void DrawFootprintSettings() noexcept;
 	/// The picked creature's last sounds, and buttons to play each sound its animations make
 	void DrawAudio(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;

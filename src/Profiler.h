@@ -37,6 +37,7 @@ public:
 		CreatureAudioUpdate,
 		CreatureObjectActionUpdate,
 		CreatureHandUpdate,
+		CreatureFootprintsUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -81,6 +82,7 @@ public:
 	    "Creature Audio",       //
 	    "Creature Objects",     //
 	    "Creature Hand",        //
+	    "Creature Footprints",  //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //

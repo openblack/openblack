@@ -155,6 +155,14 @@ struct Gate
 };
 [[nodiscard]] bool IsHeard(EventKind kind, const Gate& gate);
 
+/// Whether an action is a footstep: light, normal or a stamp, each of which leaves a footprint whether or not it is
+/// heard
+[[nodiscard]] constexpr bool IsFootstep(audio::SoundAction action)
+{
+	return action == audio::SoundAction::FootstepLight || action == audio::SoundAction::FootstepNormal ||
+	       action == audio::SoundAction::FootStamp;
+}
+
 /// The action's name, for reading, or empty for one creatures don't use
 [[nodiscard]] std::string_view Name(audio::SoundAction action);
 } // namespace openblack::creature_audio

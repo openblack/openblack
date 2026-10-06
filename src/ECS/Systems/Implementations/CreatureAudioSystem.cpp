@@ -37,6 +37,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
+#include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -296,6 +297,11 @@ void CreatureAudioSystem::Update(std::chrono::duration<float, std::milli> gameTi
 			    if (fired.event.kind == creature_audio::EventKind::HairGroup)
 			    {
 				    continue;
+			    }
+			    // A footstep leaves its print even when it isn't heard
+			    if (creature_audio::IsFootstep(fired.event.action) && Locator::footprintSystem::has_value())
+			    {
+				    Locator::footprintSystem::value().Step(entity);
 			    }
 			    if (creature_audio::IsHeard(fired.event.kind, creatureGate))
 			    {

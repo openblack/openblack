@@ -685,6 +685,7 @@ void CreatureSpawner::DrawCreatures() noexcept
 		}
 	}
 	DrawAudioSettings();
+	DrawFootprintSettings();
 	ImGui::Text("%zu creature%s", creatures.size(), creatures.size() == 1 ? "" : "s");
 	if (_selected.has_value() && std::ranges::find(creatures, *_selected) == creatures.end())
 	{

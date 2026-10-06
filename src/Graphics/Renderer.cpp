@@ -81,6 +81,7 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
@@ -2144,6 +2145,79 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 	});
 }
 
+void Renderer::DrawCreatureFootprints(const DrawSceneDesc& desc) const
+{
+	namespace prints = creature_footprints;
+	const bool reflection = desc.viewId == RenderPass::Reflection;
+	if ((desc.viewId != RenderPass::Main && !reflection) || !Locator::footprintSystem::has_value() ||
+	    (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	const auto& footprints = Locator::footprintSystem::value();
+	if (!footprints.IsShown() || footprints.GetPrints().empty())
+	{
+		return;
+	}
+	// White where the prints' pictures are, and their shapes in the alpha beside it
+	static constexpr auto k_TextureId = entt::hashed_string("raw/misc0");
+	static constexpr auto k_AlphaTextureId = entt::hashed_string("raw/misc0a");
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!textures.Contains(k_TextureId.value()) || !textures.Contains(k_AlphaTextureId.value()))
+	{
+		return;
+	}
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		uint32_t colour;
+	};
+	std::vector<Vertex> vertices;
+	vertices.reserve(footprints.GetPrints().size() * prints::k_Indices.size());
+	for (const auto& print : footprints.GetPrints())
+	{
+		// The sea's reflection shows only the prints on the land above it
+		if (reflection &&
+		    std::ranges::any_of(print.corners, [](const glm::vec3& corner) { return corner.y <= prints::k_Lift; }))
+		{
+			continue;
+		}
+		// Black, as opaque as the print still is
+		const auto colour = static_cast<uint32_t>(print.alpha) << 24u;
+		for (const auto corner : prints::k_Indices)
+		{
+			vertices.push_back({print.corners.at(corner), print.uvs.at(corner), colour});
+		}
+	}
+	if (vertices.empty())
+	{
+		return;
+	}
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto count = static_cast<uint32_t>(vertices.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	std::memcpy(buffer.data, vertices.data(), vertices.size() * sizeof(Vertex));
+	const auto* program = _shaderManager->GetShader("WorldTextured");
+	program->SetTextureSampler("s_diffuse", 0, *textures.Handle(k_TextureId));
+	program->SetTextureSampler("s_alpha", 1, *textures.Handle(k_AlphaTextureId));
+	bgfx::setVertexBuffer(0, &buffer);
+	// Unlit, blended over the land, tested against depth but leaving none, both sides
+	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
+	// Lying on the land, they are blended first of all that blends, straight after the land is drawn
+	program->Submit(static_cast<uint16_t>(TranslucentView(desc.viewId)), std::numeric_limits<uint32_t>::max());
+}
+
 void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 {
 	if (desc.viewId != RenderPass::Main || !Locator::terrainSystem::has_value() ||
@@ -3840,6 +3914,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				                      zsort::Depth(glm::vec3(centre.x, 0.0f, centre.y), cameraOrigin), discard);
 			}
 			_shaderManager->DiscardBindings();
+			DrawCreatureFootprints(desc);
 		}
 	}
 

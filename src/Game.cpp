@@ -87,6 +87,7 @@
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
+#include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -731,6 +732,11 @@ bool Game::Update() noexcept
 		// They make the sounds of the moments their animations have played past
 		auto creatureAudio = profiler.BeginScoped(Profiler::Stage::CreatureAudioUpdate);
 		Locator::creatureAudioSystem::value().Update(gameTime);
+	}
+	{
+		// Their footprints fade away
+		auto creatureFootprints = profiler.BeginScoped(Profiler::Stage::CreatureFootprintsUpdate);
+		Locator::footprintSystem::value().Update(gameTime);
 	}
 	{
 		// Their skins are painted again where their alignment, tattoos or marks have changed
@@ -1686,6 +1692,8 @@ void Game::PrepareNewLand()
 	}
 	Locator::cinematicDirectorSystem::value().Reset();
 	Locator::influenceSystem::value().Reset();
+	// Nor its creatures' footprints
+	Locator::footprintSystem::value().Reset();
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();
