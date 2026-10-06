@@ -79,8 +79,10 @@
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureAudioSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
+#include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
@@ -226,12 +228,28 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 
 	// The hand grips the land, which the temple has none of: its camera takes the clicks
 	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	// Clicking a creature holds the hand to it to stroke or slap it, rather than gripping the land
+	auto& creatureHand = Locator::creatureHandSystem::value();
 	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton)
 	{
-		PlayHandGrabSound();
+		const auto screenSize = Locator::windowing::value().GetSize();
+		glm::vec3 rayOrigin;
+		glm::vec3 rayDirection;
+		Locator::camera::value().DeprojectScreenToWorld(glm::vec2(event.button.x, event.button.y) /
+		                                                    static_cast<glm::vec2>(glm::max(screenSize, glm::ivec2(1))),
+		                                                rayOrigin, rayDirection);
+		if (!creatureHand.Grab(rayOrigin, rayDirection))
+		{
+			PlayHandGrabSound();
+		}
 	}
+	if (!leftMouseButton && creatureHand.GetCreature().has_value())
+	{
+		creatureHand.Release();
+	}
+	const bool onCreature = creatureHand.GetCreature().has_value();
 
-	_handGripping = !inTemple && (middleMouseButton || leftMouseButton);
+	_handGripping = !inTemple && (middleMouseButton || (leftMouseButton && !onCreature));
 	_handRotating = !inTemple && middleMouseButton;
 
 	auto& window = Locator::windowing::value();
@@ -434,6 +452,11 @@ bool Game::GameLogicLoop() noexcept
 		// They plan their routes and walk, run and turn
 		auto creatureLocomotion = profiler.BeginScoped(Profiler::Stage::CreatureLocomotionUpdate);
 		Locator::creatureLocomotionSystem::value().ProcessTurn();
+	}
+	{
+		// They walk up to the things they act on, and what they carry makes them stronger
+		auto creatureObjectActions = profiler.BeginScoped(Profiler::Stage::CreatureObjectActionUpdate);
+		Locator::creatureObjectActionSystem::value().ProcessTurn();
 	}
 	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
@@ -685,9 +708,19 @@ bool Game::Update() noexcept
 		Locator::creaturePhysiologySystem::value().Update(std::chrono::duration<float>(gameTime).count());
 	}
 	{
+		// What they do with things plays on their bodies
+		auto creatureObjectActions = profiler.BeginScoped(Profiler::Stage::CreatureObjectActionUpdate);
+		Locator::creatureObjectActionSystem::value().Update(gameTime);
+	}
+	{
 		// The creatures breathe, act, pull faces and look about
 		auto creatureAnimation = profiler.BeginScoped(Profiler::Stage::CreatureAnimationUpdate);
 		Locator::creatureAnimationSystem::value().Update(gameTime);
+	}
+	{
+		// They take hold of and let go of things with their hands as posed, and what they let go of flies
+		auto creatureObjectActions = profiler.BeginScoped(Profiler::Stage::CreatureObjectActionUpdate);
+		Locator::creatureObjectActionSystem::value().LateUpdate(gameTime);
 	}
 	{
 		// Their hair swings from the posed bodies
@@ -809,6 +842,27 @@ bool Game::Update() noexcept
 				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
 			}
 			PlaceHand(handTransform, std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+			// Held to a creature, the hand rests on its body under the cursor, stroking and slapping it
+			{
+				auto creatureHand = profiler.BeginScoped(Profiler::Stage::CreatureHandUpdate);
+				const auto screenSize =
+				    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
+				_handOnCreature.reset();
+				if (screenSize.x > 0 && screenSize.y > 0 && Locator::creatureHandSystem::value().GetCreature().has_value())
+				{
+					glm::vec3 rayOrigin;
+					glm::vec3 rayDirection;
+					camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+					                              rayOrigin, rayDirection);
+					_handOnCreature = Locator::creatureHandSystem::value().Update(
+					    rayOrigin, rayDirection, static_cast<glm::vec2>(_mousePosition),
+					    std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+					if (_handOnCreature.has_value())
+					{
+						handTransform.position = _handOnCreature->position;
+					}
+				}
+			}
 			Locator::entitiesRegistry::value().SetDirty();
 		}
 
@@ -820,7 +874,14 @@ bool Game::Update() noexcept
 			using HandCycle = HandAnimation::Cycle;
 			const bool dragging = _handGripping && !_handRotating;
 			const auto state = dragging ? HandState::Camera : HandState::Normal;
-			const auto cycle = dragging ? HandCycle::Grip : HandCycle::Wiggle;
+			auto cycle = dragging ? HandCycle::Grip : HandCycle::Wiggle;
+			// On a creature, it strokes it or shows its slap
+			if (_handOnCreature.has_value())
+			{
+				cycle = _handOnCreature->slapping ? HandCycle::Slap
+				        : _handOnCreature->onBody ? HandCycle::Stroke
+				                                  : HandCycle::Wiggle;
+			}
 			_handAnimation->Update(deltaTime, state, cycle, _mousePosition);
 
 			const auto handEntity = Locator::handSystem::value()

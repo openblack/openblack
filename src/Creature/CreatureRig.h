@@ -112,6 +112,25 @@ struct CreatureRig
 	/// Where the species' tattoos go, for species that have places for them
 	std::optional<creature_tattoo::Sites> tattooSites;
 
+	/// The bones the species acts with, counted in its meshes, and the moments its object animations take hold or let
+	/// go, in milliseconds from their starts. Each left side bone is the mirror of the right.
+	struct ActionPoints
+	{
+		uint32_t rightHand;
+		uint32_t rightFoot;
+		uint32_t rightArmpit;
+		uint32_t belly;
+		uint32_t head;
+		uint32_t groin;
+		float pickUpMs;
+		float destroyMs;
+		float discardMs;
+		float eatMs;
+		float throwMs;
+		float putDownMs;
+	};
+	std::optional<ActionPoints> actionPoints;
+
 	/// The sounds placed on moments of each animation of the base mesh, in the order of the creature spec file
 	std::vector<std::vector<creature_audio::SoundEvent>> soundEvents;
 	/// What the species is to its voice bank, the object key its voice is looked up by

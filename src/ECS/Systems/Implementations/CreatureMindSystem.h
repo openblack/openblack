@@ -32,7 +32,9 @@ public:
 	void PullFace(entt::entity creature, size_t animation) override;
 	bool SitDown(entt::entity creature) override;
 	void StandUp(entt::entity creature) override;
-	void Feedback(entt::entity creature, bool stroke) override;
+	void ReceiveFeedback(entt::entity creature, float feedback) override;
+	bool ForceAction(entt::entity creature, size_t animation, bool mirrored, std::optional<size_t> face, float faceSeconds,
+	                 float interruptsAfter) override;
 	bool Sleep(entt::entity creature) override;
 	bool Eat(entt::entity creature, std::optional<entt::entity> food) override;
 	bool Drink(entt::entity creature) override;

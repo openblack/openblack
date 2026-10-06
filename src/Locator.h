@@ -109,6 +109,8 @@ class CreatureMindSystemInterface;
 class CreatureLocomotionSystemInterface;
 class CreatureHairSystemInterface;
 class CreatureAudioSystemInterface;
+class CreatureObjectActionSystemInterface;
+class CreatureHandSystemInterface;
 class CreatureSkinSystemInterface;
 class CreaturePhysiologySystemInterface;
 class CinematicDirectorSystemInterface;
@@ -184,6 +186,8 @@ struct Locator
 	using creatureLocomotionSystem = entt::locator<ecs::systems::CreatureLocomotionSystemInterface>;
 	using creatureHairSystem = entt::locator<ecs::systems::CreatureHairSystemInterface>;
 	using creatureAudioSystem = entt::locator<ecs::systems::CreatureAudioSystemInterface>;
+	using creatureObjectActionSystem = entt::locator<ecs::systems::CreatureObjectActionSystemInterface>;
+	using creatureHandSystem = entt::locator<ecs::systems::CreatureHandSystemInterface>;
 	using creatureSkinSystem = entt::locator<ecs::systems::CreatureSkinSystemInterface>;
 	using creaturePhysiologySystem = entt::locator<ecs::systems::CreaturePhysiologySystemInterface>;
 	using cinematicDirectorSystem = entt::locator<ecs::systems::CinematicDirectorSystemInterface>;

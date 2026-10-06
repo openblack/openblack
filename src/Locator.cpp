@@ -38,8 +38,10 @@
 #include "ECS/Systems/Implementations/CreatureAnimationSystem.h"
 #include "ECS/Systems/Implementations/CreatureAudioSystem.h"
 #include "ECS/Systems/Implementations/CreatureHairSystem.h"
+#include "ECS/Systems/Implementations/CreatureHandSystem.h"
 #include "ECS/Systems/Implementations/CreatureLocomotionSystem.h"
 #include "ECS/Systems/Implementations/CreatureMindSystem.h"
+#include "ECS/Systems/Implementations/CreatureObjectActionSystem.h"
 #include "ECS/Systems/Implementations/CreaturePhysiologySystem.h"
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
@@ -95,8 +97,10 @@ using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::CreatureAnimationSystem;
 using openblack::ecs::systems::CreatureAudioSystem;
 using openblack::ecs::systems::CreatureHairSystem;
+using openblack::ecs::systems::CreatureHandSystem;
 using openblack::ecs::systems::CreatureLocomotionSystem;
 using openblack::ecs::systems::CreatureMindSystem;
+using openblack::ecs::systems::CreatureObjectActionSystem;
 using openblack::ecs::systems::CreaturePhysiologySystem;
 using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
@@ -198,6 +202,8 @@ bool openblack::InitializeGame() noexcept
 	Locator::creaturePhysiologySystem::emplace<CreaturePhysiologySystem>();
 	Locator::creatureHairSystem::emplace<CreatureHairSystem>();
 	Locator::creatureAudioSystem::emplace<CreatureAudioSystem>();
+	Locator::creatureObjectActionSystem::emplace<CreatureObjectActionSystem>();
+	Locator::creatureHandSystem::emplace<CreatureHandSystem>();
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
@@ -286,6 +292,8 @@ void openblack::ShutDownServices()
 	Locator::creatureSkinSystem::reset();
 	Locator::creatureHairSystem::reset();
 	Locator::creatureAudioSystem::reset();
+	Locator::creatureObjectActionSystem::reset();
+	Locator::creatureHandSystem::reset();
 	Locator::creatureAnimationSystem::reset();
 	Locator::snowSystem::reset();
 	Locator::fieldSystem::reset();

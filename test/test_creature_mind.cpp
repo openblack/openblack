@@ -624,26 +624,31 @@ TEST(CreatureNeedsMind, APooTakesFourSecondsAndDropsAsItEnds)
 	EXPECT_EQ(creature_mind::Poo(Always(0)).front().animation, animations::k_NeedAPoo);
 }
 
-TEST(CreatureNeedsMind, ItGoesUpToFoodAndEatsIt)
+TEST(CreatureNeedsMind, ItPicksFoodUpAndEatsIt)
 {
 	creature_mind::IdleMind mind;
 	creature_mind::Plan(mind, creature_mind::Activity::Eat, creature_mind::Eat(7u));
 	FakeBody body;
 	auto senses = body.Senses();
+	// Its hands go and pick the food up
 	auto commands = creature_mind::Think(mind, senses, Always(1));
-	ASSERT_TRUE(commands.move.has_value());
-	EXPECT_EQ(commands.move->kind, creature_mind::Movement::Kind::ToObject);
-	EXPECT_EQ(commands.move->object, 7u);
-	senses.moving = true;
-	senses.bodyBusy = true;
+	ASSERT_TRUE(commands.object.has_value());
+	EXPECT_EQ(commands.object->kind, creature_mind::ObjectOrder::Kind::PickUp);
+	EXPECT_EQ(commands.object->object, 7u);
+	senses.hands = creature_mind::HandsState::Busy;
 	EXPECT_EQ(creature_mind::Think(mind, senses, Always(1)).effect, creature_mind::Effect::None);
-	senses = body.Senses();
+	// Having it, it examines it, then eats it; eaten, the desire is satisfied
+	senses.hands = creature_mind::HandsState::Done;
 	static_cast<void>(creature_mind::Think(mind, senses, Always(1)));
-	// Arrived, it eats as the action starts
 	commands = creature_mind::Think(mind, senses, Always(1));
-	EXPECT_EQ(commands.playOnce, animations::k_Eat);
+	ASSERT_TRUE(commands.object.has_value());
+	EXPECT_EQ(commands.object->kind, creature_mind::ObjectOrder::Kind::Keep);
+	static_cast<void>(creature_mind::Think(mind, senses, Always(1)));
+	commands = creature_mind::Think(mind, senses, Always(1));
+	ASSERT_TRUE(commands.object.has_value());
+	EXPECT_EQ(commands.object->kind, creature_mind::ObjectOrder::Kind::Eat);
+	commands = creature_mind::Think(mind, senses, Always(1));
 	EXPECT_EQ(commands.effect, creature_mind::Effect::Eat);
-	EXPECT_EQ(commands.effectObject, 7u);
 }
 
 TEST(CreatureNeedsMind, ItDrinksAtTheWatersEdge)

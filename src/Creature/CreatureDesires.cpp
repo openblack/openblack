@@ -216,6 +216,20 @@ void creature_desires::Suppress(Desires& desires, Desire desire, float seconds, 
 	state.suppressedTurns = std::max(state.suppressedTurns, turns);
 }
 
+void creature_desires::ChangeSource(Desires& desires, uint32_t type, float amount)
+{
+	for (auto& desire : desires.desires)
+	{
+		for (auto& source : desire.sources)
+		{
+			if (source.type == type)
+			{
+				source.value = std::clamp(source.value + amount, 0.0f, 1.0f);
+			}
+		}
+	}
+}
+
 std::optional<float> creature_desires::SourceValue(const DesireState& desire, uint32_t type)
 {
 	const auto found = std::ranges::find(desire.sources, type, &Source::type);

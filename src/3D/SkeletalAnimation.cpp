@@ -214,49 +214,128 @@ Matrix BlendKeyframes(const glm::vec3& from, const glm::vec3& to, float t, bool 
 }
 } // namespace
 
+namespace
+{
+/// A row vector times a matrix
+glm::vec3 Times(const glm::vec3& v, const Matrix& m)
+{
+	glm::vec3 result {0.0f};
+	for (size_t c = 0; c < 3; ++c)
+	{
+		result[static_cast<glm::length_t>(c)] = (v.x * m.at(0).at(c)) + (v.y * m.at(1).at(c)) + (v.z * m.at(2).at(c));
+	}
+	return result;
+}
+
+/// A rotation reflected across the x = 0 plane
+Matrix Reflected(Matrix m)
+{
+	for (size_t r = 0; r < 3; ++r)
+	{
+		for (size_t c = 0; c < 3; ++c)
+		{
+			if ((r == 0) != (c == 0))
+			{
+				m.at(r).at(c) = -m.at(r).at(c);
+			}
+		}
+	}
+	return m;
+}
+} // namespace
+
+std::vector<Pose> MirrorPoses(std::span<const Pose> poses, const Skeleton& skeleton, std::span<const uint32_t> mirror)
+{
+	const auto count = std::min(poses.size(), skeleton.parents.size());
+	if (mirror.empty() || count == 0)
+	{
+		return {poses.begin(), poses.end()};
+	}
+	// Each bone's turn and place in the mesh's space as posed
+	std::vector<Matrix> world(count);
+	std::vector<glm::vec3> place(count);
+	for (size_t i = 0; i < count; ++i)
+	{
+		const auto parent = skeleton.parents[i];
+		if (parent != k_NoParent && parent < i)
+		{
+			world[i] = Multiply(poses[i].rotation, world[parent]);
+			place[i] = Times(poses[i].translation, world[parent]) + place[parent];
+		}
+		else
+		{
+			world[i] = poses[i].rotation;
+			place[i] = poses[i].translation;
+		}
+	}
+	// Each bone takes its mirror bone's bending away from the rest pose and its place, reflected
+	std::vector<Matrix> mirroredWorld(count);
+	std::vector<glm::vec3> mirroredPlace(count);
+	for (size_t i = 0; i < count; ++i)
+	{
+		const auto destination = std::min(Destination(mirror, static_cast<uint32_t>(i)), static_cast<uint32_t>(count - 1));
+		const auto bend = Multiply(skeleton.inverseRestRotations[i], world[i]);
+		mirroredWorld[destination] = Multiply(skeleton.restRotations[destination], Reflected(bend));
+		mirroredPlace[destination] = glm::vec3(-place[i].x, place[i].y, place[i].z);
+	}
+	// Back into poses relative to the parents
+	std::vector<Pose> mirrored(poses.begin(), poses.end());
+	for (size_t i = 0; i < count; ++i)
+	{
+		const auto parent = skeleton.parents[i];
+		if (parent != k_NoParent && parent < i)
+		{
+			const auto inverseParent = Inverse(mirroredWorld[parent]);
+			mirrored[i].rotation = Multiply(mirroredWorld[i], inverseParent);
+			mirrored[i].translation = Times(mirroredPlace[i] - mirroredPlace[parent], inverseParent);
+		}
+		else
+		{
+			mirrored[i].rotation = mirroredWorld[i];
+			mirrored[i].translation = mirroredPlace[i];
+		}
+	}
+	return mirrored;
+}
+
 std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand, uint32_t timeMs, const Skeleton& skeleton,
                               std::span<const uint32_t> mirror)
 {
+	// Played left to right, the pose is the animation's reflected across the body
+	if (!mirror.empty())
+	{
+		return MirrorPoses(SampleCycle(animation, stand, timeMs, skeleton, {}), skeleton, mirror);
+	}
 	const auto count = skeleton.parents.size();
 	std::vector<Pose> poses(count, Pose {.rotation = k_Identity, .translation = glm::vec3(0.0f)});
 	if (animation.frames.empty() || count == 0)
 	{
 		return poses;
 	}
-	const bool mirrored = !mirror.empty();
 	const auto* standFrame = stand.frames.empty() ? nullptr : &stand.frames.front();
 	const auto standRotated = JointSlots(stand.rotatedJoints, count);
 	const auto standTranslated = JointSlots(stand.translatedJoints, count);
-	const auto standTranslation = [&](uint32_t joint) -> std::optional<glm::vec3> {
-		if (standFrame == nullptr || !standTranslated[joint])
-		{
-			return std::nullopt;
-		}
-		return standFrame->translations[*standTranslated[joint]];
-	};
 	const auto rotated = JointSlots(animation.rotatedJoints, count);
 	const auto translated = JointSlots(animation.translatedJoints, count);
 	const auto [from, to, t] = FindFrames(animation, timeMs);
 
 	for (uint32_t joint = 0; joint < count; ++joint)
 	{
-		// The bone the keyframes of this one move: itself, or its mirror bone
-		const auto destination = std::min(Destination(mirror, joint), static_cast<uint32_t>(count - 1));
-		auto& pose = poses[destination];
-		const auto parent = skeleton.parents[destination];
+		auto& pose = poses[joint];
+		const auto parent = skeleton.parents[joint];
 
 		Matrix rotation = k_Identity;
 		if (const auto slot = rotated[joint])
 		{
 			rotation =
-			    BlendKeyframes(animation.frames[from].eulerAngles[*slot], animation.frames[to].eulerAngles[*slot], t, mirrored);
+			    BlendKeyframes(animation.frames[from].eulerAngles[*slot], animation.frames[to].eulerAngles[*slot], t, false);
 		}
-		else if (standFrame != nullptr && standRotated[destination])
+		else if (standFrame != nullptr && standRotated[joint])
 		{
-			rotation = RotationYXZ(standFrame->eulerAngles[*standRotated[destination]]);
+			rotation = RotationYXZ(standFrame->eulerAngles[*standRotated[joint]]);
 		}
-		pose.rotation = Multiply(skeleton.restRotations[destination], rotation);
-		if (destination != 0 && parent != k_NoParent)
+		pose.rotation = Multiply(skeleton.restRotations[joint], rotation);
+		if (joint != 0 && parent != k_NoParent)
 		{
 			pose.rotation = Multiply(pose.rotation, skeleton.inverseRestRotations[parent]);
 		}
@@ -265,21 +344,11 @@ std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand
 		{
 			const auto& a = animation.frames[from].translations[*slot];
 			const auto& b = animation.frames[to].translations[*slot];
-			const auto translation = (b - a) * t + a;
-			if (mirrored)
-			{
-				// The movement away from the stand, flipped, from where the stand has the mirror bone
-				const auto move = translation - standTranslation(joint).value_or(glm::vec3(0.0f));
-				pose.translation = standTranslation(destination).value_or(glm::vec3(0.0f)) + MirrorMove(move, joint);
-			}
-			else
-			{
-				pose.translation = translation;
-			}
+			pose.translation = (b - a) * t + a;
 		}
-		else if (const auto standMove = standTranslation(destination))
+		else if (standFrame != nullptr && standTranslated[joint])
 		{
-			pose.translation = *standMove;
+			pose.translation = standFrame->translations[*standTranslated[joint]];
 		}
 	}
 	return poses;

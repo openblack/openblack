@@ -11,6 +11,7 @@
 
 #include "CreatureMindSystem.h"
 
+#include <cmath>
 #include <cstring>
 
 #include <algorithm>
@@ -20,13 +21,16 @@
 #include <limits>
 #include <random>
 #include <ranges>
+#include <span>
 #include <vector>
 
 #include "3D/CreatureBody.h"
 #include "3D/DayNightClock.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/SkyInterface.h"
+#include "Camera/Camera.h"
 #include "Creature/CreatureDesires.h"
+#include "Creature/CreatureFeedback.h"
 #include "Creature/CreatureIdleMind.h"
 #include "Creature/CreatureLayers.h"
 #include "Creature/CreatureLook.h"
@@ -37,6 +41,7 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
+#include "ECS/Components/CreatureObjectAction.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Town.h"
@@ -44,7 +49,9 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
+#include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
@@ -77,6 +84,12 @@ constexpr std::string_view k_DrinkAction = "DrinkFromTheSea";
 constexpr std::string_view k_PooAction = "Poo";
 constexpr std::string_view k_PukeAction = "Puke";
 constexpr std::string_view k_SleepAction = "SleepOnTheSpot";
+constexpr std::string_view k_ExamineAction = "ExamineByPickingUp";
+constexpr std::string_view k_ThrowAboutAction = "PracticeThrow";
+constexpr std::string_view k_HurlAction = "Hurl";
+/// A creature looks for things to pick up this far away at most, and for homes and trees to hurl them at
+constexpr float k_ObjectSearchDistance = 80.0f;
+constexpr float k_HurlSearchDistance = 120.0f;
 /// The creature wants the player's attention more the longer it is alone, fully after a minute, and from lack of
 /// anything to do with the player, fully after two
 constexpr float k_LonelySeconds = 60.0f;
@@ -193,6 +206,8 @@ std::optional<float> ReadSource(uint32_t type, const creature_desires::Desires& 
 		return Clamp01(mind.secondsAlone / k_UninterestedSeconds);
 	case sources::k_ManifestState:
 		return Clamp01(desires.sum / k_ManifestSum);
+	case sources::k_RunAwayFromPlayer:
+		return Clamp01(-mind.attitudeToPlayer);
 	case sources::k_AngerFromSadness:
 	case sources::k_PlayFromSadness:
 	case sources::k_TirednessFromSadness:
@@ -327,26 +342,11 @@ float DesireValue(const creature_desires::Desires& desires, Desire desire)
 	return state.activated ? state.value : 0.0f;
 }
 
-/// What something is worth to eat, if anything: villagers by their kind, objects by theirs
-std::optional<float> FoodValueOf(ecs::Registry& registry, entt::entity entity)
+/// What something is worth to eat, if anything
+std::optional<float> FoodValueOf(entt::entity entity)
 {
-	if (!Locator::infoConstants::has_value())
-	{
-		return std::nullopt;
-	}
-	const auto& info = Locator::infoConstants::value();
-	float value = 0.0f;
-	if (const auto* villager = registry.TryGet<const Villager>(entity))
-	{
-		const auto kind = static_cast<size_t>(GVillagerInfo::Find(villager->tribe, villager->number));
-		value = kind < info.villager.size() ? info.villager.at(kind).foodValue : 0.0f;
-	}
-	else if (const auto* object = registry.TryGet<const MobileObject>(entity))
-	{
-		const auto kind = static_cast<size_t>(object->type);
-		value = kind < info.mobileObject.size() ? info.mobileObject.at(kind).foodValue : 0.0f;
-	}
-	return value > 0.0f ? std::optional(value) : std::nullopt;
+	return Locator::creatureObjectActionSystem::has_value() ? Locator::creatureObjectActionSystem::value().FoodValueOf(entity)
+	                                                        : std::nullopt;
 }
 
 /// The nearest food within reach of a point, and where it is
@@ -357,7 +357,7 @@ std::optional<std::pair<entt::entity, glm::vec2>> NearestFood(ecs::Registry& reg
 	const auto consider = [&](entt::entity entity, const Transform& at) {
 		const glm::vec2 point {at.position.x, at.position.z};
 		const auto distance = glm::distance(point, from);
-		if (distance <= best && FoodValueOf(registry, entity).has_value())
+		if (distance <= best && !registry.AllOf<HeldByCreature>(entity) && FoodValueOf(entity).has_value())
 		{
 			best = distance;
 			nearest = {entity, point};
@@ -420,15 +420,73 @@ std::optional<creature_mind::Wants::WaterSpot> NearestWater(glm::vec2 from)
 	return creature_mind::Wants::WaterSpot {.shore = *shore, .water = *nearest};
 }
 
+/// The nearest thing a creature could pick up, and where it is
+std::optional<std::pair<entt::entity, glm::vec2>> NearestObject(ecs::Registry& registry, glm::vec2 from)
+{
+	if (!Locator::creatureObjectActionSystem::has_value())
+	{
+		return std::nullopt;
+	}
+	const auto& hands = Locator::creatureObjectActionSystem::value();
+	std::optional<std::pair<entt::entity, glm::vec2>> nearest;
+	float best = k_ObjectSearchDistance;
+	registry.Each<const MobileObject, const Transform>([&](entt::entity entity, const MobileObject&, const Transform& at) {
+		const glm::vec2 point {at.position.x, at.position.z};
+		const auto distance = glm::distance(point, from);
+		if (distance <= best && !registry.AllOf<HeldByCreature>(entity) && hands.CanPickUp(entity))
+		{
+			best = distance;
+			nearest = {entity, point};
+		}
+	});
+	return nearest;
+}
+
+/// The nearest home or tree, to hurl something at
+std::optional<glm::vec2> NearestHurlTarget(ecs::Registry& registry, glm::vec2 from)
+{
+	std::optional<glm::vec2> nearest;
+	float best = k_HurlSearchDistance;
+	const auto consider = [&](const Transform& at) {
+		const glm::vec2 point {at.position.x, at.position.z};
+		const auto distance = glm::distance(point, from);
+		if (distance <= best)
+		{
+			best = distance;
+			nearest = point;
+		}
+	};
+	registry.Each<const Abode, const Transform>([&](const Abode&, const Transform& at) { consider(at); });
+	registry.Each<const Tree, const Transform>([&](const Tree&, const Transform& at) { consider(at); });
+	return nearest;
+}
+
 /// The needs the mind might see to now, and the food and water at hand for them
-creature_mind::Wants WantsOf(ecs::Registry& registry, const creature_desires::Desires& desires, glm::vec2 position)
+creature_mind::Wants WantsOf(ecs::Registry& registry, entt::entity creature, const creature_desires::Desires& desires,
+                             glm::vec2 position)
 {
 	creature_mind::Wants wants {
 	    .hunger = DesireValue(desires, Desire::Hunger),
 	    .tiredness = DesireValue(desires, Desire::Tiredness),
 	    .poo = DesireValue(desires, Desire::Poo),
 	    .water = DesireValue(desires, Desire::Water),
+	    .curiosity = DesireValue(desires, Desire::Curiosity),
+	    .play = DesireValue(desires, Desire::Play),
+	    .anger = DesireValue(desires, Desire::Anger),
+	    .holding = registry.AllOf<CreatureHeldObject>(creature),
 	};
+	if (!wants.holding && std::max({wants.curiosity, wants.play, wants.anger}) >= creature_mind::k_ActOnDesire)
+	{
+		if (const auto object = NearestObject(registry, position))
+		{
+			wants.object = entt::to_integral(object->first);
+			wants.objectPoint = object->second;
+		}
+		if (wants.anger >= creature_mind::k_ActOnDesire)
+		{
+			wants.hurlTarget = NearestHurlTarget(registry, position);
+		}
+	}
 	if (wants.hunger >= creature_mind::k_ActOnNeed)
 	{
 		if (const auto food = NearestFood(registry, position))
@@ -442,23 +500,6 @@ creature_mind::Wants WantsOf(ecs::Registry& registry, const creature_desires::De
 		wants.waterSpot = NearestWater(position);
 	}
 	return wants;
-}
-
-/// Something eaten is gone: out of its home and its town first
-void Consume(ecs::Registry& registry, entt::entity food)
-{
-	if (const auto* villager = registry.TryGet<const Villager>(food))
-	{
-		if (auto* abode = registry.TryGet<Abode>(villager->abode))
-		{
-			abode->inhabitants.erase(food);
-		}
-		if (auto* town = registry.TryGet<Town>(villager->town))
-		{
-			town->homelessVillagers.erase(food);
-		}
-	}
-	registry.Destroy(food);
 }
 
 /// Having done an action, the desire it satisfies is less, by the game's action table, and its body pays for it
@@ -486,8 +527,7 @@ void Satisfied(entt::entity creature, creature_desires::Desires& desires, std::s
 }
 
 /// What a step did to the body
-void TakeEffect(ecs::Registry& registry, entt::entity creature, const creature_mind::Commands& commands,
-                creature_desires::Desires& desires)
+void TakeEffect(entt::entity creature, const creature_mind::Commands& commands, creature_desires::Desires& desires)
 {
 	using creature_mind::Effect;
 	if (commands.effect == Effect::None || !Locator::creaturePhysiologySystem::has_value())
@@ -498,27 +538,18 @@ void TakeEffect(ecs::Registry& registry, entt::entity creature, const creature_m
 	switch (commands.effect)
 	{
 	case Effect::Eat:
-	{
-		// It eats what it went for, if that is still there and in reach
-		const auto food =
-		    commands.effectObject.has_value() ? std::optional(static_cast<entt::entity>(*commands.effectObject)) : std::nullopt;
-		const auto* self = registry.TryGet<const Transform>(creature);
-		const auto* size = registry.TryGet<const Creature>(creature);
-		const auto* at = food.has_value() ? registry.TryGet<const Transform>(*food) : nullptr;
-		if (self == nullptr || size == nullptr || at == nullptr ||
-		    glm::distance(glm::vec2(self->position.x, self->position.z), glm::vec2(at->position.x, at->position.z)) >
-		        k_EatReach * std::max(size->size, 1.0f))
-		{
-			break;
-		}
-		if (const auto value = FoodValueOf(registry, *food))
-		{
-			Consume(registry, *food);
-			physiology.Eat(creature, *value);
-			Satisfied(creature, desires, k_EatAction);
-		}
+		// It took its nourishment as it ate what it held
+		Satisfied(creature, desires, k_EatAction);
 		break;
-	}
+	case Effect::Examined:
+		Satisfied(creature, desires, k_ExamineAction);
+		break;
+	case Effect::ThrewAbout:
+		Satisfied(creature, desires, k_ThrowAboutAction);
+		break;
+	case Effect::Hurled:
+		Satisfied(creature, desires, k_HurlAction);
+		break;
 	case Effect::Drink:
 		physiology.Drink(creature);
 		Satisfied(creature, desires, k_DrinkAction);
@@ -545,6 +576,80 @@ void TakeEffect(ecs::Registry& registry, entt::entity creature, const creature_m
 	}
 }
 
+/// Tells the creature's hands what to do with a thing
+void Order(ecs::Registry& registry, entt::entity creature, const creature_mind::Commands& commands)
+{
+	if (!commands.object.has_value() || !Locator::creatureObjectActionSystem::has_value())
+	{
+		return;
+	}
+	auto& hands = Locator::creatureObjectActionSystem::value();
+	const auto& order = *commands.object;
+	const auto object = order.object.has_value() ? std::optional(static_cast<entt::entity>(*order.object)) : std::nullopt;
+	const auto ground = Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(order.point) : 0.0f;
+	const glm::vec3 point {order.point.x, ground, order.point.y};
+	using Kind = creature_mind::ObjectOrder::Kind;
+	switch (order.kind)
+	{
+	case Kind::PickUp:
+		if (object.has_value() && registry.Valid(*object))
+		{
+			hands.PickUp(creature, *object);
+		}
+		else
+		{
+			hands.Cancel(creature);
+		}
+		break;
+	case Kind::PutDown:
+		hands.PutDown(creature);
+		break;
+	case Kind::Discard:
+		hands.Discard(creature);
+		break;
+	case Kind::Eat:
+		hands.EatHeld(creature);
+		break;
+	case Kind::Keep:
+		hands.Keep(creature, order.animation);
+		break;
+	case Kind::Throw:
+	case Kind::ThrowNearby:
+		hands.Throw(creature, point);
+		break;
+	case Kind::Destroy:
+		if (object.has_value() && registry.Valid(*object))
+		{
+			hands.Destroy(creature, *object);
+		}
+		else
+		{
+			hands.Cancel(creature);
+		}
+		break;
+	}
+}
+
+creature_mind::HandsState HandsOf(entt::entity creature)
+{
+	if (!Locator::creatureObjectActionSystem::has_value())
+	{
+		return creature_mind::HandsState::Idle;
+	}
+	using State = CreatureObjectActionSystemInterface::State;
+	switch (Locator::creatureObjectActionSystem::value().GetState(creature))
+	{
+	case State::Busy:
+		return creature_mind::HandsState::Busy;
+	case State::Done:
+		return creature_mind::HandsState::Done;
+	case State::Failed:
+		return creature_mind::HandsState::Failed;
+	case State::Idle:
+		break;
+	}
+	return creature_mind::HandsState::Idle;
+}
 } // namespace
 
 void CreatureMindSystem::ProcessTurn()
@@ -613,14 +718,16 @@ void CreatureMindSystem::ProcessTurn()
 		        .feedbackWasStroke = mind.feedbackWasStroke,
 		        // Food and water are only looked for when it is free to choose what to do next
 		        .wants = mind.idle.step >= mind.idle.agenda.size()
-		                     ? WantsOf(registry, *mind.desires, glm::vec2(transform.position.x, transform.position.z))
+		                     ? WantsOf(registry, entity, *mind.desires, glm::vec2(transform.position.x, transform.position.z))
 		                     : creature_mind::Wants {},
 		        .rested = needs != nullptr && needs->rested,
+		        .hands = HandsOf(entity),
 		    };
 		    const auto commands = creature_mind::Think(mind.idle, senses, random);
 		    Apply(commands, animation, eyes);
 		    Move(entity, commands);
-		    TakeEffect(registry, entity, commands, *mind.desires);
+		    Order(registry, entity, commands);
+		    TakeEffect(entity, commands, *mind.desires);
 		    if (needs != nullptr)
 		    {
 			    needs->rest = creature_mind::IsUnconscious(mind.idle) ? CreatureNeeds::Rest::Unconscious
@@ -726,22 +833,118 @@ bool CreatureMindSystem::SitDown(entt::entity creature)
 	return true;
 }
 
-void CreatureMindSystem::Feedback(entt::entity creature, bool stroke)
+void CreatureMindSystem::ReceiveFeedback(entt::entity creature, float feedback)
 {
-	auto* mind = Locator::entitiesRegistry::value().TryGet<CreatureMindState>(creature);
+	namespace sources = creature_desires::sources;
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* mind = registry.TryGet<CreatureMindState>(creature);
 	if (mind == nullptr)
 	{
 		return;
 	}
-	mind->feedbackSeconds = 0.0f;
-	mind->feedbackWasStroke = stroke;
 	mind->secondsAlone = 0.0f;
+	mind->lastFeedback = CreatureMindState::Feedback {.value = feedback, .activity = mind->idle.activity};
+	// Too slight to count, it only looks at the player
+	if (std::abs(feedback) <= creature_feedback::k_SlightFeedback)
+	{
+		if (Locator::creatureLocomotionSystem::has_value() && Locator::camera::has_value())
+		{
+			const auto eye = Locator::camera::value().GetOrigin();
+			Locator::creatureLocomotionSystem::value().TurnToFace(creature, glm::vec2(eye.x, eye.z));
+		}
+		return;
+	}
+	mind->attitudeToPlayer = creature_feedback::AttitudeAfter(mind->attitudeToPlayer, feedback);
+	mind->averageFeedback = creature_feedback::AverageAfter(mind->averageFeedback, feedback);
+	mind->feedbackSeconds = 0.0f;
+	mind->feedbackWasStroke = feedback > 0.0f;
+	// Slapped, it stops whatever it was doing
+	if (feedback < 0.0f)
+	{
+		if (Locator::creatureObjectActionSystem::has_value())
+		{
+			Locator::creatureObjectActionSystem::value().Cancel(creature);
+		}
+		if (Locator::creatureLocomotionSystem::has_value())
+		{
+			Locator::creatureLocomotionSystem::value().Stop(creature);
+		}
+		mind->idle.agenda.clear();
+		mind->idle.step = 0;
+		mind->idle.stepStarted = false;
+	}
+	// Stroking makes it playful, showy and kind; slapping angry and fearful
+	if (mind->desires.has_value())
+	{
+		const auto amount = 0.5f * std::abs(feedback);
+		constexpr std::array k_Stroked {sources::k_PlayFromWatchingPlayer, sources::k_ManifestState,
+		                                sources::k_CompassionFromWatchingPlayer};
+		constexpr std::array k_Slapped {sources::k_AngerFromDamage, sources::k_FearFromDamage};
+		const auto pushed = feedback > 0.0f ? std::span<const uint32_t>(k_Stroked) : std::span<const uint32_t>(k_Slapped);
+		for (const auto type : pushed)
+		{
+			creature_desires::ChangeSource(*mind->desires, type, amount);
+		}
+	}
 	// The game reacts through its planner, which isn't here yet: the creature shows how it feels as soon as it is free
 	mind->idle.showDesireSeconds = 0.0f;
 	if (mind->idle.activity != creature_mind::Activity::ShowDesire)
 	{
 		mind->idle.agenda.resize(std::min(mind->idle.agenda.size(), mind->idle.step + (mind->idle.stepStarted ? 1 : 0)));
 	}
+}
+
+bool CreatureMindSystem::ForceAction(entt::entity creature, size_t animation, bool mirrored, std::optional<size_t> face,
+                                     float faceSeconds, float interruptsAfter)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* body = registry.TryGet<CreatureAnimation>(creature);
+	auto* mind = registry.TryGet<CreatureMindState>(creature);
+	if (body == nullptr || mind == nullptr || creature_mind::IsUnconscious(mind->idle))
+	{
+		return false;
+	}
+	// Not while it is only just into something
+	if (Locator::creatureObjectActionSystem::has_value())
+	{
+		if (const auto progress = Locator::creatureObjectActionSystem::value().GetProgress(creature);
+		    progress.has_value() && *progress < interruptsAfter)
+		{
+			return false;
+		}
+	}
+	if (creature_layers::IsPlaying(body->body) && Locator::creatureAnimationSystem::has_value())
+	{
+		const auto duration = Locator::creatureAnimationSystem::value().AnimationDuration(
+		    creature, creature_layers::CurrentAnimation(body->body));
+		if (duration.has_value() && *duration > 0.0f && body->body.timeMs / *duration < interruptsAfter)
+		{
+			return false;
+		}
+	}
+	const auto played = creature_layers::PlayOnce(creature_layers::BodyAction {}, animation, mirrored);
+	if (!played.has_value())
+	{
+		return false;
+	}
+	if (Locator::creatureObjectActionSystem::has_value())
+	{
+		Locator::creatureObjectActionSystem::value().Cancel(creature);
+	}
+	if (Locator::creatureLocomotionSystem::has_value())
+	{
+		Locator::creatureLocomotionSystem::value().Stop(creature);
+	}
+	body->body = *played;
+	if (face.has_value())
+	{
+		body->face.wanted = *face;
+		mind->idle.faceSeconds = faceSeconds;
+	}
+	// What it was doing is over; it decides afresh once the action has played
+	mind->idle.agenda.resize(std::min(mind->idle.agenda.size(), mind->idle.step));
+	mind->idle.stepStarted = false;
+	return true;
 }
 
 bool CreatureMindSystem::Replan(entt::entity creature, creature_mind::Activity activity,
@@ -786,7 +989,7 @@ bool CreatureMindSystem::Eat(entt::entity creature, std::optional<entt::entity> 
 			food = nearest->first;
 		}
 	}
-	if (!food.has_value() || !FoodValueOf(registry, *food).has_value())
+	if (!food.has_value() || !FoodValueOf(*food).has_value())
 	{
 		return false;
 	}

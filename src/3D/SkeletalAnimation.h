@@ -99,10 +99,16 @@ struct FrameSpan
 /// the stand animation. Keyframe rotations are in the rest pose's space; each bone's own is relative to its parent's
 /// rest rotation.
 ///
-/// Given a mirror (see MirrorJoints), the animation plays left to right: each bone's keyframes move its mirror bone
-/// instead, their y and z angles negated, and their movement away from the stand's first frame flipped across the body.
+/// Given a mirror (see MirrorJoints), the animation plays left to right: the pose is reflected across the body, as
+/// MirrorPoses does.
 [[nodiscard]] std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand, uint32_t timeMs,
                                             const Skeleton& skeleton, std::span<const uint32_t> mirror = {});
+
+/// Poses reflected across the body's x = 0 plane: each bone bends away from its rest pose as its mirror bone did,
+/// reflected, and stands where its mirror bone stood, reflected. Whatever frames the bones' own rest poses are in, the
+/// body as drawn is the exact mirror image of the unmirrored one, for a skeleton whose rest pose is symmetric.
+[[nodiscard]] std::vector<Pose> MirrorPoses(std::span<const Pose> poses, const Skeleton& skeleton,
+                                            std::span<const uint32_t> mirror);
 
 /// Poses summed by weight, rotation matrices and translations element by element, as animations playing together
 /// (walking into running, say) are. The weights are expected to add up to 1.

@@ -77,15 +77,20 @@ constexpr size_t k_MaxSources = 8;
 
 [[nodiscard]] std::string_view Name(Desire desire);
 
-/// The sources whose values follow the creature's state each turn; all others are pushed by events and fade
+/// The sources known by name: those whose values follow the creature's state each turn, and those the player's feedback
+/// pushes, which fade
 namespace sources
 {
+constexpr uint32_t k_CompassionFromWatchingPlayer = 2;
 constexpr uint32_t k_InnateKindness = 5;
+constexpr uint32_t k_AngerFromDamage = 9;
 constexpr uint32_t k_AngerFromSadness = 10;
 constexpr uint32_t k_InnateAggression = 11;
+constexpr uint32_t k_PlayFromWatchingPlayer = 12;
 constexpr uint32_t k_HungerFromLowEnergy = 14;
 constexpr uint32_t k_PlayFromSadness = 16;
 constexpr uint32_t k_FearFromDark = 17;
+constexpr uint32_t k_FearFromDamage = 18;
 constexpr uint32_t k_TirednessFromExhaustion = 22;
 constexpr uint32_t k_PooFromAmountOfPoo = 21;
 constexpr uint32_t k_TirednessFromNight = 24;
@@ -101,6 +106,7 @@ constexpr uint32_t k_InnateCommunicativeness = 39;
 constexpr uint32_t k_GetWarmer = 40;
 constexpr uint32_t k_GetColder = 41;
 constexpr uint32_t k_Scratch = 42;
+constexpr uint32_t k_RunAwayFromPlayer = 43;
 constexpr uint32_t k_Sadness = 48;
 } // namespace sources
 
@@ -178,6 +184,9 @@ void UpdateSources(Desires& desires, const SourceReader& read);
 void UpdateDesires(Desires& desires, float turnsPerSecond);
 /// The desire can't grow for some seconds, or longer if it already couldn't
 void Suppress(Desires& desires, Desire desire, float seconds, float turnsPerSecond);
+
+/// Every source of a type, in all the desires, goes up or down by an amount, staying from 0 to 1, as events push them
+void ChangeSource(Desires& desires, uint32_t type, float amount);
 
 /// The value of the first of a desire's sources of a type
 [[nodiscard]] std::optional<float> SourceValue(const DesireState& desire, uint32_t type);

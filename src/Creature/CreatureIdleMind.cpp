@@ -15,6 +15,7 @@
 #include <numbers>
 
 #include "Creature/CreatureLayers.h"
+#include "Creature/CreatureObjectActions.h"
 
 using namespace openblack;
 using namespace openblack::creature_mind;
@@ -53,6 +54,19 @@ Step Action(size_t animation, bool sleepyEyes)
 {
 	return {.kind = Step::Kind::Action, .seconds = 0.0f, .animation = animation, .sleepyEyes = sleepyEyes};
 }
+
+Step Object(ObjectOrder order, Effect effect = Effect::None)
+{
+	Step step {.kind = Step::Kind::Object};
+	step.order = order;
+	step.effect = effect;
+	return step;
+}
+
+Step PickUp(uint32_t object)
+{
+	return Object({.kind = ObjectOrder::Kind::PickUp, .object = object});
+}
 } // namespace
 
 std::string_view creature_mind::Name(Activity activity)
@@ -81,6 +95,14 @@ std::string_view creature_mind::Name(Activity activity)
 		return "Being sick";
 	case Activity::Faint:
 		return "Out cold";
+	case Activity::Examine:
+		return "Looking something over";
+	case Activity::PlayWithObject:
+		return "Throwing something about";
+	case Activity::Hurl:
+		return "Hurling something";
+	case Activity::PutDown:
+		return "Putting something down";
 	case Activity::None:
 	default:
 		return "Nothing";
@@ -125,20 +147,44 @@ std::vector<Step> creature_mind::Sleep(const Random& random)
 
 std::vector<Step> creature_mind::Eat(uint32_t food)
 {
-	auto eat = Action(animations::k_Eat, false);
-	eat.effect = Effect::Eat;
-	eat.object = food;
-	return {{.kind = Step::Kind::Move,
-	         .seconds = 0.0f,
-	         .animation = 0,
-	         .sleepyEyes = false,
-	         .movement = {.kind = Movement::Kind::ToObject,
-	                      .point = glm::vec2(0.0f),
-	                      .object = food,
-	                      .run = false,
-	                      .minDistance = 0.0f,
-	                      .maxDistance = 0.0f}},
-	        eat};
+	return {PickUp(food), Object({.kind = ObjectOrder::Kind::Keep, .animation = creature_object_actions::k_ExamineObject}),
+	        Object({.kind = ObjectOrder::Kind::Eat}, Effect::Eat)};
+}
+
+std::vector<Step> creature_mind::ExamineByPickingUp(uint32_t object, const Random& random)
+{
+	const auto keep = creature_object_actions::k_FirstKeepAnimation +
+	                  random(static_cast<uint32_t>(creature_object_actions::k_KeepAnimationCount));
+	const auto letGo = random(k_PutDownLots) >= k_TossLots ? ObjectOrder::Kind::PutDown : ObjectOrder::Kind::Discard;
+	return {PickUp(object), Object({.kind = ObjectOrder::Kind::Keep, .animation = keep}, Effect::Examined),
+	        Object({.kind = letGo})};
+}
+
+std::vector<Step> creature_mind::ThrowAbout(uint32_t object, const Random& random)
+{
+	constexpr uint32_t k_Degrees = 360;
+	const auto angle = static_cast<float>(random(k_Degrees)) * std::numbers::pi_v<float> / 180.0f;
+	const auto distance = k_ThrowAroundDistance + static_cast<float>(random(k_ThrowAroundExtra));
+	return {PickUp(object),
+	        Object({.kind = ObjectOrder::Kind::ThrowNearby, .point = distance * glm::vec2(std::cos(angle), std::sin(angle))},
+	               Effect::ThrewAbout)};
+}
+
+std::vector<Step> creature_mind::Hurl(uint32_t object, glm::vec2 target, const Random& random)
+{
+	std::vector<Step> agenda;
+	if (random(k_AngryBeforeHurlLots) == 0)
+	{
+		agenda.push_back(Action(animations::k_Angry, false));
+	}
+	agenda.push_back(PickUp(object));
+	agenda.push_back(Object({.kind = ObjectOrder::Kind::Throw, .point = target}, Effect::Hurled));
+	return agenda;
+}
+
+std::vector<Step> creature_mind::PutDownHeld()
+{
+	return {Object({.kind = ObjectOrder::Kind::PutDown})};
 }
 
 std::vector<Step> creature_mind::Drink(glm::vec2 shore, glm::vec2 water)
@@ -206,7 +252,7 @@ std::optional<NeedPlan> creature_mind::ChooseNeed(const Wants& wants, const Rand
 		bool possible;
 	};
 	const std::array<Need, 4> needs {{
-	    {.activity = Activity::Eat, .value = wants.hunger, .possible = wants.food.has_value()},
+	    {.activity = Activity::Eat, .value = wants.hunger, .possible = wants.food.has_value() && !wants.holding},
 	    {.activity = Activity::Sleep, .value = wants.tiredness, .possible = true},
 	    {.activity = Activity::Poo, .value = wants.poo, .possible = true},
 	    {.activity = Activity::Drink, .value = wants.water, .possible = wants.waterSpot.has_value()},
@@ -234,6 +280,51 @@ std::optional<NeedPlan> creature_mind::ChooseNeed(const Wants& wants, const Rand
 	case Activity::Sleep:
 	default:
 		return NeedPlan {.activity = Activity::Sleep, .agenda = Sleep(random)};
+	}
+}
+
+std::optional<NeedPlan> creature_mind::ChooseObjectActivity(const Wants& wants, const Random& random)
+{
+	if (wants.holding)
+	{
+		return NeedPlan {.activity = Activity::PutDown, .agenda = PutDownHeld()};
+	}
+	if (!wants.object.has_value())
+	{
+		return std::nullopt;
+	}
+	struct Desire
+	{
+		Activity activity;
+		float value;
+		bool possible;
+	};
+	const std::array<Desire, 3> desires {{
+	    {.activity = Activity::Examine, .value = wants.curiosity, .possible = true},
+	    {.activity = Activity::PlayWithObject, .value = wants.play, .possible = true},
+	    {.activity = Activity::Hurl, .value = wants.anger, .possible = wants.hurlTarget.has_value()},
+	}};
+	const Desire* strongest = nullptr;
+	for (const auto& desire : desires)
+	{
+		if (desire.possible && desire.value >= k_ActOnDesire && (strongest == nullptr || desire.value > strongest->value))
+		{
+			strongest = &desire;
+		}
+	}
+	if (strongest == nullptr)
+	{
+		return std::nullopt;
+	}
+	switch (strongest->activity)
+	{
+	case Activity::PlayWithObject:
+		return NeedPlan {.activity = Activity::PlayWithObject, .agenda = ThrowAbout(*wants.object, random)};
+	case Activity::Hurl:
+		return NeedPlan {.activity = Activity::Hurl, .agenda = Hurl(*wants.object, *wants.hurlTarget, random)};
+	case Activity::Examine:
+	default:
+		return NeedPlan {.activity = Activity::Examine, .agenda = ExamineByPickingUp(*wants.object, random)};
 	}
 }
 
@@ -293,6 +384,11 @@ void creature_mind::ChooseNext(IdleMind& mind, const Senses& senses, const Rando
 		Plan(mind, need->activity, std::move(need->agenda));
 		return;
 	}
+	if (senses.wants.holding)
+	{
+		Plan(mind, Activity::PutDown, PutDownHeld());
+		return;
+	}
 	if (mind.showDesireSeconds <= 0.0f)
 	{
 		std::optional<size_t> emote;
@@ -313,6 +409,11 @@ void creature_mind::ChooseNext(IdleMind& mind, const Senses& senses, const Rando
 			mind.showDesireSeconds = k_ShowDesireSeconds;
 			return;
 		}
+	}
+	if (auto activity = ChooseObjectActivity(senses.wants, random))
+	{
+		Plan(mind, activity->activity, std::move(activity->agenda));
+		return;
 	}
 	const auto lot = random(k_ActivityLots);
 	if (lot == 0)
@@ -379,12 +480,6 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			{
 				commands.eyes = Eyes::Sleepy;
 			}
-			// Eating, the food is taken as the action starts
-			if (step.effect == Effect::Eat)
-			{
-				commands.effect = step.effect;
-				commands.effectObject = step.object;
-			}
 			break;
 		case Step::Kind::Static:
 			commands.startSequence = step.sequence;
@@ -403,6 +498,14 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			{
 				commands.move->kind = Movement::Kind::ToPoint;
 				commands.move->point = senses.position + step.movement.point;
+			}
+			break;
+		case Step::Kind::Object:
+			commands.object = step.order;
+			if (step.order.kind == ObjectOrder::Kind::ThrowNearby)
+			{
+				commands.object->kind = ObjectOrder::Kind::Throw;
+				commands.object->point = senses.position + step.order.point;
 			}
 			break;
 		case Step::Kind::Wait:
@@ -428,7 +531,7 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			{
 				commands.eyes = Eyes::Normal;
 			}
-			if (step.effect != Effect::None && step.effect != Effect::Eat)
+			if (step.effect != Effect::None)
 			{
 				commands.effect = step.effect;
 			}
@@ -461,6 +564,19 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 		}
 		break;
 	}
+	case Step::Kind::Object:
+		if (senses.hands == HandsState::Done)
+		{
+			commands.effect = step.effect;
+			FinishStep(mind);
+		}
+		else if (senses.hands != HandsState::Busy)
+		{
+			// It couldn't, or was stopped: the rest of the agenda is no use without it
+			mind.step = mind.agenda.size();
+			mind.stepStarted = false;
+		}
+		break;
 	case Step::Kind::Move:
 		// Done once it has arrived or given up, or its time is up
 		if (!senses.moving)

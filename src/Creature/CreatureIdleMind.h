@@ -27,9 +27,11 @@
 /// for a while; else hanging around, which is walking somewhere nearby and sitting there; else being idle, which is
 /// waiting a second or two then a tired yawn, twice. At the start of each step it pulls a face for three seconds.
 ///
-/// Before any of that, a creature in need sees to it: hungry with food at hand it eats, tired it sleeps on the spot,
-/// needing a poo it has one, thirsty with water in reach it goes and drinks. The strongest such need is seen to first.
-/// Exhausted, starved or out of life, it faints wherever it is, and comes round a little later.
+/// Before any of that, a creature in need sees to it: hungry with food at hand it picks it up, looks it over and eats
+/// it, tired it sleeps on the spot, needing a poo it has one, thirsty with water in reach it goes and drinks. The
+/// strongest such need is seen to first. Exhausted, starved or out of life, it faints wherever it is, and comes round a
+/// little later. With no need, a curious creature picks up something nearby and looks it over, a playful one throws it
+/// about, and an angry one hurls it at a home or a tree. Holding something it has no more use for, it puts it down.
 ///
 /// Only this choice of the next agenda is the idle policy; a planner that weighs desires against the actions that
 /// satisfy them can choose agendas in its place, and the steps play out the same way.
@@ -72,6 +74,17 @@ constexpr float k_PukeSeconds = 4.0f;
 constexpr float k_FaintSeconds = 10.0f;
 /// It drinks from anywhere this close to the water's edge
 constexpr float k_DrinkReach = 5.0f;
+/// A curious, playful or angry creature this strongly so does something about it with what is nearby. The game weighs
+/// these desires against everything else through its planner; this stands in for that.
+constexpr float k_ActOnDesire = 0.3f;
+/// Looking something over, it puts it down gently most times, out of this many, and tosses it away the rest
+constexpr uint32_t k_PutDownLots = 10;
+constexpr uint32_t k_TossLots = 2;
+/// Throwing something about, it throws it this far away and up to this much further, in a random direction
+constexpr float k_ThrowAroundDistance = 30.0f;
+constexpr uint32_t k_ThrowAroundExtra = 21;
+/// Off to hurl something, it shows its anger first one time in this many
+constexpr uint32_t k_AngryBeforeHurlLots = 6;
 
 /// What the creature is doing
 enum class Activity : uint8_t
@@ -91,8 +104,38 @@ enum class Activity : uint8_t
 	Poo,
 	Puke,
 	Faint,
+	/// Doing things with what is nearby: picking something up to look it over, throwing it about, hurling it at
+	/// something, and putting down what it holds
+	Examine,
+	PlayWithObject,
+	Hurl,
+	PutDown,
 };
 [[nodiscard]] std::string_view Name(Activity activity);
+
+/// Something done with the creature's hands to a thing about it
+struct ObjectOrder
+{
+	enum class Kind : uint8_t
+	{
+		PickUp,
+		PutDown,
+		Discard,
+		Eat,
+		/// Stroking, shaking, smelling or examining what it holds, by the animation
+		Keep,
+		/// Throwing what it holds at a point, or at a point as far from where the creature is as the point is from the
+		/// origin
+		Throw,
+		ThrowNearby,
+		Destroy,
+	};
+	Kind kind {Kind::PickUp};
+	/// What it acts on, by its entity's number
+	std::optional<uint32_t> object;
+	glm::vec2 point {0.0f};
+	size_t animation {0};
+};
 
 /// Going somewhere, or turning to face something
 struct Movement
@@ -123,7 +166,7 @@ struct Movement
 enum class Effect : uint8_t
 {
 	None,
-	/// Eats its object
+	/// Has eaten what it held
 	Eat,
 	Drink,
 	Poo,
@@ -132,6 +175,10 @@ enum class Effect : uint8_t
 	Slept,
 	/// Comes round from a faint
 	CameRound,
+	/// Has looked something over, thrown something about, and hurled something
+	Examined,
+	ThrewAbout,
+	Hurled,
 };
 
 struct Step
@@ -146,6 +193,8 @@ struct Step
 		Static,
 		/// Going somewhere until it arrives or gives up, or for the step's seconds when they are more than 0
 		Move,
+		/// Doing something with a thing until it is done; if it can't, the rest of the agenda is given up
+		Object,
 	};
 	Kind kind {Kind::Wait};
 	float seconds {0.0f};
@@ -165,6 +214,8 @@ struct Step
 	Effect effect {Effect::None};
 	/// The object eaten, by its entity's number
 	std::optional<uint32_t> object;
+	/// What an object step does
+	ObjectOrder order {};
 };
 
 struct IdleMind
@@ -203,6 +254,27 @@ struct Wants
 		glm::vec2 water;
 	};
 	std::optional<WaterSpot> waterSpot;
+	/// How curious, playful and angry it is, 0 for desires it doesn't have yet
+	float curiosity {0.0f};
+	float play {0.0f};
+	float anger {0.0f};
+	/// Whether it holds something
+	bool holding {false};
+	/// The nearest thing it could pick up, by its entity's number, and where it is
+	std::optional<uint32_t> object;
+	glm::vec2 objectPoint {0.0f};
+	/// The nearest home or tree it might hurl something at
+	std::optional<glm::vec2> hurlTarget;
+};
+
+/// How what its hands were told to do is going
+enum class HandsState : uint8_t
+{
+	/// Told nothing, or it was stopped
+	Idle,
+	Busy,
+	Done,
+	Failed,
 };
 
 /// What the mind knows this turn
@@ -222,6 +294,7 @@ struct Senses
 	/// Its needs, and whether it has slept enough to wake
 	Wants wants {};
 	bool rested {false};
+	HandsState hands {HandsState::Idle};
 };
 
 /// How the eyes should look
@@ -254,6 +327,8 @@ struct Commands
 	/// What happens to the body this turn, and the object it eats
 	Effect effect {Effect::None};
 	std::optional<uint32_t> effectObject;
+	/// What to do with a thing
+	std::optional<ObjectOrder> object;
 };
 
 /// random(n) is a whole number from 0 to n - 1
@@ -268,8 +343,17 @@ using Random = std::function<uint32_t(uint32_t)>;
 /// Sleeping on the spot: half the time a tired yawn first, then sleeping with its eyes closed until rested, then a dazed
 /// look about with sleepy eyes
 [[nodiscard]] std::vector<Step> Sleep(const Random& random);
-/// Going up to food and eating it
+/// Picking food up, examining it and eating it
 [[nodiscard]] std::vector<Step> Eat(uint32_t food);
+/// Picking something up, stroking, shaking, smelling or examining it, then mostly putting it down and sometimes tossing it
+/// away
+[[nodiscard]] std::vector<Step> ExamineByPickingUp(uint32_t object, const Random& random);
+/// Picking something up and throwing it about, 30 to 50 units away in a random direction
+[[nodiscard]] std::vector<Step> ThrowAbout(uint32_t object, const Random& random);
+/// A sixth of the time showing its anger, then picking something up and hurling it at a point
+[[nodiscard]] std::vector<Step> Hurl(uint32_t object, glm::vec2 target, const Random& random);
+/// Putting down what it holds
+[[nodiscard]] std::vector<Step> PutDownHeld();
 /// Walking to the water's edge, turning to the water and drinking
 [[nodiscard]] std::vector<Step> Drink(glm::vec2 shore, glm::vec2 water);
 /// A poo on the spot, a third of the time showing it needs one first
@@ -285,6 +369,9 @@ struct NeedPlan
 	std::vector<Step> agenda;
 };
 [[nodiscard]] std::optional<NeedPlan> ChooseNeed(const Wants& wants, const Random& random);
+/// What to do about curiosity, play or anger, if any is strong enough and there is something at hand to do it with, or
+/// with something held and nothing more to do with it, putting it down
+[[nodiscard]] std::optional<NeedPlan> ChooseObjectActivity(const Wants& wants, const Random& random);
 /// Whether the creature is asleep, or out cold, in its current step
 [[nodiscard]] bool IsAsleep(const IdleMind& mind);
 [[nodiscard]] bool IsUnconscious(const IdleMind& mind);

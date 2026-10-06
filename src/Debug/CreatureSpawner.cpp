@@ -41,6 +41,7 @@
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Windowing/WindowingInterface.h"
@@ -68,6 +69,8 @@ constexpr std::array<std::string_view, static_cast<size_t>(PlayerNames::_COUNT)>
 };
 
 const ImVec4 k_PlacingColour {0.85f, 0.30f, 0.25f, 1.0f};
+/// A right click picks out the thing to pick up or knock down nearest it, this close at most
+constexpr float k_PickRadius = 12.0f;
 const ImVec4 k_StartColour {0.25f, 0.60f, 0.30f, 1.0f};
 
 std::string_view SpeciesName(CreatureType species)
@@ -297,6 +300,7 @@ void CreatureSpawner::DrawSelected() noexcept
 		DrawAppearance(*_selected);
 		DrawAudio(*_selected);
 		DrawMovement(*_selected);
+		DrawHands(*_selected);
 		DrawMind(*_selected);
 		DrawBody(*_selected);
 	}
@@ -363,6 +367,13 @@ void CreatureSpawner::DrawMovement(entt::entity entity) noexcept
 		ImGui::RadioButton("Flee from", &order, static_cast<int>(Order::Flee));
 		ImGui::SameLine();
 		ImGui::RadioButton("Face", &order, static_cast<int>(Order::Face));
+		ImGui::RadioButton("Pick up", &order, static_cast<int>(Order::PickUp));
+		ImGui::SameLine();
+		ImGui::RadioButton("Throw at", &order, static_cast<int>(Order::Throw));
+		ImGui::SameLine();
+		ImGui::RadioButton("Knock down", &order, static_cast<int>(Order::Destroy));
+		ImGui::SameLine();
+		ImGui::RadioButton("Point at", &order, static_cast<int>(Order::Point));
 		_order = static_cast<Order>(order);
 		if (!_lastOrder.empty())
 		{
@@ -584,12 +595,12 @@ void CreatureSpawner::DrawMind(entt::entity entity) noexcept
 	ImGui::SameLine();
 	if (ImGui::Button("Stroke"))
 	{
-		minds.Feedback(entity, true);
+		minds.ReceiveFeedback(entity, 0.5f);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Slap"))
 	{
-		minds.Feedback(entity, false);
+		minds.ReceiveFeedback(entity, -0.5f);
 	}
 
 	ImGui::SeparatorText("Desires");
@@ -780,6 +791,43 @@ void CreatureSpawner::Command(glm::vec2 screenCoord) noexcept
 	case Order::Face:
 		_lastOrder = fmt::format("Facing {:.0f}, {:.0f}: {}", point.x, point.y,
 		                         locomotion.TurnToFace(*_selected, point) ? "turning" : "can't");
+		break;
+	case Order::PickUp:
+	case Order::Destroy:
+	{
+		// What is nearest where the land was clicked
+		auto& hands = Locator::creatureObjectActionSystem::value();
+		auto& registry = Locator::entitiesRegistry::value();
+		const bool pickUp = _order == Order::PickUp;
+		std::optional<entt::entity> nearest;
+		float best = k_PickRadius;
+		registry.Each<const Transform>([&](entt::entity entity, const Transform& at) {
+			const auto distance = glm::distance(glm::xz(at.position), point);
+			if (distance < best && entity != *_selected && (pickUp ? hands.CanPickUp(entity) : hands.CanDestroy(entity)))
+			{
+				best = distance;
+				nearest = entity;
+			}
+		});
+		if (!nearest.has_value())
+		{
+			_lastOrder = fmt::format("Nothing to {} there", pickUp ? "pick up" : "knock down");
+			break;
+		}
+		const auto started = pickUp ? hands.PickUp(*_selected, *nearest) : hands.Destroy(*_selected, *nearest);
+		_lastOrder = fmt::format("{} entity {}: {}", pickUp ? "Picking up" : "Knocking down", entt::to_integral(*nearest),
+		                         started ? "started" : "can't");
+		break;
+	}
+	case Order::Throw:
+		_lastOrder =
+		    fmt::format("Throwing at {:.0f}, {:.0f}: {}", point.x, point.y,
+		                Locator::creatureObjectActionSystem::value().Throw(*_selected, hit->position) ? "started" : "can't");
+		break;
+	case Order::Point:
+		_lastOrder =
+		    fmt::format("Pointing at {:.0f}, {:.0f}: {}", point.x, point.y,
+		                Locator::creatureObjectActionSystem::value().PointAt(*_selected, hit->position) ? "started" : "can't");
 		break;
 	}
 }

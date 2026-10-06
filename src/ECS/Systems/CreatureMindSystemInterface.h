@@ -38,8 +38,14 @@ public:
 	virtual bool SitDown(entt::entity creature) = 0;
 	/// Gets up from sitting
 	virtual void StandUp(entt::entity creature) = 0;
-	/// As if the player stroked or slapped the creature: it shows its pleasure or sorrow next
-	virtual void Feedback(entt::entity creature, bool stroke) = 0;
+	/// The player's hand let go of the creature having stroked or slapped it, from -1 (slapped) to 1 (stroked): it
+	/// stops what it was doing if slapped, warms or cools to the player, and shows its pleasure or sorrow next. Feedback
+	/// too slight to count only has it look at the player.
+	virtual void ReceiveFeedback(entt::entity creature, float feedback) = 0;
+	/// Plays an action at once, as stroking and slapping make it, unless the body is less than a share of the way through
+	/// what it plays; a face can be pulled with it for some seconds. Returns whether it played.
+	virtual bool ForceAction(entt::entity creature, size_t animation, bool mirrored, std::optional<size_t> face,
+	                         float faceSeconds, float interruptsAfter) = 0;
 
 	/// Sees to a need now, in place of whatever it was doing: sleeps until rested, eats something (the nearest food when
 	/// none is given), goes and drinks at the nearest water, has a poo, is sick, or faints. Returns whether it could.

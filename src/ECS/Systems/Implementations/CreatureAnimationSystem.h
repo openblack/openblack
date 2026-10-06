@@ -25,6 +25,9 @@ class CreatureAnimationSystem final: public CreatureAnimationSystemInterface
 public:
 	void ProcessTurn() override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
+	[[nodiscard]] std::optional<glm::vec3> BoneInAnimation(entt::entity creature, size_t animation, float timeMs, uint32_t bone,
+	                                                       bool mirrored) override;
+	[[nodiscard]] std::optional<float> AnimationDuration(entt::entity creature, size_t animation) override;
 
 private:
 	/// The eyes blink at random, apart from the game's own random numbers

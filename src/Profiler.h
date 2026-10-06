@@ -35,6 +35,8 @@ public:
 		CreatureHairUpdate,
 		CreatureSkinUpdate,
 		CreatureAudioUpdate,
+		CreatureObjectActionUpdate,
+		CreatureHandUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -77,6 +79,8 @@ public:
 	    "Creature Hair",        //
 	    "Creature Skin",        //
 	    "Creature Audio",       //
+	    "Creature Objects",     //
+	    "Creature Hand",        //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //

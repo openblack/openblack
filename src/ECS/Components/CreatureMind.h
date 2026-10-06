@@ -36,6 +36,17 @@ struct CreatureMindState
 	/// Seconds since the player last stroked or slapped it, and which
 	std::optional<float> feedbackSeconds;
 	bool feedbackWasStroke {false};
+	/// How it feels about the player, which each stroke or slap nudges, and the average of what it has been given
+	float attitudeToPlayer {0.0f};
+	float averageFeedback {0.0f};
+	/// The last feedback the player gave it as the hand let go, from -1 (slapped) to 1 (stroked), and what it was doing
+	/// then, for it to learn from
+	struct Feedback
+	{
+		float value;
+		creature_mind::Activity activity;
+	};
+	std::optional<Feedback> lastFeedback;
 
 	/// How far the creature has grown up, which decides the desires it has and which of its body's needs it feels, and
 	/// the stage they were last set for. Until the game's story moves it on, a creature starts fully grown up.

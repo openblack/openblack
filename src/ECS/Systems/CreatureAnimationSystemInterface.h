@@ -9,7 +9,14 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #include <chrono>
+#include <optional>
+
+#include <entt/entity/fwd.hpp>
+#include <glm/vec3.hpp>
 
 namespace openblack::ecs::systems
 {
@@ -26,6 +33,14 @@ public:
 	/// Once a frame, by the game time, which stops while the game is paused: the bodies are reshaped where they have
 	/// changed enough, posed, and their eyes placed
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
+
+	/// Where a bone of a creature is in one of its animations at a time, played left to right or not, in its mesh's space,
+	/// the animation blended as the body is drawn; nothing when the creature has no such animation or bone, or hasn't been
+	/// posed yet
+	[[nodiscard]] virtual std::optional<glm::vec3> BoneInAnimation(entt::entity creature, size_t animation, float timeMs,
+	                                                               uint32_t bone, bool mirrored) = 0;
+	/// How long one of a creature's animations lasts, in milliseconds, if it has it
+	[[nodiscard]] virtual std::optional<float> AnimationDuration(entt::entity creature, size_t animation) = 0;
 };
 
 } // namespace openblack::ecs::systems

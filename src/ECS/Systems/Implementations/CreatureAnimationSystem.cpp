@@ -13,6 +13,7 @@
 
 #include <cmath>
 
+#include <algorithm>
 #include <chrono>
 
 #include <glm/gtx/transform.hpp>
@@ -399,4 +400,54 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 			    PlaceEyes(*eyes, *rig->eyes, morph.drawn, animation.boneMatrices, transform, creature.size, seconds);
 		    }
 	    });
+}
+
+namespace
+{
+/// A creature's animation blended as its body is drawn, if it has the animation and has been posed
+const Animation* PosedAnimationOf(entt::entity creature, size_t index)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* body = registry.TryGet<const Creature>(creature);
+	const auto* morph = registry.TryGet<const CreatureMorph>(creature);
+	auto* animation = registry.TryGet<CreatureAnimation>(creature);
+	if (body == nullptr || morph == nullptr || animation == nullptr || animation->skeleton.Empty())
+	{
+		return nullptr;
+	}
+	const auto& rigs = Locator::resources::value().GetCreatureRigs();
+	const auto rigId = creature::GetRigId(body->species);
+	if (!rigs.Contains(rigId))
+	{
+		return nullptr;
+	}
+	return AnimationOf(*animation, *rigs.Handle(rigId), morph->drawn, index);
+}
+} // namespace
+
+std::optional<glm::vec3> CreatureAnimationSystem::BoneInAnimation(entt::entity creature, size_t animation, float timeMs,
+                                                                  uint32_t bone, bool mirrored)
+{
+	const auto* played = PosedAnimationOf(creature, animation);
+	const auto* stand = PosedAnimationOf(creature, creature_layers::animations::k_Stand);
+	if (played == nullptr || stand == nullptr)
+	{
+		return std::nullopt;
+	}
+	const auto& body = Locator::entitiesRegistry::value().Get<CreatureAnimation>(creature);
+	if (bone >= body.skeleton.parents.size())
+	{
+		return std::nullopt;
+	}
+	const auto time = static_cast<uint32_t>(std::clamp(timeMs, 0.0f, static_cast<float>(std::max(played->duration, 1u) - 1)));
+	const auto poses = skeletal_animation::SampleCycle(
+	    *played, *stand, time, body.skeleton, mirrored ? std::span<const uint32_t>(body.mirror) : std::span<const uint32_t> {});
+	const auto matrices = skeletal_animation::ComposeBoneMatrices(poses, body.skeleton.parents);
+	return bone < matrices.size() ? std::optional(glm::vec3(matrices[bone][3])) : std::nullopt;
+}
+
+std::optional<float> CreatureAnimationSystem::AnimationDuration(entt::entity creature, size_t animation)
+{
+	const auto* played = PosedAnimationOf(creature, animation);
+	return played != nullptr ? std::optional(static_cast<float>(played->duration)) : std::nullopt;
 }

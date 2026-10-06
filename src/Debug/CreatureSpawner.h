@@ -25,7 +25,8 @@ namespace openblack::debug::gui
 /// Spawns creatures for trying them out: pick the species, owner, alignment, physique and size, then right click on
 /// the land to place one there, until placing is stopped. Lists the creatures on the land, to remove them again. The
 /// selected creature can be commanded: while commanding, a right click on the land sends it walking or running there,
-/// running away from there or turning to face it, and its route is drawn over the land.
+/// running away from there or turning to face it, picking up or knocking down what is there, throwing what it holds
+/// there or pointing there, and its route is drawn over the land.
 class CreatureSpawner final: public Window
 {
 public:
@@ -60,6 +61,9 @@ private:
 	void DrawMovement(entt::entity entity) noexcept;
 	/// The picked creature's route, over the land
 	void DrawRoute(entt::entity entity) noexcept;
+	/// The picked creature's hands: what it holds and does with things, things to put by it, buttons to make it act on
+	/// what it holds, and how the player's hand last treated it
+	void DrawHands(entt::entity entity) noexcept;
 	void Command(glm::vec2 screenCoord) noexcept;
 	void DrawCreatures() noexcept;
 	void Spawn(glm::vec2 screenCoord) noexcept;
@@ -87,6 +91,10 @@ private:
 		Run,
 		Flee,
 		Face,
+		PickUp,
+		Throw,
+		Destroy,
+		Point,
 	};
 	bool _commanding {false};
 	Order _order {Order::Walk};
@@ -98,6 +106,11 @@ private:
 	std::string _lastNeed;
 	std::mt19937 _random {std::random_device {}()};
 	std::optional<entt::entity> _selected;
+	/// The thing to put by the creature, what it does to what it holds, and what became of the last thing it was told to
+	/// do with its hands
+	int _objectType {0};
+	int _keepAction {3};
+	std::string _lastHands;
 	/// The action and gesture picked to play on the selected creature
 	size_t _action {0};
 	size_t _gesture {0};

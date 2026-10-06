@@ -303,22 +303,59 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 	}
 
 	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
-	constexpr std::streamoff k_Field = sizeof(uint32_t);
 	// Older morph data ends with a name
 	if (_header.binaryVersion <= 5)
 	{
 		skip(0x20);
 	}
-	// The creature's bones and sizes that come before the eyes, as many as the version has
-	std::streamoff fields = 2 + 1 + 1 + 1 + 1 + 4;
-	fields += version > 2 ? 2 : 0;
-	fields += version > 11 ? 1 : 0;
-	fields += version > 4 ? 2 : 0;
-	fields += version > 8 ? 2 : 0;
-	fields += version > 9 ? 1 : 0;
-	fields += version > 15 ? 1 : 0;
-	fields += version > 7 ? 1 : 0;
-	skip(fields * k_Field);
+	// The bones it acts with and the moments of its object animations, as many as the version has
+	CreatureActionPoints points {};
+	const auto read = [&stream](int32_t& value) { stream.read(reinterpret_cast<char*>(&value), sizeof(value)); };
+	read(points.rightHand);
+	read(points.rightFoot);
+	if (version > 2)
+	{
+		read(points.rightArmpit);
+		read(points.belly);
+	}
+	read(points.head);
+	if (version > 11)
+	{
+		read(points.unknownBone);
+	}
+	read(points.groin);
+	if (version > 4)
+	{
+		read(points.unknownBones[0]);
+		read(points.unknownBones[1]);
+	}
+	read(points.pickUpTime);
+	if (version > 8)
+	{
+		read(points.catchTimes[0]);
+		read(points.catchTimes[1]);
+	}
+	if (version > 9)
+	{
+		read(points.unknownTime);
+	}
+	read(points.destroyTime);
+	read(points.discardTime);
+	read(points.eatTime);
+	read(points.throwTime);
+	read(points.putDownTime);
+	if (version > 15)
+	{
+		read(points.unknownTimes[0]);
+	}
+	if (version > 7)
+	{
+		read(points.unknownTimes[1]);
+	}
+	if (stream.good())
+	{
+		_creatureActionPoints = points;
+	}
 	// Then up to two points on the body, each after whether it is there
 	const auto skipOptionalPoint = [&stream, &skip]() {
 		uint32_t present = 0;

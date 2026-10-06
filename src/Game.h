@@ -19,6 +19,7 @@
 #include <spdlog/common.h>
 
 #include "Common/Zoomer.h"
+#include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "EngineConfig.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
@@ -192,6 +193,8 @@ private:
 	bool _handWasRotating {false};
 	/// Where the cursor points at in the world, on the landscape or the sea
 	std::optional<glm::vec3> _cursorWorldPosition;
+	/// Where the hand is and how it is posed while it is held to a creature
+	std::optional<ecs::systems::CreatureHandSystemInterface::HandPose> _handOnCreature;
 	/// Grabbing the sea plays G_HandInWater_01 to _10 in turn
 	uint32_t _handInWaterSample {0};
 

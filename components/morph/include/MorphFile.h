@@ -209,6 +209,38 @@ struct CreatureEyes
 	std::array<std::array<float, 3>, 3> lidAngles;
 };
 
+/// The bones a creature acts with and the moments of its object animations, from the creature block of a .cbn file.
+/// Bones are counted in the base mesh; the left side's are the mirrors of these. Times are in milliseconds from the
+/// start of the animation they belong to. Fields a file's version lacks are -1.
+struct CreatureActionPoints
+{
+	int32_t rightHand {-1};
+	int32_t rightFoot {-1};
+	int32_t rightArmpit {-1};
+	int32_t belly {-1};
+	int32_t head {-1};
+	/// A bone whose use isn't known
+	int32_t unknownBone {-1};
+	/// The bottom, between the back legs
+	int32_t groin {-1};
+	/// Two more bones whose use isn't known
+	std::array<int32_t, 2> unknownBones {-1, -1};
+	/// When the reaching hand takes hold of what it picks up
+	int32_t pickUpTime {-1};
+	/// Two moments thought to belong to catching, and one whose use isn't known
+	std::array<int32_t, 2> catchTimes {-1, -1};
+	int32_t unknownTime {-1};
+	/// When a blow of a destroying animation lands
+	int32_t destroyTime {-1};
+	/// When what is held leaves the hand: tossed away, eaten, thrown and put down
+	int32_t discardTime {-1};
+	int32_t eatTime {-1};
+	int32_t throwTime {-1};
+	int32_t putDownTime {-1};
+	/// Two more moments whose use isn't known
+	std::array<int32_t, 2> unknownTimes {-1, -1};
+};
+
 /// A place on a creature's body a tattoo can be painted, from the creature block of a .cbn file
 struct TattooSite
 {
@@ -255,6 +287,8 @@ protected:
 	std::optional<CreatureEyes> _creatureEyes;
 	/// Where the creature's tattoos go, in creature files from version 15 on
 	std::optional<TattooSites> _tattooSites;
+	/// The bones it acts with and the moments of its object animations, in creature files from version 14 on
+	std::optional<CreatureActionPoints> _creatureActionPoints;
 
 	/// Read file from the input source
 	MorphResult ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept;
@@ -310,6 +344,10 @@ public:
 	[[nodiscard]] const std::string& GetSoundBankName() const noexcept { return _soundBankName; }
 	[[nodiscard]] const std::optional<CreatureEyes>& GetCreatureEyes() const noexcept { return _creatureEyes; }
 	[[nodiscard]] const std::optional<TattooSites>& GetTattooSites() const noexcept { return _tattooSites; }
+	[[nodiscard]] const std::optional<CreatureActionPoints>& GetCreatureActionPoints() const noexcept
+	{
+		return _creatureActionPoints;
+	}
 };
 
 } // namespace openblack::morph

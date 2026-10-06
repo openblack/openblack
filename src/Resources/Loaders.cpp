@@ -520,6 +520,32 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 		}
 	}
 
+	// The bones it acts with and when its object animations take hold or let go
+	if (const auto& points = file.GetCreatureActionPoints(); points.has_value())
+	{
+		const std::array bones {points->rightHand, points->rightFoot, points->rightArmpit,
+		                        points->belly,     points->head,      points->groin};
+		if (std::ranges::all_of(bones, [](int32_t bone) { return bone >= 0; }))
+		{
+			const auto bone = [](int32_t value) { return static_cast<uint32_t>(value); };
+			const auto ms = [](int32_t value) { return static_cast<float>(std::max(value, 0)); };
+			rig->actionPoints = CreatureRig::ActionPoints {
+			    .rightHand = bone(points->rightHand),
+			    .rightFoot = bone(points->rightFoot),
+			    .rightArmpit = bone(points->rightArmpit),
+			    .belly = bone(points->belly),
+			    .head = bone(points->head),
+			    .groin = bone(points->groin),
+			    .pickUpMs = ms(points->pickUpTime),
+			    .destroyMs = ms(points->destroyTime),
+			    .discardMs = ms(points->discardTime),
+			    .eatMs = ms(points->eatTime),
+			    .throwMs = ms(points->throwTime),
+			    .putDownMs = ms(points->putDownTime),
+			};
+		}
+	}
+
 	// The eyes and the hair sit on triangles of the meshes
 	const auto& eyes = file.GetCreatureEyes();
 	if (eyes.has_value() || !file.GetHairGroups().empty())
