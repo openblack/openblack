@@ -244,6 +244,12 @@ void Camera::HandleActions(std::chrono::microseconds dt)
 	_model->HandleActions(dt);
 }
 
+std::unique_ptr<CameraModel> Camera::SetModel(std::unique_ptr<CameraModel> model)
+{
+	std::swap(_model, model);
+	return model;
+}
+
 const glm::mat4& Camera::GetProjectionMatrix() const
 {
 	return GetProjectionMatrix(_cameraProjection);

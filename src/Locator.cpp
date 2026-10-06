@@ -45,6 +45,7 @@
 #include "ECS/Systems/Implementations/CreaturePhysiologySystem.h"
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
+#include "ECS/Systems/Implementations/EditorSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/FootprintSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
@@ -109,6 +110,7 @@ using openblack::ecs::systems::CreatureObjectActionSystem;
 using openblack::ecs::systems::CreaturePhysiologySystem;
 using openblack::ecs::systems::CreatureSkinSystem;
 using openblack::ecs::systems::DynamicsSystem;
+using openblack::ecs::systems::EditorSystem;
 using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::HandSystem;
@@ -214,6 +216,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::creatureObjectActionSystem::emplace<CreatureObjectActionSystem>();
 	Locator::creatureHandSystem::emplace<CreatureHandSystem>();
 	Locator::footprintSystem::emplace<FootprintSystem>();
+	Locator::editorSystem::emplace<EditorSystem>();
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::leashSystem::emplace<LeashSystem>();
 	Locator::creatureFightSystem::emplace<CreatureFightSystem>();
@@ -269,6 +272,7 @@ void openblack::ShutDownServices()
 
 	Locator::rendereringSystem::reset();
 	Locator::dynamicsSystem::reset();
+	Locator::editorSystem::reset();
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
