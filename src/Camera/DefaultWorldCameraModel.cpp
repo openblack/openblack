@@ -44,7 +44,15 @@ constexpr std::array<T, S> MakeFlyingScoreAngles()
 }
 
 // TODO(#708): Add to global configurations
-constexpr auto k_WheelZoomFactor = 20.0f;
+// Vanilla reads DirectInput's wheel, 120 per notch, and zooms by half of it. Zoom keys without a wheel turn count as one
+// notch every frame.
+constexpr auto k_WheelZoomPerNotch = 60.0f;
+// Zoom and keyboard movement steps are scaled by three times the camera's height above its focus, within these bounds.
+// Below the focus the zoom scale stops at k_ZoomScaleMaxBelowFocus.
+constexpr auto k_StepScaleHeightFactor = 3.0f;
+constexpr auto k_StepScaleMin = 60.0f;
+constexpr auto k_ZoomScaleMax = 2000.0f;
+constexpr auto k_ZoomScaleMaxBelowFocus = 4.0f * k_StepScaleMin;
 constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 // Vanilla black and white uses a pretty bad PI/2 approximation
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
@@ -526,6 +534,14 @@ void DefaultWorldCameraModel::UpdateRaycastHitPoints(const Camera& camera)
 	}
 }
 
+float DefaultWorldCameraModel::GetZoomScale() const
+{
+	// Zooming speeds up with height, so a wheel notch covers about the same share of the view at any altitude
+	const auto heightAboveFocus = _targetOrigin.y - _targetFocus.y;
+	const auto maxScale = heightAboveFocus < 0.0f ? k_ZoomScaleMaxBelowFocus : k_ZoomScaleMax;
+	return glm::clamp(k_StepScaleHeightFactor * glm::abs(heightAboveFocus), k_StepScaleMin, maxScale);
+}
+
 void DefaultWorldCameraModel::UpdateFocusDistance()
 {
 	_focusDistance =
@@ -555,8 +571,8 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	ComputeDistanceFromBoundY();
 
 	// Get step size
-	const auto scalingFactor = 60.0f;
-	const auto zoomDelta = _rotateAroundDelta.z * 0.0015f * scalingFactor;
+	const auto scalingFactor = k_StepScaleMin;
+	const auto zoomDelta = _rotateAroundDelta.z * 0.0015f * GetZoomScale();
 
 	if (_mode == Mode::Polar || _mode == Mode::ArcBall)
 	{
@@ -676,11 +692,15 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		}
 	}
 
-	if (actionSystem.GetAny(input::BindableActionMap::ZOOM_IN, input::BindableActionMap::ZOOM_OUT))
+	// A wheel step is a fixed distance, whatever the frame time
+	if (const auto wheelNotches = actionSystem.GetMouseWheelDelta(); wheelNotches != 0.0f)
 	{
-		const float distance =
-		    (actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? -k_WheelZoomFactor : k_WheelZoomFactor) * dp;
-		_rotateAroundDelta.z += distance;
+		_rotateAroundDelta.z -= wheelNotches * k_WheelZoomPerNotch;
+	}
+	else if (actionSystem.GetAny(input::BindableActionMap::ZOOM_IN, input::BindableActionMap::ZOOM_OUT))
+	{
+		_rotateAroundDelta.z +=
+		    actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? -k_WheelZoomPerNotch : k_WheelZoomPerNotch;
 	}
 
 	if (actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK))

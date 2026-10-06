@@ -23,14 +23,23 @@
 #include <glm/vec3.hpp>
 #include <spdlog/spdlog.h>
 
+#include "3D/DayNightClock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/SkyInterface.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Audio/GameMusic.h"
 #include "Camera/Camera.h"
+#include "Creature/LeashRules.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/LeashSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
+#include "Game.h"
 #include "Locator.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
@@ -41,6 +50,7 @@ using namespace openblack::ecs::archetypes;
 
 using openblack::Locator;
 using openblack::MobileStaticInfo;
+using openblack::ecs::components::CreatureMindState;
 using openblack::ecs::components::Transform;
 using openblack::ecs::systems::HandSystemInterface;
 using openblack::lhvm::DataType;
@@ -459,9 +469,19 @@ void EndCameraControl() // 031 END_CAMERA_CONTROL
 
 void SetWidescreen() // 032 SET_WIDESCREEN
 {
-	// const auto enabled = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enabled = static_cast<bool>(Pop().intVal);
+	// Only the task that brought the bars in may change them, or any while none has
+	auto& director = Locator::cinematicDirectorSystem::value();
+	const auto owner = director.GetWideScreenOwner();
+	const auto task = Locator::vm::value().GetCurrentTaskNumber();
+	if (enabled && owner == task)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Script asking for widescreen it has control of");
+	}
+	if (owner == 0 || owner == task)
+	{
+		director.SetWideScreen(enabled, task);
+	}
 }
 
 void MoveGameThing() // 033 MOVE_GAME_THING
@@ -559,15 +579,24 @@ void PlaySoundEffect() // 043 PLAY_SOUND_EFFECT
 
 void StartMusic() // 044 START_MUSIC
 {
-	// const auto music = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto music = Pop().intVal;
+	if (music < 0 || music >= static_cast<int32_t>(audio::MusicType::_COUNT))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "START_MUSIC: no music type {}", music);
+		return;
+	}
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->StartScriptMusic(static_cast<audio::MusicType>(music));
+	}
 }
 
 void StopMusic() // 045 STOP_MUSIC
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->StartScriptMusic(audio::MusicType::None);
+	}
 }
 
 void AttachMusic() // 046 ATTACH_MUSIC
@@ -1140,16 +1169,13 @@ void RemoveReference() // 111 REMOVE_REFERENCE
 
 void SetGameTime() // 112 SET_GAME_TIME
 {
-	// const auto time = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto time = Popf();
+	Locator::skySystem::value().SetTime(time);
 }
 
 void GetGameTime() // 113 GET_GAME_TIME
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushf(0.0f);
+	Pushf(Locator::skySystem::value().GetClock().GetScriptTime());
 }
 
 void GetRealTime() // 114 GET_REAL_TIME
@@ -1295,9 +1321,7 @@ void SetAffectedByWind() // 131 SET_AFFECTED_BY_WIND
 
 void WidescreenTransistionFinished() // 132 WIDESCREEN_TRANSISTION_FINISHED
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	Pushb(Locator::cinematicDirectorSystem::value().IsWideScreenTransitionFinished());
 }
 
 void GetResource() // 133 GET_RESOURCE
@@ -1758,24 +1782,43 @@ void SetMusicPlayPosition() // 184 SET_MUSIC_PLAY_POSITION
 
 void AttachObjectLeashToObject() // 185 ATTACH_OBJECT_LEASH_TO_OBJECT
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.TieTo(creature, object);
 }
 
 void AttachObjectLeashToHand() // 186 ATTACH_OBJECT_LEASH_TO_HAND
 {
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	if (leashes.TiedTo(creature).has_value())
+	{
+		leashes.UntieToHand(creature);
+	}
+	else if (!leashes.IsLeashed(creature))
+	{
+		leashes.Toggle(creature);
+	}
 }
 
 void DetachObjectLeash() // 187 DETACH_OBJECT_LEASH
 {
-	// const auto creature = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.TakeOff(creature);
 }
 
 void SetCreatureOnlyDesire() // 188 SET_CREATURE_ONLY_DESIRE
@@ -1928,9 +1971,41 @@ void PlayGesture() // 204 PLAY_GESTURE
 
 void DevFunction() // 205 DEV_FUNCTION
 {
-	// const auto func = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto func = Pop().intVal;
+	// The functions the tutorials use on the local player's creature: starting it growing up again kept at home, and
+	// granting it the learning leash, then the aggression and compassion leashes
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	const auto creature = leashes.PlayersCreature(PlayerNames::PLAYER_ONE);
+	if (!creature.has_value())
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "DEV_FUNCTION({}): the player has no creature they can lead", func);
+		return;
+	}
+	switch (func)
+	{
+	case 1:
+		if (auto* mind = Locator::entitiesRegistry::value().TryGet<CreatureMindState>(*creature))
+		{
+			mind->developmentPhase = 0;
+		}
+		leashes.ConfineToHome(*creature, creature_leash::k_HomeConfinement);
+		break;
+	case 2:
+		leashes.SetKnown(*creature, LeashType::Rope, true);
+		break;
+	case 3:
+		leashes.SetKnown(*creature, LeashType::Good, true);
+		leashes.SetKnown(*creature, LeashType::Evil, true);
+		break;
+	default:
+		// TODO(Daniels118): implement the other functions
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}({}) not implemented.", __func__, func);
+		break;
+	}
 }
 
 void HasMouseWheel() // 206 HAS_MOUSE_WHEEL
@@ -2068,10 +2143,8 @@ void GameSubType() // 221 GAME_SUB_TYPE
 
 void IsLeashed() // 222 IS_LEASHED
 {
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	Pushb(Locator::leashSystem::has_value() && Locator::leashSystem::value().IsLeashed(object));
 }
 
 void SetCreatureHome() // 223 SET_CREATURE_HOME
@@ -2239,26 +2312,23 @@ void CreateRewardInTown() // 240 CREATE_REWARD_IN_TOWN
 
 void SetFade() // 241 SET_FADE
 {
-	// const auto time = Popf();
-	// const auto blue = Popf();
-	// const auto green = Popf();
-	// const auto red = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// The game takes each as a whole number, the colour's as bytes and the seconds as a small signed one
+	const auto time = static_cast<int8_t>(static_cast<int32_t>(Popf()));
+	const auto blue = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	const auto green = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	const auto red = static_cast<uint8_t>(static_cast<int32_t>(Popf()));
+	Locator::cinematicDirectorSystem::value().FadeTo(red, green, blue, time);
 }
 
 void SetFadeIn() // 242 SET_FADE_IN
 {
-	// const auto duration = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto duration = static_cast<int8_t>(static_cast<int32_t>(Popf()));
+	Locator::cinematicDirectorSystem::value().FadeBackToNormal(duration);
 }
 
 void FadeFinished() // 243 FADE_FINISHED
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	Pushb(Locator::cinematicDirectorSystem::value().IsFadeFinished());
 }
 
 void SetPlayerMagic() // 244 SET_PLAYER_MAGIC
@@ -2307,10 +2377,14 @@ void GetHelp() // 248 GET_HELP
 
 void SetLeashWorks() // 249 SET_LEASH_WORKS
 {
-	// const auto creature = Pop().uintVal;
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = Pop().intVal != 0;
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.SetWorks(creature, enable);
 }
 
 void LoadMyCreature() // 250 LOAD_MY_CREATURE
@@ -2488,11 +2562,9 @@ void GetArsePosition() // 268 GET_ARSE_POSITION
 
 void IsLeashedToObject() // 269 IS_LEASHED_TO_OBJECT
 {
-	// const auto target = Pop().uintVal;
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto target = static_cast<entt::entity>(Pop().uintVal);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	Pushb(Locator::leashSystem::has_value() && Locator::leashSystem::value().TiedTo(object) == target);
 }
 
 void GetInteractionMagnitude() // 270 GET_INTERACTION_MAGNITUDE
@@ -2540,10 +2612,10 @@ void GetActionCount() // 274 GET_ACTION_COUNT
 
 void GetObjectLeashType() // 275 GET_OBJECT_LEASH_TYPE
 {
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushi(0);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	// The scripts count no leash as 0
+	const auto type = Locator::leashSystem::has_value() ? Locator::leashSystem::value().TypeOf(object) : LeashType::None;
+	Pushi(type == LeashType::None ? 0 : static_cast<int32_t>(type));
 }
 
 void SetFocusFollow() // 276 SET_FOCUS_FOLLOW
@@ -2647,17 +2719,15 @@ void MoveCameraPosFocLens() // 287 MOVE_CAMERA_POS_FOC_LENS
 
 void GameTimeOnOff() // 288 GAME_TIME_ON_OFF
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	Locator::skySystem::value().GetClock().SetRunning(enable);
 }
 
 void MoveGameTime() // 289 MOVE_GAME_TIME
 {
-	// const auto duration = Popf();
-	// const auto hourOfTheDay = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto duration = Popf();
+	const auto hourOfTheDay = Popf();
+	Locator::skySystem::value().GetClock().MoveScriptTime(hourOfTheDay, duration);
 }
 
 void SetHighGraphicsDetail() // 290 SET_HIGH_GRAPHICS_DETAIL
@@ -2736,10 +2806,10 @@ void SetIndestructable() // 298 SET_INDESTRUCTABLE
 
 void SetGraphicsClipping() // 299 SET_GRAPHICS_CLIPPING
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// Only the first argument counts: whether the camera clips close
+	Pop();
+	const auto close = Pop().uintVal != 0;
+	Locator::cinematicDirectorSystem::value().SetCloseClipping(close);
 }
 
 void SpiritAppear() // 300 SPIRIT_APPEAR
@@ -2780,9 +2850,11 @@ void ImmersionExists() // 304 IMMERSION_EXISTS
 
 void SetDrawLeash() // 305 SET_DRAW_LEASH
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::leashSystem::has_value())
+	{
+		Locator::leashSystem::value().SetDrawn(enable);
+	}
 }
 
 void SetDrawHighlight() // 306 SET_DRAW_HIGHLIGHT
@@ -3226,9 +3298,13 @@ void CreateRandomVillagerOfTribe() // 353 CREATE_RANDOM_VILLAGER_OF_TRIBE
 
 void ToggleLeash() // 354 TOGGLE_LEASH
 {
-	// const auto player = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto player = static_cast<PlayerNames>(Pop().intVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	// As the player's leash key does, refused and logged when they have no creature to lead
+	Locator::leashSystem::value().PressKey(player, creature_leash::LeashKey::Leash);
 }
 
 void GameSetMana() // 355 GAME_SET_MANA
@@ -3629,16 +3705,20 @@ void GetPlayerWindResistance() // 400 GET_PLAYER_WIND_RESISTANCE
 
 void PauseUnpauseClimateSystem() // 401 PAUSE_UNPAUSE_CLIMATE_SYSTEM
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().SetClimateSystemEnabled(enable);
+	}
 }
 
 void PauseUnpauseStormCreationInClimateSystem() // 402 PAUSE_UNPAUSE_STORM_CREATION_IN_CLIMATE_SYSTEM
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().SetStormCreationEnabled(enable);
+	}
 }
 
 void GetManaForSpell() // 403 GET_MANA_FOR_SPELL
@@ -3673,17 +3753,16 @@ void RestartObject() // 406 RESTART_OBJECT
 
 void SetGameTimeProperties() // 407 SET_GAME_TIME_PROPERTIES
 {
-	// const auto unk2 = Pop().intVal;
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto percentageChange = Popf();
+	const auto percentageNight = Popf();
+	const auto duration = Popf();
+	Locator::skySystem::value().GetClock().SetCycle(duration, percentageNight, percentageChange);
 }
 
 void ResetGameTimeProperties() // 408 RESET_GAME_TIME_PROPERTIES
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	Locator::skySystem::value().GetClock().SetCycle(DayNightClock::k_DefaultDuration, DayNightClock::k_DefaultNight,
+	                                                DayNightClock::k_DefaultChange);
 }
 
 void SoundExists() // 409 SOUND_EXISTS
@@ -3973,9 +4052,11 @@ void GameAddForBuilding() // 444 GAME_ADD_FOR_BUILDING
 
 void EnableDisableAlignmentMusic() // 445 ENABLE_DISABLE_ALIGNMENT_MUSIC
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (auto* gameMusic = Game::Instance()->GetGameMusic())
+	{
+		gameMusic->SetAlignmentMusicEnabled(enable);
+	}
 }
 
 void GetDeadLiving() // 446 GET_DEAD_LIVING
