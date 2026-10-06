@@ -37,6 +37,7 @@
 #include "ECS/Systems/Implementations/CreatureAnimationSystem.h"
 #include "ECS/Systems/Implementations/CreatureAudioSystem.h"
 #include "ECS/Systems/Implementations/CreatureHairSystem.h"
+#include "ECS/Systems/Implementations/CreatureHandSystem.h"
 #include "ECS/Systems/Implementations/CreatureLocomotionSystem.h"
 #include "ECS/Systems/Implementations/CreatureMindSystem.h"
 #include "ECS/Systems/Implementations/CreatureObjectActionSystem.h"
@@ -47,6 +48,7 @@
 #include "ECS/Systems/Implementations/FootprintSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
+#include "ECS/Systems/Implementations/LeashSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/MagicSystem.h"
 #include "ECS/Systems/Implementations/MistSystem.h"
@@ -98,6 +100,7 @@ using openblack::ecs::systems::CloudSystem;
 using openblack::ecs::systems::CreatureAnimationSystem;
 using openblack::ecs::systems::CreatureAudioSystem;
 using openblack::ecs::systems::CreatureHairSystem;
+using openblack::ecs::systems::CreatureHandSystem;
 using openblack::ecs::systems::CreatureLocomotionSystem;
 using openblack::ecs::systems::CreatureMindSystem;
 using openblack::ecs::systems::CreatureObjectActionSystem;
@@ -108,6 +111,7 @@ using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
+using openblack::ecs::systems::LeashSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::MagicSystem;
 using openblack::ecs::systems::MistSystem;
@@ -206,8 +210,10 @@ bool openblack::InitializeGame() noexcept
 	Locator::creatureHairSystem::emplace<CreatureHairSystem>();
 	Locator::creatureAudioSystem::emplace<CreatureAudioSystem>();
 	Locator::creatureObjectActionSystem::emplace<CreatureObjectActionSystem>();
+	Locator::creatureHandSystem::emplace<CreatureHandSystem>();
 	Locator::footprintSystem::emplace<FootprintSystem>();
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
+	Locator::leashSystem::emplace<LeashSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
@@ -273,6 +279,7 @@ void openblack::ShutDownServices()
 	Locator::rainSystem::reset();
 	Locator::snowfallSystem::reset();
 	Locator::waterRingSystem::reset();
+	Locator::leashSystem::reset();
 	Locator::creatureMindSystem::reset();
 	Locator::creaturePhysiologySystem::reset();
 	Locator::creatureSkinSystem::reset();
@@ -280,6 +287,7 @@ void openblack::ShutDownServices()
 	Locator::footprintSystem::reset();
 	Locator::creatureAudioSystem::reset();
 	Locator::creatureObjectActionSystem::reset();
+	Locator::creatureHandSystem::reset();
 	Locator::creatureAnimationSystem::reset();
 	Locator::snowSystem::reset();
 	Locator::fieldSystem::reset();
