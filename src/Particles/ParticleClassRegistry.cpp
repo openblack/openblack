@@ -84,6 +84,10 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterCreators(registry);
 	RegisterDrawnCreators(registry, resources);
 	RegisterConditions(registry);
+	RegisterCreateRules(registry);
+	RegisterUpdateRules(registry);
+	RegisterCurveRules(registry);
+	RegisterSoundRules(registry);
 	return registry;
 }
 
