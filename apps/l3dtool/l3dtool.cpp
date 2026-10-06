@@ -103,9 +103,9 @@ int PrintHeader(openblack::l3d::L3DFile& l3d)
 		{
 			result += "Unknown10|";
 		}
-		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::Unknown11)) != 0)
+		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasChimney)) != 0)
 		{
-			result += "Unknown11|";
+			result += "HasChimney|";
 		}
 		if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(L3DMeshFlags::HasDoorPosition)) != 0)
 		{
@@ -454,8 +454,27 @@ int PrintLookUpTables(openblack::l3d::L3DFile& l3d)
 
 int PrintBlendValues(openblack::l3d::L3DFile& l3d)
 {
-	const auto& blendValues = l3d.GetLookUpTableData();
-	return PrintRawBytes(blendValues.data(), blendValues.size() * sizeof(blendValues[0]));
+	// Each primitive's blends: the vertex that moves, the vertex it moves towards and how far, both counted in the
+	// primitive
+	const auto& blends = l3d.GetBlends();
+	size_t next = 0;
+	for (size_t p = 0; p < l3d.GetPrimitiveHeaders().size(); ++p)
+	{
+		const auto& header = l3d.GetPrimitiveHeaders()[p];
+		if (header.numVertexBlends == 0 || header.vertexBlendsOffset == std::numeric_limits<uint32_t>::max())
+		{
+			continue;
+		}
+		std::printf("primitive %zu: %u blends\n", p, header.numVertexBlends);
+		std::printf("| vertex | towards | weight   |\n");
+		std::printf("|--------|---------|----------|\n");
+		for (uint32_t i = 0; i < header.numVertexBlends && next < blends.size(); ++i, ++next)
+		{
+			const auto& blend = blends[next];
+			std::printf("| %6u | %7u | %8.6f |\n", blend.indices[0], blend.indices[1], static_cast<double>(blend.weight));
+		}
+	}
+	return EXIT_SUCCESS;
 }
 
 int PrintFootprintValues(openblack::l3d::L3DFile& l3d)

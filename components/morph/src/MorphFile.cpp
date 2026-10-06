@@ -37,8 +37,8 @@
  * ------------------------ start of animation block --------------------------
  *
  * - 44 bytes header containing:
- *         1 unknown int, TODO: possibly duration or offset
- *         1 unknown int, TODO: seem to be 1 when type C and 0 when not
+ *         duration in milliseconds
+ *         1 when the animation is a cycle (type C), 0 for a pose range (type L)
  *         5 unknown floats, TODO: likely same role as as in ANMHeader
  *         frame count as a 32-bit int
  *         mesh bone count as a 32-bit int
@@ -56,18 +56,17 @@
  *
  * - 4 bytes 1 unknown int used if the binary version is greater than 4
  * - 4 bytes containing the number of hair groups
- * - 100 bytes header * number of groups, containing:
- *         1 unknown int, TODO:
+ * - for each group, a 100 byte header containing:
+ *         segments version
  *         hair count
- *         1 unknown int, TODO: a count of some sort
- *         1 unknown int, TODO:
- *         3 unknown struct of 28 bytes each, TODO
- * - 76 byte hair structure * hair count per hair group, containing:
- *         1 unknown int, TODO:
- *         36 struct containing intersection data
- *         3 floats representing 3 x values
- *         3 floats representing 3 y values
- *         3 floats representing 3 z values
+ *         segment count (points per strand)
+ *         mapping index (1 when drawn with the hair texture)
+ *         neutral, evil and good looks of 28 bytes each: red, green, blue
+ *         as ints 0 to 255, then length, damping, stiffness and thickness
+ *   followed by its 76 byte hairs, each containing:
+ *         flags (bit 0: turned by its angles)
+ *         36 byte point on a triangle of the base mesh
+ *         neutral, evil and good x, y and z angles
  * - 4 byte offset to the next block (extra)
  *
  * ------------------------ start of extra animation block --------------------
@@ -254,12 +253,15 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	uint32_t i = 0;
 	for (auto& animSet : _animationSpecs.animationSets)
 	{
-		for ([[maybe_unused]] auto& _ : animSet.animations)
+		for (const auto& animDesc : animSet.animations)
 		{
 			if (offsets[i] > 0)
 			{
 				stream.seekg(offsets[i]);
 				auto& animation = animations.emplace_back();
+				// The spec stores the node type (C/L) as the first character, followed by the name.
+				animation.name = static_cast<char>(animDesc.type) + animDesc.name;
+				animation.setName = animSet.name;
 				stream.read(reinterpret_cast<char*>(&animation.header), sizeof(animation.header));
 
 				animation.rotatedJointIndices.resize(animation.header.rotatedJointCount);
@@ -287,6 +289,167 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	}
 
 	return animations;
+}
+
+void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
+{
+	// The creature block's version is the header's first field. Each field below came in at a version, and the eyes
+	// at version 14.
+	const auto version = _header.unknown0x0;
+	constexpr uint32_t k_EyesVersion = 14;
+
+	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
+	// Older morph data ends with a name
+	if (_header.binaryVersion <= 5)
+	{
+		skip(0x20);
+	}
+	// The bones it acts with and the moments of its object animations, as many as the version has
+	CreatureActionPoints points {};
+	const auto read = [&stream](int32_t& value) { stream.read(reinterpret_cast<char*>(&value), sizeof(value)); };
+	read(points.rightHand);
+	read(points.rightFoot);
+	if (version > 2)
+	{
+		read(points.rightArmpit);
+		read(points.belly);
+	}
+	read(points.head);
+	if (version > 11)
+	{
+		read(points.unknownBone);
+	}
+	read(points.groin);
+	if (version > 4)
+	{
+		read(points.leashBone);
+		read(points.unknownBone2);
+	}
+	read(points.pickUpTime);
+	if (version > 8)
+	{
+		read(points.catchTimes[0]);
+		read(points.catchTimes[1]);
+	}
+	if (version > 9)
+	{
+		read(points.unknownTime);
+	}
+	read(points.destroyTime);
+	read(points.discardTime);
+	read(points.eatTime);
+	read(points.throwTime);
+	read(points.putDownTime);
+	if (version > 15)
+	{
+		read(points.unknownTimes[0]);
+	}
+	if (version > 7)
+	{
+		read(points.unknownTimes[1]);
+	}
+	if (stream.good())
+	{
+		_creatureActionPoints = points;
+	}
+	if (version < k_EyesVersion)
+	{
+		return;
+	}
+	// Then up to two points on the body, each after whether it is there
+	const auto skipOptionalPoint = [&stream, &skip]() {
+		uint32_t present = 0;
+		stream.read(reinterpret_cast<char*>(&present), sizeof(present));
+		if (present != 0)
+		{
+			skip(sizeof(MeshIntersect));
+		}
+	};
+	if (version > 7)
+	{
+		skipOptionalPoint();
+	}
+	if (version > 17)
+	{
+		skipOptionalPoint();
+	}
+
+	CreatureEyes eyes {};
+	stream.read(reinterpret_cast<char*>(&eyes.scale), sizeof(eyes.scale));
+	for (auto& point : eyes.points)
+	{
+		uint32_t enabled = 0;
+		stream.read(reinterpret_cast<char*>(&point.intersect), sizeof(point.intersect));
+		stream.read(reinterpret_cast<char*>(&enabled), sizeof(enabled));
+		stream.read(reinterpret_cast<char*>(&point.depth), sizeof(point.depth));
+		point.enabled = enabled != 0;
+	}
+	// Stored a column at a time
+	for (size_t k = 0; k < 3; ++k)
+	{
+		for (auto& row : eyes.lidAngles)
+		{
+			stream.read(reinterpret_cast<char*>(&row.at(k)), sizeof(float));
+		}
+	}
+	if (stream.good())
+	{
+		_creatureEyes = eyes;
+		ReadTattooSites(stream, version);
+	}
+}
+
+void MorphFile::ReadTattooSites(std::istream& stream, uint32_t version) noexcept
+{
+	// Each field below came in at a version, and the tattoo sites at version 15
+	constexpr uint32_t k_TattooVersion = 15;
+	if (version < k_TattooVersion)
+	{
+		return;
+	}
+	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
+	constexpr std::streamoff k_Field = sizeof(uint32_t);
+	// The sound bank's name, then seven sizes, then twelve pairs or triples of numbers
+	if (version > 18)
+	{
+		std::array<char, 0x20> bank {};
+		stream.read(bank.data(), bank.size());
+		_soundBankName.assign(bank.data(), strnlen(bank.data(), bank.size()));
+	}
+	skip((version < 11 ? 1 : 7) * k_Field);
+	skip(12 * (version > 12 ? 3 : 2) * k_Field);
+
+	TattooSites sites {};
+	for (auto& site : sites)
+	{
+		site = {};
+		uint32_t enabled = 0;
+		stream.read(reinterpret_cast<char*>(&enabled), sizeof(enabled));
+		if (enabled == 0)
+		{
+			continue;
+		}
+		// The last byte of the packed place is left over
+		std::array<uint8_t, 4> packed {};
+		stream.read(reinterpret_cast<char*>(packed.data()), packed.size());
+		stream.read(reinterpret_cast<char*>(&site.size), sizeof(site.size));
+		site.enabled = true;
+		site.u = packed[0];
+		site.v = packed[1];
+		site.skin = static_cast<uint8_t>(packed[2] >> 6u);
+		if (version > 16)
+		{
+			uint32_t mirror = 0;
+			stream.read(reinterpret_cast<char*>(&mirror), sizeof(mirror));
+			stream.read(reinterpret_cast<char*>(&site.rotation), sizeof(site.rotation));
+			site.mirror = mirror != 0;
+			site.rotation &= 3u;
+		}
+	}
+	if (stream.good())
+	{
+		_tattooSites = sites;
+	}
 }
 
 HairGroup MorphFile::ReadHairGroup(std::istream& stream) noexcept
@@ -353,6 +516,15 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 
 	// Read in the base animations using those offsets
 	_baseAnimation = ReadAnimations(stream, animationOffsets);
+	_baseAnimationIndices.resize(numAnimations, -1);
+	int32_t baseIndex = 0;
+	for (size_t i = 0; i < numAnimations; ++i)
+	{
+		if (animationOffsets[i] > 0)
+		{
+			_baseAnimationIndices[i] = baseIndex++;
+		}
+	}
 
 	// Creature files have different animations for the morph meshes (evil, good, thin, fat) weak, strong are skipped
 	for (uint32_t i = 0; i < 4; ++i)
@@ -370,6 +542,16 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 			stream.read(reinterpret_cast<char*>(&extraOffset), sizeof(extraOffset));
 
 			_variantAnimations.at(i) = ReadAnimations(stream, variantAnimationOffsets);
+			auto& indices = _variantAnimationIndices.at(i);
+			indices.assign(numAnimations, -1);
+			int32_t variantIndex = 0;
+			for (size_t j = 0; j < numAnimations; ++j)
+			{
+				if (variantAnimationOffsets[j] > 0)
+				{
+					indices[j] = variantIndex++;
+				}
+			}
 		}
 	}
 
@@ -395,6 +577,12 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 			auto& data = _extraData[i].emplace_back();
 			stream.read(reinterpret_cast<char*>(&data), sizeof(data));
 		}
+	}
+
+	// Creature files go on with the creature's own block
+	if (_header.unknown0x0 != 0u)
+	{
+		ReadCreatureBlock(stream);
 	}
 
 	_isLoaded = true;

@@ -82,7 +82,9 @@ struct LNDCell
 	uint8_t altitude;
 	uint8_t saveColor;
 	Properties properties;
-	/// Sound properties: coastal sound, land sound, sea sound, freshwater sound
+	/// Bit 0: "transparent"; bit 1: an open-water cell that is not drawn; bits 2..5: the cell's ambient sound type,
+	/// (flags >> 2) & 0xF (0 none, 1 sea, 2 still fresh water, 3 coastal, 4 jungle, 5 arctic, 6 desert, 7 countryside,
+	/// 8 swamp, 9 running water)
 	uint8_t flags;
 };
 static_assert(sizeof(LNDCell::Properties) == 1);

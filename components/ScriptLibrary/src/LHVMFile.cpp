@@ -279,16 +279,82 @@ void LHVMFile::Open(const std::vector<uint8_t>& buffer)
 	ReadFile(stream);
 }
 
-void LHVMFile::Write([[maybe_unused]] const std::filesystem::path& filepath)
+namespace
+{
+
+void WriteU32(std::ostream& stream, uint32_t value)
+{
+	stream.write(reinterpret_cast<const char*>(&value), sizeof(value));
+}
+
+void WriteString(std::ostream& stream, const std::string& value)
+{
+	stream.write(value.c_str(), static_cast<std::streamsize>(value.size() + 1));
+}
+
+void WriteStrings(std::ostream& stream, const std::vector<std::string>& values)
+{
+	WriteU32(stream, static_cast<uint32_t>(values.size()));
+	for (const auto& value : values)
+	{
+		WriteString(stream, value);
+	}
+}
+
+} // namespace
+
+bool LHVMFile::Write(const std::filesystem::path& filepath) const
+{
+	std::ofstream stream(filepath, std::ios::binary);
+	if (!stream.is_open())
+	{
+		return false;
+	}
+	Write(stream);
+	return stream.good();
+}
+
+void LHVMFile::Write(std::ostream& stream) const
 {
 	assert(_isLoaded);
 
-	// TODO(Daniels118): write static CHL data
+	stream.write(k_Magic.data(), k_Magic.size());
+	WriteU32(stream, static_cast<uint32_t>(_version));
+	WriteStrings(stream, _variablesNames);
 
-	if (_hasStatus)
+	WriteU32(stream, static_cast<uint32_t>(_instructions.size()));
+	for (const auto& instruction : _instructions)
 	{
-		// TODO(Daniels118): write runtime status data
+		WriteU32(stream, static_cast<uint32_t>(instruction.code));
+		WriteU32(stream, static_cast<uint32_t>(instruction.mode));
+		WriteU32(stream, static_cast<uint32_t>(instruction.type));
+		WriteU32(stream, instruction.data.uintVal);
+		WriteU32(stream, instruction.line);
 	}
+
+	WriteU32(stream, static_cast<uint32_t>(_autostart.size()));
+	for (const auto id : _autostart)
+	{
+		WriteU32(stream, id);
+	}
+
+	WriteU32(stream, static_cast<uint32_t>(_scripts.size()));
+	for (const auto& script : _scripts)
+	{
+		WriteString(stream, script.name);
+		WriteString(stream, script.filename);
+		WriteU32(stream, static_cast<uint32_t>(script.type));
+		WriteU32(stream, script.variablesOffset);
+		WriteStrings(stream, script.variables);
+		WriteU32(stream, script.instructionAddress);
+		WriteU32(stream, script.parameterCount);
+		WriteU32(stream, script.scriptId);
+	}
+
+	WriteU32(stream, static_cast<uint32_t>(_data.size()));
+	stream.write(_data.data(), static_cast<std::streamsize>(_data.size()));
+
+	// TODO(Daniels118): write runtime status data when _hasStatus is set
 }
 
 int LHVMFile::LoadVariablesNames(std::istream& stream, std::vector<std::string>& variables)
