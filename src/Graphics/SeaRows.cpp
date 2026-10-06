@@ -43,7 +43,7 @@ struct ClipVertex
 
 uint32_t Outside(float x, float y, float z, float nearDistance)
 {
-	uint32_t outside = z < nearDistance ? k_Near : 0;
+	uint32_t outside = z < nearDistance ? static_cast<uint32_t>(k_Near) : 0u;
 	if (x > z)
 	{
 		outside |= k_Right;

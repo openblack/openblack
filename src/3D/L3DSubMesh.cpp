@@ -224,7 +224,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 			for (uint32_t j = 0; j < primitive.numTriangles * 3; j++)
 			{
 				const auto vertex = indexSpan[startIndex + j] + startVertex;
-				if (vertex < verticesSpan.size())
+				if (vertex >= 0 && static_cast<size_t>(vertex) < verticesSpan.size())
 				{
 					_pickTriangles.push_back(glm::make_vec3(&verticesSpan[vertex].position.x));
 				}

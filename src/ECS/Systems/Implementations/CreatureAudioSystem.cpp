@@ -163,7 +163,7 @@ void Sound(entt::entity entity, const Creature& creature, const Transform& trans
 			}
 		}
 	}
-	const auto array = keys.ToArray();
+	[[maybe_unused]] const auto array = keys.ToArray();
 	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Creature {} {} ({}) from {} keys [{} {} {} {} {}]: {}{}",
 	                    static_cast<uint32_t>(entity), creature_audio::Name(event.action), static_cast<int32_t>(event.action),
 	                    bank, array[0], array[1], array[2], array[3], array[4],

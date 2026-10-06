@@ -188,7 +188,8 @@ TEST(CreatureFight, PlayerMovesTakeBackControlAndTeach)
 	EXPECT_FLOAT_EQ(fighter.computerWaitMs, k_ComputerWaitsMs);
 	EXPECT_FLOAT_EQ(fighter.tendency, 0.02f);
 	PlayerMove(fighter, BlockMove(), false);
-	EXPECT_FLOAT_EQ(fighter.tendency, (0.98f * 0.02f) - 0.02f);
+	// A difference of nearly equal numbers: a fused multiply-add, as arm64 compilers make, moves its last bits
+	EXPECT_NEAR(fighter.tendency, (0.98f * 0.02f) - 0.02f, 1e-7f);
 	EXPECT_FLOAT_EQ(LearnTendency(1.0f, Move::Kind::Mid), 1.0f);
 	EXPECT_FLOAT_EQ(LearnTendency(-1.0f, Move::Kind::Block), -1.0f);
 	EXPECT_FLOAT_EQ(FirstTendency(-0.7f), 0.7f);

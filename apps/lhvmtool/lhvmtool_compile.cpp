@@ -204,7 +204,7 @@ int RunCompile(int argc, char** argv)
 		sources.push_back({.name = path.filename().string(), .text = *text});
 	}
 
-	const auto compiled = openblack::lhvm::chl::Compile(sources, {.constants = &constants});
+	const auto compiled = openblack::lhvm::chl::Compile(sources, {.natives = {}, .constants = &constants});
 	for (const auto& diagnostic : compiled.diagnostics)
 	{
 		std::cerr << diagnostic.ToString() << '\n';

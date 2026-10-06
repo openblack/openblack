@@ -70,7 +70,9 @@ int32_t creature_hair::ByAlignment(const std::array<int32_t, 3>& values, float a
 
 Look creature_hair::LookFor(const Variants& variants, float alignment)
 {
-	const auto floats = [&variants, alignment](float Look::* member) {
+	// A float member of the look, written as an alias that formats the same with every clang-format
+	using FloatMember = float Look::*;
+	const auto floats = [&variants, alignment](FloatMember member) {
 		return ByAlignment(std::array {variants[0].*member, variants[1].*member, variants[2].*member}, alignment);
 	};
 	const auto channel = [&variants, alignment](glm::length_t c) {

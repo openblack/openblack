@@ -81,7 +81,11 @@ ControlFlowGraph BuildControlFlowGraph(std::span<const VMInstruction> instructio
 	for (auto it = leaders.begin(); it != leaders.end(); ++it)
 	{
 		const auto next = std::next(it);
-		graph.blocks.push_back({.begin = *it, .end = next == leaders.end() ? endIp : *next});
+		graph.blocks.push_back({.begin = *it,
+		                        .end = next == leaders.end() ? endIp : *next,
+		                        .successors = {},
+		                        .predecessors = {},
+		                        .handler = std::nullopt});
 	}
 
 	for (size_t i = 0; i < graph.blocks.size(); ++i)

@@ -5,6 +5,9 @@
 #
 # Usage: cmake -DSOURCE=<CHLApi.cpp> -DOUTPUT=<header> -P GenerateUnimplementedNatives.cmake
 
+# Run as a script, it gets the policies of this version rather than the oldest, for if (IN_LIST)
+cmake_minimum_required(VERSION 3.18)
+
 file(STRINGS "${SOURCE}" lines)
 
 set(stubs "")
@@ -19,7 +22,10 @@ foreach (line IN LISTS lines)
     list(APPEND stubs "${current}")
     set(current "")
   endif ()
-  if (line MATCHES "CREATE_FUNCTION_BINDING\\(\"[A-Z0-9_]+\", *-?[0-9]+, *-?[0-9]+, *([A-Za-z0-9_]+)\\)")
+  if (line
+      MATCHES
+      "CREATE_FUNCTION_BINDING\\(\"[A-Z0-9_]+\", *-?[0-9]+, *-?[0-9]+, *([A-Za-z0-9_]+)\\)"
+  )
     list(APPEND bindings "${CMAKE_MATCH_1}")
   endif ()
 endforeach ()
@@ -36,16 +42,29 @@ foreach (function IN LISTS bindings)
 endforeach ()
 
 set(content "")
-string(APPEND content "// Generated from the script API's source by GenerateUnimplementedNatives.cmake: do not edit.\n")
-string(APPEND content "#pragma once\n\n#include <array>\n#include <cstdint>\n\n")
+string(
+  APPEND
+  content
+  "// Generated from the script API's source by GenerateUnimplementedNatives.cmake: do not edit.\n"
+)
+string(APPEND content
+       "#pragma once\n\n#include <array>\n#include <cstdint>\n\n"
+)
 string(APPEND content "namespace openblack::editor::scripts\n{\n")
-string(APPEND content "/// The numbers of the natives whose functions are still stubs, in order\n")
-string(APPEND content "constexpr std::array<uint32_t, ${count}> k_UnimplementedNatives {{\n")
+string(
+  APPEND content
+  "/// The numbers of the natives whose functions are still stubs, in order\n"
+)
+string(APPEND content
+       "constexpr std::array<uint32_t, ${count}> k_UnimplementedNatives {{\n"
+)
 string(APPEND content "${numbers}")
 string(APPEND content "}};\n")
 string(APPEND content "/// How many natives the script API binds\n")
 string(APPEND content "constexpr uint32_t k_NativeCount = ${index};\n")
 string(APPEND content "} // namespace openblack::editor::scripts\n")
 file(WRITE "${OUTPUT}.tmp" "${content}")
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OUTPUT}.tmp" "${OUTPUT}")
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OUTPUT}.tmp" "${OUTPUT}"
+)
 file(REMOVE "${OUTPUT}.tmp")

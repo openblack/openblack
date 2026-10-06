@@ -23,6 +23,11 @@
 namespace openblack
 {
 #pragma pack(push, 1)
+// The layout checks below take offsetof of the tables, which aren't standard layout: compilers that warn of it allow it
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#endif
 
 struct GTribeInfo
 {
@@ -2122,6 +2127,9 @@ using InfoConstants = v120::InfoConstants;
 void UpdateInfo(CreatureActionInfo& info, const v100::CreatureActionInfo& old);
 void UpdateInfo(InfoConstants& info, const v100::InfoConstants& old);
 
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 #pragma pack(pop)
 
 } // namespace openblack

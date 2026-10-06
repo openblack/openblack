@@ -156,6 +156,11 @@ std::optional<Desire> creature_leash::DesireBehind(Activity activity, std::optio
 		return Desire::ObeyPlayer;
 	case Activity::None:
 	case Activity::Faint:
+	case Activity::Examine:
+	case Activity::PlayWithObject:
+	case Activity::Hurl:
+	case Activity::PutDown:
+	case Activity::Planned:
 		break;
 	}
 	return std::nullopt;

@@ -203,7 +203,7 @@ Outcome ShowWindows(const Request& request)
 	}
 	ComPtr<IFileDialog> dialog;
 	const auto& classId = request.mode == Mode::Open ? CLSID_FileOpenDialog : CLSID_FileSaveDialog;
-	const auto& interfaceId = request.mode == Mode::Open ? __uuidof(IFileOpenDialog) : __uuidof(IFileSaveDialog);
+	const auto& interfaceId = request.mode == Mode::Open ? IID_IFileOpenDialog : IID_IFileSaveDialog;
 	if (FAILED(
 	        CoCreateInstance(classId, nullptr, CLSCTX_INPROC_SERVER, interfaceId, reinterpret_cast<void**>(&dialog.pointer))))
 	{
@@ -239,7 +239,8 @@ Outcome ShowWindows(const Request& request)
 	{
 		ComPtr<IShellItem> folder;
 		const auto absolute = std::filesystem::absolute(request.startFolder, error).make_preferred();
-		if (SUCCEEDED(SHCreateItemFromParsingName(absolute.wstring().c_str(), nullptr, IID_PPV_ARGS(&folder.pointer))))
+		if (SUCCEEDED(SHCreateItemFromParsingName(absolute.wstring().c_str(), nullptr, IID_IShellItem,
+		                                          reinterpret_cast<void**>(&folder.pointer))))
 		{
 			dialog->SetFolder(folder.pointer);
 		}

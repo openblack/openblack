@@ -57,7 +57,7 @@ std::vector<clouds::Layout> clouds::MakeLayout(const Random& random)
 		cloud.pinned = false;
 		layout.push_back(cloud);
 	}
-	for (const auto [index, end] : {std::pair {0, k_TrackHalfLength}, std::pair {1, -k_TrackHalfLength}})
+	for (const auto& [index, end] : {std::pair {0, k_TrackHalfLength}, std::pair {1, -k_TrackHalfLength}})
 	{
 		layout.at(index) = {.track = {end, 500.0f, 0.0f}, .size = 300.0f, .edgeShrink = 20.0f, .pinned = true};
 	}

@@ -91,8 +91,8 @@ std::vector<int32_t> OfTribe(const Table& table, int tribe)
 
 bool TribeCombo(int& tribe)
 {
-	const auto count = static_cast<int>(Tribe::_COUNT);
-	const auto name = [count](int index) {
+	constexpr auto count = static_cast<int>(Tribe::_COUNT);
+	const auto name = [](int index) {
 		return index < count ? TitleCase(k_TribeStrs.at(static_cast<size_t>(index))) : std::string("Others");
 	};
 	bool changed = false;

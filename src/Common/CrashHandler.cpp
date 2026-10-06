@@ -140,7 +140,8 @@ std::string_view CopyInto(std::array<char, N>& buffer, std::string_view text)
 	return {buffer.data(), length};
 }
 
-std::string_view TrimLineEnds(std::string_view text)
+// Only Windows debug builds report the C runtime's messages, which end in line breaks
+[[maybe_unused]] std::string_view TrimLineEnds(std::string_view text)
 {
 	while (!text.empty() && (text.back() == '\n' || text.back() == '\r'))
 	{
@@ -683,7 +684,7 @@ void Install()
 	stack.ss_size = s_SignalStack.size();
 	sigaltstack(&stack, nullptr);
 
-	struct sigaction action {};
+	struct sigaction action = {};
 	action.sa_sigaction = OnSignal;
 	action.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_RESETHAND;
 	sigemptyset(&action.sa_mask);

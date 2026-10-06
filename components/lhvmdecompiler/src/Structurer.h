@@ -132,7 +132,7 @@ private:
 	const ProgramView& _program;
 	const VMScript& _script;
 	std::span<const NativeSignature> _natives;
-	const DecompileOptions& _options;
+	[[maybe_unused]] const DecompileOptions& _options;
 	uint32_t _firstIp;
 	uint32_t _endIp;
 	/// Backward unconditional jumps: target -> sources

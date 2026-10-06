@@ -11,7 +11,9 @@ add_executable(lhvmtool ${LHVMTOOL})
 
 target_compile_definitions(lhvmtool PRIVATE CXXOPTS_NO_EXCEPTIONS)
 find_package(fmt CONFIG REQUIRED)
-target_link_libraries(lhvmtool PRIVATE ScriptLibrary lhvmdecompiler lhvmcompiler fmt::fmt)
+target_link_libraries(
+  lhvmtool PRIVATE ScriptLibrary lhvmdecompiler lhvmcompiler fmt::fmt
+)
 target_include_directories(lhvmtool PRIVATE ${CXXOPTS_INCLUDE_DIRS})
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)

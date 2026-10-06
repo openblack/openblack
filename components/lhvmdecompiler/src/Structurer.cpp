@@ -26,21 +26,6 @@ namespace
 
 constexpr uint8_t k_VectorWidth = 3;
 
-[[nodiscard]] bool IsArithmetic(Opcode code)
-{
-	switch (code)
-	{
-	case Opcode::Add:
-	case Opcode::Sub:
-	case Opcode::Mul:
-	case Opcode::Div:
-	case Opcode::Mod:
-		return true;
-	default:
-		return false;
-	}
-}
-
 [[nodiscard]] Op ArithmeticOp(Opcode code)
 {
 	switch (code)

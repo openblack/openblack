@@ -5,7 +5,7 @@ add_library(creaturemind STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(
   creaturemind PUBLIC $<INSTALL_INTERFACE:include>
-               $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
