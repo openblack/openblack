@@ -16,6 +16,7 @@
 #include "Creature/CreatureMorph.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -93,6 +94,7 @@ entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames pl
 	registry.Assign<CreatureMorph>(entity, CreatureMorph {.shownFatness = body.fatness, .drawn = morph, .revision = 0});
 	registry.Assign<CreatureAnimation>(entity);
 	registry.Assign<CreatureEyes>(entity);
+	registry.Assign<CreatureMindState>(entity);
 	registry.Assign<Transform>(entity, position, glm::eulerAngleY(yAngleRadians), glm::vec3(DrawnScale(creatureType, size)));
 	return entity;
 }

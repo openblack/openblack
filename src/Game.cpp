@@ -76,6 +76,7 @@
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -412,6 +413,11 @@ bool Game::GameLogicLoop() noexcept
 	// The creatures' bodies follow their fatness
 	Locator::creatureAnimationSystem::value().ProcessTurn();
 	{
+		// The creatures want things, and decide what to do while idle
+		auto creatureMind = profiler.BeginScoped(Profiler::Stage::CreatureMindUpdate);
+		Locator::creatureMindSystem::value().ProcessTurn();
+	}
+	{
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
 	}
@@ -650,8 +656,11 @@ bool Game::Update() noexcept
 	Locator::rainSystem::value().Update(std::chrono::duration<float>(gameTime).count(), camera.GetOrigin());
 	// The rings on the water grow and fade
 	Locator::waterRingSystem::value().Update(gameTime);
-	// The creatures breathe and look about
-	Locator::creatureAnimationSystem::value().Update(gameTime);
+	{
+		// The creatures breathe, act, pull faces and look about
+		auto creatureAnimation = profiler.BeginScoped(Profiler::Stage::CreatureAnimationUpdate);
+		Locator::creatureAnimationSystem::value().Update(gameTime);
+	}
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
 	                                        Locator::rainSystem::value().GetFall());

@@ -23,6 +23,7 @@
 #include "3D/SkeletalAnimation.h"
 #include "Common/Zoomer.h"
 #include "Creature/CreatureEyes.h"
+#include "Creature/CreatureLayers.h"
 #include "Creature/CreatureMorph.h"
 
 namespace openblack::ecs::components
@@ -44,13 +45,25 @@ struct CreatureMorph
 /// when they change.
 struct CreatureAnimation
 {
-	/// What the creature's body is doing, which picks its animation
-	enum class State : uint8_t
+	/// What the body plays: standing and breathing, an action, or sitting
+	creature_layers::BodyAction body {};
+	/// Animations played together, each by its weight, in place of the body's own when there are any (as walking
+	/// blends into running)
+	struct Slot
 	{
-		/// Standing, breathing
-		Idle,
+		size_t animation;
+		float timeMs;
+		float weight;
+		bool mirrored;
 	};
-	State state {State::Idle};
+	std::vector<Slot> slots;
+	/// The face's expression and a gesture such as a nod, played on top of the body
+	creature_layers::FaceLayer face {};
+	creature_layers::GestureLayer gesture {};
+	/// Where the head turns to look, if anywhere, and how far it is turned right to left and down to up
+	std::optional<glm::vec3> lookAt;
+	creature_layers::LookAxis yaw {};
+	creature_layers::LookAxis pitch {};
 
 	/// How far through a breath the creature is, 0 to 1, and the seconds a breath takes now
 	float breathPhase {0.0f};
@@ -61,6 +74,8 @@ struct CreatureAnimation
 	/// The rest pose, blended as the body is, and the animations blended so far, by their index in the creature spec
 	skeletal_animation::Skeleton skeleton;
 	std::unordered_map<size_t, skeletal_animation::Animation> animations;
+	/// Each bone's mirror bone, for playing actions left to right
+	std::vector<uint32_t> mirror;
 
 	/// The bones' matrices in the mesh's space as posed this frame, which the body is drawn with
 	std::vector<glm::mat4> boneMatrices;

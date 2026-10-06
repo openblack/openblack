@@ -19,6 +19,8 @@
 #include "3D/L3DMesh.h"
 #include "Creature/CreatureAnimation.h"
 #include "Creature/CreatureEyes.h"
+#include "Creature/CreatureLayers.h"
+#include "Creature/CreatureLook.h"
 #include "Creature/CreatureMorph.h"
 #include "Creature/CreatureRig.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
@@ -40,6 +42,11 @@ namespace
 /// The meshes look back along their z axis, so the eyes look ahead along -z when the creature looks nowhere in
 /// particular
 constexpr glm::vec3 k_MeshBack {0.0f, 0.0f, 1.0f};
+/// How fast the head speeds up turning to look, in radians a second each second. The game reads its rate from the
+/// species' tables; this stands in until that field is known.
+constexpr float k_HeadAcceleration = 4.0f;
+/// The head is turned when more than this far round, in radians
+constexpr float k_LookSettled = 1e-4f;
 
 creature_morph::Morph TargetMorph(const Creature& creature, const CreatureMorph& morph)
 {
@@ -200,6 +207,128 @@ void PlaceEyes(CreatureEyes& eyes, const CreatureRig::Eyes& rig, const creature_
 		drawn.eyelid = creature_eyes::ToMatrix(creature_eyes::Turned(lid, angle), eyeSize);
 	}
 }
+/// A blended animation of the creature's, blended the first time it is wanted, or nothing when the species has none
+const Animation* AnimationOf(CreatureAnimation& animation, const CreatureRig& rig, const creature_morph::Morph& morph,
+                             size_t index)
+{
+	auto found = animation.animations.find(index);
+	if (found == animation.animations.end())
+	{
+		// A species without the animation keeps an empty one, so as not to look for it again
+		auto blended = BlendAnimation(rig, morph, index).value_or(Animation {});
+		found = animation.animations.emplace(index, std::move(blended)).first;
+	}
+	return found->second.frames.empty() ? nullptr : &found->second;
+}
+
+std::optional<uint32_t> DurationOf(const Animation* animation)
+{
+	return animation != nullptr ? std::optional(animation->duration) : std::nullopt;
+}
+
+/// Plays a head turning animation on top of the pose for how far the head is turned, unless it looks straight on
+void AddLook(std::vector<skeletal_animation::Pose>& poses, const Animation* look, float angle, float limit,
+             const CreatureAnimation& animation, std::span<const uint32_t> mirror)
+{
+	if (look == nullptr || std::abs(angle) <= k_LookSettled)
+	{
+		return;
+	}
+	const auto reference = (look->frames.size() - 1) / 2;
+	skeletal_animation::AddLayer(poses, *look, creature_layers::LookTime(angle, limit, look->duration), reference,
+	                             animation.skeleton, mirror);
+}
+
+/// The body posed for this frame: its action or breathing, or its slots blended, then the head turned, the face and
+/// any gesture on top
+void PoseBody(CreatureAnimation& animation, const CreatureRig& rig, const creature_morph::Morph& morph,
+              const Transform& transform, float size, float milliseconds, float seconds)
+{
+	const auto* stand = AnimationOf(animation, rig, morph, creature_layers::animations::k_Stand);
+	if (stand == nullptr)
+	{
+		return;
+	}
+	const auto playbackMs = milliseconds * creature_layers::PlaybackRate(size);
+	const auto animationOf = [&](size_t index) { return AnimationOf(animation, rig, morph, index); };
+
+	animation.body = creature_layers::AdvanceBody(animation.body, playbackMs,
+	                                              DurationOf(animationOf(creature_layers::CurrentAnimation(animation.body))));
+	animation.face = creature_layers::AdvanceFace(
+	    animation.face, milliseconds,
+	    DurationOf(animation.face.current.has_value() ? animationOf(*animation.face.current) : nullptr));
+	animation.gesture = creature_layers::AdvanceGesture(
+	    animation.gesture, playbackMs,
+	    DurationOf(animation.gesture.animation.has_value() ? animationOf(*animation.gesture.animation) : nullptr));
+
+	// The head turns towards where the creature looks, from its eyes' height
+	const auto ahead = -(transform.rotation * k_MeshBack);
+	const auto head = transform.position + glm::vec3(0.0f, creature_look::k_HeadHeight * size, 0.0f);
+	const auto angles = animation.lookAt.has_value() ? creature_layers::AnglesTowards(head, ahead, *animation.lookAt)
+	                                                 : creature_layers::LookAngles {.yaw = 0.0f, .pitch = 0.0f};
+	animation.yaw =
+	    creature_layers::TurnHead(animation.yaw, angles.yaw, k_HeadAcceleration, seconds, creature_layers::k_YawLimit);
+	animation.pitch =
+	    creature_layers::TurnHead(animation.pitch, angles.pitch, k_HeadAcceleration, seconds, creature_layers::k_PitchLimit);
+
+	const std::span<const uint32_t> mirror = animation.body.mirrored ? animation.mirror : std::span<const uint32_t> {};
+	std::vector<skeletal_animation::Pose> poses;
+	if (!animation.slots.empty())
+	{
+		std::vector<std::vector<skeletal_animation::Pose>> sampled;
+		std::vector<float> weights;
+		for (const auto& slot : animation.slots)
+		{
+			const auto* played = animationOf(slot.animation);
+			sampled.push_back(skeletal_animation::SampleCycle(
+			    played != nullptr ? *played : *stand, *stand, static_cast<uint32_t>(std::max(slot.timeMs, 0.0f)),
+			    animation.skeleton, slot.mirrored ? animation.mirror : std::span<const uint32_t> {}));
+			weights.push_back(slot.weight);
+		}
+		poses = skeletal_animation::WeightedSum(sampled, weights);
+	}
+	else if (const auto* played = creature_layers::IsPlaying(animation.body)
+	                                  ? animationOf(creature_layers::CurrentAnimation(animation.body))
+	                                  : nullptr;
+	         played != nullptr)
+	{
+		poses = skeletal_animation::SampleCycle(*played, *stand, static_cast<uint32_t>(std::max(animation.body.timeMs, 0.0f)),
+		                                        animation.skeleton, mirror);
+	}
+	else
+	{
+		const auto time = creature_animation::BreathTime(animation.breathPhase, stand->duration);
+		poses = skeletal_animation::SampleCycle(*stand, *stand, time, animation.skeleton);
+	}
+
+	// Sitting, the head turns by the sitting versions. The head turns the other way when the body plays mirrored.
+	const bool sitting = creature_layers::CurrentAnimation(animation.body) == creature_layers::animations::k_Sit;
+	AddLook(poses,
+	        animationOf(sitting ? creature_layers::animations::k_SitLookDownUp : creature_layers::animations::k_LookDownUp),
+	        animation.pitch.angle, creature_layers::k_PitchLimit, animation, mirror);
+	AddLook(
+	    poses,
+	    animationOf(sitting ? creature_layers::animations::k_SitLookRightLeft : creature_layers::animations::k_LookRightLeft),
+	    mirror.empty() ? animation.yaw.angle : -animation.yaw.angle, creature_layers::k_YawLimit, animation, mirror);
+	// The face and gestures, relative to their first frames
+	if (animation.face.current.has_value())
+	{
+		if (const auto* face = animationOf(*animation.face.current))
+		{
+			skeletal_animation::AddLayer(poses, *face, static_cast<uint32_t>(std::max(animation.face.timeMs, 0.0f)), 0,
+			                             animation.skeleton);
+		}
+	}
+	if (animation.gesture.animation.has_value())
+	{
+		if (const auto* gesture = animationOf(*animation.gesture.animation))
+		{
+			skeletal_animation::AddLayer(poses, *gesture, static_cast<uint32_t>(std::max(animation.gesture.timeMs, 0.0f)), 0,
+			                             animation.skeleton);
+		}
+	}
+	animation.boneMatrices = skeletal_animation::ComposeBoneMatrices(poses, animation.skeleton.parents);
+}
 } // namespace
 
 void CreatureAnimationSystem::ProcessTurn()
@@ -252,6 +381,7 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 			    animation.animations.clear();
 			    animation.builtRevision = morph.revision;
 			    animation.boneMatrices = rest;
+			    animation.mirror = skeletal_animation::MirrorJoints(rest);
 		    }
 
 		    // Standing, the creature breathes in and out over its stand animation
@@ -261,22 +391,7 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 
 		    if (rig != nullptr)
 		    {
-			    auto stand = animation.animations.find(creature_animation::k_StandAnimation);
-			    if (stand == animation.animations.end())
-			    {
-				    if (auto blended = BlendAnimation(*rig, morph.drawn, creature_animation::k_StandAnimation))
-				    {
-					    stand = animation.animations.emplace(creature_animation::k_StandAnimation, std::move(*blended)).first;
-				    }
-			    }
-			    if (stand != animation.animations.end() && !stand->second.frames.empty())
-			    {
-				    const auto& standAnimation = stand->second;
-				    const auto time = creature_animation::BreathTime(animation.breathPhase, standAnimation.duration);
-				    const auto poses =
-				        skeletal_animation::SampleCycle(standAnimation, standAnimation, time, animation.skeleton);
-				    animation.boneMatrices = skeletal_animation::ComposeBoneMatrices(poses, animation.skeleton.parents);
-			    }
+			    PoseBody(animation, *rig, morph.drawn, transform, creature.size, gameTime.count(), seconds);
 		    }
 		    if (animation.boneMatrices.size() != base->GetBoneMatrices().size())
 		    {

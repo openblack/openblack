@@ -12,8 +12,10 @@
 #include <cmath>
 
 #include <algorithm>
+#include <optional>
 
 #include <MorphFile.h>
+#include <glm/geometric.hpp>
 #include <glm/mat3x3.hpp>
 #include <glm/matrix.hpp>
 
@@ -161,61 +163,255 @@ FrameSpan FindFrames(const Animation& animation, uint32_t timeMs)
 	return {.from = static_cast<size_t>(frame), .to = static_cast<size_t>(next), .t = t};
 }
 
-std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand, uint32_t timeMs, const Skeleton& skeleton)
+namespace
 {
-	std::vector<Pose> poses(skeleton.parents.size(), Pose {.rotation = k_Identity, .translation = glm::vec3(0.0f)});
-	if (animation.frames.empty())
+/// Where each bone is in a list of the bones an animation moves, or nothing for those it doesn't
+std::vector<std::optional<size_t>> JointSlots(std::span<const uint32_t> joints, size_t count)
+{
+	std::vector<std::optional<size_t>> slots(count);
+	for (size_t i = 0; i < joints.size(); ++i)
+	{
+		if (joints[i] < count)
+		{
+			slots[joints[i]] = i;
+		}
+	}
+	return slots;
+}
+
+/// Mirrored keyframe angles: y and z negated
+glm::vec3 MirrorEuler(glm::vec3 euler)
+{
+	euler.y = -euler.y;
+	euler.z = -euler.z;
+	return euler;
+}
+
+/// A movement flipped across the body: the root moves sideways along x, every other bone along its own z
+glm::vec3 MirrorMove(glm::vec3 move, uint32_t joint)
+{
+	if (joint == 0)
+	{
+		move.x = -move.x;
+	}
+	else
+	{
+		move.z = -move.z;
+	}
+	return move;
+}
+
+uint32_t Destination(std::span<const uint32_t> mirror, uint32_t joint)
+{
+	return joint < mirror.size() ? mirror[joint] : joint;
+}
+
+/// A keyframe rotation between two frames, blended on the matrices' elements and made unit again
+Matrix BlendKeyframes(const glm::vec3& from, const glm::vec3& to, float t, bool mirrored)
+{
+	return NormaliseRows(
+	    Lerp(RotationYXZ(mirrored ? MirrorEuler(from) : from), RotationYXZ(mirrored ? MirrorEuler(to) : to), t));
+}
+} // namespace
+
+std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand, uint32_t timeMs, const Skeleton& skeleton,
+                              std::span<const uint32_t> mirror)
+{
+	const auto count = skeleton.parents.size();
+	std::vector<Pose> poses(count, Pose {.rotation = k_Identity, .translation = glm::vec3(0.0f)});
+	if (animation.frames.empty() || count == 0)
 	{
 		return poses;
 	}
+	const bool mirrored = !mirror.empty();
 	const auto* standFrame = stand.frames.empty() ? nullptr : &stand.frames.front();
+	const auto standRotated = JointSlots(stand.rotatedJoints, count);
+	const auto standTranslated = JointSlots(stand.translatedJoints, count);
+	const auto standTranslation = [&](uint32_t joint) -> std::optional<glm::vec3> {
+		if (standFrame == nullptr || !standTranslated[joint])
+		{
+			return std::nullopt;
+		}
+		return standFrame->translations[*standTranslated[joint]];
+	};
+	const auto rotated = JointSlots(animation.rotatedJoints, count);
+	const auto translated = JointSlots(animation.translatedJoints, count);
 	const auto [from, to, t] = FindFrames(animation, timeMs);
 
-	size_t rotated = 0;
-	size_t translated = 0;
-	for (uint32_t joint = 0; joint < poses.size(); ++joint)
+	for (uint32_t joint = 0; joint < count; ++joint)
 	{
-		auto& pose = poses[joint];
-		const auto parent = skeleton.parents[joint];
+		// The bone the keyframes of this one move: itself, or its mirror bone
+		const auto destination = std::min(Destination(mirror, joint), static_cast<uint32_t>(count - 1));
+		auto& pose = poses[destination];
+		const auto parent = skeleton.parents[destination];
 
 		Matrix rotation = k_Identity;
-		if (rotated < animation.rotatedJoints.size() && animation.rotatedJoints[rotated] == joint)
+		if (const auto slot = rotated[joint])
 		{
-			rotation = NormaliseRows(Lerp(RotationYXZ(animation.frames[from].eulerAngles[rotated]),
-			                              RotationYXZ(animation.frames[to].eulerAngles[rotated]), t));
-			++rotated;
+			rotation =
+			    BlendKeyframes(animation.frames[from].eulerAngles[*slot], animation.frames[to].eulerAngles[*slot], t, mirrored);
 		}
-		else if (standFrame != nullptr)
+		else if (standFrame != nullptr && standRotated[destination])
 		{
-			const auto iter = std::ranges::find(stand.rotatedJoints, joint);
-			if (iter != stand.rotatedJoints.end())
-			{
-				rotation = RotationYXZ(standFrame->eulerAngles[static_cast<size_t>(iter - stand.rotatedJoints.begin())]);
-			}
+			rotation = RotationYXZ(standFrame->eulerAngles[*standRotated[destination]]);
 		}
-		pose.rotation = Multiply(skeleton.restRotations[joint], rotation);
-		if (joint != 0 && parent != k_NoParent)
+		pose.rotation = Multiply(skeleton.restRotations[destination], rotation);
+		if (destination != 0 && parent != k_NoParent)
 		{
 			pose.rotation = Multiply(pose.rotation, skeleton.inverseRestRotations[parent]);
 		}
 
-		if (translated < animation.translatedJoints.size() && animation.translatedJoints[translated] == joint)
+		if (const auto slot = translated[joint])
 		{
-			const auto& a = animation.frames[from].translations[translated];
-			const auto& b = animation.frames[to].translations[translated];
-			pose.translation = (b - a) * t + a;
-			++translated;
-		}
-		else if (standFrame != nullptr)
-		{
-			const auto iter = std::ranges::find(stand.translatedJoints, joint);
-			if (iter != stand.translatedJoints.end())
+			const auto& a = animation.frames[from].translations[*slot];
+			const auto& b = animation.frames[to].translations[*slot];
+			const auto translation = (b - a) * t + a;
+			if (mirrored)
 			{
-				pose.translation = standFrame->translations[static_cast<size_t>(iter - stand.translatedJoints.begin())];
+				// The movement away from the stand, flipped, from where the stand has the mirror bone
+				const auto move = translation - standTranslation(joint).value_or(glm::vec3(0.0f));
+				pose.translation = standTranslation(destination).value_or(glm::vec3(0.0f)) + MirrorMove(move, joint);
 			}
+			else
+			{
+				pose.translation = translation;
+			}
+		}
+		else if (const auto standMove = standTranslation(destination))
+		{
+			pose.translation = *standMove;
 		}
 	}
 	return poses;
+}
+
+std::vector<Pose> WeightedSum(std::span<const std::vector<Pose>> poses, std::span<const float> weights)
+{
+	if (poses.empty())
+	{
+		return {};
+	}
+	std::vector<Pose> sum(poses.front().size(), Pose {.rotation = {}, .translation = glm::vec3(0.0f)});
+	for (size_t i = 0; i < poses.size() && i < weights.size(); ++i)
+	{
+		const auto weight = weights[i];
+		for (size_t joint = 0; joint < sum.size() && joint < poses[i].size(); ++joint)
+		{
+			for (size_t r = 0; r < 3; ++r)
+			{
+				for (size_t c = 0; c < 3; ++c)
+				{
+					sum[joint].rotation.at(r).at(c) += weight * poses[i][joint].rotation.at(r).at(c);
+				}
+			}
+			sum[joint].translation += weight * poses[i][joint].translation;
+		}
+	}
+	return sum;
+}
+
+void AddLayer(std::vector<Pose>& poses, const Animation& layer, uint32_t timeMs, size_t referenceFrame,
+              const Skeleton& skeleton, std::span<const uint32_t> mirror)
+{
+	if (layer.frames.empty() || poses.empty())
+	{
+		return;
+	}
+	const bool mirrored = !mirror.empty();
+	const auto count = std::min(poses.size(), skeleton.parents.size());
+	const auto& reference = layer.frames[std::min(referenceFrame, layer.frames.size() - 1)];
+	const auto [from, to, t] = FindFrames(layer, timeMs);
+
+	for (size_t slot = 0; slot < layer.rotatedJoints.size(); ++slot)
+	{
+		const auto joint = layer.rotatedJoints[slot];
+		const auto destination = Destination(mirror, joint);
+		if (joint >= count || destination >= count)
+		{
+			continue;
+		}
+		const auto keyframe =
+		    BlendKeyframes(layer.frames[from].eulerAngles[slot], layer.frames[to].eulerAngles[slot], t, mirrored);
+		const auto referenceEuler = mirrored ? MirrorEuler(reference.eulerAngles[slot]) : reference.eulerAngles[slot];
+		// A bone's keyframe rotation sits just before its parent's inverse rest rotation; the layer's turn away from its
+		// reference goes in straight after the keyframe
+		const auto parent = skeleton.parents[destination];
+		const bool hasParent = destination != 0 && parent != k_NoParent && parent < count;
+		auto rotation = poses[destination].rotation;
+		if (hasParent)
+		{
+			rotation = Multiply(rotation, skeleton.restRotations[parent]);
+		}
+		rotation = Multiply(Multiply(rotation, Transpose(RotationYXZ(referenceEuler))), keyframe);
+		if (hasParent)
+		{
+			rotation = Multiply(rotation, skeleton.inverseRestRotations[parent]);
+		}
+		poses[destination].rotation = rotation;
+	}
+
+	for (size_t slot = 0; slot < layer.translatedJoints.size(); ++slot)
+	{
+		const auto joint = layer.translatedJoints[slot];
+		const auto destination = Destination(mirror, joint);
+		if (joint >= count || destination >= count)
+		{
+			continue;
+		}
+		const auto& a = layer.frames[from].translations[slot];
+		const auto& b = layer.frames[to].translations[slot];
+		const auto move = ((b - a) * t) + a - reference.translations[slot];
+		poses[destination].translation += mirrored ? MirrorMove(move, joint) : move;
+	}
+}
+
+std::vector<uint32_t> MirrorJoints(std::span<const glm::mat4> rest)
+{
+	// Bones closer than this share of the skeleton's reach count as in the same place
+	constexpr float k_Tolerance = 0.03f;
+	const auto count = rest.size();
+	std::vector<uint32_t> mirror(count);
+	std::vector<glm::vec3> positions(count);
+	float reach = 0.0f;
+	for (size_t i = 0; i < count; ++i)
+	{
+		mirror[i] = static_cast<uint32_t>(i);
+		positions[i] = glm::vec3(rest[i][3]);
+		reach = std::max(reach, glm::length(positions[i]));
+	}
+	const auto tolerance = std::max(reach * k_Tolerance, 1e-6f);
+	for (size_t i = 0; i < count; ++i)
+	{
+		if (std::abs(positions[i].x) <= tolerance)
+		{
+			continue;
+		}
+		const glm::vec3 reflected {-positions[i].x, positions[i].y, positions[i].z};
+		std::optional<size_t> best;
+		float bestDistance = tolerance;
+		for (size_t j = 0; j < count; ++j)
+		{
+			const auto distance = glm::length(positions[j] - reflected);
+			if (j != i && distance <= bestDistance)
+			{
+				best = j;
+				bestDistance = distance;
+			}
+		}
+		if (best)
+		{
+			mirror[i] = static_cast<uint32_t>(*best);
+		}
+	}
+	// Only pairs that agree on each other
+	for (size_t i = 0; i < count; ++i)
+	{
+		if (mirror[mirror[i]] != i)
+		{
+			mirror[i] = static_cast<uint32_t>(i);
+		}
+	}
+	return mirror;
 }
 
 std::vector<glm::mat4> ComposeBoneMatrices(std::span<const Pose> poses, std::span<const uint32_t> parents)

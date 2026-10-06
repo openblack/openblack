@@ -95,8 +95,26 @@ struct FrameSpan
 /// The bones' poses at a time of a cycle: the bones it moves follow its keyframes, all others take the first frame of
 /// the stand animation. Keyframe rotations are in the rest pose's space; each bone's own is relative to its parent's
 /// rest rotation.
+///
+/// Given a mirror (see MirrorJoints), the animation plays left to right: each bone's keyframes move its mirror bone
+/// instead, their y and z angles negated, and their movement away from the stand's first frame flipped across the body.
 [[nodiscard]] std::vector<Pose> SampleCycle(const Animation& animation, const Animation& stand, uint32_t timeMs,
-                                            const Skeleton& skeleton);
+                                            const Skeleton& skeleton, std::span<const uint32_t> mirror = {});
+
+/// Poses summed by weight, rotation matrices and translations element by element, as animations playing together
+/// (walking into running, say) are. The weights are expected to add up to 1.
+[[nodiscard]] std::vector<Pose> WeightedSum(std::span<const std::vector<Pose>> poses, std::span<const float> weights);
+
+/// Plays an animation on top of poses: each bone it moves is turned and moved by how far its keyframes at the time are
+/// from a reference keyframe of the same animation. Turning the head to look about, the face's expressions and
+/// gestures such as nodding are layered this way. A mirror flips the layer as SampleCycle does.
+void AddLayer(std::vector<Pose>& poses, const Animation& layer, uint32_t timeMs, size_t referenceFrame,
+              const Skeleton& skeleton, std::span<const uint32_t> mirror = {});
+
+/// Each bone's mirror bone across the body's x = 0 plane in the rest pose: a left leg's right leg, a bone along the
+/// middle itself. Bones are paired when each is where the other would be reflected; any without a clear partner keep
+/// their own place.
+[[nodiscard]] std::vector<uint32_t> MirrorJoints(std::span<const glm::mat4> rest);
 
 /// The matrices in the mesh's space of the bones posed, in the form L3DMesh::GetBoneMatrices gives the rest pose
 [[nodiscard]] std::vector<glm::mat4> ComposeBoneMatrices(std::span<const Pose> poses, std::span<const uint32_t> parents);

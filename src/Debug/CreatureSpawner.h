@@ -41,6 +41,8 @@ private:
 	void DrawSettings() noexcept;
 	/// The creature picked in the list: its alignment, physique and size, changed as it stands
 	void DrawSelected() noexcept;
+	/// The picked creature's mind: what it is doing, wants and looks at, and buttons to make it do things
+	void DrawMind(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
 	void DrawCreatures() noexcept;
 	void Spawn(glm::vec2 screenCoord) noexcept;
@@ -63,6 +65,9 @@ private:
 	std::optional<glm::vec2> _placeAt;
 	std::mt19937 _random {std::random_device {}()};
 	std::optional<entt::entity> _selected;
+	/// The action and gesture picked to play on the selected creature
+	size_t _action {0};
+	size_t _gesture {0};
 };
 
 } // namespace openblack::debug::gui
