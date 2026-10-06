@@ -39,6 +39,7 @@
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
+#include "ECS/Systems/Implementations/MagicSystem.h"
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/ParticleSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
@@ -90,6 +91,7 @@ using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LivingActionSystem;
+using openblack::ecs::systems::MagicSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::ParticleSystem;
 using openblack::ecs::systems::PathfindingSystem;
@@ -187,6 +189,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::influenceSystem::emplace<InfluenceSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	Locator::particleSystem::emplace<ParticleSystem>();
+	Locator::magicSystem::emplace<MagicSystem>();
 	return true;
 }
 
@@ -245,6 +248,7 @@ void openblack::ShutDownServices()
 	Locator::fieldSystem::reset();
 	Locator::soundTagSystem::reset();
 	Locator::townDesireSystem::reset();
+	Locator::magicSystem::reset();
 	Locator::particleSystem::reset();
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
