@@ -32,6 +32,19 @@ Ocean::Ocean() noexcept
 }
 Ocean::~Ocean() noexcept = default;
 
+void Ocean::ResizeReflectionFramebuffer(glm::u16vec2 size)
+{
+	uint16_t width = 0;
+	uint16_t height = 0;
+	_reflectionFrameBuffer->GetSize(width, height);
+	if (size.x == 0 || size.y == 0 || (width == size.x && height == size.y))
+	{
+		return;
+	}
+	_reflectionFrameBuffer = std::make_unique<FrameBuffer>("Reflection", size.x, size.y, graphics::TextureFormat::RGBA8,
+	                                                       graphics::TextureFormat::Depth24Stencil8);
+}
+
 void Ocean::CreateMesh()
 {
 	VertexDecl decl;

@@ -39,6 +39,7 @@ public:
 	~Ocean() noexcept;
 
 	[[nodiscard]] graphics::FrameBuffer& GetReflectionFramebuffer() const noexcept override { return *_reflectionFrameBuffer; }
+	void ResizeReflectionFramebuffer(glm::u16vec2 size) override;
 	[[nodiscard]] graphics::Mesh& GetMesh() const noexcept override { return *_mesh; }
 	[[nodiscard]] entt::id_type GetDiffuseTexture() const noexcept override { return k_DiffuseTextureId; }
 	[[nodiscard]] entt::id_type GetAlphaTexture() const noexcept override { return k_AlphaTextureId; }
