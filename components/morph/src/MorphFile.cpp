@@ -375,7 +375,9 @@ void MorphFile::ReadTattooSites(std::istream& stream, uint32_t version) noexcept
 	// The sound bank's name, then seven sizes, then twelve pairs or triples of numbers
 	if (version > 18)
 	{
-		skip(0x20);
+		std::array<char, 0x20> bank {};
+		stream.read(bank.data(), bank.size());
+		_soundBankName.assign(bank.data(), strnlen(bank.data(), bank.size()));
 	}
 	skip((version < 11 ? 1 : 7) * k_Field);
 	skip(12 * (version > 12 ? 3 : 2) * k_Field);

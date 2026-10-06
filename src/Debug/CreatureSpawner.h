@@ -51,6 +51,10 @@ private:
 	void DrawBody(entt::entity entity) noexcept;
 	/// The picked creature's tattoos and marks, to put on and take off, and how its shadow and seams are drawn
 	void DrawAppearance(entt::entity entity) noexcept;
+	/// The mute for every creature's sounds and the switch for other players' creatures' voices
+	void DrawAudioSettings() noexcept;
+	/// The picked creature's last sounds, and buttons to play each sound its animations make
+	void DrawAudio(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
 	/// The picked creature's movement: its speed and route, and the command mode
 	void DrawMovement(entt::entity entity) noexcept;

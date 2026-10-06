@@ -64,7 +64,9 @@ static_assert(sizeof(AnimationHeader) == 0x2c);
 
 struct HairHeader
 {
-	uint32_t unknown0x0; // TODO(#460):
+	/// What the species is to its sound bank: the object key its voice is looked up by (the values of the game's
+	/// Data/SoundObject.h, such as 3 for the ape and 5 for the tiger)
+	uint32_t soundObject;
 	uint32_t hairGroupCount;
 };
 static_assert(sizeof(HairHeader) == 0x8);
@@ -127,12 +129,18 @@ struct Hair
 };
 static_assert(sizeof(Hair) == 0x4c);
 
+/// Something that happens at a moment of an animation of the base set: a sound, or a tuft of hair shown or hidden
 struct ExtraData
 {
-	uint32_t unknown0x0; // TODO(#465)
-	uint32_t unknown0x4; // TODO(#465)
-	uint32_t unknown0x8; // TODO(#465)
-	uint32_t unknown0xc; // TODO(#465)
+	/// 0 for a sound from the species' own bank (its voice), 1 to show (mode 0) or hide a hair group, 2 for a sound from
+	/// the bank all creatures share (footsteps, blows, snores)
+	uint32_t type;
+	/// When it happens, in milliseconds from the start of the animation
+	uint32_t frame;
+	/// The sound's action key (the values of the game's Data/SoundAction.h), or the hair group
+	uint32_t action;
+	/// 0 plays the sound, 1 stops it and 2 lets its loop run out; for a hair group, 0 shows it
+	uint32_t mode;
 };
 static_assert(sizeof(ExtraData) == 0x10);
 
@@ -240,6 +248,9 @@ protected:
 	HairHeader _hairHeader;
 	std::vector<HairGroup> _hairGroups;
 	std::vector<std::vector<ExtraData>> _extraData; ///< related to \ref _base_animation
+	/// The name of the species' sound bank in Audio/SFX/Creature, without its extension, in creature files from version
+	/// 19 on
+	std::string _soundBankName;
 	/// The creature's eyes, in creature files from version 14 on
 	std::optional<CreatureEyes> _creatureEyes;
 	/// Where the creature's tattoos go, in creature files from version 15 on
@@ -292,7 +303,11 @@ public:
 		return &_variantAnimations.at(variant)[static_cast<size_t>(indices[specIndex])];
 	}
 	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const noexcept { return _hairGroups; }
+	[[nodiscard]] const HairHeader& GetHairHeader() const noexcept { return _hairHeader; }
+	/// For every animation of the spec file in order, what happens at moments of it
 	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const noexcept { return _extraData; }
+	/// Empty when the file has none
+	[[nodiscard]] const std::string& GetSoundBankName() const noexcept { return _soundBankName; }
 	[[nodiscard]] const std::optional<CreatureEyes>& GetCreatureEyes() const noexcept { return _creatureEyes; }
 	[[nodiscard]] const std::optional<TattooSites>& GetTattooSites() const noexcept { return _tattooSites; }
 };

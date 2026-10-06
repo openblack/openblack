@@ -56,6 +56,7 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	}
 
 	std::printf("%zu hair groups\n", morph.GetHairGroups().size());
+	std::printf("sound object %u, sound bank \"%s\"\n", morph.GetHairHeader().soundObject, morph.GetSoundBankName().c_str());
 
 	const auto& extraData = morph.GetExtraData();
 
@@ -289,10 +290,10 @@ int ShowExtraData(openblack::morph::MorphFile& morph)
 		for (const auto& data : list)
 		{
 			std::printf("\t[%2u]\n", j);
-			std::printf("\t\tunknown0x0: 0x%08X\n", data.unknown0x0);
-			std::printf("\t\tunknown0x4: 0x%08X\n", data.unknown0x4);
-			std::printf("\t\tunknown0x8: 0x%08X\n", data.unknown0x8);
-			std::printf("\t\tunknown0xc: 0x%08X\n", data.unknown0xc);
+			std::printf("\t\ttype: %u\n", data.type);
+			std::printf("\t\tframe: %u ms\n", data.frame);
+			std::printf("\t\taction: %u\n", data.action);
+			std::printf("\t\tmode: %u\n", data.mode);
 			++j;
 		}
 		++i;

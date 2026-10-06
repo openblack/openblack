@@ -101,6 +101,8 @@ LandData flat_land::Build(bool pool)
 	std::ranges::fill(country.materials, lnd::LNDMapMaterial {.indices = {0, 0}, .coefficient = 0});
 
 	auto& material = data.materials.emplace_back();
+	// Grass, so that what walks on it sounds as on land
+	material.type = k_GrassMaterial;
 	for (int x = 0; x < lnd::LNDMaterial::k_Width; ++x)
 	{
 		for (int z = 0; z < lnd::LNDMaterial::k_Height; ++z)

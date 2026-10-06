@@ -23,6 +23,7 @@
 #include <glm/vec3.hpp>
 
 #include "3D/SkeletalAnimation.h"
+#include "Creature/CreatureAudio.h"
 #include "Creature/CreatureEyes.h"
 #include "Creature/CreatureHair.h"
 #include "Creature/CreatureMorph.h"
@@ -110,6 +111,13 @@ struct CreatureRig
 
 	/// Where the species' tattoos go, for species that have places for them
 	std::optional<creature_tattoo::Sites> tattooSites;
+
+	/// The sounds placed on moments of each animation of the base mesh, in the order of the creature spec file
+	std::vector<std::vector<creature_audio::SoundEvent>> soundEvents;
+	/// What the species is to its voice bank, the object key its voice is looked up by
+	int32_t soundObject {0};
+	/// The voice bank the file names, without its extension, empty when it names none
+	std::string soundBankName;
 
 	/// An animated mesh's animation, falling back on the base's when the mesh has none of its own
 	[[nodiscard]] const skeletal_animation::Animation* GetAnimation(Mesh mesh, size_t index) const;

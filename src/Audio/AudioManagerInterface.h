@@ -38,6 +38,28 @@ namespace audio
 
 class AtmosPlayer;
 
+/// What became of an animation effect asked for
+struct AnimEffectPlay
+{
+	enum class Outcome : uint8_t
+	{
+		Played,
+		/// The bank is not loaded or has no effect for the keys
+		NoEffect,
+		/// The sample the effect picked is not loaded
+		NotLoaded,
+		/// The listener is beyond the sample's maximum distance
+		TooFar,
+		/// The bank header plays the sample once and the owner is playing it or another of its voice group
+		AlreadyPlaying,
+	};
+	Outcome outcome {Outcome::NoEffect};
+	/// The emitter playing it, null when nothing plays
+	entt::entity emitter {entt::null};
+	/// The sample the effect picked, none when the bank has no effect for the keys
+	std::optional<int32_t> sample;
+};
+
 /// A music bank's group and its number of samples
 struct MusicBankInfo
 {
@@ -96,8 +118,8 @@ public:
 	/// a one-shot 3D sound at position on behalf of owner. Nothing plays when the listener is beyond the sample's
 	/// maximum distance, or when the bank header plays the sample once and owner is playing it, or another of its
 	/// voice group, already.
-	virtual void PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
-	                            const glm::vec3& position) = 0;
+	virtual AnimEffectPlay PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
+	                                      const glm::vec3& position) = 0;
 	virtual const Sound& GetSound(entt::id_type id) = 0;
 	virtual void CreateSoundGroup(const std::string& name) = 0;
 	virtual void AddToSoundGroup(const std::string& name, entt::id_type id) = 0;

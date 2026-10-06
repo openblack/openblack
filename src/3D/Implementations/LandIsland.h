@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -51,6 +52,7 @@ private:
 	[[nodiscard]] std::vector<uint8_t> CreateCellColourMap() const;
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
+	std::vector<uint16_t> _materialTypes;
 
 	/// One more than the index of each block of the map, [x * 32 + z], or 0 where there is no land
 	std::array<uint16_t, 1024> _blockIndexLookup {0};
@@ -60,6 +62,7 @@ public:
 	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override { return _landBlocks; }
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
+	[[nodiscard]] std::span<const uint16_t> GetMaterialTypes() const override { return _materialTypes; }
 
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override { return *_heightMap; }
 	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override { return *_luminosityMap; }

@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <filesystem>
+#include <span>
 #include <vector>
 
 #include <entt/core/hashed_string.hpp>
@@ -59,6 +60,9 @@ public:
 	[[nodiscard]] virtual std::vector<LandBlock>& GetBlocks() = 0;
 	[[nodiscard]] virtual const std::vector<LandBlock>& GetBlocks() const = 0;
 	[[nodiscard]] virtual const std::vector<lnd::LNDCountry>& GetCountries() const = 0;
+	/// The terrain type of each of the land's materials, which the countries blend by index: what the ground is
+	/// made of, for its sounds. Empty when no land is loaded.
+	[[nodiscard]] virtual std::span<const uint16_t> GetMaterialTypes() const { return {}; }
 
 	[[nodiscard]] virtual const graphics::Texture2D& GetHeightMap() const = 0;
 	/// Each cell corner's luminosity, laid out as the height map, 255 where there is no block

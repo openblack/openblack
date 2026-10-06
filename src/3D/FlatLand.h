@@ -24,6 +24,8 @@ constexpr uint8_t k_Altitude = 32;
 constexpr uint8_t k_Luminosity = 0xFF;
 /// The ambient sound of every cell: countryside
 constexpr uint8_t k_SoundFlags = 7 << 2;
+/// The terrain type of the plane's material: grass
+constexpr uint16_t k_GrassMaterial = 18;
 /// The bump map's value that leaves the materials' colours as they are
 constexpr uint8_t k_FlatBump = 0x80;
 

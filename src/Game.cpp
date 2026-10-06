@@ -77,6 +77,7 @@
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureAudioSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
@@ -692,6 +693,11 @@ bool Game::Update() noexcept
 		// Their hair swings from the posed bodies
 		auto creatureHair = profiler.BeginScoped(Profiler::Stage::CreatureHairUpdate);
 		Locator::creatureHairSystem::value().Update(gameTime);
+	}
+	{
+		// They make the sounds of the moments their animations have played past
+		auto creatureAudio = profiler.BeginScoped(Profiler::Stage::CreatureAudioUpdate);
+		Locator::creatureAudioSystem::value().Update(gameTime);
 	}
 	{
 		// Their skins are painted again where their alignment, tattoos or marks have changed

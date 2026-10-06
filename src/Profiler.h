@@ -34,6 +34,7 @@ public:
 		CreatureAnimationUpdate,
 		CreatureHairUpdate,
 		CreatureSkinUpdate,
+		CreatureAudioUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -75,6 +76,7 @@ public:
 	    "Creature Animation",   //
 	    "Creature Hair",        //
 	    "Creature Skin",        //
+	    "Creature Audio",       //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //

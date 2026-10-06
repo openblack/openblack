@@ -295,6 +295,7 @@ void CreatureSpawner::DrawSelected() noexcept
 	if (_selected.has_value())
 	{
 		DrawAppearance(*_selected);
+		DrawAudio(*_selected);
 		DrawMovement(*_selected);
 		DrawMind(*_selected);
 		DrawBody(*_selected);
@@ -672,6 +673,7 @@ void CreatureSpawner::DrawCreatures() noexcept
 			hair.SetShown(shown);
 		}
 	}
+	DrawAudioSettings();
 	ImGui::Text("%zu creature%s", creatures.size(), creatures.size() == 1 ? "" : "s");
 	if (_selected.has_value() && std::ranges::find(creatures, *_selected) == creatures.end())
 	{

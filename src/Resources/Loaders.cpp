@@ -483,6 +483,25 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 	}
 
 	rig->meshNames = meshNames;
+
+	// The sounds on moments of the animations
+	const auto& extraData = file.GetExtraData();
+	rig->soundEvents.resize(extraData.size());
+	for (size_t i = 0; i < extraData.size(); ++i)
+	{
+		for (const auto& data : extraData[i])
+		{
+			rig->soundEvents[i].push_back({
+			    .kind = static_cast<creature_audio::EventKind>(data.type),
+			    .timeMs = static_cast<int32_t>(data.frame),
+			    .action = static_cast<audio::SoundAction>(data.action),
+			    .mode = static_cast<int32_t>(data.mode),
+			});
+		}
+	}
+	rig->soundObject = static_cast<int32_t>(file.GetHairHeader().soundObject);
+	rig->soundBankName = file.GetSoundBankName();
+
 	if (const auto& sites = file.GetTattooSites(); sites.has_value())
 	{
 		auto& tattooSites = rig->tattooSites.emplace();

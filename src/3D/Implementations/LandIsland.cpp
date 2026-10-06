@@ -15,6 +15,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <iterator>
 #include <span>
 #include <stdexcept>
 
@@ -223,6 +224,9 @@ void LandIsland::Build(const LandData& data)
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", data.countries.size());
 	_countries = data.countries;
+	_materialTypes.clear();
+	std::ranges::transform(data.materials, std::back_inserter(_materialTypes),
+	                       [](const lnd::LNDMaterial& material) { return material.type; });
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", data.materials.size());
 	std::vector<uint16_t> rgba5TextureData;
