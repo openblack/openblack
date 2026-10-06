@@ -21,20 +21,36 @@ class Resources final: public ResourcesInterface
 {
 public:
 	MeshManager& GetMeshes() override { return _meshes; }
+	L3DFileManager& GetL3DFiles() override { return _l3dFiles; }
+	Bitmap16BManager& GetBitmaps() override { return _bitmaps; }
+	LandLightPaletteManager& GetLandLightPalettes() override { return _landLightPalettes; }
 	TextureManager& GetTextures() override { return _textures; }
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
+	CreatureRigManager& GetCreatureRigs() override { return _creatureRigs; }
+	CreatureSkinArtManager& GetCreatureSkinArt() override { return _creatureSkinArt; }
 	SoundManager& GetSounds() override { return _sounds; }
 	GlowManager& GetGlows() override { return _glows; }
+	CameraPathManager& GetCameraPaths() override { return _cameraPaths; }
+	ParticleFileManager& GetParticleFiles() override { return _particleFiles; }
+	ParticleBitmapManager& GetParticleBitmaps() override { return _particleBitmaps; }
 
 private:
 	MeshManager _meshes;
+	L3DFileManager _l3dFiles;
+	Bitmap16BManager _bitmaps;
+	LandLightPaletteManager _landLightPalettes;
 	TextureManager _textures;
 	AnimationManager _animations;
 	LevelManager _levels;
 	CreatureMindManager _creatureMinds;
+	CreatureRigManager _creatureRigs;
+	CreatureSkinArtManager _creatureSkinArt;
 	SoundManager _sounds;
 	GlowManager _glows;
+	CameraPathManager _cameraPaths;
+	ParticleFileManager _particleFiles;
+	ParticleBitmapManager _particleBitmaps;
 };
 } // namespace openblack::resources

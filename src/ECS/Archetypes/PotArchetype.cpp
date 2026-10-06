@@ -41,7 +41,7 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 	const auto& info = Locator::infoConstants::value().pot.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(1.0f));
-	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot));
+	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot), type);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 	if (info.potType == PotType::PileFood)

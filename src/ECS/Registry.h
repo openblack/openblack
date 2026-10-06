@@ -13,6 +13,7 @@
 #include <entt/entity/helper.hpp>
 #include <entt/entity/registry.hpp>
 
+#include "ECS/DrawLayoutComponents.h"
 #include "ECS/RegistryContext.h"
 
 namespace openblack
@@ -49,24 +50,25 @@ public:
 	template <typename It>
 	void Destroy(It first, It last)
 	{
+		SetLayoutDirty();
 		_registry.destroy(first, last);
 	}
 	template <typename Component, typename... Args>
 	decltype(auto) Assign(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
-		SetDirty();
+		ComponentsChanged<Component>();
 		return _registry.emplace<Component>(entity, std::forward<Args>(args)...);
 	}
 	template <typename Component, typename... Args>
 	decltype(auto) AssignOrReplace(entt::entity entity, [[maybe_unused]] Args&&... args)
 	{
-		SetDirty();
+		ComponentsChanged<Component>();
 		return _registry.emplace_or_replace<Component>(entity, std::forward<Args>(args)...);
 	}
 	template <typename Component, typename... Other>
 	decltype(auto) Remove(entt::entity entity)
 	{
-		SetDirty();
+		ComponentsChanged<Component, Other...>();
 		return _registry.remove<Component, Other...>(entity);
 	}
 	template <typename After, typename Before, typename... Args>
@@ -76,7 +78,10 @@ public:
 		Remove<Before>(entity);
 		return Assign<After>(entity, std::forward<Args>(args)...);
 	}
+	/// What is drawn has moved: the instances are uploaded again
 	virtual void SetDirty();
+	/// Entities came or went, or gained or lost what they are drawn as: the draw lists are made again as well
+	virtual void SetLayoutDirty();
 	virtual RegistryContext& Context();
 	[[nodiscard]] virtual const RegistryContext& Context() const;
 	virtual void Reset();
@@ -155,6 +160,20 @@ public:
 	virtual ~Registry() = default;
 
 protected:
+	/// What is drawn changes with the components an entity gains or loses (see k_ChangesDrawLayout)
+	template <typename... Components>
+	void ComponentsChanged()
+	{
+		if constexpr ((k_ChangesDrawLayout<Components> || ...))
+		{
+			SetLayoutDirty();
+		}
+		else
+		{
+			SetDirty();
+		}
+	}
+
 	entt::registry _registry;
 };
 

@@ -28,6 +28,7 @@ void Registry::Release(entt::entity entity)
 
 void Registry::Destroy(entt::entity entity)
 {
+	SetLayoutDirty();
 	_registry.destroy(entity);
 }
 
@@ -43,7 +44,7 @@ const RegistryContext& Registry::Context() const
 
 void Registry::Reset()
 {
-	SetDirty();
+	SetLayoutDirty();
 	_registry.clear();
 	_registry.ctx().erase<RegistryContext>();
 	_registry.ctx().emplace<RegistryContext>();
@@ -54,6 +55,14 @@ void Registry::SetDirty()
 	if (Locator::rendereringSystem::has_value())
 	{
 		Locator::rendereringSystem::value().SetDirty();
+	}
+}
+
+void Registry::SetLayoutDirty()
+{
+	if (Locator::rendereringSystem::has_value())
+	{
+		Locator::rendereringSystem::value().SetLayoutDirty();
 	}
 }
 } // namespace openblack::ecs

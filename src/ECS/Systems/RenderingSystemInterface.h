@@ -78,7 +78,10 @@ struct RenderContext
 	std::vector<glm::mat4> treeInstanceUniforms;
 	std::vector<glm::vec4> treeSwayParams;
 
+	/// The instances are to be uploaded again
 	bool dirty {true};
+	/// The draw lists are to be made again, then the instances uploaded
+	bool layoutDirty {true};
 	bool hasBoundingBoxes {false};
 	uint32_t treeInstanceCount {0};
 };
@@ -86,7 +89,10 @@ struct RenderContext
 class RenderingSystemInterface
 {
 public:
+	/// What is drawn has moved
 	virtual void SetDirty() = 0;
+	/// Entities came or went or changed what they are drawn as
+	virtual void SetLayoutDirty() = 0;
 	virtual void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) = 0;
 	virtual const RenderContext& GetContext() = 0;
 	inline ~RenderingSystemInterface() = default;

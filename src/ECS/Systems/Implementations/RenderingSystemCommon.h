@@ -30,6 +30,7 @@ class RenderingSystemCommon: public RenderingSystemInterface
 public:
 	~RenderingSystemCommon();
 	void SetDirty() override;
+	void SetLayoutDirty() override;
 	void PrepareDraw(bool drawBoundingBox, bool drawFootpaths, bool drawStreams) override;
 	const RenderContext& GetContext() override { return _renderContext; }
 

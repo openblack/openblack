@@ -13,6 +13,10 @@
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
 #endif
 
+#include <cstdint>
+
+#include <vector>
+
 #include "Map.h"
 
 namespace openblack::ecs
@@ -33,6 +37,9 @@ private:
 
 	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _fixedGrid;
 	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _mobileGrid;
+	/// The cells with anything in them, the only ones there is anything to clear in: most of the grid is empty
+	std::vector<uint32_t> _occupiedFixed;
+	std::vector<uint32_t> _occupiedMobile;
 };
 
 } // namespace openblack::ecs

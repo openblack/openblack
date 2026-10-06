@@ -69,6 +69,13 @@ public:
 
 	[[nodiscard]] bool Contains(entt::id_type identifier) const { return _resourceCache.contains(identifier); }
 
+	/// The resource, or null when there is none of the id: one lookup, for what runs for every draw
+	[[nodiscard]] const ResourceType* Find(entt::id_type identifier) const
+	{
+		const auto resource = _resourceCache[identifier];
+		return resource ? &*resource : nullptr;
+	}
+
 	template <typename T>
 	[[nodiscard]] bool Contains(T identifier) const
 	{

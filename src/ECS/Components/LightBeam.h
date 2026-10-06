@@ -9,19 +9,13 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "Enums.h"
+#include "3D/Light.h"
 
 namespace openblack::ecs::components
 {
-
-struct Pot
+/// The beam of a spot light, drawn with its glow
+struct LightBeam
 {
-	uint16_t amount;
-	uint16_t maxAmount;
-	/// What kind of pot or pile it is, which says what it holds
-	PotInfo type {PotInfo::FoodPot};
+	LightCone cone;
 };
-
 } // namespace openblack::ecs::components

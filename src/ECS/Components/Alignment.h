@@ -9,19 +9,13 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Pot
+/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
+struct Alignment
 {
-	uint16_t amount;
-	uint16_t maxAmount;
-	/// What kind of pot or pile it is, which says what it holds
-	PotInfo type {PotInfo::FoodPot};
+	float value {0.0f};
 };
 
 } // namespace openblack::ecs::components

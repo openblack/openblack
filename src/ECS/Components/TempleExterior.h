@@ -9,19 +9,23 @@
 
 #pragma once
 
-#include <cstdint>
+#include <optional>
 
-#include "Enums.h"
+#include <glm/vec2.hpp>
 
 namespace openblack::ecs::components
 {
 
-struct Pot
+/// How a temple's outside looks: its player's alignment and share of influence, each from 0 to 1, and where each is
+/// heading. Its mesh is blended for them as they change.
+struct TempleExterior
 {
-	uint16_t amount;
-	uint16_t maxAmount;
-	/// What kind of pot or pile it is, which says what it holds
-	PotInfo type {PotInfo::FoodPot};
+	float alignment {0.5f};
+	float alignmentTarget {0.5f};
+	float size {0.0f};
+	float sizeTarget {0.0f};
+	/// The size and alignment its mesh was last blended for, none before it first is
+	std::optional<glm::vec2> morphed;
 };
 
 } // namespace openblack::ecs::components

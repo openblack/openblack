@@ -54,14 +54,16 @@ void MapProduction::Rebuild()
 
 void MapProduction::Clear()
 {
-	for (auto& g : _fixedGrid)
+	for (const auto index : _occupiedFixed)
 	{
-		g.clear();
+		_fixedGrid.at(index).clear();
 	}
-	for (auto& g : _mobileGrid)
+	for (const auto index : _occupiedMobile)
 	{
-		g.clear();
+		_mobileGrid.at(index).clear();
 	}
+	_occupiedFixed.clear();
+	_occupiedMobile.clear();
 }
 
 void MapProduction::Build()
@@ -80,7 +82,12 @@ void MapProduction::Build()
 				const auto cellId = MapProduction::CellId(x, y);
 				if (glm::distance2(GetCellCenter(cellId), fixed.boundingCenter) < radius * radius)
 				{
-					auto& cell = _fixedGrid.at(cellId.x + cellId.y * k_GridSize.x);
+					const auto index = static_cast<uint32_t>(cellId.x + cellId.y * k_GridSize.x);
+					auto& cell = _fixedGrid.at(index);
+					if (cell.empty())
+					{
+						_occupiedFixed.push_back(index);
+					}
 					cell.insert(entity);
 				}
 			}
@@ -89,7 +96,12 @@ void MapProduction::Build()
 	registry.Each<const Mobile, const Transform>(
 	    [this](entt::entity entity, [[maybe_unused]] const Mobile& mobile, const Transform& transform) {
 		    const auto cellId = GetGridCell(transform.position);
-		    auto& cell = _mobileGrid.at(cellId.x + cellId.y * k_GridSize.x);
+		    const auto index = static_cast<uint32_t>(cellId.x + cellId.y * k_GridSize.x);
+		    auto& cell = _mobileGrid.at(index);
+		    if (cell.empty())
+		    {
+			    _occupiedMobile.push_back(index);
+		    }
 		    cell.insert(entity);
 	    });
 }
