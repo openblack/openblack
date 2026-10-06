@@ -10,6 +10,8 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <span>
+#include <typeinfo>
 
 #include <SDL_messagebox.h>
 #include <cxxopts.hpp>
@@ -22,6 +24,7 @@
 // clang-format on
 #endif
 
+#include "Common/CrashHandler.h"
 #include "EngineConfig.h"
 #include "Game.h"
 
@@ -198,6 +201,12 @@ bool parseOptions(int argc, char** argv, openblack::Arguments& args, int& return
 
 int main(int argc, char* argv[]) noexcept
 {
+	const bool crashDialogs = openblack::crash_handler::WantsCrashDialogs(std::span(argv, static_cast<size_t>(argc)));
+	if (!crashDialogs)
+	{
+		openblack::crash_handler::Install();
+	}
+
 	// clang-format off
 	std::cout <<
 	    "==============================================================================\n"
@@ -214,6 +223,7 @@ int main(int argc, char* argv[]) noexcept
 		{
 			return returnCode;
 		}
+		openblack::crash_handler::SetLogFile(args.logFile);
 		auto game = std::make_unique<openblack::Game>(std::move(args));
 		if (!game->Initialize())
 		{
@@ -226,6 +236,11 @@ int main(int argc, char* argv[]) noexcept
 	}
 	catch (std::exception& e)
 	{
+		if (!crashDialogs)
+		{
+			openblack::crash_handler::ReportFatal(openblack::crash_report::CrashKind::UncaughtException, e.what(), {}, 0,
+			                                      typeid(e).name());
+		}
 		std::cerr << e.what() << std::endl;
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error", e.what(), nullptr);
 		return EXIT_FAILURE;
