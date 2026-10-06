@@ -126,6 +126,7 @@ target_link_libraries(
           anm
           glw
           morph
+          psys
           rawimage
           imgui::imgui
           imgui_user
