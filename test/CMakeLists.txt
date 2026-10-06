@@ -48,3 +48,13 @@ openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
 openblack_setup_and_add_json_test(test_camera camera/test_camera.cpp)
+openblack_setup_and_add_test(test_pack_bank_info pack/test_pack_bank_info.cpp)
+target_link_libraries(test_pack_bank_info PRIVATE pack)
+openblack_setup_and_add_test(test_l3d_lightmaps l3d/test_l3d_lightmaps.cpp)
+target_link_libraries(test_l3d_lightmaps PRIVATE l3d)
+openblack_setup_and_add_test(test_l3d_copy l3d/test_l3d_copy.cpp)
+target_link_libraries(test_l3d_copy PRIVATE l3d)
+openblack_setup_and_add_test(
+  test_l3d_submesh_names l3d/test_l3d_submesh_names.cpp
+)
+target_link_libraries(test_l3d_submesh_names PRIVATE l3d)

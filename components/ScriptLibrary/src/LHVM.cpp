@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 
@@ -158,6 +159,9 @@ int LHVM::LoadBinary(const LHVMFile& file)
 	}
 
 	_tasks.clear();
+	_heldTasks.clear();
+	_resumeFrom.clear();
+	_breakpoints.clear();
 	_ticks = 0;
 	_currentLineNumber = 0;
 	_highestTaskId = 0;
@@ -178,6 +182,26 @@ int LHVM::LoadBinary(const LHVMFile& file)
 		}
 	}
 
+	return EXIT_SUCCESS;
+}
+
+int LHVM::UpdateProgram(const LHVMFile& file)
+{
+	if (!file.IsLoaded() || file.GetInstructions().size() < _instructions.size() ||
+	    file.GetVariablesNames().size() < _variablesNames.size() || file.GetScripts().size() < _scripts.size())
+	{
+		return EXIT_FAILURE;
+	}
+	_instructions = file.GetInstructions();
+	_scripts = file.GetScripts();
+	_data = file.GetData();
+	const auto& names = file.GetVariablesNames();
+	for (auto i = _variablesNames.size(); i < names.size(); ++i)
+	{
+		_variables.emplace_back(DataType::Float, VMValue(0.0f), names[i]);
+	}
+	_variablesNames = names;
+	_highestScriptId = static_cast<uint32_t>(_scripts.size());
 	return EXIT_SUCCESS;
 }
 
@@ -203,6 +227,9 @@ int LHVM::RestoreState(const std::filesystem::path& filepath)
 	_auto = file.GetAutostart();
 
 	_tasks.clear();
+	_heldTasks.clear();
+	_resumeFrom.clear();
+	_breakpoints.clear();
 	for (const auto& task : file.GetTasks())
 	{
 		_tasks.emplace(task.id, task);
@@ -292,6 +319,7 @@ void LHVM::Reboot()
 	_auto.clear();
 	_instructions.clear();
 	_data.clear();
+	_breakpoints.clear();
 
 	_ticks = 0;
 	_highestTaskId = 0;
@@ -333,7 +361,7 @@ void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
 	// execute exception handlers first
 	for (auto& [id, task] : _tasks)
 	{
-		if (task.type & allowedScriptTypesMask)
+		if ((task.type & allowedScriptTypesMask) && !IsParked(id))
 		{
 			_currentStack = &task.stack;
 			if (task.inExceptionHandler)
@@ -357,7 +385,7 @@ void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
 	// execute normal code
 	for (auto& [id, task] : _tasks)
 	{
-		if (task.type & allowedScriptTypesMask)
+		if ((task.type & allowedScriptTypesMask) && !IsParked(id))
 		{
 			_currentStack = &task.stack;
 			if (!task.inExceptionHandler)
@@ -380,7 +408,7 @@ void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
 	// unlock waiting tasks
 	for (auto& [id, task] : _tasks)
 	{
-		if (task.type & allowedScriptTypesMask)
+		if ((task.type & allowedScriptTypesMask) && !IsParked(id))
 		{
 			task.ticks++;
 			if (task.waitingTaskId != 0 && !TaskExists(task.waitingTaskId))
@@ -506,6 +534,8 @@ void LHVM::StopTask(uint32_t taskNumber)
 		}
 
 		_tasks.erase(taskNumber);
+		_heldTasks.erase(taskNumber);
+		_resumeFrom.erase(taskNumber);
 	}
 	else
 	{
@@ -627,7 +657,8 @@ uint32_t LHVM::GetTicksCount()
 
 void LHVM::PushElaspedTime()
 {
-	const float time = GetTicksCount() * 10.0f;
+	// The game's script time is the tick count times 0.1f, rounded once to a float by its 24-bit FPU
+	const auto time = static_cast<float>(static_cast<double>(GetTicksCount()) * static_cast<double>(0.1f));
 	Pushf(time);
 }
 
@@ -722,6 +753,10 @@ void LHVM::CpuLoop(VMTask& task)
 	task.iield = false;
 	while (task.waitingTaskId == 0)
 	{
+		if ((!_breakpoints.empty() || !_heldTasks.empty() || !_resumeFrom.empty()) && DebuggerStops(task))
+		{
+			break;
+		}
 		_currentTask = &task;
 		_executedInstructions++;
 		const auto& instruction = _instructions.at(task.instructionAddress);
@@ -737,6 +772,90 @@ void LHVM::CpuLoop(VMTask& task)
 		task.instructionAddress++;
 	}
 	_currentTask = nullptr;
+}
+
+bool LHVM::DebuggerStops(VMTask& task)
+{
+	const auto address = task.instructionAddress;
+	if (auto held = _heldTasks.find(task.id); held != _heldTasks.end())
+	{
+		if (held->second == 0)
+		{
+			return true;
+		}
+		--held->second;
+		return false;
+	}
+	bool resuming = false;
+	if (auto resume = _resumeFrom.find(task.id); resume != _resumeFrom.end())
+	{
+		resuming = resume->second == address;
+		_resumeFrom.erase(resume);
+	}
+	if (!resuming && _breakpoints.contains(address))
+	{
+		_heldTasks[task.id] = 0;
+		return true;
+	}
+	return false;
+}
+
+bool LHVM::IsParked(uint32_t taskNumber) const
+{
+	const auto held = _heldTasks.find(taskNumber);
+	return held != _heldTasks.end() && held->second == 0;
+}
+
+void LHVM::SetVariable(uint32_t id, VMValue value)
+{
+	if (id < _variables.size())
+	{
+		_variables.at(id).value = value;
+	}
+}
+
+void LHVM::SetTaskVariable(uint32_t taskNumber, size_t index, VMValue value)
+{
+	if (auto task = _tasks.find(taskNumber); task != _tasks.end() && index < task->second.localVars.size())
+	{
+		task->second.localVars.at(index).value = value;
+	}
+}
+
+void LHVM::SetBreakpoint(uint32_t address, bool enabled)
+{
+	if (enabled)
+	{
+		_breakpoints.insert(address);
+	}
+	else
+	{
+		_breakpoints.erase(address);
+	}
+}
+
+void LHVM::HoldTask(uint32_t taskNumber)
+{
+	if (TaskExists(taskNumber))
+	{
+		_heldTasks[taskNumber] = 0;
+	}
+}
+
+void LHVM::StepTask(uint32_t taskNumber)
+{
+	if (auto held = _heldTasks.find(taskNumber); held != _heldTasks.end())
+	{
+		++held->second;
+	}
+}
+
+void LHVM::ContinueTask(uint32_t taskNumber)
+{
+	if (auto task = _tasks.find(taskNumber); task != _tasks.end() && _heldTasks.erase(taskNumber) > 0)
+	{
+		_resumeFrom[taskNumber] = task->second.instructionAddress;
+	}
 }
 
 float LHVM::Fmod(float a, float b)
@@ -796,7 +915,8 @@ void LHVM::Opcode03Pop(VMTask& task, const VMInstruction& instruction)
 		}
 		if (var.type == DataType::Object)
 		{
-			RemoveReference(newVal.uintVal);
+			// the object the variable held until now
+			RemoveReference(var.value.uintVal);
 		}
 		var.value = newVal;
 		var.type = type;
@@ -858,6 +978,20 @@ void LHVM::Opcode05Sys(VMTask& /*task*/, const VMInstruction& instruction)
 			_currentStack->popCount = 0;
 			InvokeNativeCallEnterCallback(id);
 			func.impl();
+			// The game's functions always take their arguments off the stack. One that hasn't been written yet may leave
+			// them, which would shift every argument after it, so they are taken from under whatever it pushed.
+			auto& stack = *_currentStack;
+			const auto in = static_cast<uint32_t>(std::max(func.stackIn, 0));
+			if (stack.popCount == 0 && in > 0 && stack.count >= in + stack.pushCount)
+			{
+				const auto top = stack.count - stack.pushCount;
+				for (uint32_t i = 0; i < stack.pushCount; ++i)
+				{
+					stack.values.at(top - in + i) = stack.values.at(top + i);
+					stack.types.at(top - in + i) = stack.types.at(top + i);
+				}
+				stack.count -= in;
+			}
 			InvokeNativeCallExitCallback(id);
 		}
 		else // if impl not provided, then just adjust the stack
@@ -1348,7 +1482,33 @@ void LHVM::Opcode23Cast(VMTask& task, const VMInstruction& instruction)
 	}
 	else // Mode::CAST
 	{
-		Push(Pop(), instruction.type);
+		// The game's cast converts the value for two types and only retags it for the others
+		switch (instruction.type)
+		{
+		case DataType::Int:
+		{
+			// The bits read as a float, truncated through a 64-bit integer and its low 32 bits kept: out of range and NaN
+			// give 0
+			const auto f = Pop().floatVal;
+			constexpr auto k_Limit = 9.2233720368547758e18f; // 2^63
+			const auto truncated = std::isfinite(f) && std::fabs(f) < k_Limit ? static_cast<int64_t>(f) : 0;
+			Push(VMValue(static_cast<int32_t>(static_cast<uint32_t>(truncated))), DataType::Int);
+			break;
+		}
+		case DataType::Float:
+			// The bits read as an unsigned 32-bit integer
+			Push(VMValue(static_cast<float>(Pop().uintVal)), DataType::Float);
+			break;
+		case DataType::Vector:
+		case DataType::Object:
+		case DataType::Boolean:
+			// The same bits, the new type
+			Push(Pop(), instruction.type);
+			break;
+		default:
+			// Nothing: the value stays as it was
+			break;
+		}
 	}
 }
 

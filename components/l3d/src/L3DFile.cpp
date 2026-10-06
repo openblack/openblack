@@ -71,7 +71,18 @@
  *
  * ------------------------ start of uv2 block ---------------------------------
  *
- *  TODO(#483): Investigate optional UV2 block
+ * - 20 byte header containing:
+ *         block size, header included - 4 bytes
+ *         vertex count - 4 bytes, those of all submeshes
+ *         submesh count - 4 bytes
+ *         coordinates offset - 4 bytes, from the start of the file
+ *         lightmaps offset - 4 bytes, from the start of the file
+ * - vertex count * 2 floats: the lightmap coordinates of each vertex of every
+ *   submesh in turn
+ * - submesh count * 32 bytes, the lightmap of each submesh:
+ *         material - 16 bytes, see the primitive's material, with the
+ *                    lightmap's skin
+ *         zero - 16 bytes
  *
  * ------------------------ start of name block --------------------------------
  *
@@ -170,6 +181,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <algorithm>
 #include <fstream>
 #include <limits>
 #include <utility>
@@ -297,6 +309,115 @@ std::string_view openblack::l3d::ResultToStr(L3DResult result)
 L3DFile::L3DFile() noexcept = default;
 L3DFile::~L3DFile() noexcept = default;
 
+namespace
+{
+/// Spans into items at the same places as spans into other items
+template <typename Item>
+std::vector<std::span<Item>> Rebind(const std::vector<std::span<Item>>& spans, const std::vector<Item>& from,
+                                    std::vector<Item>& to)
+{
+	std::vector<std::span<Item>> rebound;
+	rebound.reserve(spans.size());
+	for (const auto& span : spans)
+	{
+		if (span.empty())
+		{
+			rebound.emplace_back();
+			continue;
+		}
+		const auto offset = static_cast<size_t>(span.data() - from.data());
+		rebound.emplace_back(to.data() + offset, span.size());
+	}
+	return rebound;
+}
+} // namespace
+
+L3DFile::L3DFile(const L3DFile& other)
+{
+	*this = other;
+}
+
+L3DFile& L3DFile::operator=(const L3DFile& other)
+{
+	if (this == &other)
+	{
+		return *this;
+	}
+	_isLoaded = other._isLoaded;
+	_header = other._header;
+	_submeshHeaders = other._submeshHeaders;
+	_skins = other._skins;
+	_extraPoints = other._extraPoints;
+	_primitiveHeaders = other._primitiveHeaders;
+	_vertices = other._vertices;
+	_indices = other._indices;
+	_vertexGroups = other._vertexGroups;
+	_blends = other._blends;
+	_bones = other._bones;
+	_primitiveSpans = Rebind(other._primitiveSpans, other._primitiveHeaders, _primitiveHeaders);
+	_vertexSpans = Rebind(other._vertexSpans, other._vertices, _vertices);
+	_indexSpans = Rebind(other._indexSpans, other._indices, _indices);
+	_vertexGroupSpans = Rebind(other._vertexGroupSpans, other._vertexGroups, _vertexGroups);
+	_blendSpans = Rebind(other._blendSpans, other._blends, _blends);
+	_boneSpans = Rebind(other._boneSpans, other._bones, _bones);
+	_footprint = other._footprint;
+	_uv2Data = other._uv2Data;
+	_lightmapCoordinates = other._lightmapCoordinates;
+	_lightmaps = other._lightmaps;
+	_nameData = other._nameData;
+	_submeshNames = other._submeshNames;
+	_extraMetrics = other._extraMetrics;
+	_eBone = other._eBone;
+	return *this;
+}
+
+bool openblack::l3d::DecodeLightmaps(std::span<const uint8_t> data, uint32_t blockOffset, uint32_t blockSize,
+                                     uint32_t vertexCount, uint32_t submeshCount, std::vector<L3DPoint2D>& coordinates,
+                                     std::vector<L3DLightmap>& lightmaps) noexcept
+{
+	constexpr uint32_t k_HeaderSize = 5 * sizeof(uint32_t);
+	// The data starts after the block's size, vertex count and submesh count
+	constexpr uint32_t k_DataStart = 3 * sizeof(uint32_t);
+	if (blockSize < k_HeaderSize || data.size() < 2 * sizeof(uint32_t))
+	{
+		return false;
+	}
+
+	// The coordinates of every vertex and the lightmap of each submesh, where the block says they are
+	uint32_t coordinatesOffset = 0;
+	uint32_t lightmapsOffset = 0;
+	std::memcpy(&coordinatesOffset, &data[0], sizeof(coordinatesOffset));
+	std::memcpy(&lightmapsOffset, &data[sizeof(uint32_t)], sizeof(lightmapsOffset));
+	const auto blockStart = static_cast<uint64_t>(blockOffset);
+	const auto blockEnd = std::min(blockStart + blockSize, blockStart + k_DataStart + data.size());
+	const auto coordinatesEnd = static_cast<uint64_t>(coordinatesOffset) + uint64_t {vertexCount} * sizeof(L3DPoint2D);
+	const auto lightmapsEnd = static_cast<uint64_t>(lightmapsOffset) + uint64_t {submeshCount} * sizeof(L3DLightmap);
+	if (coordinatesOffset < blockStart + k_HeaderSize || coordinatesEnd > blockEnd ||
+	    lightmapsOffset < blockStart + k_HeaderSize || lightmapsEnd > blockEnd)
+	{
+		return false;
+	}
+
+	coordinates.resize(vertexCount);
+	std::memcpy(coordinates.data(), &data[coordinatesOffset - blockStart - k_DataStart], vertexCount * sizeof(L3DPoint2D));
+	lightmaps.resize(submeshCount);
+	std::memcpy(lightmaps.data(), &data[lightmapsOffset - blockStart - k_DataStart], submeshCount * sizeof(L3DLightmap));
+	return true;
+}
+
+bool openblack::l3d::DecodeSubmeshNames(std::span<const uint8_t> data, uint32_t dataOffset, uint32_t count,
+                                        uint32_t recordsOffset, std::vector<L3DSubmeshName>& names) noexcept
+{
+	const auto recordsEnd = static_cast<uint64_t>(recordsOffset) + uint64_t {count} * sizeof(L3DSubmeshName);
+	if (recordsOffset < dataOffset || recordsEnd > uint64_t {dataOffset} + data.size())
+	{
+		return false;
+	}
+	names.resize(count);
+	std::memcpy(names.data(), &data[recordsOffset - dataOffset], count * sizeof(L3DSubmeshName));
+	return true;
+}
+
 L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 {
 	assert(!_isLoaded);
@@ -346,10 +467,22 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 		}
 		if (_header.skinOffsetsOffset + skinOffsets.size() * sizeof(skinOffsets[0]) > fsize)
 		{
-			return L3DResult::ErrBadSkinOffset;
+			// Data\WeatherSystem\sun.l3d: the file ends where its skin table should start (its header size says 4 bytes
+			// more than the file has); the original ignores the missing skin, so do the same
+			if (_header.skinOffsetsOffset == fsize)
+			{
+				skinOffsets.clear();
+			}
+			else
+			{
+				return L3DResult::ErrBadSkinOffset;
+			}
 		}
-		stream.seekg(_header.skinOffsetsOffset);
-		stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
+		if (!skinOffsets.empty())
+		{
+			stream.seekg(_header.skinOffsetsOffset);
+			stream.read(reinterpret_cast<char*>(skinOffsets.data()), skinOffsets.size() * sizeof(skinOffsets[0]));
+		}
 	}
 	_extraPoints.resize(_header.extraDataCount);
 	if (!_extraPoints.empty() && _header.extraDataOffset != std::numeric_limits<uint32_t>::max())
@@ -662,14 +795,22 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	uint32_t uv2DataSize = 0;
 	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsUV2)) != 0u)
 	{
-		// TODO(#483): Investigate optional UV2 block
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0), std::istream::beg);
+		const auto blockOffset = additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0);
+		stream.seekg(blockOffset, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&uv2DataSize), sizeof(uv2DataSize));
-		stream.seekg(8, std::istream::cur);
+		uint32_t vertexCount = 0;
+		uint32_t submeshCount = 0;
+		stream.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
+		stream.read(reinterpret_cast<char*>(&submeshCount), sizeof(submeshCount));
 		_uv2Data.resize(uv2DataSize);
 		stream.read(reinterpret_cast<char*>(_uv2Data.data()), _uv2Data.size());
+
+		if (vertexCount == _vertices.size() && submeshCount == _submeshHeaders.size())
+		{
+			DecodeLightmaps(_uv2Data, blockOffset, uv2DataSize, vertexCount, submeshCount, _lightmapCoordinates, _lightmaps);
+		}
 	}
 
 	// Name data
@@ -678,12 +819,22 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	{
 		stream.seekg(0x48, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
-		stream.seekg(additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize,
-		             std::istream::beg);
+		const auto blockOffset = additionalDataOffset + (_footprint.has_value() ? _footprint->header.size : 0) + uv2DataSize;
+		stream.seekg(blockOffset, std::istream::beg);
 		stream.read(reinterpret_cast<char*>(&nameDataSize), sizeof(nameDataSize));
-		stream.seekg(8, std::istream::cur);
+		uint32_t nameCount = 0;
+		uint32_t namesOffset = 0;
+		stream.read(reinterpret_cast<char*>(&nameCount), sizeof(nameCount));
+		stream.read(reinterpret_cast<char*>(&namesOffset), sizeof(namesOffset));
 		_nameData.resize(nameDataSize);
 		stream.read(_nameData.data(), _nameData.size());
+
+		if (nameCount == _submeshHeaders.size())
+		{
+			const auto dataSize = std::min<size_t>(_nameData.size(), nameDataSize - std::min(nameDataSize, 3u * 4u));
+			DecodeSubmeshNames({reinterpret_cast<const uint8_t*>(_nameData.data()), dataSize},
+			                   blockOffset + 3 * sizeof(uint32_t), nameCount, namesOffset, _submeshNames);
+		}
 	}
 
 	// Extra Metrics
@@ -709,6 +860,40 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 		}
 	}
 
+	// EBone data: after the footprint, UV2, name and extra metrics blocks, each starting with its size
+	// (the footprint block keeps its size at +8)
+	if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsEBone)) != 0u)
+	{
+		stream.seekg(0x48, std::istream::beg);
+		stream.read(reinterpret_cast<char*>(&additionalDataOffset), sizeof(additionalDataOffset));
+		const auto readSize = [&stream](uint32_t at) {
+			uint32_t size = 0;
+			stream.seekg(at, std::istream::beg);
+			stream.read(reinterpret_cast<char*>(&size), sizeof(size));
+			return size;
+		};
+		uint32_t offset = additionalDataOffset;
+		if ((headerFlags & static_cast<uint32_t>(L3DMeshFlags::ContainsLandscapeFeature)) != 0u)
+		{
+			offset += readSize(offset + 8);
+		}
+		for (const auto flag : {L3DMeshFlags::ContainsUV2, L3DMeshFlags::ContainsNameData, L3DMeshFlags::ContainsExtraMetrics})
+		{
+			if ((headerFlags & static_cast<uint32_t>(flag)) != 0u)
+			{
+				offset += readSize(offset);
+			}
+		}
+		L3DEBone eBone {};
+		stream.seekg(offset, std::istream::beg);
+		stream.read(reinterpret_cast<char*>(&eBone), sizeof(eBone));
+		if (stream && eBone.size == sizeof(L3DEBone))
+		{
+			_eBone = eBone;
+		}
+		stream.clear();
+	}
+
 	// Create spans per submesh
 	_primitiveSpans.reserve(_submeshHeaders.size());
 	_boneSpans.reserve(_submeshHeaders.size());
@@ -728,28 +913,38 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	_vertexSpans.reserve(_submeshHeaders.size());
 	_indexSpans.reserve(_submeshHeaders.size());
 	_vertexGroupSpans.reserve(_submeshHeaders.size());
+	_blendSpans.reserve(_submeshHeaders.size());
 	{
 		uint32_t vertexStart = 0;
 		uint32_t indexStart = 0;
 		uint32_t vertexGroupStart = 0;
+		uint32_t blendStart = 0;
 		for (uint32_t i = 0; i < _submeshHeaders.size(); ++i)
 		{
 			uint32_t vertexLength = 0;
 			uint32_t indexLength = 0;
 			uint32_t vertexGroupLength = 0;
+			uint32_t blendLength = 0;
 			for (auto& primitive : GetPrimitiveSpan(i))
 			{
 				vertexLength += primitive.numVertices;
 				indexLength += primitive.numTriangles * 3;
 				vertexGroupLength += primitive.numGroups;
+				// The primitives whose blends weren't read have none
+				if (primitive.vertexBlendsOffset != std::numeric_limits<uint32_t>::max())
+				{
+					blendLength += primitive.numVertexBlends;
+				}
 			}
 
 			add_span(_vertexSpans, _vertices, vertexStart, vertexLength);
 			add_span(_indexSpans, _indices, indexStart, indexLength);
 			add_span(_vertexGroupSpans, _vertexGroups, vertexGroupStart, vertexGroupLength);
+			add_span(_blendSpans, _blends, blendStart, std::min<size_t>(blendLength, _blends.size() - blendStart));
 			vertexStart += vertexLength;
 			indexStart += indexLength;
 			vertexGroupStart += vertexGroupLength;
+			blendStart += std::min<uint32_t>(blendLength, static_cast<uint32_t>(_blends.size()) - blendStart);
 		}
 	}
 

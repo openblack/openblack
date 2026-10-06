@@ -209,7 +209,10 @@ LNDResult LNDFile::ReadFile(std::istream& stream) noexcept
 	// First 1052 bytes
 	stream.read(reinterpret_cast<char*>(&_header), sizeof(LNDHeader));
 
-	if (_header.blockSize != sizeof(LNDBlock))
+	// The game never reads this, and some playground lands (the god lands, 0GOODXEVIL) store the size of all their
+	// blocks together here
+	if (_header.blockSize != sizeof(LNDBlock) &&
+	    (_header.blockCount == 0 || _header.blockSize != sizeof(LNDBlock) * (_header.blockCount - 1)))
 	{
 		return LNDResult::ErrNonStandardBlockSize;
 	}

@@ -56,6 +56,7 @@ int ListDetails(openblack::morph::MorphFile& morph)
 	}
 
 	std::printf("%zu hair groups\n", morph.GetHairGroups().size());
+	std::printf("sound object %u, sound bank \"%s\"\n", morph.GetHairHeader().soundObject, morph.GetSoundBankName().c_str());
 
 	const auto& extraData = morph.GetExtraData();
 
@@ -120,13 +121,12 @@ int PrintSpecs(openblack::morph::MorphFile& morph)
 void PrintAnimation(const openblack::morph::Animation& animation)
 {
 	std::printf("\tHeader:\n");
-	std::printf("\t\tunknown0x0: 0x%08X\n", animation.header.unknown0x0);
-	std::printf("\t\tunknown0x4: 0x%08X\n", animation.header.unknown0x4);
-	std::printf("\t\tunknown0x8: %f\n", animation.header.unknown0x8);
-	std::printf("\t\tunknown0xc: %f\n", animation.header.unknown0xc);
-	std::printf("\t\tunknown0x10: %f\n", animation.header.unknown0x10);
-	std::printf("\t\tunknown0x14: %f\n", animation.header.unknown0x14);
-	std::printf("\t\tunknown0x18: %f\n", animation.header.unknown0x18);
+	std::printf("\t\tduration: %u ms\n", animation.header.duration);
+	std::printf("\t\tlooping: %u\n", animation.header.looping);
+	std::printf("\t\tstrideRate: %f\n", static_cast<double>(animation.header.strideRate));
+	std::printf("\t\tstrideLength: %f\n", static_cast<double>(animation.header.strideLength));
+	std::printf("\t\tdisplacement: %f, %f, %f\n", static_cast<double>(animation.header.displacement[0]),
+	            static_cast<double>(animation.header.displacement[1]), static_cast<double>(animation.header.displacement[2]));
 	std::printf("\t\tframeCount: %u\n", animation.header.frameCount);
 	std::printf("\t\tmeshBoneCount: %u\n", animation.header.meshBoneCount);
 	std::printf("\t\trotatedJointCount: %u\n", animation.header.rotatedJointCount);
@@ -225,41 +225,37 @@ int ShowHairGroups(openblack::morph::MorphFile& morph)
 	{
 		std::printf("[%2u]\n", i);
 		std::printf("\tHeader:\n");
-		std::printf("\t\tunknown0x0: 0x%08X\n", group.header.unknown0x0);
-		std::printf("\t\thairCount: %d\n", group.header.hairCount);
-		std::printf("\t\tunknown0x8: 0x%08X\n", group.header.unknown0x8);
-		std::printf("\t\tunknown0xc: 0x%08X\n", group.header.unknown0xc);
-		for (size_t j = 0; j < group.header.unknown0x10.size(); ++j)
+		std::printf("\t\tsegmentsVersion: %u\n", group.header.segmentsVersion);
+		std::printf("\t\thairCount: %u\n", group.header.hairCount);
+		std::printf("\t\tsegmentCount: %u\n", group.header.segmentCount);
+		std::printf("\t\tmappingIndex: %u\n", group.header.mappingIndex);
+		constexpr std::array<const char*, 3> k_VariantNames {"neutral", "evil", "good"};
+		for (size_t j = 0; j < group.header.variants.size(); ++j)
 		{
-			std::printf("\t\tunknown0x10[%2zu]:\n", j);
-			std::printf("\t\t\tunknown0x0: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x0);
-			std::printf("\t\t\tunknown0x4: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x4);
-			std::printf("\t\t\tunknown0x8: 0x%08X\n", group.header.unknown0x10.at(j).unknown0x8);
-			std::printf("\t\t\tunknown0xc: %f\n", group.header.unknown0x10.at(j).unknown0xc);
-			std::printf("\t\t\tunknown0x10: %f\n", group.header.unknown0x10.at(j).unknown0x10);
-			std::printf("\t\t\tunknown0x14: %f\n", group.header.unknown0x10.at(j).unknown0x14);
-			std::printf("\t\t\tunknown0x18: %f\n", group.header.unknown0x10.at(j).unknown0x18);
+			const auto& variant = group.header.variants.at(j);
+			std::printf("\t\t%s:\n", k_VariantNames.at(j));
+			std::printf("\t\t\tcolour: %d, %d, %d\n", variant.red, variant.green, variant.blue);
+			std::printf("\t\t\tlength: %f\n", static_cast<double>(variant.length));
+			std::printf("\t\t\tdamping: %f\n", static_cast<double>(variant.damping));
+			std::printf("\t\t\tstiffness: %f\n", static_cast<double>(variant.stiffness));
+			std::printf("\t\t\tthickness: %f\n", static_cast<double>(variant.thickness));
 		}
 		std::printf("\tHairs:\n");
 		for (size_t j = 0; j < group.hairs.size(); ++j)
 		{
+			const auto& hair = group.hairs[j];
 			std::printf("\t[%2zu]\n", j);
-			std::printf("\t\tunknown0x0: 0x%08X\n", group.hairs[j].unknown0x0);
-
-			std::printf("\t\tintersection:\n");
-			std::printf("\t\t\tunknown0x0: 0x%08X\n", group.hairs[j].intersection.unknown0x0);
-			std::printf("\t\t\tunknown0x4: 0x%08X\n", group.hairs[j].intersection.unknown0x4);
-			std::printf("\t\t\tunknown0x8: 0x%08X\n", group.hairs[j].intersection.unknown0x8);
-			std::printf("\t\t\tunknown0xc: 0x%08X\n", group.hairs[j].intersection.unknown0xc);
-			std::printf("\t\t\tunknown0x10: 0x%08X\n", group.hairs[j].intersection.unknown0x10);
-			std::printf("\t\t\tunknown0x14: 0x%08X\n", group.hairs[j].intersection.unknown0x14);
-			std::printf("\t\t\tunknown0x18: 0x%08X\n", group.hairs[j].intersection.unknown0x18);
-			std::printf("\t\t\tunknown0x1c: %f\n", group.hairs[j].intersection.unknown0x1c);
-			std::printf("\t\t\tunknown0x20: %f\n", group.hairs[j].intersection.unknown0x20);
-
-			std::printf("\t\txs: [%f, %f, %f]\n", group.hairs[j].xs[0], group.hairs[j].xs[1], group.hairs[j].xs[2]);
-			std::printf("\t\tys: [%f, %f, %f]\n", group.hairs[j].ys[0], group.hairs[j].ys[1], group.hairs[j].ys[2]);
-			std::printf("\t\tzs: [%f, %f, %f]\n", group.hairs[j].zs[0], group.hairs[j].zs[1], group.hairs[j].zs[2]);
+			std::printf("\t\tflags: 0x%08X\n", hair.flags);
+			std::printf("\t\tintersection: primitive %u, vertices %u %u %u, groups %u %u %u, u %f, v %f\n",
+			            hair.intersection.primitive, hair.intersection.vertices[0], hair.intersection.vertices[1],
+			            hair.intersection.vertices[2], hair.intersection.vertexGroups[0], hair.intersection.vertexGroups[1],
+			            hair.intersection.vertexGroups[2], static_cast<double>(hair.intersection.u),
+			            static_cast<double>(hair.intersection.v));
+			for (size_t k = 0; k < hair.angles.size(); ++k)
+			{
+				std::printf("\t\t%s angles: [%f, %f, %f]\n", k_VariantNames.at(k), static_cast<double>(hair.angles.at(k)[0]),
+				            static_cast<double>(hair.angles.at(k)[1]), static_cast<double>(hair.angles.at(k)[2]));
+			}
 		}
 		++i;
 	}
@@ -294,10 +290,10 @@ int ShowExtraData(openblack::morph::MorphFile& morph)
 		for (const auto& data : list)
 		{
 			std::printf("\t[%2u]\n", j);
-			std::printf("\t\tunknown0x0: 0x%08X\n", data.unknown0x0);
-			std::printf("\t\tunknown0x4: 0x%08X\n", data.unknown0x4);
-			std::printf("\t\tunknown0x8: 0x%08X\n", data.unknown0x8);
-			std::printf("\t\tunknown0xc: 0x%08X\n", data.unknown0xc);
+			std::printf("\t\ttype: %u\n", data.type);
+			std::printf("\t\tframe: %u ms\n", data.frame);
+			std::printf("\t\taction: %u\n", data.action);
+			std::printf("\t\tmode: %u\n", data.mode);
 			++j;
 		}
 		++i;

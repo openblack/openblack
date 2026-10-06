@@ -29,40 +29,52 @@ enum class GLWResult : uint8_t
 
 std::string_view ResultToStr(GLWResult result);
 
+/// A light of a room of the temple, as the game reads them and as they were exported from the lights of the rooms'
+/// scenes. The game draws a glow at each and a beam down each spot light that has one.
 struct Glow
 {
-	uint32_t size; // Must be 196
-	uint32_t unk1; // Always seems to be 0
-	float red;     // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float green;   // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float blue;    // The emitter size and colour. 0 is invisible. Can be greater than 1
-	float posX;    // The emitter x coordinate. These are world coordinates
-	float posY;    // The emitter y coordinate. These are world coordinates
-	float posZ;    // The emitter z coordinate. These are world coordinates
-	float unkX;    // Unknown coordinate, sometimes copies glowX
-	float unkY;    // Unknown coordinate, sometimes copies glowY
-	float unkZ;    // Unknown coordinate, sometimes copies glowZ
-	float unkX2;   // Unknown coordinate, sometimes copies glowX
-	float unkY2;   // Unknown coordinate, sometimes copies glowY
-	float unkZ2;   // Unknown coordinate, sometimes copies glowZ
-	float unk14;
-	float unk15;
-	float unk16;
-	float unk17;
-	float unk18;
-	float unk19;
-	float unk20;
-	float unk21;
-	float unk22;
-	float unk23;
-	float unk24;
-	float unk25;
-	float unk26;
-	float dirX; // Unknown coordinate
-	float dirY; // Unknown coordinate
-	float dirZ; // Unknown coordinate
-	float unk27;
-	float unk28;
+	uint32_t size; // Must be 196, how far on the next light is
+	/// 0 for an omni light, 1 for a spot light, which can draw a beam
+	uint32_t type;
+	float red;   // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float green; // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float blue;  // The emitter size and colour. 0 is invisible. Can be greater than 1
+	float posX;  // The emitter x coordinate. These are world coordinates
+	float posY;  // The emitter y coordinate. These are world coordinates
+	float posZ;  // The emitter z coordinate. These are world coordinates
+	/// The point a spot light aims at, the light's own position for an omni light. The game doesn't read it.
+	float targetX;
+	float targetY;
+	float targetZ;
+	/// A spot light's direction to its target, a unit long. The game doesn't read it.
+	float targetDirectionX;
+	float targetDirectionY;
+	float targetDirectionZ;
+	/// The light's axes and position: a spot light's beam goes down its y axis, and a glow aligned to a wall lies along
+	/// its x and z axes
+	float xAxisX;
+	float xAxisY;
+	float xAxisZ;
+	float yAxisX;
+	float yAxisY;
+	float yAxisZ;
+	float zAxisX;
+	float zAxisY;
+	float zAxisZ;
+	float originX;
+	float originY;
+	float originZ;
+	/// How long a spot light's beam is
+	float coneLength;
+	/// Bits: 1 draws a spot light's beam, 8 aligns the glow to the light's axes
+	uint32_t flags;
+	/// A spot light's inner and outer cone angles, in degrees, -1 for an omni light. The beam spreads by the inner
+	/// one; the outer one, always at least as wide, the game doesn't read.
+	float hotspotAngle;
+	float falloffAngle;
+	/// Where the light starts and stops fading with distance, the start never past the end. The game doesn't read them.
+	float attenuationStart;
+	float attenuationEnd;
 	std::array<char, 64> name;
 	float emitterSize; // Usually a number between 1 and 10. Multiplies the size
 };
