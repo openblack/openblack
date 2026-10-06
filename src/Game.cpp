@@ -62,6 +62,7 @@
 #include "Creature/CreatureHandRules.h"
 #include "Debug/DebugGuiInterface.h"
 #include "Debug/FrameStatsLog.h"
+#include "Debug/TestbedDispenserGrid.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Creature.h"
@@ -1943,8 +1944,10 @@ void Game::LoadTestbed() noexcept
 
 	StartNewLand();
 
-	// The testbed has no temple to give its player influence: its miracles may be cast anywhere.
+	// The testbed has no temple to give its player influence: its miracles may be cast anywhere. A dispenser of every
+	// miracle stands in a grid in front of the camera.
 	Locator::magicSystem::value().SetIgnoreInfluence(true);
+	testbed_dispensers::PlaceGrid(middle);
 
 	// The testbed comes with its window of scenarios to try out on it
 	if (Locator::debugGui::has_value())
