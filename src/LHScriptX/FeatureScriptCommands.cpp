@@ -24,7 +24,6 @@
 #include "ECS/Archetypes/AbodeArchetype.h"
 #include "ECS/Archetypes/AnimatedStaticArchetype.h"
 #include "ECS/Archetypes/BigForestArchetype.h"
-#include "ECS/Archetypes/BonfireArchetype.h"
 #include "ECS/Archetypes/CitadelArchetype.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/DeadTreeArchetype.h"
@@ -45,6 +44,7 @@
 #include "ECS/Components/Stream.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
+#include "ECS/Systems/WeatherSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "InfoConstants.h"
@@ -633,28 +633,25 @@ void FeatureScriptCommands::CreateInfluenceRing([[maybe_unused]] glm::vec3 posit
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateWeatherClimate(int32_t, int32_t, glm::vec3, float, float)
+void FeatureScriptCommands::CreateWeatherClimate(int32_t index, int32_t type, glm::vec3 position, float radius1, float radius2)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().CreateClimate(index, static_cast<uint32_t>(type), glm::xz(position), radius1, radius2);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateRain(int32_t, float, int32_t, int32_t, int32_t)
+void FeatureScriptCommands::CreateWeatherClimateRain(int32_t index, float desire, int32_t dryDays, int32_t rainingDays,
+                                                     int32_t raining)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateRain(index, desire, dryDays, rainingDays, raining);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateTemp(int32_t, float, float)
+void FeatureScriptCommands::CreateWeatherClimateTemp(int32_t index, float temperature, float targetTemperature)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateTemperature(index, temperature, targetTemperature);
 }
 
-void FeatureScriptCommands::CreateWeatherClimateWind(int32_t, float, float, float)
+void FeatureScriptCommands::CreateWeatherClimateWind(int32_t index, float windX, float windZ, float angle)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	Locator::weatherSystem::value().SetClimateWind(index, windX, windZ, angle);
 }
 
 void FeatureScriptCommands::CreateWeatherStorm(int32_t, glm::vec3, float, int32_t, const std::string&, const std::string&,
@@ -775,22 +772,15 @@ void FeatureScriptCommands::MultiplayerDebug(int32_t, int32_t)
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateStreetLantern([[maybe_unused]] glm::vec3 position, int32_t type)
+void FeatureScriptCommands::CreateStreetLantern(glm::vec3 position, int32_t type)
 {
-	// In the retail game, any value other than 7 creates a bonfire
-	if (type == 7)
-	{
-		StreetLanternArchetype::Create(position);
-	}
-	else
-	{
-		BonfireArchetype::Create(position);
-	}
+	// Any kind other than the street lantern makes a country lantern on a campfire, not a bonfire
+	StreetLanternArchetype::Create(position, static_cast<MobileStaticInfo>(type));
 }
 
-void FeatureScriptCommands::CreateStreetLight([[maybe_unused]] glm::vec3 position)
+void FeatureScriptCommands::CreateStreetLight(glm::vec3 position)
 {
-	StreetLanternArchetype::Create(position);
+	StreetLanternArchetype::Create(position, MobileStaticInfo::StreetLantern);
 }
 
 void FeatureScriptCommands::SetLandNumber(int32_t number)

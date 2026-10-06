@@ -9,18 +9,19 @@
 
 #pragma once
 
-#include <entt/fwd.hpp>
-#include <glm/fwd.hpp>
+#include "ECS/Systems/MistSystemInterface.h"
 
-#include "Enums.h"
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#error "ECS System implementations should only be included in Locator.cpp"
+#endif
 
-namespace openblack::ecs::archetypes
+namespace openblack::ecs::systems
 {
-class StreetLanternArchetype
+
+class MistSystem final: public MistSystemInterface
 {
 public:
-	/// A lantern of the given kind: the street lantern of the towns, or any other kind for a country lantern on a campfire
-	static entt::entity Create(const glm::vec3& position, MobileStaticInfo info);
-	StreetLanternArchetype() = delete;
+	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 };
-} // namespace openblack::ecs::archetypes
+
+} // namespace openblack::ecs::systems

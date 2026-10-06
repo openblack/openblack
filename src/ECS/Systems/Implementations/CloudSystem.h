@@ -9,18 +9,20 @@
 
 #pragma once
 
-#include <entt/fwd.hpp>
-#include <glm/fwd.hpp>
+#include "ECS/Systems/CloudSystemInterface.h"
 
-#include "Enums.h"
+#if !defined(LOCATOR_IMPLEMENTATIONS)
+#error "ECS System implementations should only be included in Locator.cpp"
+#endif
 
-namespace openblack::ecs::archetypes
+namespace openblack::ecs::systems
 {
-class StreetLanternArchetype
+
+class CloudSystem final: public CloudSystemInterface
 {
 public:
-	/// A lantern of the given kind: the street lantern of the towns, or any other kind for a country lantern on a campfire
-	static entt::entity Create(const glm::vec3& position, MobileStaticInfo info);
-	StreetLanternArchetype() = delete;
+	void Reset() override;
+	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 };
-} // namespace openblack::ecs::archetypes
+
+} // namespace openblack::ecs::systems
