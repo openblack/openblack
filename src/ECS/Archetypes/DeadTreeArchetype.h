@@ -9,23 +9,17 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
 #include "Enums.h"
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-struct Town
+class DeadTreeArchetype
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+public:
+	static entt::entity Create(const glm::vec3& position, TreeInfo type, float yAngleRadians, float scale);
+	DeadTreeArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

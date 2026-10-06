@@ -9,23 +9,19 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
+#include <glm/vec3.hpp>
 
 namespace openblack::ecs::components
 {
 
-struct Town
+/// One of the sky's clouds (see clouds), a puff of mist (components::Mist) drifting with the wind. Its Mist's alpha is
+/// how far it has faded at the track's ends; its colour follows the sky.
+struct Cloud
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// Where it is on the wind's track
+	glm::vec3 track;
+	/// The two huge clouds on the horizon stay where they are
+	bool pinned;
 };
 
 } // namespace openblack::ecs::components

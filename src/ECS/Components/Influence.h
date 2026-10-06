@@ -9,23 +9,23 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Town
+/// How far a town's influence reaches, worked out each turn from its own and its buildings', and how far it reached
+/// when its border was last drawn
+struct TownInfluence
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	float radius {0.0f};
+	float drawnRadius {0.0f};
+};
+
+/// How far a citadel's influence reaches before the land's multiplier, fixed when it is first asked for, and how far it
+/// reached when its border was last drawn
+struct CitadelInfluence
+{
+	float reach {0.0f};
+	float drawnRadius {0.0f};
 };
 
 } // namespace openblack::ecs::components

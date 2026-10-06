@@ -9,23 +9,20 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
+#include <entt/fwd.hpp>
 
-#include "Enums.h"
-
-namespace openblack::ecs::components
+namespace openblack::clouds
 {
+struct Layout;
+}
 
-struct Town
+namespace openblack::ecs::archetypes
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+class CloudArchetype
+{
+public:
+	/// One of the sky's clouds, as the clouds of a land are laid out
+	static entt::entity Create(const clouds::Layout& layout);
+	CloudArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

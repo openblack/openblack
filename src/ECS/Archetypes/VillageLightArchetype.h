@@ -9,23 +9,18 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-#include "Enums.h"
+#include "ECS/Components/VillageLight.h"
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-struct Town
+class VillageLightArchetype
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+public:
+	/// A village light standing at `position`, with its flames and glow above it
+	static entt::entity Create(const glm::vec3& position, components::VillageLight::Kind kind);
+	VillageLightArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes

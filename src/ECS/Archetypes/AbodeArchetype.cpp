@@ -20,6 +20,7 @@
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/ChimneySmokeSystemInterface.h"
 #include "ECS/Systems/TownSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -108,6 +109,14 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	if (morphsWithTerrain)
 	{
 		registry.Assign<MorphWithTerrain>(entity);
+	}
+
+	// A home with a chimney smokes while someone is in
+	if (const auto& meshes = Locator::resources::value().GetMeshes();
+	    Locator::chimneySmokeSystem::has_value() && meshes.Contains(resourceId))
+	{
+		Locator::chimneySmokeSystem::value().Attach(entity, *meshes.Handle(resourceId), transform,
+		                                            info.abodeType == AbodeType::Workshop);
 	}
 
 	// Create Fixed component with a 2d bounding circle

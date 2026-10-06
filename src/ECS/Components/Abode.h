@@ -26,6 +26,8 @@ struct Abode
 	uint32_t woodAmount;
 	/// Villager
 	std::set<entt::entity> inhabitants;
+	/// How many of them are inside now
+	uint32_t presentAtHome {0};
 };
 
 } // namespace openblack::ecs::components

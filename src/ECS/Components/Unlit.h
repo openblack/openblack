@@ -9,23 +9,13 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Town
+/// The entity's mesh isn't shaded by the sun: it is drawn in the colour of the land's light where it stands, hazed with
+/// distance. Black & White draws its big forests, dead trees and flowers this way, as it does its trees.
+struct Unlit
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
 };
 
 } // namespace openblack::ecs::components

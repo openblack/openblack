@@ -9,23 +9,15 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Town
+/// Drawn added over what is behind it, among the other things that blend, whatever its model's materials say: a
+/// one-shot miracle's bubble
+struct Translucent
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// The share of its colour added, 0 to 1
+	float share {1.0f};
 };
 
 } // namespace openblack::ecs::components

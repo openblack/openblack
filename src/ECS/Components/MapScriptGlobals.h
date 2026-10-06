@@ -9,23 +9,19 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
+#include <cstdint>
 
 namespace openblack::ecs::components
 {
 
-struct Town
+/// What a land's script sets for the whole land, back to these each time a land opens
+struct MapScriptGlobals
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// Which land of the story this is, 0 outside the story
+	int32_t landNumber {0};
+	/// How far the towns' and the players' citadels' influence reaches, as a part of what it would be
+	float townInfluenceMultiplier {1.0f};
+	float playerInfluenceMultiplier {1.0f};
 };
 
 } // namespace openblack::ecs::components

@@ -9,23 +9,18 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
+#include <chrono>
 
-#include "Enums.h"
-
-namespace openblack::ecs::components
+namespace openblack::ecs::systems
 {
 
-struct Town
+/// Animates the puffs of mist (components::Mist)
+class MistSystemInterface
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+public:
+	virtual ~MistSystemInterface() = default;
+	/// Moves every mist's animation on by the game time that has passed, which stops while the game is paused
+	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
 };
 
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::systems

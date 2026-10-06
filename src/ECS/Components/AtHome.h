@@ -9,23 +9,14 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Town
+/// A villager inside its abode: it isn't drawn while it is
+struct AtHome
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// It has been to bed since it came in
+	bool beenToBed {false};
 };
 
 } // namespace openblack::ecs::components

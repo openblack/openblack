@@ -9,23 +9,15 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
 #include "Enums.h"
 
 namespace openblack::ecs::components
 {
 
-struct Town
+/// A tree that has been uprooted: it no longer grows or sways, and lies where it was left
+struct DeadTree
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	TreeInfo type;
 };
 
 } // namespace openblack::ecs::components

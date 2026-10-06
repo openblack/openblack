@@ -13,9 +13,12 @@
 
 #include <entt/entity/fwd.hpp>
 
+#include "3D/VillageLights.h"
 #include "Components/Footpath.h"
+#include "Components/MapScriptGlobals.h"
 #include "Components/Stream.h"
 #include "Components/Town.h"
+#include "Components/VillageLight.h"
 
 namespace openblack::ecs
 {
@@ -24,5 +27,7 @@ struct RegistryContext
 	std::unordered_map<components::Footpath::Id, entt::entity> footpaths;
 	std::unordered_map<components::Stream::Id, entt::entity> streams;
 	std::unordered_map<uint32_t, entt::entity> towns;
+	components::VillageLightFlames villageLightFlames {.clock = 0, .starts = village_lights::k_FlameStarts};
+	components::MapScriptGlobals mapScriptGlobals;
 };
 } // namespace openblack::ecs

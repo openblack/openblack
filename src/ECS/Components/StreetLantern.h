@@ -9,23 +9,14 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-struct Town
+/// A lantern of a town or of the country, whose crackle is heard while it is dark (its SoundTag)
+struct StreetLantern
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// A country lantern on a campfire, rather than a town's lantern on a post
+	bool country;
 };
 
 } // namespace openblack::ecs::components

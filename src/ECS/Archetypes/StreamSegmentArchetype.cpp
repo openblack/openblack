@@ -7,10 +7,14 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-#include "TownArchetype.h"
+#include "StreamSegmentArchetype.h"
 
-#include "ECS/Components/Town.h"
-#include "ECS/Components/TownDesire.h"
+#include <cmath>
+
+#include <glm/geometric.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
+#include "ECS/Components/Stream.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Locator.h"
@@ -19,21 +23,16 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity TownArchetype::Create(int id, const glm::vec3& position, PlayerNames playerOwner, Tribe tribe)
+entt::entity StreamSegmentArchetype::Create(const glm::vec3& from, const glm::vec3& to)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
 
-	// const auto& info = Game::Instance()->GetInfoConstants().town;
-
-	registry.Assign<Town>(entity, static_cast<uint32_t>(id), playerOwner);
-	registry.Assign<Tribe>(entity, tribe);
-	// What it wants, worked out each turn from its people and buildings
-	registry.Assign<TownDesire>(entity);
-	registry.Assign<TownStats>(entity);
-	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
-	auto& registryContext = registry.Context();
-	registryContext.towns.insert({id, entity});
+	// The meshes' x turns to point from one point to the next across the ground, and stretches to reach it
+	const float angle = std::atan2(to.z - from.z, to.x - from.x);
+	const float stretch = glm::distance(from, to) / StreamSegment::k_MeshLength;
+	registry.Assign<Transform>(entity, from, glm::eulerAngleY(-angle), glm::vec3(stretch, 1.0f, 1.0f));
+	registry.Assign<StreamSegment>(entity);
 
 	return entity;
 }

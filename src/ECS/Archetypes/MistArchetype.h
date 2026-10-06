@@ -9,23 +9,19 @@
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <unordered_map>
+#include <cstdint>
 
-#include "Enums.h"
+#include <entt/fwd.hpp>
+#include <glm/fwd.hpp>
 
-namespace openblack::ecs::components
+namespace openblack::ecs::archetypes
 {
-
-struct Town
+class MistArchetype
 {
-	uint32_t id;
-	/// The player whose town it is
-	PlayerNames owner {PlayerNames::NEUTRAL};
-	std::unordered_map<std::string, float> beliefs;
-	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+public:
+	/// A puff of mist `altitude` above the land at `position`. An `edgeShrink` other than 1 makes it shrink edge on
+	/// that much.
+	static entt::entity Create(const glm::vec3& position, float altitude, uint32_t colour, float size, float edgeShrink);
+	MistArchetype() = delete;
 };
-
-} // namespace openblack::ecs::components
+} // namespace openblack::ecs::archetypes
