@@ -758,6 +758,14 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 					program->SetTextureSampler("s_snow", 12, *textures.Handle(snow_cover::k_TextureId.value()));
 					program->SetTextureSampler("s_snowAlpha", 13, *textures.Handle(snow_cover::k_AlphaTextureId.value()));
 				}
+				else if (_whiteTexture)
+				{
+					// Every sampler the shader declares must be bound, even those it won't read: Vulkan leaves an unbound
+					// one pointing wherever its memory last pointed, a texture of a land since freed, which hangs the GPU
+					program->SetTextureSampler("s_snowDepth", 11, *_whiteTexture);
+					program->SetTextureSampler("s_snow", 12, *_whiteTexture);
+					program->SetTextureSampler("s_snowAlpha", 13, *_whiteTexture);
+				}
 			}
 			if (program->HasUniform("u_window"))
 			{
