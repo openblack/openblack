@@ -53,7 +53,15 @@ entt::id_type creature::GetIdFromType(CreatureType species, CreatureBody::Appear
 	    fmt::format("creature/{}/{}", static_cast<uint8_t>(species), static_cast<uint32_t>(appearance)).c_str());
 }
 
-entt::id_type creature::GetIdFromMeshName(const std::string& name)
+namespace
+{
+struct MeshName
+{
+	CreatureType species;
+	CreatureBody::Appearance appearance;
+};
+
+MeshName ParseMeshName(const std::string& name)
 {
 	auto species = S::Unknown;
 	auto appearance = A::Base;
@@ -70,8 +78,13 @@ entt::id_type creature::GetIdFromMeshName(const std::string& name)
 		appearance = appearanceFound->second;
 	}
 
-	// Remove the suffix and find the creature species
+	// Remove the suffix and find the creature species. The Ogre's variants keep its base mesh's name before their own,
+	// as in A_Greek_Boned_Base_Evil.
 	split.erase(split.begin() + split.size() - 1);
+	if (split.size() > 1 && split.back() == "base")
+	{
+		split.pop_back();
+	}
 	auto speciesFound = k_MeshNameToSpecies.find(fmt::format("{}", fmt::join(split, "_")));
 	if (speciesFound == k_MeshNameToSpecies.end())
 	{
@@ -81,7 +94,22 @@ entt::id_type creature::GetIdFromMeshName(const std::string& name)
 	{
 		species = speciesFound->second;
 	}
+	return {.species = species, .appearance = appearance};
+}
+} // namespace
 
-	return entt::hashed_string(
-	    fmt::format("creature/{}/{}", static_cast<uint8_t>(species), static_cast<uint32_t>(appearance)).c_str());
+entt::id_type creature::GetIdFromMeshName(const std::string& name)
+{
+	const auto [species, appearance] = ParseMeshName(name);
+	return GetIdFromType(species, appearance);
+}
+
+CreatureType creature::GetSpeciesFromMeshName(const std::string& fileName)
+{
+	return ParseMeshName(fileName).species;
+}
+
+entt::id_type creature::GetRigId(CreatureType species)
+{
+	return entt::hashed_string(fmt::format("creature/{}/rig", static_cast<uint8_t>(species)).c_str());
 }
