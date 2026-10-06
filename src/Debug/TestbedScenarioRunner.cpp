@@ -456,7 +456,8 @@ void Runner::Give(const Command& command)
 		break;
 	case Kind::Stroke:
 	case Kind::Slap:
-		minds.Feedback(*entity, command.kind == Kind::Stroke);
+		// As a whole session of the hand on the creature would, a full reward or punishment as the hand lets go
+		minds.ReceiveFeedback(*entity, command.kind == Kind::Stroke ? 1.0f : -1.0f);
 		break;
 	case Kind::SetHour:
 		break;
