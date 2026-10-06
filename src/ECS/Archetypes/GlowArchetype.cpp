@@ -24,7 +24,7 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, components::TempleRoom room)
+std::array<entt::entity, 2> GlowArchetype::Create(const LightEmitter& emitter, TempleRoom room)
 {
 	auto texture = Locator::resources::value().GetTextures().Handle(entt::hashed_string("raw/ATMOS"));
 	auto& registry = Locator::entitiesRegistry::value();

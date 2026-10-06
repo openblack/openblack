@@ -25,7 +25,7 @@ namespace openblack::ecs::archetypes
 class GlowArchetype
 {
 public:
-	static std::array<entt::entity, 2> Create(const LightEmitter& emitter, openblack::ecs::components::TempleRoom room);
+	static std::array<entt::entity, 2> Create(const LightEmitter& emitter, TempleRoom room);
 	GlowArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

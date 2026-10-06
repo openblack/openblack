@@ -30,6 +30,6 @@ public:
 private:
 	void PrepareDrawDescs(bool drawBoundingBox) override;
 	void PrepareDrawUploadUniforms(bool drawBoundingBox) override;
-	std::set<ecs::components::TempleRoom> _loadedRooms;
+	std::set<TempleRoom> _loadedRooms;
 };
 } // namespace openblack::ecs::systems
