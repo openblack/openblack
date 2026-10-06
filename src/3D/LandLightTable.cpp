@@ -1,0 +1,213 @@
+/******************************************************************************
+ * Copyright (c) 2018-2026 openblack developers
+ *
+ * For a complete list of all authors, please refer to contributors.md
+ * Interested in contributing? Visit https://github.com/openblack/openblack
+ *
+ * openblack is licensed under the GNU General Public License version 3.
+ *******************************************************************************/
+
+#include "LandLightTable.h"
+
+#include <algorithm>
+#include <stdexcept>
+
+using namespace openblack;
+
+namespace
+{
+constexpr size_t k_PaletteSide = LandLightPalette::k_Side;
+constexpr uint32_t k_DarkLevels = 48;
+/// The ramps divide by this rather than 255
+constexpr uint32_t k_RampDivisor = 200;
+
+// The haze's distances as their inverses, exactly as the game's floats: 400 and 900 from the camera, drawn in by dusk
+// to 100 and 800
+constexpr float k_NearInverse = 0x1.47AE14p-9f;     // 0.0025
+constexpr float k_NearInverseDusk = 0x1.EB851Ep-8f; // 0.0075
+constexpr float k_FarInverse = 0x1.234568p-10f;     // 1 / 900
+constexpr float k_FarInverseDusk = 0x1.234560p-13f; // 0.00013888883
+// Under a full overcast the haze closes in to 15 and 350
+constexpr float k_NearInverseStorm = 0x1.111112p-4f; // 1 / 15
+constexpr float k_FarInverseStorm = 0x1.767DCEp-9f;  // 1 / 350
+/// How far a full overcast darkens the land's colour
+constexpr float k_OvercastDarkening = 96.0f;
+
+enum Row : size_t
+{
+	k_Good = 0,
+	k_Neutral = 1,
+	k_Evil = 2,
+	k_Dark = 3,
+	k_Moon = 5,
+	k_Warm = 6,
+	k_RowCount = 8,
+};
+
+/// Each channel of a towards b by t of 256, in whole steps; the alpha of b
+uint32_t Lerp(uint32_t a, uint32_t b, uint32_t t)
+{
+	const uint32_t r = (((((b & 0xFF0000u) - (a & 0xFF0000u)) * t) >> 8) + (a & 0xFFFF0000u)) & 0xFF0000u;
+	const uint32_t g = (((((b & 0xFF00u) - (a & 0xFF00u)) * t) >> 8) + (a & 0xFFFFFF00u)) & 0xFF00u;
+	const uint32_t bl = (((((b & 0xFFu) - (a & 0xFFu)) * t) >> 8) + a) & 0xFFu;
+	return r | g | bl | (b & 0xFF000000u);
+}
+
+/// Each channel (a (255 - t) + b t) / 200, at most 255; the alpha of a
+uint32_t Ramp(uint32_t a, uint32_t b, uint32_t t)
+{
+	uint32_t result = a & 0xFF000000u;
+	for (const uint32_t shift : {16u, 8u, 0u})
+	{
+		const uint32_t value = (((a >> shift) & 0xFFu) * (255 - t) + ((b >> shift) & 0xFFu) * t) / k_RampDivisor;
+		result |= std::min(255u, value) << shift;
+	}
+	return result;
+}
+} // namespace
+
+LandLightPalette::LandLightPalette(std::span<const uint8_t> bytes)
+{
+	if (bytes.size() != k_Side * k_Side * 4)
+	{
+		throw std::runtime_error("The land's light palette isn't 32 by 32 colours");
+	}
+	_colours.resize(k_Side * k_Side);
+	for (size_t i = 0; i < _colours.size(); ++i)
+	{
+		const auto texel = bytes.subspan(i * 4, 4);
+		_colours.at(i) = static_cast<uint32_t>(texel[0]) << 16 | static_cast<uint32_t>(texel[1]) << 8 |
+		                 static_cast<uint32_t>(texel[2]) | static_cast<uint32_t>(texel[3]) << 24;
+	}
+}
+
+namespace
+{
+/// The palette's colour of each row for the time of day and the alignment
+std::array<uint32_t, k_RowCount> PaletteColours(const LandLightPalette& palette, float skyType, float alignment)
+{
+	// The palette's columns: the time of day from midnight to noon, and the alignment from good to evil
+	const float timeColumn = std::clamp(skyType, 0.0f, 2.0f) * 15.0f;
+	const float alignmentColumn = std::clamp(1.0f - alignment, 0.0f, 2.0f) * 15.0f;
+
+	std::array<uint32_t, k_RowCount> colours {};
+	for (size_t row = 0; row < colours.size(); ++row)
+	{
+		const float column = row <= k_Evil ? timeColumn : alignmentColumn;
+		const auto index = std::min(static_cast<size_t>(column), k_PaletteSide - 2);
+		const auto t = static_cast<uint32_t>((column - static_cast<float>(index)) * 256.0f);
+		colours.at(row) = Lerp(palette.At(row, index), palette.At(row, index + 1), t);
+	}
+	return colours;
+}
+
+/// The land's colour, from good through neutral to evil
+uint32_t LandColour(const std::array<uint32_t, k_RowCount>& colours, float alignment)
+{
+	const float evil = std::clamp(1.0f - alignment, 0.0f, 2.0f);
+	const auto towardsEvil = static_cast<int32_t>(evil * 255.0f);
+	return evil < 1.0f ? Lerp(colours[k_Good], colours[k_Neutral], static_cast<uint32_t>(towardsEvil))
+	                   : Lerp(colours[k_Neutral], colours[k_Evil], static_cast<uint32_t>(towardsEvil - 256));
+}
+
+/// No channel of the land's colour brighter than 255 - 96 times the overcast
+uint32_t Overcast(uint32_t land, float overcast)
+{
+	const auto limit = static_cast<int32_t>(255.0 - static_cast<double>(overcast) * k_OvercastDarkening);
+	for (const uint32_t shift : {16u, 8u, 0u})
+	{
+		if (static_cast<int32_t>((land >> shift) & 0xFFu) > limit)
+		{
+			land = (land & ~(0xFFu << shift)) | ((static_cast<uint32_t>(limit) & 0xFFu) << shift);
+		}
+	}
+	return land;
+}
+} // namespace
+
+uint32_t LandLightTable::GetLandColour(const LandLightPalette& palette, float skyType, float alignment, float overcast) noexcept
+{
+	return Overcast(LandColour(PaletteColours(palette, skyType, alignment), alignment), overcast) & 0xFFFFFFu;
+}
+
+void LandLightTable::Build(const LandLightPalette& palette, float skyType, float alignment, float overcast,
+                           uint8_t flash) noexcept
+{
+	const auto colours = PaletteColours(palette, skyType, alignment);
+	const auto land = Overcast(LandColour(colours, alignment), overcast);
+
+	_landColour = land & 0xFFFFFFu;
+	_warmColour = colours[k_Warm] & 0xFFFFFFu;
+	_moonColour = colours[k_Moon] & 0xFFFFFFu;
+
+	// The haze: a third of the land's colour, k by its brightness, and its distances drawn in at dusk
+	{
+		const uint32_t r = (land >> 16) & 0xFFu;
+		const uint32_t g = (land >> 8) & 0xFFu;
+		const uint32_t b = land & 0xFFu;
+		auto k = static_cast<int32_t>(std::min(255u, (r + 4 * g + 3 * b) / 8 + 8));
+		_haze.colour = glm::vec3(static_cast<float>(r / 3), static_cast<float>(g / 3), static_cast<float>(b / 3));
+		// 0 by day and at night, 1 at dusk
+		const float dusk = std::clamp(skyType < 1.0f ? skyType : 2.0f - skyType, 0.0f, 1.0f);
+		const float duskSquared = dusk * dusk;
+		float nearInverse = k_NearInverse;
+		float farInverse = k_FarInverse;
+		if (duskSquared > 0.0f)
+		{
+			nearInverse = duskSquared * k_NearInverseDusk + k_NearInverse;
+			farInverse = duskSquared * k_FarInverseDusk + k_FarInverse;
+		}
+		// An overcast takes the haze towards a storm's: dark, thick and close
+		if (overcast > 0.0f)
+		{
+			const float storm = std::min(overcast, 1.0f);
+			const auto stormColour = glm::vec3(static_cast<float>((r >> 3) + 32), static_cast<float>((g >> 3) + 32),
+			                                   static_cast<float>((b >> 3) + 32));
+			_haze.colour += (stormColour - _haze.colour) * storm;
+			k += static_cast<int32_t>(static_cast<float>(48 - k) * storm);
+			nearInverse += (k_NearInverseStorm - nearInverse) * storm;
+			farInverse += (k_FarInverseStorm - farInverse) * storm;
+		}
+		// A flash of lightning takes the haze towards white
+		if (flash != 0)
+		{
+			const float towardsWhite = static_cast<float>(flash) * (1.0f / 256.0f);
+			_haze.colour += (glm::vec3(255.0f) - _haze.colour) * towardsWhite;
+			k += static_cast<int32_t>(static_cast<float>(static_cast<int64_t>(255 - k) * flash) * (1.0f / 256.0f));
+		}
+		_haze.k = static_cast<float>(k);
+		_haze.nearDistance = 1.0f / nearInverse;
+		_haze.farDistance = 1.0f / farInverse;
+	}
+
+	std::array<uint32_t, k_Size> table {};
+	// The darkest levels reach the land's colour at a level by its green, then go on to the warm colour
+	const uint32_t landLevel = (((land >> 8) & 0xFFu) * k_DarkLevels) >> 8;
+	for (uint32_t i = 0; i < landLevel; ++i)
+	{
+		table.at(i) = Ramp(colours[k_Dark], land, (i * 256) / landLevel);
+	}
+	for (uint32_t i = landLevel; i < k_DarkLevels; ++i)
+	{
+		table.at(i) = Ramp(land, colours[k_Warm], ((i - landLevel) * 256) / (k_DarkLevels - landLevel));
+	}
+	for (uint32_t i = k_DarkLevels; i < k_Size; ++i)
+	{
+		table.at(i) = Ramp(colours[k_Dark], land, i);
+	}
+
+	// A flash of lightning takes every light towards white
+	if (flash != 0)
+	{
+		for (auto& light : table)
+		{
+			light = Lerp(light, 0xFFFFFFFFu, flash);
+		}
+	}
+
+	for (size_t i = 0; i < k_Size; ++i)
+	{
+		const uint32_t c = table.at(i);
+		_texels.at(i) = ((c >> 16) & 0xFFu) | (c & 0xFF00u) | ((c & 0xFFu) << 16) | 0xFF000000u;
+	}
+}
