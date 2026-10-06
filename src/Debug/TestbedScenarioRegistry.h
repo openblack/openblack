@@ -58,6 +58,13 @@ enum class Facet : uint8_t
 	Movement,
 	Footprints,
 	Audio,
+	/// Picking things up, looking them over, putting them down, throwing them, eating them, knocking them down,
+	/// pointing, and what curiosity, play and anger have it do with them
+	Objects,
+	/// The player's hand on it: stroking, slapping, and its status panel
+	Hand,
+	/// Being led on the leashes, tied up and kept at home
+	Leash,
 
 	_Count
 };
@@ -218,6 +225,31 @@ struct Command
 		Slap,
 		/// The hour of the day jumps, for every creature
 		SetHour,
+		/// Walking up to the scenario's object and picking it up; then, with what it holds, putting it down, tossing it
+		/// away, lobbing it, eating it, or looking it over with one of its four ways of doing so (stroking, shaking,
+		/// smelling, examining); throwing it at the point
+		PickUp,
+		PutDown,
+		Discard,
+		Lob,
+		EatHeld,
+		Examine,
+		ThrowAt,
+		/// Walking up to the scenario's object and knocking it down; pointing at the point
+		KnockDown,
+		PointAt,
+		/// The player's hand stroking a part of its body, or slapping it at a height and hard or gently, held to it
+		/// until the hand lets go, which tells its mind how it was treated
+		HandStroke,
+		HandSlap,
+		HandLetGo,
+		/// Putting a leash on it, which it is first taught; tying the leash to the scenario's object, untying it to the
+		/// hand, taking it off; keeping it within a radius of where it stands
+		PutOnLeash,
+		TieLeash,
+		UntieLeash,
+		TakeOffLeash,
+		ConfineToHome,
 	};
 	Kind kind {Kind::Stop};
 	/// Which creature, by its place in the scenario's creatures
@@ -232,6 +264,18 @@ struct Command
 	size_t value {0};
 	/// The hour jumped to
 	float hour {12.0f};
+	/// The object picked up, knocked down or tied to, by its place in the scenario's objects
+	size_t object {0};
+	/// The leash put on
+	LeashType leash {LeashType::Rope};
+	/// The part of the body stroked, by its place in the hand's parts (the head first)
+	size_t bodyPart {0};
+	/// How high a slap lands, as a share of the creature's height, whether it is gentle, and which way it sweeps
+	float slapHeight {0.85f};
+	bool gentle {false};
+	bool sweepsRight {false};
+	/// How far from where it stands it is kept
+	float radius {0.0f};
 };
 [[nodiscard]] std::string_view Name(Command::Kind kind);
 

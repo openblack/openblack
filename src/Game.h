@@ -195,6 +195,8 @@ private:
 	std::optional<glm::vec3> _cursorWorldPosition;
 	/// Where the hand is and how it is posed while it is held to a creature
 	std::optional<ecs::systems::CreatureHandSystemInterface::HandPose> _handOnCreature;
+	/// The creature the hand is over this frame, if any
+	std::optional<entt::entity> _creatureUnderHand;
 	/// Grabbing the sea plays G_HandInWater_01 to _10 in turn
 	uint32_t _handInWaterSample {0};
 
@@ -208,6 +210,12 @@ private:
 	static void LoadCreatureRigs();
 	/// Acts on what the player chose in the game's menu: continuing restores the pause it had before it opened
 	void HandleInterfaceAction();
+	/// Once a frame outside the temple: where the hand's tooltip is drawn, and the status panel of the creature the hand
+	/// is held to, or over
+	void UpdateHandInterface();
+	/// Once a game turn outside the temple: the hand's tooltip for what it is over, "Interact" over the player's own
+	/// creature
+	void ProcessHandToolTipTurn();
 
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 	std::unique_ptr<audio::AtmosAudio> _atmosAudio;

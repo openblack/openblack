@@ -62,8 +62,10 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
+#include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureHair.h"
+#include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mist.h"
 #include "ECS/Components/Town.h"
@@ -245,7 +247,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 			PlayHandGrabSound();
 		}
 	}
-	if (!leftMouseButton && creatureHand.GetCreature().has_value())
+	if (!leftMouseButton && creatureHand.GetCreature().has_value() && !creatureHand.IsHeldByCommand())
 	{
 		creatureHand.Release();
 	}
@@ -387,6 +389,67 @@ bool Game::IsPaused() const
 	return Locator::time::value().IsPaused();
 }
 
+void Game::UpdateHandInterface()
+{
+	if (!_interface)
+	{
+		return;
+	}
+	_interface->SetCreaturePanel(std::nullopt);
+	// The temple places the hand's tooltip itself
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	if (inTemple)
+	{
+		return;
+	}
+	// Outside it, the tooltip is drawn by the hand, which is at the cursor
+	_interface->SetHandOnScreen(Locator::debugGui::value().IsMouseOverWindow() ? std::nullopt
+	                                                                           : std::optional(glm::vec2(_mousePosition)));
+	// Nor is the panel shown while a script has the cinema bars in
+	if (!Locator::cinematicDirectorSystem::value().IsInterfaceActive())
+	{
+		return;
+	}
+	// The creature the hand is held to, or else the one it is over, any player's
+	const auto& creatureHand = Locator::creatureHandSystem::value();
+	auto creature = creatureHand.GetCreature();
+	const bool rightButtonHeld = (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK) != 0;
+	if (!creature.has_value() && creature_panel::Triggered(rightButtonHeld))
+	{
+		creature = _creatureUnderHand;
+	}
+	if (!creature.has_value())
+	{
+		return;
+	}
+	const auto* needs = Locator::entitiesRegistry::value().TryGet<const ecs::components::CreatureNeeds>(*creature);
+	if (needs != nullptr)
+	{
+		// The reward is the hand's, which it keeps showing after letting go until it takes hold again
+		_interface->SetCreaturePanel(creature_panel::FromNeeds(needs->needs, creatureHand.GetLastFeedbackSum()));
+	}
+}
+
+void Game::ProcessHandToolTipTurn()
+{
+	if (!_interface || (Locator::temple::has_value() && Locator::temple::value().Active()))
+	{
+		return;
+	}
+	auto& toolTips = _interface->GetToolTips();
+	// Over the player's own creature, the hand can take hold of it to stroke or slap it
+	const auto over = _creatureUnderHand.has_value() ? _creatureUnderHand : Locator::creatureHandSystem::value().GetCreature();
+	if (over.has_value() && !_interface->GetMenu().IsOpen() && Locator::cinematicDirectorSystem::value().IsInterfaceActive())
+	{
+		const auto* creature = Locator::entitiesRegistry::value().TryGet<const ecs::components::Creature>(*over);
+		if (creature != nullptr && creature->owner == PlayerNames::PLAYER_ONE)
+		{
+			toolTips.Submit(creature_panel::k_InteractToolTip, gui::ToolTipAction::Select, gui::ToolTipArrows::k_None);
+		}
+	}
+	toolTips.ProcessTurn();
+}
+
 bool Game::GameLogicLoop() noexcept
 {
 	using namespace ecs::components;
@@ -420,6 +483,7 @@ bool Game::GameLogicLoop() noexcept
 		return false;
 	}
 	clock.StartTurn();
+	ProcessHandToolTipTurn();
 
 	// Build Map Grid Acceleration Structure
 	Locator::entitiesMap::value().Rebuild();
@@ -862,20 +926,32 @@ bool Game::Update() noexcept
 				const auto screenSize =
 				    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
 				_handOnCreature.reset();
-				if (screenSize.x > 0 && screenSize.y > 0 && Locator::creatureHandSystem::value().GetCreature().has_value())
+				_creatureUnderHand.reset();
+				if (screenSize.x > 0 && screenSize.y > 0)
 				{
+					auto& hands = Locator::creatureHandSystem::value();
 					glm::vec3 rayOrigin;
 					glm::vec3 rayDirection;
 					camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
 					                              rayOrigin, rayDirection);
-					_handOnCreature = Locator::creatureHandSystem::value().Update(
-					    rayOrigin, rayDirection, static_cast<glm::vec2>(_mousePosition),
-					    std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+					// The hand isn't over the world while it is over a debug window, or in the temple
+					const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+					if (!inTemple && !Locator::debugGui::value().IsMouseOverWindow())
+					{
+						_creatureUnderHand = hands.CreatureAlong(rayOrigin, rayDirection);
+					}
+					if (hands.GetCreature().has_value())
+					{
+						_handOnCreature =
+						    hands.Update(rayOrigin, rayDirection, static_cast<glm::vec2>(_mousePosition),
+						                 std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+					}
 					if (_handOnCreature.has_value())
 					{
 						handTransform.position = _handOnCreature->position;
 					}
 				}
+				UpdateHandInterface();
 			}
 			Locator::entitiesRegistry::value().SetDirty();
 		}

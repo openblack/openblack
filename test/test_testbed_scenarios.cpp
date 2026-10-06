@@ -17,6 +17,7 @@
 #include <glm/geometric.hpp>
 #include <gtest/gtest.h>
 
+#include "Creature/CreatureFeedback.h"
 #include "Creature/CreatureLayers.h"
 #include "Debug/TestbedScenarioRegistry.h"
 
@@ -124,6 +125,140 @@ TEST(TestbedScenarios, CoversTheCreatureFeatures)
 	// Thirst needs water to find
 	EXPECT_EQ(Find("needs.thirst")->environment.land, Land::Pool);
 	EXPECT_EQ(Find("light.reflections")->environment.land, Land::Pool);
+}
+
+TEST(TestbedScenarios, CoversObjectsTheHandAndLeashes)
+{
+	for (const auto* id :
+	     {"objects.reach", "objects.examine", "objects.throw_lob", "objects.eat_held", "objects.knock_down_trees",
+	      "objects.point", "objects.curious", "objects.playful", "objects.angry", "hand.stroke", "hand.slap",
+	      "hand.status_panel", "leash.types", "leash.pull_to_hand", "leash.tied", "leash.home"})
+	{
+		EXPECT_NE(Find(id), nullptr) << id;
+	}
+	const auto commandsOf = [](std::string_view id) {
+		std::set<Command::Kind> kinds;
+		for (const auto& command : Find(id)->commands)
+		{
+			kinds.insert(command.kind);
+		}
+		return kinds;
+	};
+
+	// Reaching in every direction round the creature: in front, both sides and behind
+	const auto* reach = Find("objects.reach");
+	bool front = false;
+	bool behind = false;
+	bool left = false;
+	bool right = false;
+	for (const auto& object : reach->objects)
+	{
+		front = front || object.offset.y < 0.0f;
+		behind = behind || object.offset.y > 0.0f;
+		left = left || object.offset.x < 0.0f;
+		right = right || object.offset.x > 0.0f;
+	}
+	EXPECT_TRUE(front && behind && left && right);
+	EXPECT_TRUE(commandsOf("objects.reach").contains(Command::Kind::PutDown));
+
+	// Every way of looking a thing over
+	std::set<size_t> ways;
+	for (const auto& command : Find("objects.examine")->commands)
+	{
+		if (command.kind == Command::Kind::Examine)
+		{
+			ways.insert(command.value);
+		}
+	}
+	EXPECT_EQ(ways.size(), 4u);
+	for (const auto kind : {Command::Kind::ThrowAt, Command::Kind::Lob, Command::Kind::Discard})
+	{
+		EXPECT_TRUE(commandsOf("objects.throw_lob").contains(kind));
+	}
+	EXPECT_TRUE(commandsOf("objects.eat_held").contains(Command::Kind::EatHeld));
+	EXPECT_TRUE(commandsOf("objects.knock_down_trees").contains(Command::Kind::KnockDown));
+	EXPECT_TRUE(commandsOf("objects.point").contains(Command::Kind::PointAt));
+	// The moods are the mind's own, with nothing told
+	EXPECT_TRUE(Find("objects.curious")->commands.empty());
+	EXPECT_FALSE(Find("objects.angry")->creatures.front().desires.empty());
+
+	// Every part of the body stroked; slaps high and low, gentle and hard
+	std::set<size_t> parts;
+	for (const auto& command : Find("hand.stroke")->commands)
+	{
+		if (command.kind == Command::Kind::HandStroke)
+		{
+			parts.insert(command.bodyPart);
+		}
+	}
+	EXPECT_EQ(parts.size(), creature_feedback::k_BodyPartCount);
+	std::set<std::pair<bool, bool>> slaps;
+	for (const auto& command : Find("hand.slap")->commands)
+	{
+		if (command.kind == Command::Kind::HandSlap)
+		{
+			slaps.insert({command.gentle, command.slapHeight < creature_feedback::k_FeetBelow});
+		}
+	}
+	EXPECT_EQ(slaps.size(), 4u);
+	EXPECT_TRUE(commandsOf("hand.slap").contains(Command::Kind::HandLetGo));
+
+	// The status panel's creature has needs held to read off it
+	const auto& worn = Find("hand.status_panel")->creatures.front();
+	EXPECT_TRUE(worn.hold);
+	EXPECT_TRUE(worn.needs.life.has_value() && worn.needs.energy.has_value() && worn.needs.exhaustion.has_value());
+
+	// Every leash, tied up and kept at home
+	std::set<LeashType> leashes;
+	for (const auto& command : Find("leash.types")->commands)
+	{
+		if (command.kind == Command::Kind::PutOnLeash)
+		{
+			leashes.insert(command.leash);
+		}
+	}
+	EXPECT_EQ(leashes, (std::set<LeashType> {LeashType::Evil, LeashType::Rope, LeashType::Good}));
+	EXPECT_TRUE(commandsOf("leash.tied").contains(Command::Kind::TieLeash));
+	EXPECT_TRUE(commandsOf("leash.tied").contains(Command::Kind::UntieLeash));
+	EXPECT_TRUE(commandsOf("leash.home").contains(Command::Kind::ConfineToHome));
+}
+
+TEST(TestbedScenarios, EveryCommandHasAName)
+{
+	for (size_t i = 0; i <= static_cast<size_t>(Command::Kind::ConfineToHome); ++i)
+	{
+		EXPECT_FALSE(Name(static_cast<Command::Kind>(i)).empty()) << i;
+	}
+}
+
+TEST(TestbedScenarios, CommandsOnThingsAreChecked)
+{
+	using Kind = Command::Kind;
+	Scenario broken {
+	    .id = "broken.things",
+	    .name = "Broken",
+	    .description = "Broken on purpose",
+	    .expected = "Every problem found",
+	    .creatures = {CreatureSetup {}},
+	    .objects = {{.type = FeatureInfo::FatPilarChalk}, {.type = MobileObjectInfo::Ball}},
+	    .commands = {{.kind = Kind::PickUp, .object = 0},
+	                 {.kind = Kind::KnockDown, .object = 0},
+	                 {.kind = Kind::TieLeash, .object = 2},
+	                 {.kind = Kind::Examine, .value = 4},
+	                 {.kind = Kind::HandStroke, .bodyPart = creature_feedback::k_BodyPartCount},
+	                 {.kind = Kind::HandSlap, .slapHeight = 2.0f},
+	                 {.kind = Kind::PutOnLeash, .leash = LeashType::None},
+	                 {.kind = Kind::ConfineToHome, .radius = 0.0f}},
+	};
+	EXPECT_EQ(Problems(broken).size(), 8u);
+
+	// Picking up a thing, knocking it down and tying to anything are fine
+	broken.commands = {{.kind = Kind::PickUp, .object = 1},
+	                   {.kind = Kind::KnockDown, .object = 1},
+	                   {.kind = Kind::TieLeash, .object = 0},
+	                   {.kind = Kind::PutOnLeash, .leash = LeashType::Good},
+	                   {.kind = Kind::ConfineToHome, .radius = 10.0f}};
+	EXPECT_TRUE(Problems(broken).empty());
 }
 
 TEST(TestbedScenarios, ProblemsAreFound)

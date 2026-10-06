@@ -289,9 +289,10 @@ void GameInterface::Draw(glm::u16vec2 resolution, glm::ivec2 mouse, uint32_t mil
 		_painter.DrawTextWrapped(DialogRect {{0, 0}, DialogPainter::k_Size}, true, _message->text, 60,
 		                         glm::vec4(1.0f, 1.0f, 1.0f, _message->alpha));
 	}
-	// The game leaves the tooltip out under a dialog
+	// The game leaves the creature's panel and the tooltip out under a dialog
 	if (!menuOpen)
 	{
+		DrawCreaturePanel(resolution);
 		DrawToolTip(resolution);
 	}
 	if (_menu->IsVisible())
@@ -349,6 +350,84 @@ void GameInterface::DrawGlow(glm::vec2 min, glm::vec2 max, glm::vec4 colour)
 		}
 	}
 	_canvas.SetBlend(Canvas::Blend::Alpha);
+}
+
+void GameInterface::DrawCreaturePanel(glm::u16vec2 resolution)
+{
+	if (!_creaturePanel.has_value())
+	{
+		return;
+	}
+	using creature_panel::Row;
+	const auto& values = *_creaturePanel;
+	const bool withReward = values.reward.has_value();
+	const float textSize = static_cast<float>(resolution.y) / 32.0f;
+
+	// The labels' column is as wide as the widest label
+	std::array<std::u16string_view, creature_panel::k_RowCount> labels {};
+	std::array<float, creature_panel::k_RowCount> widths {};
+	for (size_t i = 0; i < labels.size(); ++i)
+	{
+		labels.at(i) = _texts.Get(creature_panel::k_LabelNames.at(i));
+		widths.at(i) = _font.GetWidth(labels.at(i), textSize);
+	}
+	const auto layout =
+	    creature_panel::Compute(resolution, withReward, creature_panel::LabelColumnWidth(widths, textSize * 2.0f));
+	const creature_panel::RewardTexts rewardTexts {
+	    .bad = _texts.Get(creature_panel::k_BadBoyName),
+	    .good = _texts.Get(creature_panel::k_GoodBoyName),
+	    .none = _texts.Get(creature_panel::k_NoRewardName),
+	};
+
+	// See-through black at the left, fading out to the right
+	const glm::vec4 shade {0.0f, 0.0f, 0.0f, 95.0f / 255.0f};
+	const glm::vec4 clear {0.0f, 0.0f, 0.0f, 0.0f};
+	const auto& box = layout.box;
+	_canvas.DrawShape({box.min, glm::vec2(box.max.x, box.min.y), box.max, glm::vec2(box.min.x, box.max.y)},
+	                  {shade, clear, clear, shade});
+
+	const glm::vec4 white {1.0f, 1.0f, 1.0f, 1.0f};
+	const glm::vec4 black {0.0f, 0.0f, 0.0f, 1.0f};
+	// Each text in white over its black shadow, two pixels down and right
+	const auto drawText = [&](glm::vec2 at, std::u16string_view text) {
+		_painter.DrawString(at + 2.0f, text, layout.textSize, black);
+		_painter.DrawString(at, text, layout.textSize, white);
+	};
+	for (const auto& row : layout.Rows())
+	{
+		const auto label = labels.at(static_cast<size_t>(row.row));
+		drawText({row.labelRight.x - std::floor(_font.GetWidth(label, layout.textSize)), row.labelRight.y}, label);
+		drawText(row.valueLeft, creature_panel::FormatValue(row.row, values, rewardTexts));
+
+		// The bar's dark box and white frame, its fill brightening towards where it ends, and shadows inside its frame
+		const auto& bar = row.bar;
+		_painter.DrawBevelBox({_painter.ToDialog(glm::ivec2(bar.min)), _painter.ToDialog(glm::ivec2(bar.max))}, 1,
+		                      DialogPainter::All, white);
+		const float fill = creature_panel::Fill(row.row, values);
+		const auto filled = creature_panel::FillOf(bar, fill, row.row == Row::Reward);
+		if (!filled.Empty())
+		{
+			const auto bright = creature_panel::BarColour(row.row, fill);
+			const auto dim = glm::vec4(glm::vec3(bright) * 0.5f, 1.0f);
+			_canvas.DrawShape({glm::vec2(filled.from, filled.top), glm::vec2(filled.to, filled.top),
+			                   glm::vec2(filled.to, filled.bottom), glm::vec2(filled.from, filled.bottom)},
+			                  {dim, bright, bright, dim});
+		}
+		if (filled.middle.has_value())
+		{
+			_canvas.DrawLine(glm::ivec2(static_cast<int>(*filled.middle), static_cast<int>(filled.top)),
+			                 glm::ivec2(static_cast<int>(*filled.middle), static_cast<int>(filled.bottom) - 1), black);
+		}
+		const float inset = creature_panel::k_BarInset;
+		const glm::vec2 inner {bar.min.x + inset, bar.min.y + inset};
+		const glm::vec2 innerMax {bar.max.x - inset, bar.max.y - inset};
+		_canvas.DrawShape({inner, glm::vec2(innerMax.x, inner.y), glm::vec2(innerMax.x, inner.y + inset),
+		                   glm::vec2(inner.x, inner.y + inset)},
+		                  {black, black, clear, clear});
+		_canvas.DrawShape({inner, glm::vec2(inner.x + inset, inner.y), glm::vec2(inner.x + inset, innerMax.y),
+		                   glm::vec2(inner.x, innerMax.y)},
+		                  {black, clear, clear, black});
+	}
 }
 
 void GameInterface::DrawToolTip(glm::u16vec2 resolution)

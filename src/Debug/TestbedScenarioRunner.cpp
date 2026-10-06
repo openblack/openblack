@@ -25,6 +25,7 @@
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "Creature/CreatureLayers.h"
+#include "Creature/CreatureObjectActions.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Archetypes/FeatureArchetype.h"
 #include "ECS/Archetypes/MobileObjectArchetype.h"
@@ -36,11 +37,14 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
+#include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Game.h"
 #include "Locator.h"
@@ -113,10 +117,16 @@ glm::vec2 AheadOf(const Transform& transform)
 	return {ahead.x, ahead.z};
 }
 
-/// Whether a command sends its creature somewhere, or has it face somewhere
+/// Whether a command sends its creature somewhere, or has it face, throw or point somewhere
 bool HasPoint(Kind kind)
 {
-	return kind == Kind::WalkTo || kind == Kind::RunTo || kind == Kind::FleeFrom || kind == Kind::TurnToFace;
+	return kind == Kind::WalkTo || kind == Kind::RunTo || kind == Kind::FleeFrom || kind == Kind::TurnToFace ||
+	       kind == Kind::ThrowAt || kind == Kind::PointAt;
+}
+
+std::string_view Started(bool started)
+{
+	return started ? "started" : "can't";
 }
 
 /// The camera's fields of view across and up and down, in radians
@@ -136,6 +146,7 @@ void Runner::Start(const Scenario& scenario)
 	_seconds = 0.0f;
 	_timeline = {};
 	_creatures.clear();
+	_objects.clear();
 	_started.clear();
 	_log.clear();
 	_shot.reset();
@@ -167,6 +178,11 @@ void Runner::Stop()
 		return;
 	}
 	_running = false;
+	// The hand lets go of a creature a scenario held it to
+	if (Locator::creatureHandSystem::has_value() && Locator::creatureHandSystem::value().IsHeldByCommand())
+	{
+		Locator::creatureHandSystem::value().Release();
+	}
 	if (Locator::creaturePhysiologySystem::has_value())
 	{
 		auto& physiology = Locator::creaturePhysiologySystem::value();
@@ -229,22 +245,22 @@ void Runner::PlaceObjects(const Scenario& scenario, glm::vec2 middle)
 		const auto point = MapPoint(middle, object.offset);
 		const glm::vec3 position {point.x, land.GetHeightAt(point), point.y};
 		const auto yaw = glm::radians(object.yawDegrees);
-		std::visit(
+		_objects.push_back(std::visit(
 		    [&]<typename T>(T type) {
 			    if constexpr (std::is_same_v<T, MobileObjectInfo>)
 			    {
-				    ecs::archetypes::MobileObjectArchetype::Create(position, type, yaw, object.scale);
+				    return ecs::archetypes::MobileObjectArchetype::Create(position, type, yaw, object.scale);
 			    }
 			    else if constexpr (std::is_same_v<T, TreeInfo>)
 			    {
-				    ecs::archetypes::TreeArchetype::Create(0, position, type, true, yaw, object.scale, object.scale);
+				    return ecs::archetypes::TreeArchetype::Create(0, position, type, true, yaw, object.scale, object.scale);
 			    }
 			    else
 			    {
-				    ecs::archetypes::FeatureArchetype::Create(position, type, yaw, object.scale);
+				    return ecs::archetypes::FeatureArchetype::Create(position, type, yaw, object.scale);
 			    }
 		    },
-		    object.type);
+		    object.type));
 	}
 }
 
@@ -344,6 +360,117 @@ void Runner::ApplyStates()
 			mind->idle = {};
 		}
 		_started[i] = true;
+	}
+}
+
+std::optional<entt::entity> Runner::ObjectAt(size_t index) const
+{
+	if (index >= _objects.size() || !Locator::entitiesRegistry::has_value() ||
+	    !Locator::entitiesRegistry::value().Valid(_objects[index]))
+	{
+		return std::nullopt;
+	}
+	return _objects[index];
+}
+
+std::string Runner::GiveObjectCommand(entt::entity creature, const Command& command)
+{
+	if (!Locator::creatureObjectActionSystem::has_value())
+	{
+		return "no hands";
+	}
+	auto& hands = Locator::creatureObjectActionSystem::value();
+	const auto& land = Locator::terrainSystem::value();
+	const auto point = MapPoint(_middle, command.point);
+	const glm::vec3 onLand {point.x, land.GetHeightAt(point), point.y};
+	const auto object = ObjectAt(command.object);
+	switch (command.kind)
+	{
+	case Kind::PickUp:
+		return object.has_value() ? std::string(Started(hands.PickUp(creature, *object))) : "it is gone";
+	case Kind::PutDown:
+		return std::string(Started(hands.PutDown(creature)));
+	case Kind::Discard:
+		return std::string(Started(hands.Discard(creature)));
+	case Kind::Lob:
+		return std::string(Started(hands.Lob(creature)));
+	case Kind::EatHeld:
+		return std::string(Started(hands.EatHeld(creature)));
+	case Kind::Examine:
+		return std::string(Started(hands.Keep(creature, creature_object_actions::k_FirstKeepAnimation + command.value)));
+	case Kind::ThrowAt:
+		// At about the height of a creature's middle
+		return std::string(Started(hands.Throw(creature, onLand + glm::vec3(0.0f, CreatureHeight(1.0f) * 0.5f, 0.0f))));
+	case Kind::KnockDown:
+		return object.has_value() ? std::string(Started(hands.Destroy(creature, *object))) : "it is gone";
+	case Kind::PointAt:
+		return std::string(Started(hands.PointAt(creature, onLand)));
+	default:
+		return {};
+	}
+}
+
+std::string Runner::GiveHandCommand(entt::entity creature, const Command& command)
+{
+	if (!Locator::creatureHandSystem::has_value())
+	{
+		return "no hand";
+	}
+	auto& hand = Locator::creatureHandSystem::value();
+	switch (command.kind)
+	{
+	case Kind::HandStroke:
+		return hand.Stroke(creature, static_cast<creature_feedback::BodyPart>(command.bodyPart)) ? "stroked" : "busy";
+	case Kind::HandSlap:
+		return hand.Slap(creature, command.slapHeight, command.gentle, command.sweepsRight) ? "slapped" : "busy";
+	case Kind::HandLetGo:
+		if (hand.GetCreature() == creature)
+		{
+			const auto sum = hand.GetFeedbackSum();
+			hand.Release();
+			return fmt::format("{:+.2f}", sum);
+		}
+		return "not held";
+	default:
+		return {};
+	}
+}
+
+std::string Runner::GiveLeashCommand(entt::entity creature, const Command& command)
+{
+	if (!Locator::leashSystem::has_value())
+	{
+		return "no leashes";
+	}
+	auto& leashes = Locator::leashSystem::value();
+	switch (command.kind)
+	{
+	case Kind::PutOnLeash:
+		// It must know the learning leash before any, and the leash itself
+		leashes.SetKnown(creature, LeashType::Rope, true);
+		leashes.SetKnown(creature, command.leash, true);
+		if (leashes.IsLeashed(creature))
+		{
+			return leashes.ChangeType(creature, command.leash) ? "changed" : "can't";
+		}
+		return leashes.PutOn(creature, command.leash) ? "on" : "can't";
+	case Kind::TieLeash:
+		if (const auto object = ObjectAt(command.object))
+		{
+			return leashes.TieTo(creature, *object) ? "tied" : "can't";
+		}
+		return "it is gone";
+	case Kind::UntieLeash:
+		leashes.UntieToHand(creature);
+		return {};
+	case Kind::TakeOffLeash:
+		leashes.TakeOff(creature);
+		return {};
+	case Kind::ConfineToHome:
+		leashes.ConfineToHome(creature, command.radius);
+		return {};
+	default:
+		return {};
 	}
 }
 
@@ -458,6 +585,29 @@ void Runner::Give(const Command& command)
 	case Kind::Slap:
 		// As a whole session of the hand on the creature would, a full reward or punishment as the hand lets go
 		minds.ReceiveFeedback(*entity, command.kind == Kind::Stroke ? 1.0f : -1.0f);
+		break;
+	case Kind::PickUp:
+	case Kind::PutDown:
+	case Kind::Discard:
+	case Kind::Lob:
+	case Kind::EatHeld:
+	case Kind::Examine:
+	case Kind::ThrowAt:
+	case Kind::KnockDown:
+	case Kind::PointAt:
+		result = GiveObjectCommand(*entity, command);
+		break;
+	case Kind::HandStroke:
+	case Kind::HandSlap:
+	case Kind::HandLetGo:
+		result = GiveHandCommand(*entity, command);
+		break;
+	case Kind::PutOnLeash:
+	case Kind::TieLeash:
+	case Kind::UntieLeash:
+	case Kind::TakeOffLeash:
+	case Kind::ConfineToHome:
+		result = GiveLeashCommand(*entity, command);
 		break;
 	case Kind::SetHour:
 		break;

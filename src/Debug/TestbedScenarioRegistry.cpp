@@ -18,7 +18,9 @@
 #include <fmt/format.h>
 #include <glm/geometric.hpp>
 
+#include "Creature/CreatureFeedback.h"
 #include "Creature/CreatureLayers.h"
+#include "Creature/CreatureObjectActions.h"
 
 using namespace openblack;
 using namespace openblack::testbed_scenarios;
@@ -27,10 +29,11 @@ using namespace openblack::testbed_scenarios;
 // ("facet.what", never reused or renamed, as tests and the command line pick scenarios by it), a name, its facet, a
 // description of what it sets up and what to look for, and then its data: the environment (land, hour, weather, body
 // time), the framing, the creatures with the bodies, needs and desires they start with, the objects on the land, and
-// the commands, which play in turn. Offsets are from the middle of the map, x east and y north; the testbed's camera
-// looks north from 120 units south of the middle, and the pool lies between them (x -160 to 160, y -120 to -20). A
-// new facet goes into the Facet enum and its Name. test_testbed_scenarios checks the data of every scenario; anything a
-// scenario needs that the runner can't yet do goes into these types and TestbedScenarioRunner together.
+// the commands, which play in turn (commands on objects name them by their place in the scenario's objects). Offsets are from
+// the middle of the map, x east and y north; the testbed's camera looks north from 120 units south of the middle, and the pool
+// lies between them (x -160 to 160, y -120 to -20). A new facet goes into the Facet enum and its Name. test_testbed_scenarios
+// checks the data of every scenario; anything a scenario needs that the runner can't yet do goes into these types and
+// TestbedScenarioRunner together.
 
 namespace
 {
@@ -65,6 +68,37 @@ Command Act(Kind kind, size_t creature, float delay = 0.0f, bool wait = false)
 Command AtHour(float hour, float delay)
 {
 	return {.kind = Kind::SetHour, .delaySeconds = delay, .hour = hour};
+}
+
+/// A command on one of the scenario's objects: picking it up, knocking it down, tying the leash to it
+Command OnObject(Kind kind, size_t creature, size_t object, float delay = 0.0f, bool wait = true)
+{
+	return {.kind = kind, .creature = creature, .delaySeconds = delay, .waitUntilFree = wait, .object = object};
+}
+
+Command Stroke(size_t creature, creature_feedback::BodyPart part, float delay)
+{
+	return {.kind = Kind::HandStroke,
+	        .creature = creature,
+	        .delaySeconds = delay,
+	        .waitUntilFree = true,
+	        .bodyPart = static_cast<size_t>(part)};
+}
+
+Command Slap(size_t creature, float height, bool gentle, bool sweepsRight, float delay)
+{
+	return {.kind = Kind::HandSlap,
+	        .creature = creature,
+	        .delaySeconds = delay,
+	        .waitUntilFree = true,
+	        .slapHeight = height,
+	        .gentle = gentle,
+	        .sweepsRight = sweepsRight};
+}
+
+Command Leash(size_t creature, LeashType type, float delay)
+{
+	return {.kind = Kind::PutOnLeash, .creature = creature, .delaySeconds = delay, .leash = type};
 }
 
 /// A body wanting nothing: full, rested, watered, comfortable
@@ -850,6 +884,294 @@ void AddAudio(std::vector<Scenario>& all)
 	});
 }
 
+void AddObjects(std::vector<Scenario>& all)
+{
+	// Balls all round a tiger facing the camera, south: it reaches for each in turn, looks it over and puts it down,
+	// then goes back to the middle and faces south again
+	constexpr float k_Reach = 10.0f;
+	constexpr float k_Diagonal = 7.0f;
+	const std::array<glm::vec2, 6> k_Round {glm::vec2 {0.0f, -k_Reach},          glm::vec2 {-k_Diagonal, -k_Diagonal},
+	                                        glm::vec2 {k_Diagonal, -k_Diagonal}, glm::vec2 {-k_Reach, 0.0f},
+	                                        glm::vec2 {k_Reach, 0.0f},           glm::vec2 {0.0f, k_Reach}};
+	std::vector<ObjectSetup> balls;
+	std::vector<Command> reaching;
+	for (size_t i = 0; i < k_Round.size(); ++i)
+	{
+		balls.push_back({.type = MobileObjectInfo::Ball, .offset = k_Round.at(i)});
+		reaching.push_back(OnObject(Kind::PickUp, 0, i, 1.0f));
+		reaching.push_back(Play(Kind::Examine, 0, creature_object_actions::k_KeepAnimationCount - 1, 0.5f, true));
+		reaching.push_back(Act(Kind::PutDown, 0, 0.5f, true));
+		reaching.push_back(Go(Kind::WalkTo, 0, {0.0f, 0.0f}, 0.5f));
+		reaching.push_back(Go(Kind::TurnToFace, 0, {0.0f, -60.0f}, 0.0f));
+	}
+	all.push_back({
+	    .id = "objects.reach",
+	    .name = "Picking up, looking over, putting down",
+	    .facet = Facet::Objects,
+	    .description = "A tiger facing the camera with balls in front of it, to its front left and right, either side "
+	                   "and behind it. It picks each up in turn, examines it and puts it down, then goes back to the "
+	                   "middle.",
+	    .expected = "It reaches for each ball the way it lies, in front, to the side or behind, picking it up with its "
+	                "hand; holds it up to look at it; and puts it down gently.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.3f},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .objects = balls,
+	    .commands = reaching,
+	    .repeatFrom = 0,
+	});
+
+	std::vector<Command> examining {OnObject(Kind::PickUp, 0, 0, 1.0f)};
+	for (size_t way = 0; way < creature_object_actions::k_KeepAnimationCount; ++way)
+	{
+		examining.push_back(Play(Kind::Examine, 0, way, 1.0f, true));
+	}
+	examining.push_back(Act(Kind::PutDown, 0, 1.0f, true));
+	all.push_back({
+	    .id = "objects.examine",
+	    .name = "Looking a thing over four ways",
+	    .facet = Facet::Objects,
+	    .description = "A tiger picks up a pot in front of it and strokes, shakes, smells and examines it in turn, then "
+	                   "puts it down.",
+	    .expected = "Each way of looking the pot over plays its own animation with the pot held in the hand.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.2f},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .objects = {{.type = MobileObjectInfo::EgyptPotA, .offset = {0.0f, -k_Reach}}},
+	    .commands = examining,
+	    .repeatFrom = 0,
+	});
+
+	all.push_back({
+	    .id = "objects.throw_lob",
+	    .name = "Throwing at a target, lobbing and tossing away",
+	    .facet = Facet::Objects,
+	    .description = "A tiger picks up a ball and throws it at a pillar of rock 60 units east, fetches it and lobs it, "
+	                   "fetches it again and tosses it away.",
+	    .expected = "The throw flies flat and hard towards the pillar; the lob goes up high and comes down near; the "
+	                "toss drops it aside. Each comes to rest where it lands.",
+	    .framing = {.shot = Shot::Overview, .include = {{60.0f, 30.0f}, {-30.0f, -30.0f}}},
+	    .creatures = {Posed(CreatureType::Tiger, {-20.0f, 0.0f}, 270.0f)},
+	    .objects = {{.type = MobileObjectInfo::Ball, .offset = {-20.0f, -k_Reach}},
+	                {.type = FeatureInfo::FatPilarChalk, .offset = {60.0f, 0.0f}}},
+	    .commands = {OnObject(Kind::PickUp, 0, 0, 1.0f), Go(Kind::ThrowAt, 0, {60.0f, 0.0f}, 0.5f),
+	                 OnObject(Kind::PickUp, 0, 0, 1.0f), Act(Kind::Lob, 0, 0.5f, true), OnObject(Kind::PickUp, 0, 0, 1.0f),
+	                 Act(Kind::Discard, 0, 0.5f, true), Go(Kind::WalkTo, 0, {-20.0f, 0.0f}, 1.0f)},
+	    .repeatFrom = 0,
+	});
+
+	auto hungry = Posed(CreatureType::Tiger, {0.0f, 0.0f});
+	hungry.needs = {.energy = 0.3f};
+	hungry.hold = false;
+	all.push_back({
+	    .id = "objects.eat_held",
+	    .name = "Eating by picking food up",
+	    .facet = Facet::Objects,
+	    .description = "A hungry tiger with three piles of food about it picks each up and eats it from its hand.",
+	    .expected = "It walks up to each, picks it up, brings it to its mouth and eats it; the food is gone and its "
+	                "energy rises in the spawner.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.3f},
+	    .creatures = {hungry},
+	    .objects = {{.type = MobileObjectInfo::MagicFood, .offset = {0.0f, -k_Reach}},
+	                {.type = MobileObjectInfo::MagicFood, .offset = {-15.0f, -5.0f}},
+	                {.type = MobileObjectInfo::MagicFood, .offset = {15.0f, -5.0f}}},
+	    .commands = {OnObject(Kind::PickUp, 0, 0, 1.0f), Act(Kind::EatHeld, 0, 0.5f, true), OnObject(Kind::PickUp, 0, 1, 1.0f),
+	                 Act(Kind::EatHeld, 0, 0.5f, true), OnObject(Kind::PickUp, 0, 2, 1.0f), Act(Kind::EatHeld, 0, 0.5f, true)},
+	});
+
+	all.push_back({
+	    .id = "objects.knock_down_trees",
+	    .name = "Knocking down trees",
+	    .facet = Facet::Objects,
+	    .description = "A tiger walks up to each of three trees in a row and knocks it down.",
+	    .expected = "It strikes each tree, which falls; its town's view of it shows in the spawner.",
+	    .framing = {.shot = Shot::Overview},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, -20.0f})},
+	    .objects = {{.type = TreeInfo::Oak, .offset = {-40.0f, 10.0f}},
+	                {.type = TreeInfo::Beech, .offset = {0.0f, 10.0f}},
+	                {.type = TreeInfo::Conifer, .offset = {40.0f, 10.0f}}},
+	    .commands = {OnObject(Kind::KnockDown, 0, 0, 1.0f), OnObject(Kind::KnockDown, 0, 1, 1.0f),
+	                 OnObject(Kind::KnockDown, 0, 2, 1.0f)},
+	});
+
+	all.push_back({
+	    .id = "objects.point",
+	    .name = "Pointing",
+	    .facet = Facet::Objects,
+	    .description = "A tiger facing the camera points in front of it, to either side, far off and behind it.",
+	    .expected = "It turns as needed and points its arm at each point in turn.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.4f},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .commands = {Go(Kind::PointAt, 0, {0.0f, -40.0f}, 1.0f), Go(Kind::PointAt, 0, {-40.0f, 0.0f}, 1.0f),
+	                 Go(Kind::PointAt, 0, {40.0f, 0.0f}, 1.0f), Go(Kind::PointAt, 0, {0.0f, 200.0f}, 1.0f),
+	                 Go(Kind::TurnToFace, 0, {0.0f, -60.0f}, 1.0f)},
+	    .repeatFrom = 0,
+	});
+
+	// Left to the mind: one desire as strong as it gets, with things about to act on
+	struct Mood
+	{
+		std::string_view id;
+		std::string_view name;
+		Desire desire;
+		std::string_view description;
+		std::string_view expected;
+	};
+	const std::array<Mood, 3> k_Moods {{
+	    {"objects.curious", "Curious about things", Desire::Curiosity,
+	     "A tiger as curious as it gets, wanting nothing else, among a ball, a pot and a barrel.",
+	     "It walks up to something nearby, picks it up and looks it over, then mostly puts it down gently and sometimes "
+	     "tosses it away, and goes on to the next."},
+	    {"objects.playful", "Playing with things", Desire::Play,
+	     "A tiger as playful as it gets, wanting nothing else, among a ball, a pot and a barrel.",
+	     "It picks something up and throws it about, a good way off in a random direction, and goes after the next."},
+	    {"objects.angry", "Angry with things", Desire::Anger,
+	     "A tiger as angry as it gets, wanting nothing else, among a ball, a pot and a barrel, with trees nearby.",
+	     "It picks something up, now and then shows its anger first, and hurls it at the nearest tree."},
+	}};
+	for (const auto& mood : k_Moods)
+	{
+		auto moody = Content(CreatureType::Tiger, {0.0f, 0.0f});
+		moody.desires = OnlyDesire(mood.desire);
+		all.push_back({
+		    .id = mood.id,
+		    .name = mood.name,
+		    .facet = Facet::Objects,
+		    .description = mood.description,
+		    .expected = mood.expected,
+		    .framing = {.shot = Shot::Overview, .distance = 1.2f},
+		    .creatures = {moody},
+		    .objects = {{.type = MobileObjectInfo::Ball, .offset = {-15.0f, -10.0f}},
+		                {.type = MobileObjectInfo::EgyptPotA, .offset = {15.0f, -10.0f}},
+		                {.type = MobileObjectInfo::EgyptBarrel, .offset = {0.0f, 15.0f}},
+		                {.type = TreeInfo::Oak, .offset = {-50.0f, 30.0f}},
+		                {.type = TreeInfo::Birch, .offset = {50.0f, 30.0f}}},
+		});
+	}
+}
+
+void AddHand(std::vector<Scenario>& all)
+{
+	using creature_feedback::BodyPart;
+	// Every part of the body, the head first
+	std::vector<Command> strokes;
+	for (size_t part = 0; part < creature_feedback::k_BodyPartCount; ++part)
+	{
+		strokes.push_back(Stroke(0, static_cast<BodyPart>(part), 1.0f));
+	}
+	strokes.push_back(Act(Kind::HandLetGo, 0, 1.0f, true));
+	all.push_back({
+	    .id = "hand.stroke",
+	    .name = "Stroking each part of the body",
+	    .facet = Facet::Hand,
+	    .description = "The hand rests on a tiger facing the camera and strokes its head, armpits, belly, groin, feet and "
+	                   "hands in turn, then lets go.",
+	    .expected = "Each stroke plays the pleased animation for its part, mirrored for the left side, and its face; the "
+	                "panel's reward climbs a tenth a stroke to Good Boy! 90%, and letting go warms it to the player.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.2f},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .commands = strokes,
+	    .repeatFrom = 0,
+	});
+
+	all.push_back({
+	    .id = "hand.slap",
+	    .name = "Slapping gently and hard, high and low",
+	    .facet = Facet::Hand,
+	    .description = "The hand slaps a tiger facing the camera on the head, the waist and the feet, gently and then "
+	                   "hard, from either side, then lets go.",
+	    .expected = "Each slap plays its reeling animation for its height, the gentle ones softer, the sweeps to the "
+	                "right mirrored; the panel's reward falls to Bad Boy! 100%, and letting go cools it to the player.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.2f},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .commands = {Slap(0, 0.85f, true, false, 1.0f), Slap(0, 0.55f, true, true, 1.0f), Slap(0, 0.2f, true, false, 1.0f),
+	                 Slap(0, 0.85f, false, true, 1.0f), Slap(0, 0.55f, false, false, 1.0f), Slap(0, 0.2f, false, true, 1.0f),
+	                 Act(Kind::HandLetGo, 0, 1.0f, true)},
+	    .repeatFrom = 0,
+	});
+
+	auto worn = Posed(CreatureType::Tiger, {0.0f, 0.0f});
+	worn.needs = {.energy = 0.595f, .exhaustion = 0.325f, .life = 0.745f};
+	all.push_back({
+	    .id = "hand.status_panel",
+	    .name = "The creature's status panel",
+	    .facet = Facet::Hand,
+	    .description = "The hand on a tiger whose needs are held at 25% damage, 40% hunger and 32% tiredness strokes it "
+	                   "three times, slaps it once gently and once hard, and lets go.",
+	    .expected = "While the hand is on it the panel at the left shows Damage 25%, Hunger 40% and Tiredness 32% in "
+	                "yellow bars, and the reward going from No Reward 0% to Good Boy! 30% in green, then down past the "
+	                "middle to Bad Boy! in red. Hovering the hand over it shows the panel with the last reward.",
+	    .framing = {.shot = Shot::Follow, .distance = 1.0f},
+	    .creatures = {worn},
+	    .commands = {Stroke(0, BodyPart::Head, 1.0f), Stroke(0, BodyPart::Belly, 1.0f), Stroke(0, BodyPart::RightHand, 1.0f),
+	                 Slap(0, 0.85f, true, false, 2.0f), Slap(0, 0.55f, false, true, 2.0f), Act(Kind::HandLetGo, 0, 3.0f, true)},
+	    .repeatFrom = 0,
+	});
+}
+
+void AddLeash(std::vector<Scenario>& all)
+{
+	all.push_back({
+	    .id = "leash.types",
+	    .name = "Led on each leash",
+	    .facet = Facet::Leash,
+	    .description = "A tiger is put on the learning leash, then the aggression leash, then the compassion leash, a "
+	                   "while each, and the leash is taken off. Move the hand about to lead it.",
+	    .expected = "A rope runs from the hand to its collar, coloured for each leash; on the aggression leash it wants "
+	                "to be angry, on the compassion leash to be kind, and on the learning leash it watches the player.",
+	    .framing = {.shot = Shot::Testbed},
+	    .creatures = {Content(CreatureType::Tiger, {0.0f, 40.0f})},
+	    .commands = {Leash(0, LeashType::Rope, 1.0f), Leash(0, LeashType::Evil, 10.0f), Leash(0, LeashType::Good, 10.0f),
+	                 Act(Kind::TakeOffLeash, 0, 10.0f), Act(Kind::Stop, 0, 3.0f)},
+	    .repeatFrom = 0,
+	});
+
+	all.push_back({
+	    .id = "leash.pull_to_hand",
+	    .name = "Pulled to the hand",
+	    .facet = Facet::Leash,
+	    .description = "A tiger far off to the north is put on the learning leash. Put the hand on the land near the "
+	                   "camera, well away from it.",
+	    .expected = "Once the rope is pulled taut it stops what it is doing and walks to the hand, then its mind takes "
+	                "over again near the hand.",
+	    .framing = {.shot = Shot::Testbed},
+	    .creatures = {Content(CreatureType::Tiger, {0.0f, 150.0f})},
+	    .commands = {Leash(0, LeashType::Rope, 1.0f)},
+	});
+
+	all.push_back({
+	    .id = "leash.tied",
+	    .name = "Tied to a tree and a rock",
+	    .facet = Facet::Leash,
+	    .description = "A tiger on the learning leash is tied to a tree and told to walk far off, untied back to the "
+	                   "hand, then tied to a pillar of rock and told to walk far off again.",
+	    .expected = "The rope runs from what it is tied to, and it is kept within the rope's length of it however far "
+	                "it is told to walk; untied, the rope goes back to the hand.",
+	    .framing = {.shot = Shot::Overview, .include = {{-120.0f, 60.0f}, {120.0f, 60.0f}}},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f})},
+	    .objects = {{.type = TreeInfo::Oak, .offset = {-40.0f, 10.0f}},
+	                {.type = FeatureInfo::FatPilarChalk, .offset = {40.0f, 10.0f}}},
+	    .commands = {Leash(0, LeashType::Rope, 1.0f), OnObject(Kind::TieLeash, 0, 0, 1.0f, false),
+	                 Go(Kind::WalkTo, 0, {-120.0f, 60.0f}, 1.0f, false), Act(Kind::UntieLeash, 0, 8.0f),
+	                 OnObject(Kind::TieLeash, 0, 1, 2.0f, false), Go(Kind::WalkTo, 0, {120.0f, 60.0f}, 1.0f, false),
+	                 Act(Kind::TakeOffLeash, 0, 8.0f)},
+	    .repeatFrom = 0,
+	});
+
+	all.push_back({
+	    .id = "leash.home",
+	    .name = "Kept at home",
+	    .facet = Facet::Leash,
+	    .description = "A tiger is kept within 40 units of where it stands, as a young creature is kept near its home, "
+	                   "and told to walk 120 units away.",
+	    .expected = "Once it strays past the radius it turns back and walks home again.",
+	    .framing = {.shot = Shot::Overview, .include = {{120.0f, 0.0f}, {-40.0f, 0.0f}}},
+	    .creatures = {Posed(CreatureType::Tiger, {0.0f, 0.0f}, 90.0f)},
+	    .commands = {{.kind = Kind::ConfineToHome, .delaySeconds = 0.5f, .radius = 40.0f},
+	                 Go(Kind::WalkTo, 0, {120.0f, 0.0f}, 1.0f),
+	                 Go(Kind::WalkTo, 0, {0.0f, 0.0f}, 6.0f)},
+	    .repeatFrom = 1,
+	});
+}
+
 std::vector<Scenario> Build()
 {
 	std::vector<Scenario> all;
@@ -863,6 +1185,9 @@ std::vector<Scenario> Build()
 	AddMovement(all);
 	AddFootprints(all);
 	AddAudio(all);
+	AddObjects(all);
+	AddHand(all);
+	AddLeash(all);
 	return all;
 }
 
@@ -912,12 +1237,43 @@ bool ValidOffset(glm::vec2 offset)
 {
 	return std::abs(offset.x) <= k_MaxOffset && std::abs(offset.y) <= k_MaxOffset;
 }
+
+/// What is wrong with what a command acts on, if anything: the object it picks up must be a thing, what it knocks down
+/// a thing or a tree, the part it strokes, the way it looks something over and the leash put on real ones
+std::string_view CommandProblem(const Command& command, std::span<const ObjectSetup> objects)
+{
+	const auto* object = command.object < objects.size() ? &objects[command.object] : nullptr;
+	switch (command.kind)
+	{
+	case Kind::PickUp:
+		return object != nullptr && std::holds_alternative<MobileObjectInfo>(object->type) ? "" : "picks up no thing";
+	case Kind::KnockDown:
+		return object != nullptr && !std::holds_alternative<FeatureInfo>(object->type) ? "" : "knocks down no thing or tree";
+	case Kind::TieLeash:
+		return object != nullptr ? "" : "ties the leash to nothing";
+	case Kind::Examine:
+		return command.value < creature_object_actions::k_KeepAnimationCount ? "" : "no such way of looking it over";
+	case Kind::HandStroke:
+		return command.bodyPart < creature_feedback::k_BodyPartCount ? "" : "no such part of the body";
+	case Kind::HandSlap:
+		return command.slapHeight > 0.0f && command.slapHeight < creature_feedback::k_SlapAbove ? "" : "slaps above it";
+	case Kind::PutOnLeash:
+		return command.leash == LeashType::Rope || command.leash == LeashType::Evil || command.leash == LeashType::Good
+		           ? ""
+		           : "no such leash";
+	case Kind::ConfineToHome:
+		return command.radius > 0.0f ? "" : "keeps it nowhere";
+	default:
+		return "";
+	}
+}
 } // namespace
 
 std::string_view testbed_scenarios::Name(Facet facet)
 {
 	constexpr std::array<std::string_view, k_FacetCount> k_Names {
-	    "Idle", "Expressions", "Senses", "Needs", "Growth", "Appearance", "Light", "Movement", "Footprints", "Audio",
+	    "Idle",     "Expressions", "Senses", "Needs",   "Growth", "Appearance", "Light",
+	    "Movement", "Footprints",  "Audio",  "Objects", "Hand",   "Leash",
 	};
 	return k_Names.at(static_cast<size_t>(facet));
 }
@@ -936,11 +1292,27 @@ std::string_view testbed_scenarios::Name(Shot shot)
 
 std::string_view testbed_scenarios::Name(Command::Kind kind)
 {
-	constexpr std::array<std::string_view, 22> k_Names {
-	    "walk to", "run to",      "follow",  "flee from", "turn to face", "face the camera",
-	    "stop",    "play action", "gesture", "pull face", "sit down",     "stand up",
-	    "sleep",   "wake",        "eat",     "drink",     "poo",          "puke",
-	    "faint",   "stroke",      "slap",    "set hour",
+	constexpr std::array<std::string_view, 39> k_Names {
+	    "walk to",      "run to",
+	    "follow",       "flee from",
+	    "turn to face", "face the camera",
+	    "stop",         "play action",
+	    "gesture",      "pull face",
+	    "sit down",     "stand up",
+	    "sleep",        "wake",
+	    "eat",          "drink",
+	    "poo",          "puke",
+	    "faint",        "stroke",
+	    "slap",         "set hour",
+	    "pick up",      "put down",
+	    "toss away",    "lob",
+	    "eat it",       "look it over",
+	    "throw at",     "knock down",
+	    "point at",     "hand strokes",
+	    "hand slaps",   "hand lets go",
+	    "put on leash", "tie leash to",
+	    "untie leash",  "take off leash",
+	    "keep at home",
 	};
 	return k_Names.at(static_cast<size_t>(kind));
 }
@@ -1076,6 +1448,10 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 		if (!ValidAnimation(command.kind, command.value))
 		{
 			problems.push_back(fmt::format("{}: animation {} isn't of its kind", what, command.value));
+		}
+		if (const auto problem = CommandProblem(command, scenario.objects); !problem.empty())
+		{
+			problems.push_back(fmt::format("{}: {}", what, problem));
 		}
 		if (!ValidOffset(command.point) || command.delaySeconds < 0.0f || !InRange(command.hour, 0.0f, k_HoursPerDay))
 		{

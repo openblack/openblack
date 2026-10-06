@@ -39,6 +39,15 @@ struct HandOnCreature
 	float speed {0.0f};
 	/// The hand shows its slap for a moment after it slaps
 	float slapShowMs {0.0f};
+	/// Held by a command, such as a testbed scenario's, rather than by the button, which lets go only when told to
+	bool byCommand {false};
+};
+
+/// On the player's hand once it has let go of a creature: the sum of strokes and slaps it let go with, which the
+/// creature's status panel goes on showing until the hand next takes hold of a creature
+struct HandLastFeedback
+{
+	float sum {0.0f};
 };
 
 } // namespace openblack::ecs::components

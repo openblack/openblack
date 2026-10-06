@@ -62,9 +62,15 @@ private:
 	/// The needs and desires go on once the body and mind have started, and every frame for those that hold them
 	void ApplyStates();
 	void Give(const Command& command);
+	/// The commands on things, of the player's hand and of the leashes; each returns what came of it
+	std::string GiveObjectCommand(entt::entity creature, const Command& command);
+	std::string GiveHandCommand(entt::entity creature, const Command& command);
+	std::string GiveLeashCommand(entt::entity creature, const Command& command);
 	void UpdateCamera();
 	[[nodiscard]] bool IsFree(size_t creature) const;
 	[[nodiscard]] std::optional<entt::entity> CreatureAt(size_t index) const;
+	/// The scenario's objects by their place in it, while they are still about
+	[[nodiscard]] std::optional<entt::entity> ObjectAt(size_t index) const;
 	void Log(std::string line);
 
 	const Scenario* _scenario {nullptr};
@@ -73,6 +79,7 @@ private:
 	Timeline _timeline;
 	glm::vec2 _middle {0.0f};
 	std::vector<entt::entity> _creatures;
+	std::vector<entt::entity> _objects;
 	/// Whether each creature's needs and desires have been set as it started
 	std::vector<bool> _started;
 	std::deque<std::string> _log;
