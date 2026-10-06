@@ -18,6 +18,8 @@
 #include <LHVMFile.h>
 #include <gtest/gtest.h>
 
+#include "Editor/Scripts/Decompiler.h"
+
 using namespace openblack::lhvm;
 
 namespace
@@ -584,6 +586,33 @@ TEST(LhvmDecompiler, LineMapAndControlFlowGraph)
 	EXPECT_TRUE(graph.blocks.front().handler.has_value());
 	EXPECT_EQ(graph.BlockAt(assign), graph.BlockAt(assign + 1));
 	EXPECT_TRUE(std::ranges::all_of(graph.blocks, [](const auto& block) { return block.reachable; }));
+}
+
+TEST(LhvmDecompiler, EditorSourceView)
+{
+	ProgramBuilder b({"X"});
+	b.BeginScript("Map", ScriptType::Script, {}, {});
+	b.Start();
+	const auto assign = b.Here();
+	b.Assign(b.Global("X"));
+	b.PushF(7.0f);
+	b.Store(b.Global("X"));
+	b.EndScript();
+	const auto view = b.View();
+
+	// The machine's variable table starts with its null variable
+	const std::vector<VMVar> globals {VMVar(DataType::Float, VMValue(0.0f), "Null variable"),
+	                                  VMVar(DataType::Float, VMValue(0.0f), "X")};
+	const openblack::editor::scripts::Program program {
+	    .code = view.instructions, .scripts = view.scripts, .globals = globals, .natives = {}, .data = view.data};
+	ASSERT_TRUE(openblack::editor::scripts::HasDecompiler());
+	const auto source = openblack::editor::scripts::Decompile(program, view.scripts.front());
+	ASSERT_TRUE(source.has_value());
+	ASSERT_EQ(source->lines.size(), 4);
+	EXPECT_EQ(source->lines[2], "    X = 7");
+	EXPECT_EQ(source->lineAddresses[2], assign);
+	EXPECT_EQ(openblack::editor::scripts::LineOf(*source, assign + 2), 2);
+	EXPECT_TRUE(source->diagnostics.empty());
 }
 
 TEST(LhvmDecompiler, ChallengeChlSmoke)

@@ -25,6 +25,8 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include "Editor/Scripts/Decompiler.h"
+
 using namespace openblack::lhvm;
 using namespace openblack::lhvm::chl;
 
@@ -635,4 +637,45 @@ TEST(ChlCompiler, WrittenProgramsReadBack)
 	ASSERT_EQ(read.GetScripts().size(), 1u);
 	EXPECT_EQ(read.GetScripts()[0].name, "Test");
 	EXPECT_EQ(read.GetScripts()[0].filename, "Test.txt");
+}
+
+// ------------------------------------------------------------------------------------------------------------ editor
+
+TEST(ChlCompiler, EditorRecompilesAScriptIntoTheRunningProgram)
+{
+	const std::vector<SourceFile> sources = {{.name = "A.txt",
+	                                          .text = "global G\nbegin script Main\nstart\n\tG = 1\nend script Main\n"
+	                                                  "begin script Other\nstart\n\tG = 2\nend script Other\n"}};
+	const auto original = Compile(sources);
+	ASSERT_TRUE(original.program.has_value());
+
+	LHVM vm;
+	ASSERT_EQ(vm.LoadBinary(*original.program), EXIT_SUCCESS);
+	const openblack::editor::scripts::Program program {
+	    .code = vm.GetInstructions(),
+	    .scripts = vm.GetScripts(),
+	    .globals = vm.GetVariables(),
+	    .natives = {},
+	    .data = vm.GetData(),
+	};
+	const auto& main = vm.GetScripts().at(0);
+	const auto oldSize = vm.GetInstructions().size();
+
+	const auto broken =
+	    openblack::editor::scripts::Compile(program, main, "begin script Main\nstart\n\tNope = 1\nend script Main\n");
+	EXPECT_FALSE(broken.compiled);
+	ASSERT_FALSE(broken.diagnostics.empty());
+	EXPECT_EQ(broken.diagnostics.front().substr(0, 4), "3:2:");
+
+	const auto result =
+	    openblack::editor::scripts::Compile(program, main, "begin script Main\nstart\n\tG = 3\nend script Main\n");
+	ASSERT_TRUE(result.compiled);
+	ASSERT_NE(result.program, nullptr);
+	ASSERT_EQ(vm.UpdateProgram(*result.program), EXIT_SUCCESS);
+	ASSERT_EQ(vm.GetScripts().size(), 2u);
+	EXPECT_EQ(vm.GetScripts()[0].instructionAddress, oldSize);
+	EXPECT_EQ(vm.GetScripts()[1].instructionAddress, original.program->GetScripts()[1].instructionAddress);
+	EXPECT_EQ(vm.GetVariables().size(), 2u);
+	const auto body = Disassemble(*result.program, oldSize + 2, 4);
+	EXPECT_EQ(body, (std::vector<std::string> {"PUSHF [1]", "POPI", "PUSHF 3", "POPF [1]"}));
 }
