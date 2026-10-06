@@ -13,14 +13,20 @@
 
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/GraphicsHandleBgfx.h"
+#include "SamplerDefaults.h"
 #include "Texture2D.h"
 
 namespace openblack::graphics
 {
 
-ShaderProgram::ShaderProgram(const std::string& name, ShaderHandle vertexShader, ShaderHandle fragmentShader)
+static_assert(ShaderProgram::k_DiscardAll == BGFX_DISCARD_ALL);
+
+ShaderProgram::ShaderProgram(const std::string& name, ShaderHandle vertexShader, ShaderHandle fragmentShader,
+                             std::vector<shader_samplers::Sampler> samplers, SamplerDefaults& samplerDefaults)
     : _name(name)
     , _program(BGFX_INVALID_HANDLE)
+    , _samplers(std::move(samplers))
+    , _samplerDefaults(samplerDefaults)
 {
 	uint16_t numShaderUniforms = 0;
 	bgfx::UniformInfo info = {};
@@ -44,6 +50,19 @@ ShaderProgram::ShaderProgram(const std::string& name, ShaderHandle vertexShader,
 		_uniforms.emplace(std::string(info.name), fromBgfx(uniforms[i]));
 	}
 
+	// Two samplers at one stage would share a texture
+	for (const auto& [first, second] : shader_samplers::StageCollisions(_samplers))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "{} Shader samples {} and {} at the same stage", name, first, second);
+	}
+	// A sampler the backend's build of the shader doesn't have can't be bound, nor needs to be
+	std::erase_if(_samplers, [this](const shader_samplers::Sampler& sampler) { return !_uniforms.contains(sampler.name); });
+	for (const auto& sampler : _samplers)
+	{
+		SPDLOG_LOGGER_DEBUG(spdlog::get("graphics"), "{} Shader samples {} at stage {} (kind {})", name, sampler.name,
+		                    sampler.stage, static_cast<int>(sampler.dimension));
+	}
+
 	_program = fromBgfx(bgfx::createProgram(toBgfx(vertexShader), toBgfx(fragmentShader), true));
 	bgfx::setName(toBgfx(vertexShader), (name + "_vs").c_str());
 	bgfx::setName(toBgfx(fragmentShader), (name + "_fs").c_str());
@@ -64,6 +83,7 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	if (uniform != _uniforms.cend())
 	{
 		bgfx::setTexture(bindPoint, toBgfx(uniform->second), toBgfx(texture.GetNativeHandle()));
+		_samplerDefaults.Set(bindPoint);
 	}
 	else
 	{
@@ -77,11 +97,28 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	if (uniform != _uniforms.cend())
 	{
 		bgfx::setTexture(bindPoint, toBgfx(uniform->second), toBgfx(texture));
+		_samplerDefaults.Set(bindPoint);
 	}
 	else
 	{
 		WarnMissing(samplerName);
 	}
+}
+
+void ShaderProgram::Submit(uint16_t viewId, uint32_t depth, uint8_t discardFlags) const
+{
+	for (const auto& sampler : _samplers)
+	{
+		if (!_samplerDefaults.IsSet(sampler.stage))
+		{
+			const auto texture = _samplerDefaults.Texture(shader_samplers::DefaultTextureFor(sampler.dimension));
+			bgfx::setTexture(sampler.stage, toBgfx(_uniforms.at(sampler.name)), toBgfx(texture));
+			// Kept for the next draw as well when this one keeps its bindings
+			_samplerDefaults.Set(sampler.stage);
+		}
+	}
+	bgfx::submit(viewId, toBgfx(_program), depth, discardFlags);
+	_samplerDefaults.Discarded(discardFlags);
 }
 
 void ShaderProgram::SetUniformArray(const char* uniformName, const void* values, uint16_t count) const

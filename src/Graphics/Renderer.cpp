@@ -765,14 +765,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 					program->SetTextureSampler("s_snow", 12, *textures.Handle(snow_cover::k_TextureId.value()));
 					program->SetTextureSampler("s_snowAlpha", 13, *textures.Handle(snow_cover::k_AlphaTextureId.value()));
 				}
-				else if (_whiteTexture)
-				{
-					// Every sampler the shader declares must be bound, even those it won't read: Vulkan leaves an unbound
-					// one pointing wherever its memory last pointed, a texture of a land since freed, which hangs the GPU
-					program->SetTextureSampler("s_snowDepth", 11, *_whiteTexture);
-					program->SetTextureSampler("s_snow", 12, *_whiteTexture);
-					program->SetTextureSampler("s_snowAlpha", 13, *_whiteTexture);
-				}
+				// Without snow its samplers get the program's white defaults when submitted
 			}
 			if (program->HasUniform("u_window"))
 			{
@@ -926,8 +919,8 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setState(state, desc.rgba);
 			}
 
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()), desc.sortDepth,
-			             primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
+			program->Submit(static_cast<bgfx::ViewId>(viewId), desc.sortDepth,
+			                primitivePreserveState ? BGFX_DISCARD_NONE : BGFX_DISCARD_ALL);
 		}
 		lastPreserveState = primitivePreserveState;
 	}
@@ -970,7 +963,7 @@ void Renderer::DrawTempleText(const DrawSceneDesc& desc) const
 	shader->SetTextureSampler("s_texture", 0, *texture);
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
 	               BGFX_STATE_BLEND_ALPHA);
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+	shader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawTemplePool(const DrawSceneDesc& desc) const
@@ -1130,11 +1123,11 @@ void Renderer::DrawTempleMapPass() const
 		block.GetMesh().GetVertexBuffer().Bind();
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
 		// The textures stay bound from one block to the next
-		bgfx::submit(viewId, toBgfx(terrainShader->GetRawHandle()), 0,
-		             BGFX_DISCARD_INSTANCE_DATA | BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_TRANSFORM |
-		                 BGFX_DISCARD_VERTEX_STREAMS | BGFX_DISCARD_STATE);
+		terrainShader->Submit(viewId, 0,
+		                      BGFX_DISCARD_INSTANCE_DATA | BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_TRANSFORM |
+		                          BGFX_DISCARD_VERTEX_STREAMS | BGFX_DISCARD_STATE);
 	}
-	bgfx::discard(BGFX_DISCARD_BINDINGS);
+	_shaderManager->DiscardBindings();
 }
 
 void Renderer::DrawTempleUnderside(const DrawSceneDesc& desc) const
@@ -1181,7 +1174,7 @@ void Renderer::DrawTempleUnderside(const DrawSceneDesc& desc) const
 	shader->SetTextureSampler("s_texture", 0, *_whiteTexture);
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER |
 	               BGFX_STATE_MSAA);
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+	shader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
@@ -1220,7 +1213,7 @@ void Renderer::DrawTempleMap(const DrawSceneDesc& desc) const
 	shader->SetTextureSampler("s_texture", 0, _templeMapFrameBuffer->GetColorAttachment());
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER |
 	               BGFX_STATE_MSAA | BGFX_STATE_BLEND_ALPHA);
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+	shader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
@@ -1262,7 +1255,7 @@ void Renderer::DrawTempleMapMarkers(const DrawSceneDesc& desc) const
 			_plane->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+			spriteShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 		}
 	}
 
@@ -1541,7 +1534,7 @@ void Renderer::DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) 
 		// Blended over what is behind by the texture's alpha, both sides, tested against depth but leaving none
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA |
 		               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(middle, eye));
+		program->Submit(viewId, zsort::Depth(middle, eye));
 	}
 }
 
@@ -1611,7 +1604,7 @@ void Renderer::DrawMistDomes(const DrawSceneDesc& desc) const
 		    bgfx::setVertexBuffer(0, &vertices);
 		    bgfx::setIndexBuffer(&indices);
 		    bgfx::setState(k_State);
-		    bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(shader->GetRawHandle()));
+		    shader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 	    });
 }
 
@@ -1662,7 +1655,7 @@ void Renderer::DrawLightBeams(const DrawSceneDesc& desc) const
 		bgfx::setVertexBuffer(0, &vertices);
 		bgfx::setIndexBuffer(&indices);
 		bgfx::setState(k_State);
-		bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(beamShader->GetRawHandle()));
+		beamShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 	};
 
 	// The spot lights' cones, with the atmosphere texture. Each room's lights drift on together, a step for each cone
@@ -1801,7 +1794,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			                       | BGFX_STATE_CULL_CW     //
 			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(footprintShaderInstanced->GetRawHandle()));
+			footprintShaderInstanced->Submit(static_cast<bgfx::ViewId>(viewId));
 		}
 
 		for (const auto& [meshId, placers] : renderCtx.treeInstancedDrawDescs)
@@ -1822,7 +1815,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			                       | BGFX_STATE_CULL_CW     //
 			                       | BGFX_STATE_MSAA;
 			bgfx::setState(state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(footprintShaderInstanced->GetRawHandle()));
+			footprintShaderInstanced->Submit(static_cast<bgfx::ViewId>(viewId));
 		}
 
 		// The rivers' beds are laid after the land's other footprints, blended into its colour like them
@@ -1870,7 +1863,7 @@ void Renderer::DrawStreamFootprints(RenderPass viewId, entt::id_type meshId) con
 	                                     BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_MIN)
 	                               : BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA;
 	bgfx::setState(state);
-	bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+	program->Submit(static_cast<bgfx::ViewId>(viewId));
 }
 
 void Renderer::SetSeaUniforms(const ShaderProgram& waterShader, const Camera& camera) const
@@ -1998,7 +1991,7 @@ void Renderer::DrawHandWaterGlow(const DrawSceneDesc& desc) const
 	_plane->GetVertexBuffer().Bind();
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(spriteShader->GetRawHandle()));
+	spriteShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawCelestialMesh(RenderPass viewId, const CelestialDraw& draw) const
@@ -2028,7 +2021,7 @@ void Renderer::DrawCelestialMesh(RenderPass viewId, const CelestialDraw& draw) c
 			}
 			subMesh->GetMesh().GetVertexBuffer().Bind();
 			bgfx::setState(draw.state);
-			bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+			program->Submit(static_cast<bgfx::ViewId>(viewId));
 		}
 	}
 }
@@ -2144,8 +2137,8 @@ void Renderer::DrawMists(const DrawSceneDesc& desc) const
 				// Both sides, blended over what is behind, tested against but not writing depth
 				bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
 				// In its place among everything that blends, the farthest first
-				bgfx::submit(static_cast<bgfx::ViewId>(TranslucentView(desc.viewId)), toBgfx(program->GetRawHandle()),
-				             zsort::Depth(transform.position, origin));
+				program->Submit(static_cast<bgfx::ViewId>(TranslucentView(desc.viewId)),
+				                zsort::Depth(transform.position, origin));
 			}
 		}
 	});
@@ -2231,7 +2224,7 @@ void Renderer::DrawGroundBlobs(const DrawSceneDesc& desc) const
 	bgfx::setVertexBuffer(0, &buffer);
 	// Blended over the land, tested against depth but leaving none, both sides
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA | BGFX_STATE_MSAA);
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+	program->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawInfluenceRipples(const DrawSceneDesc& desc) const
@@ -2300,7 +2293,7 @@ void Renderer::DrawInfluenceRipples(const DrawSceneDesc& desc) const
 		bgfx::setVertexBuffer(0, &vertexBuffer);
 		bgfx::setIndexBuffer(&indexBuffer);
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
-		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(ripple.point, origin));
+		program->Submit(viewId, zsort::Depth(ripple.point, origin));
 	}
 }
 
@@ -2378,7 +2371,7 @@ void Renderer::DrawInfluenceBorder(const DrawSceneDesc& desc) const
 		bgfx::setIndexBuffer(&indexBuffer);
 		// Blended over what is behind, tested against depth but leaving none, both sides
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
-		bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+		program->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 	}
 }
 
@@ -2436,7 +2429,7 @@ void Renderer::DrawChimneySmoke(const DrawSceneDesc& desc) const
 			_plane->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
 			               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-			bgfx::submit(viewId, toBgfx(spriteShader->GetRawHandle()), depth);
+			spriteShader->Submit(viewId, depth);
 		}
 	});
 }
@@ -2505,7 +2498,7 @@ void Renderer::DrawWaterRings(const DrawSceneDesc& desc) const
 	// Added over what is behind by their alpha, both sides, tested against depth but leaving none
 	bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER |
 	               BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE));
-	bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(program->GetRawHandle()));
+	program->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 }
 
 void Renderer::DrawSnowfall(const DrawSceneDesc& desc) const
@@ -2583,7 +2576,7 @@ void Renderer::DrawSnowfall(const DrawSceneDesc& desc) const
 		// Both sides of each flake, blended over what is behind, tested against depth but leaving none
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
 		// In its place among what blends, by the ground under the quarter's corner
-		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(corner, origin));
+		program->Submit(viewId, zsort::Depth(corner, origin));
 	}
 }
 
@@ -2652,7 +2645,7 @@ void Renderer::DrawRain(const DrawSceneDesc& desc) const
 		// Lines, blended over what is behind, tested against depth but leaving none
 		bgfx::setState(BGFX_STATE_PT_LINES | BGFX_STATE_WRITE_RGB | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA);
 		// In its place among what blends, by the ground under the block's centre
-		bgfx::submit(viewId, toBgfx(program->GetRawHandle()), zsort::Depth(centre, origin));
+		program->Submit(viewId, zsort::Depth(centre, origin));
 	}
 }
 
@@ -2724,7 +2717,7 @@ void Renderer::DrawMoon(RenderPass viewId) const
 		program->SetUniformValue("u_celestial", &celestial);
 		bgfx::setVertexBuffer(0, &buffer);
 		bgfx::setState(k_AdditiveState | BGFX_STATE_DEPTH_TEST_GREATER);
-		bgfx::submit(static_cast<bgfx::ViewId>(viewId), toBgfx(program->GetRawHandle()));
+		program->Submit(static_cast<bgfx::ViewId>(viewId));
 	}
 
 	// Then the moon, blended over the sky, its face turned to the real moon's phase. It leaves its depth, so the land
@@ -2881,7 +2874,7 @@ void SubmitLandQuad(bgfx::ViewId viewId, const ShaderProgram& program, glm::vec2
 	}
 	bgfx::setVertexBuffer(0, &buffer);
 	bgfx::setState(state);
-	bgfx::submit(viewId, toBgfx(program.GetRawHandle()));
+	program.Submit(viewId);
 }
 } // namespace
 
@@ -3716,7 +3709,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
 			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
 			SetSeaUniforms(*waterShader, *desc.camera);
-			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(waterShader->GetRawHandle()));
+			waterShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 		}
 	}
 
@@ -3843,10 +3836,10 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				bgfx::setState(defaultState | (desc.cullBack ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW), 0);
 				// The game draws the land's blocks the nearest first, which bgfx keeps by their distance
 				const auto centre = block.GetMapPosition() + glm::vec2(80.0f);
-				bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(terrainShader->GetRawHandle()),
-				             zsort::Depth(glm::vec3(centre.x, 0.0f, centre.y), cameraOrigin), discard);
+				terrainShader->Submit(static_cast<bgfx::ViewId>(desc.viewId),
+				                      zsort::Depth(glm::vec3(centre.x, 0.0f, centre.y), cameraOrigin), discard);
 			}
-			bgfx::discard(BGFX_DISCARD_BINDINGS);
+			_shaderManager->DiscardBindings();
 		}
 	}
 
@@ -4100,19 +4093,19 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.instanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
+					debugShaderInstanced->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 				}
 				if (renderCtx.footpaths)
 				{
 					renderCtx.footpaths->GetVertexBuffer().Bind();
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
+					debugShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 				}
 				if (renderCtx.streams)
 				{
 					renderCtx.streams->GetVertexBuffer().Bind();
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShader->GetRawHandle()));
+					debugShader->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 				}
 			}
 		}
@@ -4159,7 +4152,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					renderCtx.boundingBox->GetVertexBuffer().Bind();
 					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
-					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
+					debugShaderInstanced->Submit(static_cast<bgfx::ViewId>(desc.viewId));
 				}
 			}
 		}
@@ -4223,8 +4216,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					bgfx::setState(0 | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend |
 					               BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD));
 
-					bgfx::submit(static_cast<bgfx::ViewId>(translucentViewId), toBgfx(spriteShader->GetRawHandle()),
-					             zsort::Depth(transform.position, cameraOrigin));
+					spriteShader->Submit(static_cast<bgfx::ViewId>(translucentViewId),
+					                     zsort::Depth(transform.position, cameraOrigin));
 				});
 			}
 		}
@@ -4263,6 +4256,7 @@ void Renderer::Frame() noexcept
 {
 	// Advance to next frame. Process submitted rendering primitives.
 	bgfx::frame();
+	_shaderManager->FrameEnded();
 }
 
 void Renderer::RequestScreenshot(const std::filesystem::path& filepath) noexcept

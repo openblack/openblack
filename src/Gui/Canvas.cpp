@@ -156,6 +156,6 @@ void Canvas::End()
 		                       : BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
 		                                                        BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | blend);
-		bgfx::submit(view, graphics::toBgfx(program->GetRawHandle()));
+		program->Submit(view);
 	}
 }

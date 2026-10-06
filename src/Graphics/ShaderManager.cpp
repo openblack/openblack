@@ -43,8 +43,11 @@
 #define BGFX_EMBEDDED_SHADER_DX9BC(...)
 #endif
 
+#include <spdlog/spdlog.h>
+
 #include "Camera/Camera.h"
 #include "GraphicsHandleBgfx.h"
+#include "SamplerDefaults.h"
 
 // clang-format off
 #define SHADER_NAME vs_line
@@ -255,6 +258,36 @@ constexpr std::array k_Shaders {
     ShaderDefinition {"Text3D", "vs_text3d", "fs_interface"},
 };
 
+namespace
+{
+/// The samplers a shader uses, read from its Vulkan build, which every desktop platform embeds whichever backend runs
+std::vector<shader_samplers::Sampler> ReflectSamplers(std::string_view shaderName)
+{
+	for (const auto& shader : k_EmbeddedShaders)
+	{
+		if (shader.name == nullptr || shaderName != shader.name)
+		{
+			continue;
+		}
+		for (const auto& data : shader.data)
+		{
+			if (data.type == bgfx::RendererType::Vulkan && data.data != nullptr)
+			{
+				if (auto samplers = shader_samplers::ReadSpirvSamplers({data.data, data.size}))
+				{
+					return *std::move(samplers);
+				}
+			}
+		}
+	}
+	SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Could not read the samplers of shader {}: they won't get defaults",
+	                   shaderName);
+	return {};
+}
+} // namespace
+
+ShaderManager::ShaderManager() = default;
+
 ShaderManager::~ShaderManager()
 {
 	// delete all mapped shaders
@@ -265,10 +298,12 @@ ShaderManager::~ShaderManager()
 	}
 
 	_shaderPrograms.clear();
+	_samplerDefaults.reset();
 }
 
 void ShaderManager::LoadShaders()
 {
+	_samplerDefaults = std::make_unique<SamplerDefaults>();
 	for (const auto& shader : k_Shaders)
 	{
 		bgfx::RendererType::Enum type = bgfx::getRendererType();
@@ -276,7 +311,11 @@ void ShaderManager::LoadShaders()
 		assert(bgfx::isValid(vs));
 		auto fs = bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, shader.fragmentShaderName.data());
 		assert(bgfx::isValid(fs));
-		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), fromBgfx(vs), fromBgfx(fs));
+		const auto vertexSamplers = ReflectSamplers(shader.vertexShaderName);
+		const auto fragmentSamplers = ReflectSamplers(shader.fragmentShaderName);
+		_shaderPrograms[shader.name.data()] =
+		    new ShaderProgram(shader.name.data(), fromBgfx(vs), fromBgfx(fs),
+		                      shader_samplers::Merge(vertexSamplers, fragmentSamplers), *_samplerDefaults);
 	}
 }
 
@@ -290,6 +329,17 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 
 	// todo: return an empty shader?
 	return nullptr;
+}
+
+void ShaderManager::DiscardBindings() const
+{
+	bgfx::discard(BGFX_DISCARD_BINDINGS);
+	_samplerDefaults->Discarded(BGFX_DISCARD_BINDINGS);
+}
+
+void ShaderManager::FrameEnded() const
+{
+	_samplerDefaults->FrameEnded();
 }
 
 void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera& camera)
