@@ -56,6 +56,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
@@ -73,6 +74,8 @@ namespace openblack::ecs::systems::mind_detail
 {
 constexpr float k_TurnSeconds = std::chrono::duration<float>(TimeSystemInterface::k_TurnDuration).count();
 constexpr float k_TurnsPerSecond = 1.0f / k_TurnSeconds;
+/// A creature just put in the world takes its first few turns to stand up before it can pass out
+constexpr uint32_t k_TurnsBeforePassingOut = 2;
 /// A face told to by hand is held this long
 constexpr float k_ToldFaceMs = 3000.0f;
 
@@ -703,6 +706,8 @@ void CreatureMindSystem::ProcessTurn()
 	};
 	std::optional<std::vector<creature_look::Candidate>> candidates;
 	const bool night = IsNight();
+	// The creatures passing out this turn, which are knocked out once every mind has thought
+	std::vector<entt::entity> passingOut;
 
 	registry.Each<const Creature, CreatureMindState, CreatureAnimation, const Transform>(
 	    [&](entt::entity entity, const Creature& creature, CreatureMindState& mind, CreatureAnimation& animation,
@@ -752,8 +757,20 @@ void CreatureMindSystem::ProcessTurn()
 		    {
 			    return;
 		    }
-		    // Exhausted, starved or out of life, it drops where it stands
-		    if (needs != nullptr && needs->faint.has_value() && !creature_mind::IsUnconscious(mind.idle))
+		    // Exhausted, starved or out of life, it passes out as a fight's loser does: it lies where it fell, then a
+		    // player's creature is carried to its pen to come round. A creature just put in the world stands up first.
+		    const bool fainting = needs != nullptr && needs->faint.has_value();
+		    if (fainting && Locator::creatureFightSystem::has_value())
+		    {
+			    if (mind.turn > k_TurnsBeforePassingOut)
+			    {
+				    needs->faint.reset();
+				    passingOut.push_back(entity);
+			    }
+			    return;
+		    }
+		    // Without the fights' knock-outs, it drops where it stands and comes round there
+		    if (fainting && !creature_mind::IsUnconscious(mind.idle))
 		    {
 			    if (Locator::creatureLocomotionSystem::has_value())
 			    {
@@ -839,6 +856,10 @@ void CreatureMindSystem::ProcessTurn()
 			    eyes->lookAt = animation.lookAt;
 		    }
 	    });
+	for (const auto entity : passingOut)
+	{
+		Locator::creatureFightSystem::value().KnockOut(entity);
+	}
 }
 
 bool CreatureMindSystem::PlayAction(entt::entity creature, size_t animation)

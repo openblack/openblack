@@ -89,6 +89,7 @@
 #include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureModeSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
@@ -303,7 +304,13 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		Locator::camera::value().DeprojectScreenToWorld(glm::vec2(event.button.x, event.button.y) /
 		                                                    static_cast<glm::vec2>(glm::max(screenSize, glm::ivec2(1))),
 		                                                rayOrigin, rayDirection);
-		if (!fights.Press(rayOrigin, rayDirection))
+		// The second press of a double click on a creature, anyone's, locks the camera onto it
+		const bool doubleClicked =
+		    Locator::creatureModeSystem::has_value() &&
+		    Locator::creatureModeSystem::value().Press({.milliseconds = event.button.timestamp,
+		                                                .screen = glm::vec2(event.button.x, event.button.y),
+		                                                .creature = creatureHand.CreatureAlong(rayOrigin, rayDirection)});
+		if (!doubleClicked && !fights.Press(rayOrigin, rayDirection))
 		{
 			PlayHandGrabSound();
 		}
@@ -495,6 +502,13 @@ void Game::UpdateHandInterface()
 	{
 		creature = _creatureUnderHand;
 	}
+	// Without one, the creature Creature Mode follows shows near the top of the screen, without the reward
+	std::optional<float> reward = creatureHand.GetLastFeedbackSum();
+	if (!creature.has_value() && Locator::creatureModeSystem::has_value())
+	{
+		creature = Locator::creatureModeSystem::value().GetCreature();
+		reward.reset();
+	}
 	if (!creature.has_value())
 	{
 		return;
@@ -503,7 +517,7 @@ void Game::UpdateHandInterface()
 	if (needs != nullptr)
 	{
 		// The reward is the hand's, which it keeps showing after letting go until it takes hold again
-		_interface->SetCreaturePanel(creature_panel::FromNeeds(needs->needs, creatureHand.GetLastFeedbackSum()));
+		_interface->SetCreaturePanel(creature_panel::FromNeeds(needs->needs, reward));
 	}
 }
 
@@ -830,6 +844,13 @@ bool Game::Update() noexcept
 	{
 		auto editor = profiler.BeginScoped(Profiler::Stage::EditorUpdate);
 		Locator::editorSystem::value().Update(deltaTime);
+	}
+
+	// Creature Mode keeps the camera on its creature, and the cave follows the temple's creature room
+	if (Locator::creatureModeSystem::has_value())
+	{
+		auto creatureMode = profiler.BeginScoped(Profiler::Stage::CreatureModeUpdate);
+		Locator::creatureModeSystem::value().Update(deltaTime, {.handGripping = _handGripping});
 	}
 
 	camera.Update(deltaTime);
@@ -1504,9 +1525,12 @@ bool Game::Initialize() noexcept
 		{
 			SPDLOG_LOGGER_WARN(spdlog::get("game"), "The game's menu is not available, Escape quits");
 		}
-		else if (Locator::temple::has_value())
+		else
 		{
-			Locator::temple::value().SetInterface(_interface.get());
+			if (Locator::temple::has_value())
+			{
+				Locator::temple::value().SetInterface(_interface.get());
+			}
 		}
 	}
 

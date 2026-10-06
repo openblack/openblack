@@ -42,6 +42,7 @@
 #include "ECS/Systems/Implementations/CreatureHandSystem.h"
 #include "ECS/Systems/Implementations/CreatureLocomotionSystem.h"
 #include "ECS/Systems/Implementations/CreatureMindSystem.h"
+#include "ECS/Systems/Implementations/CreatureModeSystem.h"
 #include "ECS/Systems/Implementations/CreatureObjectActionSystem.h"
 #include "ECS/Systems/Implementations/CreaturePhysiologySystem.h"
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
@@ -107,6 +108,7 @@ using openblack::ecs::systems::CreatureHairSystem;
 using openblack::ecs::systems::CreatureHandSystem;
 using openblack::ecs::systems::CreatureLocomotionSystem;
 using openblack::ecs::systems::CreatureMindSystem;
+using openblack::ecs::systems::CreatureModeSystem;
 using openblack::ecs::systems::CreatureObjectActionSystem;
 using openblack::ecs::systems::CreaturePhysiologySystem;
 using openblack::ecs::systems::CreatureSkinSystem;
@@ -221,6 +223,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::creatureSkinSystem::emplace<CreatureSkinSystem>();
 	Locator::leashSystem::emplace<LeashSystem>();
 	Locator::creatureFightSystem::emplace<CreatureFightSystem>();
+	Locator::creatureModeSystem::emplace<CreatureModeSystem>();
 	Locator::cinematicDirectorSystem::emplace<CinematicDirectorSystem>();
 	Locator::soundTagSystem::emplace<SoundTagSystem>();
 	Locator::rainSystem::emplace<RainSystem>();
@@ -306,6 +309,7 @@ void openblack::ShutDownServices()
 	Locator::rainSystem::reset();
 	Locator::snowfallSystem::reset();
 	Locator::waterRingSystem::reset();
+	Locator::creatureModeSystem::reset();
 	Locator::creatureFightSystem::reset();
 	Locator::leashSystem::reset();
 	Locator::creatureMindSystem::reset();

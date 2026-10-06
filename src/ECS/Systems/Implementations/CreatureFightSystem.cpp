@@ -23,6 +23,7 @@
 #include <glm/mat3x3.hpp>
 
 #include "3D/CreatureBody.h"
+#include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "Camera/Camera.h"
 #include "Camera/CameraModel.h"
@@ -31,6 +32,7 @@
 #include "Creature/CreatureLayers.h"
 #include "Creature/CreatureLocomotion.h"
 #include "Creature/CreatureMarks.h"
+#include "Creature/CreatureMode.h"
 #include "Creature/CreatureRig.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
@@ -39,6 +41,7 @@
 #include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
+#include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -230,21 +233,50 @@ std::vector<feedback::Capsule> BodyOf(const ecs::Registry& registry, entt::entit
 
 /// Where a creature is taken when knocked out: the home its leash keeps it at, else its player's temple, else where it
 /// stood as the fight started
-std::optional<glm::vec3> HomeOf(ecs::Registry& registry, entt::entity creature, std::optional<glm::vec3> fallback)
+/// Where a temple keeps its player's creature: the first place its mesh marks, turned and moved with the temple, or the
+/// temple itself when its mesh marks none
+glm::vec3 TempleCreatureHome(const Transform& transform, const Mesh* mesh)
 {
-	if (const auto* leash = registry.TryGet<const CreatureLeash>(creature); leash != nullptr && leash->home.has_value())
+	if (mesh != nullptr && Locator::resources::has_value())
 	{
-		return leash->home;
-	}
-	const auto owner = registry.Get<const Creature>(creature).owner;
-	std::optional<glm::vec3> home;
-	registry.Each<const Temple, const Transform>([&home, owner](const Temple& temple, const Transform& transform) {
-		if (temple.owner == owner && !home.has_value())
+		const auto& meshes = Locator::resources::value().GetMeshes();
+		if (meshes.Contains(mesh->id) && !meshes.Handle(mesh->id)->GetExtraMetrics().empty())
 		{
-			home = transform.position;
+			const auto local = glm::vec3(meshes.Handle(mesh->id)->GetExtraMetrics().front()[3]);
+			return transform.position + (transform.rotation * (local * transform.scale));
 		}
-	});
-	return home.has_value() ? home : fallback;
+	}
+	return transform.position;
+}
+
+/// A creature's pen, where it is carried when it passes out: the home it was given, its player's temple's place for it,
+/// or else the fallback
+glm::vec3 HomeOf(ecs::Registry& registry, entt::entity creature, glm::vec3 fallback)
+{
+	const auto* leash = registry.TryGet<const CreatureLeash>(creature);
+	const auto owner = registry.Get<const Creature>(creature).owner;
+	std::optional<glm::vec3> temple;
+	registry.Each<const Temple, const Transform>(
+	    [&registry, &temple, owner](entt::entity entity, const Temple& building, const Transform& transform) {
+		    if (building.owner == owner && !temple.has_value())
+		    {
+			    temple = TempleCreatureHome(transform, registry.TryGet<const Mesh>(entity));
+		    }
+	    });
+	return creature_mode::PenOf(leash != nullptr ? leash->home : std::nullopt, temple, fallback);
+}
+
+/// Where a creature is carried when its player has no temple and it passed out outside a fight, as on the testbed: the
+/// middle of the land, where the testbed puts its creatures
+std::optional<glm::vec3> NoPen()
+{
+	if (!Locator::terrainSystem::has_value())
+	{
+		return std::nullopt;
+	}
+	const auto& land = Locator::terrainSystem::value();
+	const auto middle = (land.GetExtent().minimum + land.GetExtent().maximum) * 0.5f;
+	return glm::vec3(middle.x, land.GetHeightAt(middle), middle.y);
 }
 
 /// Whether a fighter faces its opponent closely enough to make a move
@@ -600,10 +632,12 @@ void CreatureFightSystem::Faint(entt::entity creature, std::optional<glm::vec3> 
 	{
 		needs->rest = CreatureNeeds::Rest::Unconscious;
 	}
-	// It is taken to its home, or else back to where it stood as its fight started
+	// It is taken to its pen, or else back to where it stood as its fight started; passing out outside a fight with no
+	// temple for a pen, to the middle of the land
 	const auto here = registry.Get<const Transform>(creature).position;
-	registry.AssignOrReplace<CreatureKnockedOut>(creature,
-	                                             CreatureKnockedOut {.home = HomeOf(registry, creature, start.value_or(here))});
+	const auto fallback = start.has_value() ? start : NoPen();
+	registry.AssignOrReplace<CreatureKnockedOut>(
+	    creature, CreatureKnockedOut {.home = HomeOf(registry, creature, fallback.value_or(here))});
 }
 
 void CreatureFightSystem::KillPermanently(entt::entity creature)

@@ -42,6 +42,7 @@ public:
 		CreatureFootprintsUpdate,
 		CreatureLeashUpdate,
 		CreatureCombatUpdate,
+		CreatureModeUpdate,
 		VegetationUpdate,
 		ParticlesUpdate,
 		MagicUpdate,
@@ -100,6 +101,7 @@ public:
 	    "Creature Footprints",  //
 	    "Creature Leash",       //
 	    "Creature Combat",      //
+	    "Creature Mode",        //
 	    "Vegetation Update",    //
 	    "Particles",            //
 	    "Magic",                //
