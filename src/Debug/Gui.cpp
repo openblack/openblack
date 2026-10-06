@@ -58,6 +58,7 @@
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "Editor/EditorWindow.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
@@ -133,6 +134,8 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new KeyBindingsWindow);
 	auto spawner = std::make_unique<CreatureSpawner>();
 	auto scenarios = std::make_unique<TestbedScenarios>(*spawner);
+	// The editor hosts the creature spawner's and the scenarios' windows, and the scripts
+	debugWindows.emplace_back(std::make_unique<editor::EditorWindow>(*spawner, *scenarios));
 	debugWindows.emplace_back(std::move(scenarios));
 	debugWindows.emplace_back(std::move(spawner));
 
@@ -589,6 +592,10 @@ bool Gui::ShowMenu() noexcept
 
 		if (ImGui::BeginMenu("Debug"))
 		{
+			if (ImGui::MenuItem("Editor", "F2"))
+			{
+				OpenWindow("Editor");
+			}
 			if (ImGui::BeginMenu("Windows"))
 			{
 				for (auto& window : _debugWindows)
