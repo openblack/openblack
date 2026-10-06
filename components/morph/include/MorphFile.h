@@ -223,8 +223,9 @@ struct CreatureActionPoints
 	int32_t unknownBone {-1};
 	/// The bottom, between the back legs
 	int32_t groin {-1};
-	/// Two more bones whose use isn't known
-	std::array<int32_t, 2> unknownBones {-1, -1};
+	/// The bone a leash is tied to, at the collar, and one more whose use isn't known
+	int32_t leashBone {-1};
+	int32_t unknownBone2 {-1};
 	/// When the reaching hand takes hold of what it picks up
 	int32_t pickUpTime {-1};
 	/// Two moments thought to belong to catching, and one whose use isn't known
@@ -287,7 +288,7 @@ protected:
 	std::optional<CreatureEyes> _creatureEyes;
 	/// Where the creature's tattoos go, in creature files from version 15 on
 	std::optional<TattooSites> _tattooSites;
-	/// The bones it acts with and the moments of its object animations, in creature files from version 14 on
+	/// The bones it acts with and the moments of its object animations, as many as the file's version has
 	std::optional<CreatureActionPoints> _creatureActionPoints;
 
 	/// Read file from the input source
@@ -347,6 +348,15 @@ public:
 	[[nodiscard]] const std::optional<CreatureActionPoints>& GetCreatureActionPoints() const noexcept
 	{
 		return _creatureActionPoints;
+	}
+	/// The bone a leash is tied to, when the file has it
+	[[nodiscard]] std::optional<uint32_t> GetLeashBone() const noexcept
+	{
+		if (!_creatureActionPoints.has_value() || _creatureActionPoints->leashBone < 0)
+		{
+			return std::nullopt;
+		}
+		return static_cast<uint32_t>(_creatureActionPoints->leashBone);
 	}
 };
 

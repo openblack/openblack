@@ -58,6 +58,11 @@ private:
 	void DrawFootprintSettings() noexcept;
 	/// The picked creature's last sounds, and buttons to play each sound its animations make
 	void DrawAudio(entt::entity entity) noexcept;
+	/// The picked creature's leashes: which it knows, the one it wears and how taut it is, buttons to put leashes on,
+	/// tie and untie them, and the rope drawn point by point over the scene
+	void DrawLeash(entt::entity entity) noexcept;
+	/// The rope's points over the scene, coloured by how far each segment is stretched
+	void DrawRope(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
 	/// The picked creature's movement: its speed and route, and the command mode
 	void DrawMovement(entt::entity entity) noexcept;
@@ -102,6 +107,7 @@ private:
 	Order _order {Order::Walk};
 	std::optional<glm::vec2> _commandAt;
 	bool _showRoute {true};
+	bool _showRope {false};
 	/// What became of the last order
 	std::string _lastOrder;
 	/// What became of the last need it was told to see to

@@ -137,6 +137,8 @@ struct CreatureRig
 	int32_t soundObject {0};
 	/// The voice bank the file names, without its extension, empty when it names none
 	std::string soundBankName;
+	/// The bone at the creature's collar that a leash is tied to, when the file names one
+	std::optional<uint32_t> leashBone;
 
 	/// An animated mesh's animation, falling back on the base's when the mesh has none of its own
 	[[nodiscard]] const skeletal_animation::Animation* GetAnimation(Mesh mesh, size_t index) const;

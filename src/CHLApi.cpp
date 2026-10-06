@@ -29,11 +29,14 @@
 #include "3D/TempleInteriorInterface.h"
 #include "Audio/GameMusic.h"
 #include "Camera/Camera.h"
+#include "Creature/LeashRules.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
 #include "Game.h"
@@ -47,6 +50,7 @@ using namespace openblack::ecs::archetypes;
 
 using openblack::Locator;
 using openblack::MobileStaticInfo;
+using openblack::ecs::components::CreatureMindState;
 using openblack::ecs::components::Transform;
 using openblack::ecs::systems::HandSystemInterface;
 using openblack::lhvm::DataType;
@@ -1778,24 +1782,43 @@ void SetMusicPlayPosition() // 184 SET_MUSIC_PLAY_POSITION
 
 void AttachObjectLeashToObject() // 185 ATTACH_OBJECT_LEASH_TO_OBJECT
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.TieTo(creature, object);
 }
 
 void AttachObjectLeashToHand() // 186 ATTACH_OBJECT_LEASH_TO_HAND
 {
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	if (leashes.TiedTo(creature).has_value())
+	{
+		leashes.UntieToHand(creature);
+	}
+	else if (!leashes.IsLeashed(creature))
+	{
+		leashes.Toggle(creature);
+	}
 }
 
 void DetachObjectLeash() // 187 DETACH_OBJECT_LEASH
 {
-	// const auto creature = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.TakeOff(creature);
 }
 
 void SetCreatureOnlyDesire() // 188 SET_CREATURE_ONLY_DESIRE
@@ -1948,9 +1971,40 @@ void PlayGesture() // 204 PLAY_GESTURE
 
 void DevFunction() // 205 DEV_FUNCTION
 {
-	// const auto func = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto func = Pop().intVal;
+	// The functions the tutorials use on the local player's creature: starting it growing up again kept at home, and
+	// granting it the learning leash, then the aggression and compassion leashes
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	const auto creature = leashes.PlayersCreature(PlayerNames::PLAYER_ONE);
+	if (!creature.has_value())
+	{
+		return;
+	}
+	switch (func)
+	{
+	case 1:
+		if (auto* mind = Locator::entitiesRegistry::value().TryGet<CreatureMindState>(*creature))
+		{
+			mind->developmentPhase = 0;
+		}
+		leashes.ConfineToHome(*creature, creature_leash::k_HomeConfinement);
+		break;
+	case 2:
+		leashes.SetKnown(*creature, LeashType::Rope, true);
+		break;
+	case 3:
+		leashes.SetKnown(*creature, LeashType::Good, true);
+		leashes.SetKnown(*creature, LeashType::Evil, true);
+		break;
+	default:
+		// TODO(Daniels118): implement the other functions
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}({}) not implemented.", __func__, func);
+		break;
+	}
 }
 
 void HasMouseWheel() // 206 HAS_MOUSE_WHEEL
@@ -2088,10 +2142,8 @@ void GameSubType() // 221 GAME_SUB_TYPE
 
 void IsLeashed() // 222 IS_LEASHED
 {
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	Pushb(Locator::leashSystem::has_value() && Locator::leashSystem::value().IsLeashed(object));
 }
 
 void SetCreatureHome() // 223 SET_CREATURE_HOME
@@ -2324,10 +2376,14 @@ void GetHelp() // 248 GET_HELP
 
 void SetLeashWorks() // 249 SET_LEASH_WORKS
 {
-	// const auto creature = Pop().uintVal;
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = Pop().intVal != 0;
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	leashes.SetWorks(creature, enable);
 }
 
 void LoadMyCreature() // 250 LOAD_MY_CREATURE
@@ -2505,11 +2561,9 @@ void GetArsePosition() // 268 GET_ARSE_POSITION
 
 void IsLeashedToObject() // 269 IS_LEASHED_TO_OBJECT
 {
-	// const auto target = Pop().uintVal;
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto target = static_cast<entt::entity>(Pop().uintVal);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	Pushb(Locator::leashSystem::has_value() && Locator::leashSystem::value().TiedTo(object) == target);
 }
 
 void GetInteractionMagnitude() // 270 GET_INTERACTION_MAGNITUDE
@@ -2557,10 +2611,10 @@ void GetActionCount() // 274 GET_ACTION_COUNT
 
 void GetObjectLeashType() // 275 GET_OBJECT_LEASH_TYPE
 {
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushi(0);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	// The scripts count no leash as 0
+	const auto type = Locator::leashSystem::has_value() ? Locator::leashSystem::value().TypeOf(object) : LeashType::None;
+	Pushi(type == LeashType::None ? 0 : static_cast<int32_t>(type));
 }
 
 void SetFocusFollow() // 276 SET_FOCUS_FOLLOW
@@ -2795,9 +2849,11 @@ void ImmersionExists() // 304 IMMERSION_EXISTS
 
 void SetDrawLeash() // 305 SET_DRAW_LEASH
 {
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto enable = Pop().intVal != 0;
+	if (Locator::leashSystem::has_value())
+	{
+		Locator::leashSystem::value().SetDrawn(enable);
+	}
 }
 
 void SetDrawHighlight() // 306 SET_DRAW_HIGHLIGHT
@@ -3241,9 +3297,16 @@ void CreateRandomVillagerOfTribe() // 353 CREATE_RANDOM_VILLAGER_OF_TRIBE
 
 void ToggleLeash() // 354 TOGGLE_LEASH
 {
-	// const auto player = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto player = static_cast<PlayerNames>(Pop().intVal);
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	if (const auto creature = leashes.PlayersCreature(player))
+	{
+		leashes.Toggle(*creature);
+	}
 }
 
 void GameSetMana() // 355 GAME_SET_MANA

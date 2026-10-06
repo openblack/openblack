@@ -14,6 +14,7 @@
 #include "Creature/CreatureDesires.h"
 #include "Creature/CreatureIdleMind.h"
 #include "Creature/CreatureLook.h"
+#include "Creature/LeashRules.h"
 
 namespace openblack::ecs::components
 {
@@ -55,6 +56,10 @@ struct CreatureMindState
 
 	/// While paused, the mind leaves the body alone to be posed by hand
 	bool paused {false};
+
+	/// What the leash tells the mind: the desire it forces, whether the creature is following it to the hand, and what
+	/// the player has shown it on the leash
+	creature_leash::MindHooks leash {};
 };
 
 } // namespace openblack::ecs::components

@@ -53,6 +53,9 @@ public:
 
 	/// Walks or runs to anywhere from minDistance to maxDistance away from a point
 	virtual MoveResult MoveTo(entt::entity creature, glm::vec2 point, Pace pace, float minDistance, float maxDistance) = 0;
+	/// Led on the leash to a point: from walking at no pull towards twice its running pace at a full pull of 1, arriving
+	/// anywhere within maxDistance of it
+	virtual MoveResult LeadTo(entt::entity creature, glm::vec2 point, float pull, float maxDistance) = 0;
 	/// Walks or runs up to something, stopping some way short of it by both their sizes, and up to extra further
 	virtual MoveResult MoveToObject(entt::entity creature, entt::entity target, Pace pace, float extra) = 0;
 	/// Keeps within a distance of something, following it as it moves, until stopped

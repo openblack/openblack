@@ -297,10 +297,6 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 	// at version 14.
 	const auto version = _header.unknown0x0;
 	constexpr uint32_t k_EyesVersion = 14;
-	if (version < k_EyesVersion)
-	{
-		return;
-	}
 
 	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
 	// Older morph data ends with a name
@@ -326,8 +322,8 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 	read(points.groin);
 	if (version > 4)
 	{
-		read(points.unknownBones[0]);
-		read(points.unknownBones[1]);
+		read(points.leashBone);
+		read(points.unknownBone2);
 	}
 	read(points.pickUpTime);
 	if (version > 8)
@@ -355,6 +351,10 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 	if (stream.good())
 	{
 		_creatureActionPoints = points;
+	}
+	if (version < k_EyesVersion)
+	{
+		return;
 	}
 	// Then up to two points on the body, each after whether it is there
 	const auto skipOptionalPoint = [&stream, &skip]() {

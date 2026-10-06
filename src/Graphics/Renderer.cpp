@@ -4111,6 +4111,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
+			DrawLeashes(desc);
 			DrawWaterRings(desc);
 			DrawRain(desc);
 			DrawSnowfall(desc);

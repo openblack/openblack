@@ -38,6 +38,7 @@ public:
 		CreatureObjectActionUpdate,
 		CreatureHandUpdate,
 		CreatureFootprintsUpdate,
+		CreatureLeashUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -83,6 +84,7 @@ public:
 	    "Creature Objects",     //
 	    "Creature Hand",        //
 	    "Creature Footprints",  //
+	    "Creature Leash",       //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //

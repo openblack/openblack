@@ -34,6 +34,7 @@ public:
 	void Update(float turnFraction) override;
 
 	MoveResult MoveTo(entt::entity creature, glm::vec2 point, Pace pace, float minDistance, float maxDistance) override;
+	MoveResult LeadTo(entt::entity creature, glm::vec2 point, float pull, float maxDistance) override;
 	MoveResult MoveToObject(entt::entity creature, entt::entity target, Pace pace, float extra) override;
 	MoveResult Follow(entt::entity creature, entt::entity target, float distance, Pace pace) override;
 	MoveResult FleeFrom(entt::entity creature, glm::vec2 threat) override;

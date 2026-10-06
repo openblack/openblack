@@ -608,6 +608,21 @@ CreatureLocomotionSystem::MoveResult CreatureLocomotionSystem::MoveTo(entt::enti
 	return StartMove(creature, *self, point, pace == Pace::Run ? fractions.run : fractions.walk, minDistance, maxDistance);
 }
 
+CreatureLocomotionSystem::MoveResult CreatureLocomotionSystem::LeadTo(entt::entity creature, glm::vec2 point, float pull,
+                                                                      float maxDistance)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* self = registry.TryGet<CreatureLocomotion>(creature);
+	const auto* body = registry.TryGet<const Creature>(creature);
+	if (self == nullptr || body == nullptr || !self->started)
+	{
+		return MoveResult::Busy;
+	}
+	self->following.reset();
+	const auto fractions = FractionsOf(body->species);
+	return StartMove(creature, *self, point, locomotion::LeashFraction(fractions.walk, fractions.run, pull), 0.0f, maxDistance);
+}
+
 CreatureLocomotionSystem::MoveResult CreatureLocomotionSystem::MoveToObject(entt::entity creature, entt::entity target,
                                                                             Pace pace, float extra)
 {

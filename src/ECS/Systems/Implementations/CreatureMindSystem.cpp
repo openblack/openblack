@@ -690,7 +690,8 @@ void CreatureMindSystem::ProcessTurn()
 		    creature_desires::UpdateDesires(*mind.desires, k_TurnsPerSecond);
 
 		    auto* eyes = registry.TryGet<CreatureEyes>(entity);
-		    if (mind.paused)
+		    // Paused, or following the leash to the hand, the mind leaves the body alone
+		    if (mind.paused || mind.leash.obeying)
 		    {
 			    return;
 		    }

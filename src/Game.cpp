@@ -90,6 +90,7 @@
 #include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
+#include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
@@ -444,6 +445,11 @@ bool Game::GameLogicLoop() noexcept
 	// The creatures' bodies follow their fatness, and their marks heal
 	Locator::creatureAnimationSystem::value().ProcessTurn();
 	Locator::creatureSkinSystem::value().ProcessTurn();
+	{
+		// A taut leash pulls its creature to the hand before the creature's mind thinks
+		auto creatureLeash = profiler.BeginScoped(Profiler::Stage::CreatureLeashUpdate);
+		Locator::leashSystem::value().ProcessTurn();
+	}
 	{
 		// The creatures want things, and decide what to do while idle
 		auto creatureMind = profiler.BeginScoped(Profiler::Stage::CreatureMindUpdate);
@@ -807,6 +813,8 @@ bool Game::Update() noexcept
 						enterTemple = Locator::templeExteriorSystem::value().EntranceAt(rayOrigin, rayDirection) ==
 						              PlayerNames::PLAYER_ONE;
 					}
+					// The leash keys, and the Action button tapping leash posts, creatures and things to tie the leash to
+					Locator::leashSystem::value().HandleInput(rayOrigin, rayDirection);
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
 						intersectionTransform = hit->first;
@@ -870,6 +878,12 @@ bool Game::Update() noexcept
 				}
 			}
 			Locator::entitiesRegistry::value().SetDirty();
+		}
+
+		// The leashes' ropes swing from where the hand now is
+		{
+			auto creatureLeash = profiler.BeginScoped(Profiler::Stage::CreatureLeashUpdate);
+			Locator::leashSystem::value().Update(std::chrono::duration<float>(gameTime).count());
 		}
 
 		// Animate the hand: gripping while it drags the land, otherwise its normal pose. Turning the camera with the
@@ -1231,6 +1245,11 @@ bool Game::Initialize() noexcept
 		LoadHandAnimation();
 		LoadCreatureRigs();
 		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+		// The collar the citadel's leash posts are drawn with
+		if (const auto path = fileSystem.GetPath<Path::Misc>() / "leash.l3d"; fileSystem.Exists(path))
+		{
+			meshManager.Load("misc/leash", LFromDiskTag {}, path);
+		}
 		// The eyes every creature is drawn with
 		for (const auto& [id, file] : {std::pair {ecs::components::CreatureEyes::k_EyeballMeshId, "Eyeball.l3d"},
 		                               std::pair {ecs::components::CreatureEyes::k_EyelidMeshId, "Eyelid.l3d"}})

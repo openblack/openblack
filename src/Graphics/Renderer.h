@@ -168,6 +168,8 @@ private:
 	void DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, const L3DMeshSubmitDesc& bodyDesc) const;
 	/// A creature's strands of hair, as ribbons facing the camera blended over the scene
 	void DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) const;
+	/// The leashes' ropes, each a ribbon lit by the land beneath it, and their shadows on the land
+	void DrawLeashes(const DrawSceneDesc& desc) const;
 	/// Takes up the creatures' skins where they have been painted again, before their bodies are drawn with them; drops
 	/// those of creatures no longer on the land
 	void UploadCreatureSkins(const DrawSceneDesc& drawDesc) const;
