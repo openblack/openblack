@@ -21,6 +21,15 @@ class Texture2D;
 class SkyInterface
 {
 public:
+	/// Hours of the morning at which the sky reaches each state, mirrored around midday for the evening
+	struct DayNightTimes
+	{
+		float nightFull;
+		float duskStart;
+		float duskEnd;
+		float dayFull;
+	};
+
 	[[nodiscard]] virtual float GetCurrentSkyType() const noexcept = 0;
 	[[nodiscard]] virtual graphics::L3DMesh& GetMesh() const noexcept = 0;
 	[[nodiscard]] virtual graphics::Texture2D& GetTexture() const noexcept = 0;
