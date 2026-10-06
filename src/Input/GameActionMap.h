@@ -10,9 +10,12 @@
 #pragma once
 
 #include <array>
+#include <bitset>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
+#include <SDL_events.h>
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 #include <glm/vec3.hpp>
@@ -41,7 +44,14 @@ public:
 	[[nodiscard]] bool GetUnbindableRepeat(UnbindableActionMap action) const final;
 	[[nodiscard]] glm::uvec2 GetMousePosition() const final;
 	[[nodiscard]] glm::ivec2 GetMouseDelta() const final;
+	[[nodiscard]] float GetMouseWheelDelta() const final;
 	[[nodiscard]] std::array<std::optional<glm::vec3>, 2> GetHandPositions() const final;
+
+	[[nodiscard]] std::span<const KeyBinding> GetKeyBindings() const final;
+	void SetKeyBinding(BindableActionMap action, std::optional<KeyChord> key) final;
+	void ResetKeyBindings() final;
+	void QueuePress(BindableActionMap action) final;
+	[[nodiscard]] bool HasQueuedPresses() const final;
 
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;
@@ -51,13 +61,28 @@ private:
 	UnbindableActionMap _unbindableMap = UnbindableActionMap::NONE;
 	BindableActionMap _bindableMapPrevious = BindableActionMap::NONE;
 	UnbindableActionMap _unbindableMapPrevious = UnbindableActionMap::NONE;
-	std::unordered_map<SDL_Keycode, std::pair<SDL_Keymod, BindableActionMap>> _keyboardModBindings;
-	std::unordered_map<SDL_Keycode, BindableActionMap> _keyboardBindings;
+	/// Puts the mouse's bindings in the lookups the mouse events use, after the table changes
+	void ApplyMouseBindings();
+	/// Lets go of the keys whose letting go went elsewhere, as to a text field of the debug windows
+	void ReleaseKeysNoLongerHeld();
+	/// Makes the presses queued for testing, and lets go of last frame's
+	void ApplyQueuedPresses();
+
+	/// What each of the options screen's actions is bound to, starting as the game's defaults
+	KeyBindingTable _bindings {k_DefaultKeyBindings};
+	/// The keys down, as pressed, so their letting go can be made up when it goes elsewhere
+	std::bitset<SDL_NUM_SCANCODES> _heldKeys;
+	std::vector<BindableActionMap> _queuedPresses;
+	/// The events that let go of last frame's queued presses
+	std::vector<SDL_Event> _queuedReleases;
+	/// The actions without a key pressed for testing, let go of the next frame
+	BindableActionMap _queuedHeld = BindableActionMap::NONE;
 	std::unordered_map<int /*mousebutton*/, BindableActionMap> _mouseBindings;
 	std::unordered_map<int /*mousebutton*/, std::pair<SDL_Keymod, BindableActionMap>> _mouseModBindings;
 	uint8_t _currentMouseButtons = 0;
 	std::array<std::optional<BindableActionMap>, 2> _mouseWheelBinding; // up, down
 	glm::uvec2 _mousePosition;
-	glm::ivec2 _mouseDelta;
+	glm::ivec2 _mouseDelta {0};
+	float _mouseWheelDelta = 0.0f;
 };
 } // namespace openblack::input
