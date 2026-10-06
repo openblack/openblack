@@ -87,20 +87,28 @@ constexpr uint32_t k_HungerFromLowEnergy = 14;
 constexpr uint32_t k_PlayFromSadness = 16;
 constexpr uint32_t k_FearFromDark = 17;
 constexpr uint32_t k_TirednessFromExhaustion = 22;
+constexpr uint32_t k_PooFromAmountOfPoo = 21;
 constexpr uint32_t k_TirednessFromNight = 24;
 constexpr uint32_t k_TirednessFromSadness = 25;
 constexpr uint32_t k_InnateLethargy = 26;
+constexpr uint32_t k_WaterFromDehydration = 32;
+constexpr uint32_t k_RestoreHealthFromLife = 33;
 constexpr uint32_t k_InnateFriendliness = 35;
 constexpr uint32_t k_AttentionFromLoneliness = 36;
 constexpr uint32_t k_AttentionFromLackOfInteraction = 37;
 constexpr uint32_t k_ManifestState = 38;
 constexpr uint32_t k_InnateCommunicativeness = 39;
+constexpr uint32_t k_GetWarmer = 40;
+constexpr uint32_t k_GetColder = 41;
+constexpr uint32_t k_Scratch = 42;
 constexpr uint32_t k_Sadness = 48;
 } // namespace sources
 
 /// The game's sigmoid of how far a source's value is past its threshold, 0 to 1 by a table of 41 steps; 0 for a value
 /// of 0 or less, or a threshold of 1
 [[nodiscard]] float Sigmoid(float threshold, float value);
+/// The same sigmoid without the cut off: a value of 0 still reads its step of the table
+[[nodiscard]] float SigmoidStep(float threshold, float value);
 
 struct Source
 {

@@ -10,7 +10,9 @@
 #pragma once
 
 #include <random>
+#include <vector>
 
+#include "Creature/CreatureIdleMind.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -31,8 +33,17 @@ public:
 	bool SitDown(entt::entity creature) override;
 	void StandUp(entt::entity creature) override;
 	void Feedback(entt::entity creature, bool stroke) override;
+	bool Sleep(entt::entity creature) override;
+	bool Eat(entt::entity creature, std::optional<entt::entity> food) override;
+	bool Drink(entt::entity creature) override;
+	bool Poo(entt::entity creature) override;
+	bool Puke(entt::entity creature) override;
+	bool Faint(entt::entity creature) override;
+	void Wake(entt::entity creature) override;
 
 private:
+	/// Plans an activity in place of what the creature was doing, getting it up and stopping it first
+	bool Replan(entt::entity creature, creature_mind::Activity activity, std::vector<creature_mind::Step> agenda);
 	/// The minds choose at random, apart from the game's own random numbers
 	std::mt19937 _random {std::random_device {}()};
 };

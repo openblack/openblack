@@ -41,8 +41,9 @@ constexpr Colour k_BlockEdge {7, 8, 6};
 /// The colour of texel (x, z) of the material, which every block shows whole
 [[nodiscard]] Colour MaterialColour(int x, int z);
 
-/// Low enough over the sea for what stands on it to show in a pool of it
-constexpr uint8_t k_LowAltitude = 3;
+/// Low enough over the sea for what stands on it to show in a pool of it, and just high enough above sea level for
+/// creatures to walk on
+constexpr uint8_t k_LowAltitude = 4;
 /// The pool's cells, from the first to before the last, in cells of the map: in front of the testbed's camera, just
 /// short of the middle of the map
 constexpr int k_PoolMinX = 240;

@@ -297,6 +297,7 @@ void CreatureSpawner::DrawSelected() noexcept
 		DrawAppearance(*_selected);
 		DrawMovement(*_selected);
 		DrawMind(*_selected);
+		DrawBody(*_selected);
 	}
 }
 
@@ -478,8 +479,12 @@ void CreatureSpawner::DrawMind(entt::entity entity) noexcept
 		case creature_mind::Step::Kind::Action:
 			ImGui::Text("Action %s%s", AnimationLabel(step.animation).c_str(), step.sleepyEyes ? ", sleepy eyes" : "");
 			break;
-		case creature_mind::Step::Kind::Sit:
-			ImGui::Text("Sitting %.1f of %.1f s", static_cast<double>(idle.stepSeconds), static_cast<double>(step.seconds));
+		case creature_mind::Step::Kind::Static:
+			ImGui::Text("%s %.1f of %.1f s", AnimationLabel(step.sequence[1]).c_str(), static_cast<double>(idle.stepSeconds),
+			            static_cast<double>(step.seconds));
+			break;
+		case creature_mind::Step::Kind::Move:
+			ImGui::Text("Moving for %.1f s", static_cast<double>(idle.stepSeconds));
 			break;
 		}
 	}
@@ -587,8 +592,7 @@ void CreatureSpawner::DrawMind(entt::entity entity) noexcept
 	}
 
 	ImGui::SeparatorText("Desires");
-	ImGui::Text("Energy %.2f, exhaustion %.2f, alone %.0f s", static_cast<double>(mind->energy),
-	            static_cast<double>(mind->exhaustion), static_cast<double>(mind->secondsAlone));
+	ImGui::Text("Alone %.0f s", static_cast<double>(mind->secondsAlone));
 	if (!mind->desires.has_value())
 	{
 		return;

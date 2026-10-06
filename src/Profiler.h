@@ -29,6 +29,7 @@ public:
 		PathfindingUpdate,
 		LivingActionUpdate,
 		CreatureMindUpdate,
+		CreaturePhysiologyUpdate,
 		CreatureLocomotionUpdate,
 		CreatureAnimationUpdate,
 		CreatureHairUpdate,
@@ -69,6 +70,7 @@ public:
 	    "Pathfinding Update",   //
 	    "Living Action Update", //
 	    "Creature Mind",        //
+	    "Creature Physiology",  //
 	    "Creature Locomotion",  //
 	    "Creature Animation",   //
 	    "Creature Hair",        //

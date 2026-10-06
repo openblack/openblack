@@ -71,7 +71,7 @@ struct FakeBody
 			played.push_back(*commands.playOnce);
 			turnsLeft = actionTurns;
 		}
-		if (commands.startSit && turnsLeft == 0)
+		if (commands.startSequence && turnsLeft == 0)
 		{
 			looping = true;
 			++sits;
@@ -311,7 +311,7 @@ TEST(CreatureIdleMind, SometimesItSitsForAWhile)
 		if (turn == 0)
 		{
 			EXPECT_EQ(mind.activity, creature_mind::Activity::Sit);
-			EXPECT_TRUE(commands.startSit);
+			EXPECT_TRUE(commands.startSequence);
 		}
 		if (commands.endSit)
 		{
@@ -486,15 +486,15 @@ TEST(CreatureIdleMind, HangingAroundWalksSomewhereNearbyThenSits)
 	{
 		const auto commands = creature_mind::Think(mind, senses, random);
 		EXPECT_FALSE(commands.move.has_value());
-		EXPECT_FALSE(commands.startSit);
+		EXPECT_FALSE(commands.startSequence);
 		EXPECT_EQ(mind.step, 0u);
 	}
 	// Arrived, it sits down
 	senses.moving = false;
 	senses.bodyBusy = false;
-	EXPECT_FALSE(creature_mind::Think(mind, senses, random).startSit);
+	EXPECT_FALSE(creature_mind::Think(mind, senses, random).startSequence);
 	EXPECT_EQ(mind.step, 1u);
-	EXPECT_TRUE(creature_mind::Think(mind, senses, random).startSit);
+	EXPECT_TRUE(creature_mind::Think(mind, senses, random).startSequence);
 }
 
 TEST(CreatureIdleMind, AFollowStepStopsWhenItsTimeIsUp)
@@ -527,4 +527,160 @@ TEST(CreatureIdleMind, AFollowStepStopsWhenItsTimeIsUp)
 	}
 	EXPECT_GE(stoppedAt, 10);
 	EXPECT_LE(stoppedAt, 11);
+}
+
+TEST(CreatureNeedsMind, TheStrongestNeedWithTheMeansAtHandIsSeenTo)
+{
+	creature_mind::Wants wants {.hunger = 0.9f, .tiredness = 0.5f, .poo = 0.4f, .water = 0.6f};
+	// Hungry with nothing to eat and thirsty with no water, it sleeps
+	auto plan = creature_mind::ChooseNeed(wants, Always(1));
+	ASSERT_TRUE(plan.has_value());
+	EXPECT_EQ(plan->activity, creature_mind::Activity::Sleep);
+	wants.waterSpot = {.shore = glm::vec2(10.0f, 20.0f), .water = glm::vec2(10.0f, 30.0f)};
+	plan = creature_mind::ChooseNeed(wants, Always(1));
+	ASSERT_TRUE(plan.has_value());
+	EXPECT_EQ(plan->activity, creature_mind::Activity::Drink);
+	wants.food = 42u;
+	plan = creature_mind::ChooseNeed(wants, Always(1));
+	ASSERT_TRUE(plan.has_value());
+	EXPECT_EQ(plan->activity, creature_mind::Activity::Eat);
+	// Nothing pressing, nothing to see to
+	EXPECT_FALSE(creature_mind::ChooseNeed({.hunger = 0.2f, .tiredness = 0.1f, .poo = 0.29f, .water = 0.0f}, Always(1)));
+}
+
+TEST(CreatureNeedsMind, ANeedComesBeforeIdling)
+{
+	creature_mind::IdleMind mind;
+	auto senses = FakeBody {}.Senses();
+	senses.wants = {.hunger = 0.0f, .tiredness = 0.0f, .poo = 0.8f, .water = 0.0f};
+	creature_mind::ChooseNext(mind, senses, Always(1));
+	EXPECT_EQ(mind.activity, creature_mind::Activity::Poo);
+}
+
+TEST(CreatureNeedsMind, ItSleepsWithItsEyesClosedUntilRested)
+{
+	creature_mind::IdleMind mind;
+	// Draws of 1: no yawn first
+	creature_mind::Plan(mind, creature_mind::Activity::Sleep, creature_mind::Sleep(Always(1)));
+	ASSERT_EQ(mind.agenda.size(), 2u);
+	FakeBody body;
+	auto commands = creature_mind::Think(mind, body.Senses(), Always(1));
+	ASSERT_TRUE(commands.startSequence.has_value());
+	EXPECT_EQ((*commands.startSequence)[1], animations::k_Sleep);
+	EXPECT_EQ(commands.eyes, creature_mind::Eyes::Closed);
+	EXPECT_TRUE(creature_mind::IsAsleep(mind));
+	body.Obey(commands, 1);
+	// However long it sleeps, it sleeps on until rested
+	for (int turn = 0; turn < 1000; ++turn)
+	{
+		commands = creature_mind::Think(mind, body.Senses(), Always(1));
+		EXPECT_FALSE(commands.endSit);
+		EXPECT_FALSE(commands.lookAbout);
+		body.Obey(commands, 1);
+	}
+	auto senses = body.Senses();
+	senses.rested = true;
+	commands = creature_mind::Think(mind, senses, Always(1));
+	EXPECT_TRUE(commands.endSit);
+	EXPECT_EQ(commands.effect, creature_mind::Effect::Slept);
+	body.Obey(commands, 1);
+	commands = creature_mind::Think(mind, body.Senses(), Always(1));
+	EXPECT_EQ(commands.eyes, creature_mind::Eyes::Normal);
+	EXPECT_FALSE(creature_mind::IsAsleep(mind));
+	// Then a dazed look about with sleepy eyes
+	commands = creature_mind::Think(mind, body.Senses(), Always(1));
+	EXPECT_EQ(commands.playOnce, animations::k_Confused);
+	EXPECT_EQ(commands.eyes, creature_mind::Eyes::Sleepy);
+}
+
+TEST(CreatureNeedsMind, APooTakesFourSecondsAndDropsAsItEnds)
+{
+	creature_mind::IdleMind mind;
+	creature_mind::Plan(mind, creature_mind::Activity::Poo, creature_mind::Poo(Always(1)));
+	ASSERT_EQ(mind.agenda.size(), 1u);
+	FakeBody body;
+	std::optional<int> dropped;
+	for (int turn = 0; turn < 100 && !dropped; ++turn)
+	{
+		const auto commands = creature_mind::Think(mind, body.Senses(), Always(1));
+		if (turn == 0)
+		{
+			ASSERT_TRUE(commands.startSequence.has_value());
+			EXPECT_EQ(*commands.startSequence,
+			          (std::array<size_t, 3> {animations::k_StartPoo, animations::k_Poo, animations::k_EndPoo}));
+		}
+		if (commands.effect == creature_mind::Effect::Poo)
+		{
+			EXPECT_TRUE(commands.endSit);
+			dropped = turn;
+		}
+		body.Obey(commands, 1);
+	}
+	// Four seconds of tenths, give or take a turn's rounding
+	ASSERT_TRUE(dropped.has_value());
+	EXPECT_GE(*dropped, 40);
+	EXPECT_LE(*dropped, 41);
+	// A third of the time it shows it needs one first
+	EXPECT_EQ(creature_mind::Poo(Always(0)).front().animation, animations::k_NeedAPoo);
+}
+
+TEST(CreatureNeedsMind, ItGoesUpToFoodAndEatsIt)
+{
+	creature_mind::IdleMind mind;
+	creature_mind::Plan(mind, creature_mind::Activity::Eat, creature_mind::Eat(7u));
+	FakeBody body;
+	auto senses = body.Senses();
+	auto commands = creature_mind::Think(mind, senses, Always(1));
+	ASSERT_TRUE(commands.move.has_value());
+	EXPECT_EQ(commands.move->kind, creature_mind::Movement::Kind::ToObject);
+	EXPECT_EQ(commands.move->object, 7u);
+	senses.moving = true;
+	senses.bodyBusy = true;
+	EXPECT_EQ(creature_mind::Think(mind, senses, Always(1)).effect, creature_mind::Effect::None);
+	senses = body.Senses();
+	static_cast<void>(creature_mind::Think(mind, senses, Always(1)));
+	// Arrived, it eats as the action starts
+	commands = creature_mind::Think(mind, senses, Always(1));
+	EXPECT_EQ(commands.playOnce, animations::k_Eat);
+	EXPECT_EQ(commands.effect, creature_mind::Effect::Eat);
+	EXPECT_EQ(commands.effectObject, 7u);
+}
+
+TEST(CreatureNeedsMind, ItDrinksAtTheWatersEdge)
+{
+	const auto agenda = creature_mind::Drink({100.0f, 200.0f}, {100.0f, 230.0f});
+	ASSERT_EQ(agenda.size(), 3u);
+	EXPECT_EQ(agenda[0].movement.kind, creature_mind::Movement::Kind::ToPoint);
+	EXPECT_EQ(agenda[0].movement.point, glm::vec2(100.0f, 200.0f));
+	EXPECT_FLOAT_EQ(agenda[0].movement.maxDistance, creature_mind::k_DrinkReach);
+	EXPECT_EQ(agenda[1].movement.kind, creature_mind::Movement::Kind::TurnToFace);
+	EXPECT_EQ(agenda[1].movement.point, glm::vec2(100.0f, 230.0f));
+	EXPECT_EQ(agenda[2].animation, animations::k_Drink);
+	EXPECT_EQ(agenda[2].effect, creature_mind::Effect::Drink);
+}
+
+TEST(CreatureNeedsMind, FaintedItLiesStillThenComesRound)
+{
+	creature_mind::IdleMind mind;
+	creature_mind::Plan(mind, creature_mind::Activity::Faint, creature_mind::Faint());
+	FakeBody body;
+	auto commands = creature_mind::Think(mind, body.Senses(), Always(1));
+	ASSERT_TRUE(commands.startSequence.has_value());
+	EXPECT_TRUE(commands.holdLoop);
+	EXPECT_EQ((*commands.startSequence)[0], animations::k_Faint);
+	EXPECT_EQ((*commands.startSequence)[2], animations::k_GetUp);
+	EXPECT_TRUE(creature_mind::IsUnconscious(mind));
+	body.Obey(commands, 1);
+	std::optional<int> cameRound;
+	for (int turn = 1; turn < 200 && !cameRound; ++turn)
+	{
+		commands = creature_mind::Think(mind, body.Senses(), Always(1));
+		if (commands.effect == creature_mind::Effect::CameRound)
+		{
+			cameRound = turn;
+		}
+		body.Obey(commands, 1);
+	}
+	ASSERT_TRUE(cameRound.has_value());
+	EXPECT_EQ(*cameRound, static_cast<int>(creature_mind::k_FaintSeconds * k_TurnsPerSecond));
 }

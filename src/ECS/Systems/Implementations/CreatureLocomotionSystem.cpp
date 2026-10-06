@@ -36,6 +36,7 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/CreatureMind.h"
+#include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
@@ -801,10 +802,10 @@ void CreatureLocomotionSystem::ProcessTurn()
 			    }
 		    }
 
-		    const auto* mind = registry.TryGet<const CreatureMindState>(entity);
+		    const auto* needs = registry.TryGet<const CreatureNeeds>(entity);
 		    const auto fractions = FractionsOf(creature.species);
 		    const auto fraction =
-		        locomotion::RequiredFraction(self.fraction, fractions.slow, mind != nullptr ? mind->exhaustion : 0.0f);
+		        locomotion::RequiredFraction(self.fraction, fractions.slow, needs != nullptr ? needs->needs.exhaustion : 0.0f);
 		    const auto targetSpeed = locomotion::TargetSpeed(fraction, self.speeds.run);
 
 		    switch (self.motion)

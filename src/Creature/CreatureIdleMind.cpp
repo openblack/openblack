@@ -37,6 +37,22 @@ void FinishStep(IdleMind& mind)
 	mind.stepSeconds = 0.0f;
 	mind.sitEnding = false;
 }
+
+/// A start, loop and end held for some seconds
+Step Static(std::array<size_t, 3> sequence, float seconds)
+{
+	return {.kind = Step::Kind::Static,
+	        .seconds = seconds,
+	        .animation = sequence[1],
+	        .sleepyEyes = false,
+	        .movement = {},
+	        .sequence = sequence};
+}
+
+Step Action(size_t animation, bool sleepyEyes)
+{
+	return {.kind = Step::Kind::Action, .seconds = 0.0f, .animation = animation, .sleepyEyes = sleepyEyes};
+}
 } // namespace
 
 std::string_view creature_mind::Name(Activity activity)
@@ -53,6 +69,18 @@ std::string_view creature_mind::Name(Activity activity)
 		return "Hanging around";
 	case Activity::Told:
 		return "Doing as told";
+	case Activity::Eat:
+		return "Eating";
+	case Activity::Drink:
+		return "Drinking";
+	case Activity::Sleep:
+		return "Sleeping";
+	case Activity::Poo:
+		return "Having a poo";
+	case Activity::Puke:
+		return "Being sick";
+	case Activity::Faint:
+		return "Out cold";
 	case Activity::None:
 	default:
 		return "Nothing";
@@ -75,10 +103,158 @@ std::vector<Step> creature_mind::BeIdle(const Random& random)
 
 Step creature_mind::SitDown(const Random& random)
 {
-	return {.kind = Step::Kind::Sit,
-	        .seconds = static_cast<float>(k_SitSeconds + random(k_SitExtraSeconds)),
-	        .animation = animations::k_Sit,
-	        .sleepyEyes = false};
+	return Static({animations::k_StartSit, animations::k_Sit, animations::k_EndSit},
+	              static_cast<float>(k_SitSeconds + random(k_SitExtraSeconds)));
+}
+
+std::vector<Step> creature_mind::Sleep(const Random& random)
+{
+	std::vector<Step> agenda;
+	if (random(k_YawnBeforeSleepLots) == 0)
+	{
+		agenda.push_back(Action(animations::k_Tired, true));
+	}
+	auto sleep = Static({animations::k_StartSleep, animations::k_Sleep, animations::k_EndSleep}, 0.0f);
+	sleep.untilRested = true;
+	sleep.closedEyes = true;
+	sleep.effect = Effect::Slept;
+	agenda.push_back(sleep);
+	agenda.push_back(Action(animations::k_Confused, true));
+	return agenda;
+}
+
+std::vector<Step> creature_mind::Eat(uint32_t food)
+{
+	auto eat = Action(animations::k_Eat, false);
+	eat.effect = Effect::Eat;
+	eat.object = food;
+	return {{.kind = Step::Kind::Move,
+	         .seconds = 0.0f,
+	         .animation = 0,
+	         .sleepyEyes = false,
+	         .movement = {.kind = Movement::Kind::ToObject,
+	                      .point = glm::vec2(0.0f),
+	                      .object = food,
+	                      .run = false,
+	                      .minDistance = 0.0f,
+	                      .maxDistance = 0.0f}},
+	        eat};
+}
+
+std::vector<Step> creature_mind::Drink(glm::vec2 shore, glm::vec2 water)
+{
+	auto drink = Action(animations::k_Drink, false);
+	drink.effect = Effect::Drink;
+	return {{.kind = Step::Kind::Move,
+	         .seconds = 0.0f,
+	         .animation = 0,
+	         .sleepyEyes = false,
+	         .movement = {.kind = Movement::Kind::ToPoint,
+	                      .point = shore,
+	                      .object = std::nullopt,
+	                      .run = false,
+	                      .minDistance = 0.0f,
+	                      .maxDistance = k_DrinkReach}},
+	        {.kind = Step::Kind::Move,
+	         .seconds = 0.0f,
+	         .animation = 0,
+	         .sleepyEyes = false,
+	         .movement = {.kind = Movement::Kind::TurnToFace,
+	                      .point = water,
+	                      .object = std::nullopt,
+	                      .run = false,
+	                      .minDistance = 0.0f,
+	                      .maxDistance = 0.0f}},
+	        drink};
+}
+
+std::vector<Step> creature_mind::Poo(const Random& random)
+{
+	std::vector<Step> agenda;
+	if (random(k_ShowPooLots) == 0)
+	{
+		agenda.push_back(Action(animations::k_NeedAPoo, false));
+	}
+	auto poo = Static({animations::k_StartPoo, animations::k_Poo, animations::k_EndPoo}, k_PooSeconds);
+	poo.effect = Effect::Poo;
+	agenda.push_back(poo);
+	return agenda;
+}
+
+std::vector<Step> creature_mind::Puke()
+{
+	auto puke = Static({animations::k_StartPuke, animations::k_Puke, animations::k_EndPuke}, k_PukeSeconds);
+	puke.effect = Effect::Puke;
+	return {puke};
+}
+
+std::vector<Step> creature_mind::Faint()
+{
+	auto faint = Static({animations::k_Faint, animations::k_Faint, animations::k_GetUp}, k_FaintSeconds);
+	faint.holdLoop = true;
+	faint.closedEyes = true;
+	faint.effect = Effect::CameRound;
+	return {faint};
+}
+
+std::optional<NeedPlan> creature_mind::ChooseNeed(const Wants& wants, const Random& random)
+{
+	struct Need
+	{
+		Activity activity;
+		float value;
+		bool possible;
+	};
+	const std::array<Need, 4> needs {{
+	    {.activity = Activity::Eat, .value = wants.hunger, .possible = wants.food.has_value()},
+	    {.activity = Activity::Sleep, .value = wants.tiredness, .possible = true},
+	    {.activity = Activity::Poo, .value = wants.poo, .possible = true},
+	    {.activity = Activity::Drink, .value = wants.water, .possible = wants.waterSpot.has_value()},
+	}};
+	const Need* strongest = nullptr;
+	for (const auto& need : needs)
+	{
+		if (need.possible && need.value >= k_ActOnNeed && (strongest == nullptr || need.value > strongest->value))
+		{
+			strongest = &need;
+		}
+	}
+	if (strongest == nullptr)
+	{
+		return std::nullopt;
+	}
+	switch (strongest->activity)
+	{
+	case Activity::Eat:
+		return NeedPlan {.activity = Activity::Eat, .agenda = Eat(*wants.food)};
+	case Activity::Drink:
+		return NeedPlan {.activity = Activity::Drink, .agenda = Drink(wants.waterSpot->shore, wants.waterSpot->water)};
+	case Activity::Poo:
+		return NeedPlan {.activity = Activity::Poo, .agenda = Poo(random)};
+	case Activity::Sleep:
+	default:
+		return NeedPlan {.activity = Activity::Sleep, .agenda = Sleep(random)};
+	}
+}
+
+namespace
+{
+const Step* CurrentStep(const IdleMind& mind)
+{
+	return mind.stepStarted && mind.step < mind.agenda.size() ? &mind.agenda[mind.step] : nullptr;
+}
+} // namespace
+
+bool creature_mind::IsAsleep(const IdleMind& mind)
+{
+	const auto* step = CurrentStep(mind);
+	return step != nullptr && step->kind == Step::Kind::Static && step->untilRested;
+}
+
+bool creature_mind::IsUnconscious(const IdleMind& mind)
+{
+	const auto* step = CurrentStep(mind);
+	return step != nullptr && step->kind == Step::Kind::Static && step->holdLoop;
 }
 
 std::vector<Step> creature_mind::HangAround(const Random& random)
@@ -107,10 +283,16 @@ void creature_mind::Plan(IdleMind& mind, Activity activity, std::vector<Step> ag
 	mind.stepStarted = false;
 	mind.stepSeconds = 0.0f;
 	mind.sitEnding = false;
+	mind.wakeWanted = false;
 }
 
 void creature_mind::ChooseNext(IdleMind& mind, const Senses& senses, const Random& random)
 {
+	if (auto need = ChooseNeed(senses.wants, random))
+	{
+		Plan(mind, need->activity, std::move(need->agenda));
+		return;
+	}
 	if (mind.showDesireSeconds <= 0.0f)
 	{
 		std::optional<size_t> emote;
@@ -169,7 +351,7 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 		return commands;
 	}
 	const auto& step = mind.agenda[mind.step];
-	const bool sitting = step.kind == Step::Kind::Sit && mind.stepStarted;
+	const bool sitting = step.kind == Step::Kind::Static && mind.stepStarted;
 	// A sit nobody is waiting on any more ends
 	if (senses.bodyLooping && !sitting)
 	{
@@ -197,9 +379,23 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			{
 				commands.eyes = Eyes::Sleepy;
 			}
+			// Eating, the food is taken as the action starts
+			if (step.effect == Effect::Eat)
+			{
+				commands.effect = step.effect;
+				commands.effectObject = step.object;
+			}
 			break;
-		case Step::Kind::Sit:
-			commands.startSit = true;
+		case Step::Kind::Static:
+			commands.startSequence = step.sequence;
+			commands.holdLoop = step.holdLoop;
+			if (step.closedEyes)
+			{
+				commands.eyes = Eyes::Closed;
+				// Asleep or out cold, it pulls no face
+				commands.face = std::optional<size_t> {};
+				mind.faceSeconds = 0.0f;
+			}
 			break;
 		case Step::Kind::Move:
 			commands.move = step.movement;
@@ -232,21 +428,39 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			{
 				commands.eyes = Eyes::Normal;
 			}
+			if (step.effect != Effect::None && step.effect != Effect::Eat)
+			{
+				commands.effect = step.effect;
+			}
 			FinishStep(mind);
 		}
 		break;
-	case Step::Kind::Sit:
-		commands.lookAbout = senses.bodyLooping;
+	case Step::Kind::Static:
+	{
+		commands.lookAbout = senses.bodyLooping && !step.closedEyes;
+		const bool done = mind.wakeWanted || (step.untilRested ? senses.rested : mind.stepSeconds >= step.seconds);
 		if (!senses.bodyBusy)
 		{
+			if (step.closedEyes)
+			{
+				commands.eyes = Eyes::Normal;
+			}
+			// The body played the whole sequence before its time was up: it still takes effect
+			if (!mind.sitEnding)
+			{
+				commands.effect = step.effect;
+			}
 			FinishStep(mind);
 		}
-		else if (!mind.sitEnding && mind.stepSeconds >= step.seconds)
+		else if (!mind.sitEnding && done)
 		{
 			commands.endSit = true;
+			commands.effect = step.effect;
 			mind.sitEnding = true;
+			mind.wakeWanted = false;
 		}
 		break;
+	}
 	case Step::Kind::Move:
 		// Done once it has arrived or given up, or its time is up
 		if (!senses.moving)

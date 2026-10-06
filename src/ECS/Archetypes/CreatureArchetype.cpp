@@ -19,6 +19,7 @@
 #include "ECS/Components/CreatureHair.h"
 #include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/CreatureMind.h"
+#include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/CreatureSkin.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
@@ -98,6 +99,7 @@ entt::entity CreatureArchetype::Create(const glm::vec3& position, PlayerNames pl
 	registry.Assign<CreatureAnimation>(entity);
 	registry.Assign<CreatureEyes>(entity);
 	registry.Assign<CreatureMindState>(entity);
+	registry.Assign<CreatureNeeds>(entity);
 	registry.Assign<CreatureHair>(entity);
 	registry.Assign<CreatureTattoos>(entity);
 	registry.Assign<CreatureMarks>(entity);

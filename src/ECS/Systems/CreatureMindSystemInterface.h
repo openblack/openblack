@@ -11,6 +11,8 @@
 
 #include <cstddef>
 
+#include <optional>
+
 #include <entt/entity/fwd.hpp>
 
 namespace openblack::ecs::systems
@@ -38,6 +40,17 @@ public:
 	virtual void StandUp(entt::entity creature) = 0;
 	/// As if the player stroked or slapped the creature: it shows its pleasure or sorrow next
 	virtual void Feedback(entt::entity creature, bool stroke) = 0;
+
+	/// Sees to a need now, in place of whatever it was doing: sleeps until rested, eats something (the nearest food when
+	/// none is given), goes and drinks at the nearest water, has a poo, is sick, or faints. Returns whether it could.
+	virtual bool Sleep(entt::entity creature) = 0;
+	virtual bool Eat(entt::entity creature, std::optional<entt::entity> food) = 0;
+	virtual bool Drink(entt::entity creature) = 0;
+	virtual bool Poo(entt::entity creature) = 0;
+	virtual bool Puke(entt::entity creature) = 0;
+	virtual bool Faint(entt::entity creature) = 0;
+	/// Wakes it, or ends whatever it is sitting, lying or squatting through
+	virtual void Wake(entt::entity creature) = 0;
 };
 
 } // namespace openblack::ecs::systems

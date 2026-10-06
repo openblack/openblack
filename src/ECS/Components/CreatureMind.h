@@ -21,6 +21,9 @@ namespace openblack::ecs::components
 /// What a creature wants, what it is doing about it, and what it looks at
 struct CreatureMindState
 {
+	/// The last stage of growing up
+	static constexpr uint32_t k_FullyGrownUp = 13;
+
 	/// The desires, set up from the species' tables when the mind first thinks
 	std::optional<creature_desires::Desires> desires;
 	creature_mind::IdleMind idle {};
@@ -28,18 +31,15 @@ struct CreatureMindState
 	/// Whether the head turns to what it watches this turn
 	bool lookingAbout {false};
 
-	/// What the body is like, for the desires that grow from it. Energy runs down and exhaustion builds up at made-up
-	/// rates until the creature eats, sleeps and tires itself out for real.
-	float energy {1.0f};
-	float exhaustion {0.0f};
 	/// Seconds since the player last paid it any attention
 	float secondsAlone {0.0f};
 	/// Seconds since the player last stroked or slapped it, and which
 	std::optional<float> feedbackSeconds;
 	bool feedbackWasStroke {false};
 
-	/// How far the creature has grown up, which decides the desires it has, and the stage they were last set for
-	uint32_t developmentPhase {0};
+	/// How far the creature has grown up, which decides the desires it has and which of its body's needs it feels, and
+	/// the stage they were last set for. Until the game's story moves it on, a creature starts fully grown up.
+	uint32_t developmentPhase {k_FullyGrownUp};
 	std::optional<uint32_t> desiresPhase;
 
 	/// While paused, the mind leaves the body alone to be posed by hand

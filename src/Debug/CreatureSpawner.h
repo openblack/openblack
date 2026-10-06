@@ -46,6 +46,9 @@ private:
 	void DrawSelected() noexcept;
 	/// The picked creature's mind: what it is doing, wants and looks at, and buttons to make it do things
 	void DrawMind(entt::entity entity) noexcept;
+	/// The picked creature's body: its needs as bars to set, the body's time to speed up, and buttons to make it see to
+	/// a need
+	void DrawBody(entt::entity entity) noexcept;
 	/// The picked creature's tattoos and marks, to put on and take off, and how its shadow and seams are drawn
 	void DrawAppearance(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
@@ -87,6 +90,8 @@ private:
 	bool _showRoute {true};
 	/// What became of the last order
 	std::string _lastOrder;
+	/// What became of the last need it was told to see to
+	std::string _lastNeed;
 	std::mt19937 _random {std::random_device {}()};
 	std::optional<entt::entity> _selected;
 	/// The action and gesture picked to play on the selected creature

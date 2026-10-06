@@ -34,6 +34,16 @@ constexpr size_t k_FirstFace = 16;
 constexpr size_t k_FaceCount = 12;
 /// The ten faces the idle creature pulls at random
 constexpr size_t k_IdleFaceCount = 10;
+/// The start, loop and end of sleeping, having a poo and being sick
+constexpr size_t k_StartSleep = 28;
+constexpr size_t k_Sleep = 29;
+constexpr size_t k_EndSleep = 30;
+constexpr size_t k_StartPoo = 31;
+constexpr size_t k_Poo = 32;
+constexpr size_t k_EndPoo = 33;
+constexpr size_t k_StartPuke = 34;
+constexpr size_t k_Puke = 35;
+constexpr size_t k_EndPuke = 36;
 constexpr size_t k_StartSit = 37;
 constexpr size_t k_Sit = 38;
 constexpr size_t k_EndSit = 39;
@@ -56,12 +66,18 @@ constexpr size_t k_Impress = 65;
 constexpr size_t k_NeedAPoo = 66;
 constexpr size_t k_FeelPlayful = 67;
 constexpr size_t k_Taunt = 70;
+constexpr size_t k_Drink = 71;
 constexpr size_t k_FriendlyWave = 72;
 /// Turning the head right to left and looking down to up, standing and sitting. The middle keyframe looks ahead.
 constexpr size_t k_LookRightLeft = 75;
 constexpr size_t k_LookDownUp = 76;
 constexpr size_t k_SitLookRightLeft = 77;
 constexpr size_t k_SitLookDownUp = 78;
+/// Eating what it holds
+constexpr size_t k_Eat = 96;
+/// Fainting, and getting up again
+constexpr size_t k_Faint = 106;
+constexpr size_t k_GetUp = 107;
 /// The gestures played on top of the body: nod, shake, yawn, thirsty, squirt water, talk
 constexpr size_t k_FirstGesture = 200;
 constexpr size_t k_GestureCount = 7;
@@ -101,6 +117,8 @@ struct BodyAction
 	bool mirrored {false};
 	/// A sequence ends once its loop is told to
 	bool endWanted {false};
+	/// The loop holds its last frame rather than playing, as lying where it fell
+	bool holdLoop {false};
 };
 
 [[nodiscard]] bool IsPlaying(const BodyAction& body);
@@ -110,8 +128,9 @@ struct BodyAction
 [[nodiscard]] size_t CurrentAnimation(const BodyAction& body);
 /// An action that plays once, unless the body already plays one: nothing starts while one plays
 [[nodiscard]] std::optional<BodyAction> PlayOnce(const BodyAction& body, size_t animation, bool mirrored);
-/// A start, loop and end, unless the body already plays an action
-[[nodiscard]] std::optional<BodyAction> PlaySequence(const BodyAction& body, size_t start, size_t loop, size_t end);
+/// A start, loop and end, unless the body already plays an action; the loop can hold its last frame
+[[nodiscard]] std::optional<BodyAction> PlaySequence(const BodyAction& body, size_t start, size_t loop, size_t end,
+                                                     bool holdLoop = false);
 /// A sequence's loop ends and its end plays
 [[nodiscard]] BodyAction EndLoop(BodyAction body);
 /// The body some milliseconds on, given how long the animation it plays now lasts, or nothing when the species has no

@@ -116,6 +116,11 @@ float creature_desires::Sigmoid(float threshold, float value)
 	{
 		return 0.0f;
 	}
+	return SigmoidStep(threshold, value);
+}
+
+float creature_desires::SigmoidStep(float threshold, float value)
+{
 	const auto past = std::clamp(std::clamp(value, -1.0f, 1.0f) - threshold, -1.0f, 1.0f);
 	const auto step = std::min(static_cast<size_t>((past + 1.0f) * k_SigmoidSteps), k_Sigmoid.size() - 1);
 	return k_Sigmoid.at(step);

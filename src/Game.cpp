@@ -80,6 +80,7 @@
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
@@ -415,6 +416,11 @@ bool Game::GameLogicLoop() noexcept
 	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	// The crops in the fields grow
 	Locator::fieldSystem::value().ProcessTurn(Locator::time::value().GetTurn());
+	{
+		// The creatures age, grow, get hungry, tired and thirsty, and heal while they sleep
+		auto creaturePhysiology = profiler.BeginScoped(Profiler::Stage::CreaturePhysiologyUpdate);
+		Locator::creaturePhysiologySystem::value().ProcessTurn();
+	}
 	// The creatures' bodies follow their fatness, and their marks heal
 	Locator::creatureAnimationSystem::value().ProcessTurn();
 	Locator::creatureSkinSystem::value().ProcessTurn();
@@ -671,6 +677,11 @@ bool Game::Update() noexcept
 		// The creatures are drawn moving between the last two turns
 		auto creatureLocomotion = profiler.BeginScoped(Profiler::Stage::CreatureLocomotionUpdate);
 		Locator::creatureLocomotionSystem::value().Update(clock.GetTurnFraction());
+	}
+	{
+		// Drops of creatures' sick fly and fall
+		auto creaturePhysiology = profiler.BeginScoped(Profiler::Stage::CreaturePhysiologyUpdate);
+		Locator::creaturePhysiologySystem::value().Update(std::chrono::duration<float>(gameTime).count());
 	}
 	{
 		// The creatures breathe, act, pull faces and look about

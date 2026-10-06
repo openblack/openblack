@@ -62,6 +62,30 @@ std::string_view animations::Name(size_t animation)
 	}
 	switch (animation)
 	{
+	case k_StartSleep:
+		return "start_sleep";
+	case k_Sleep:
+		return "sleep";
+	case k_EndSleep:
+		return "end_sleep";
+	case k_StartPoo:
+		return "start_poo";
+	case k_Poo:
+		return "poo";
+	case k_EndPoo:
+		return "end_poo";
+	case k_StartPuke:
+		return "start_puke";
+	case k_Puke:
+		return "puke";
+	case k_EndPuke:
+		return "end_puke";
+	case k_Eat:
+		return "eat";
+	case k_Faint:
+		return "faint";
+	case k_GetUp:
+		return "get_up";
 	case k_StartSit:
 		return "start_sit";
 	case k_Sit:
@@ -124,7 +148,8 @@ std::optional<BodyAction> creature_layers::PlayOnce(const BodyAction& body, size
 	                   .endWanted = false};
 }
 
-std::optional<BodyAction> creature_layers::PlaySequence(const BodyAction& body, size_t start, size_t loop, size_t end)
+std::optional<BodyAction> creature_layers::PlaySequence(const BodyAction& body, size_t start, size_t loop, size_t end,
+                                                        bool holdLoop)
 {
 	if (IsPlaying(body))
 	{
@@ -135,7 +160,8 @@ std::optional<BodyAction> creature_layers::PlaySequence(const BodyAction& body, 
 	                   .animations = {start, loop, end},
 	                   .timeMs = 0.0f,
 	                   .mirrored = false,
-	                   .endWanted = false};
+	                   .endWanted = false,
+	                   .holdLoop = holdLoop};
 }
 
 BodyAction creature_layers::EndLoop(BodyAction body)
@@ -173,13 +199,13 @@ BodyAction creature_layers::AdvanceBody(BodyAction body, float milliseconds, std
 		}
 		break;
 	case BodyAction::Phase::Loop:
-		if (body.endWanted || length <= 0.0f)
+		if (body.endWanted || (length <= 0.0f && !body.holdLoop))
 		{
 			body.phase = BodyAction::Phase::End;
 			body.timeMs = 0.0f;
 			break;
 		}
-		body.timeMs = std::fmod(body.timeMs + milliseconds, length);
+		body.timeMs = body.holdLoop ? std::max(length - 1.0f, 0.0f) : std::fmod(body.timeMs + milliseconds, length);
 		break;
 	case BodyAction::Phase::End:
 		body.timeMs += milliseconds;

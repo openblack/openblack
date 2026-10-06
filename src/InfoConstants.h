@@ -864,7 +864,36 @@ struct GCreatureInfo: GLivingInfo
 	/// How big a new creature of the species is, and how fat, 0 to 1
 	float startScale;
 	float startFatness;
-	std::array<uint8_t, 0x4c> field0x1f4;
+	/// How a new creature's body starts: full of energy, and neither warm nor cold
+	float startEnergy;
+	float startWarmth;
+	/// The temperature the species is comfortable at; it warms or cools only well away from it
+	float comfortTemperature;
+	/// The creature ages by one every this many seconds of game time
+	uint32_t secondsPerAgeTick;
+	/// It grows fast for most of this many minutes of age, then slowly
+	float growUpMinutes;
+	float field0x208;
+	/// Walking while its energy is below this tires it faster
+	float lowEnergyThreshold;
+	/// How much moving tires it each game turn, before its youth makes that faster
+	float exhaustionRate;
+	/// It goes from not thirsty to fully thirsty in this many seconds
+	float secondsToDehydrate;
+	/// Its strength is multiplied by this each game turn
+	float strengthDecay;
+	/// Carrying something as heavy as itself makes it stronger by half in this many minutes
+	float carryStrengthMinutes;
+	/// The energy it uses each game turn, less the bigger it is
+	float energyDrain;
+	/// While hungry, the fat it burns each game turn
+	float fatBurn;
+	/// How much of what it eats beyond full turns to fat
+	float overeatFatFactor;
+	/// Asleep, the life it regains and the exhaustion it sheds each game turn
+	float sleepHeal;
+	float sleepRecover;
+	std::array<uint8_t, 0xc> field0x234;
 	/// How fast the creature goes, each a fraction of its top speed: slowly (when exhausted), walking and running
 	float slowSpeed;
 	float walkSpeed;
@@ -872,9 +901,24 @@ struct GCreatureInfo: GLivingInfo
 	std::array<uint8_t, 0x8c> field0x24c;
 	/// Running away, the creature goes at least this far from what it flees, and up to 40 further
 	float runAwayDistance;
-	std::array<uint8_t, 0xa8> field0x2dc;
+	std::array<uint8_t, 0x88> field0x2dc;
+	/// How long it sleeps for its size, once rested
+	float sleepLength;
+	/// A meal's food value over this, and over its size, is the energy it gains
+	float foodToEnergy;
+	float field0x36c;
+	/// The poo a meal builds up for each unit of energy it gains
+	float pooPerEnergy;
+	std::array<uint8_t, 0x10> field0x374;
 };
 static_assert(sizeof(GCreatureInfo) == 0x384);
+static_assert(offsetof(GCreatureInfo, startEnergy) == 0x1f4);
+static_assert(offsetof(GCreatureInfo, comfortTemperature) == 0x1fc);
+static_assert(offsetof(GCreatureInfo, growUpMinutes) == 0x204);
+static_assert(offsetof(GCreatureInfo, energyDrain) == 0x220);
+static_assert(offsetof(GCreatureInfo, sleepRecover) == 0x230);
+static_assert(offsetof(GCreatureInfo, sleepLength) == 0x364);
+static_assert(offsetof(GCreatureInfo, pooPerEnergy) == 0x370);
 static_assert(offsetof(GCreatureInfo, slowSpeed) == 0x240);
 static_assert(offsetof(GCreatureInfo, runAwayDistance) == 0x2d8);
 
@@ -1763,9 +1807,11 @@ namespace v100 // original release 1.0
 {
 struct CreatureActionInfo
 {
-	float field0x0;
-	float field0x4;
-	float field0x8;
+	/// What doing the action does to the creature's body once it is done: strength gained, energy used and exhaustion
+	/// added, the last two less the bigger it is
+	float strengthGain;
+	float energyCost;
+	float exhaustionCost;
 	uint32_t field0xc;
 	float field0x10;
 	std::array<char, 0x20> name;
@@ -1794,7 +1840,8 @@ struct CreatureActionInfo
 	uint32_t field0x8c;
 	uint32_t field0x90;
 	uint32_t field0x94;
-	uint32_t field0x98;
+	/// The desire the action satisfies
+	uint32_t desire;
 	uint32_t field0x9c;
 	uint32_t field0xa0;
 	uint32_t field0xa4;
@@ -1804,7 +1851,8 @@ struct CreatureActionInfo
 	uint32_t field0xb4;
 	uint32_t field0xb8;
 	uint32_t field0xbc;
-	float field0xc0;
+	/// The desire it satisfies is multiplied by this once it is done
+	float desireMultiplier;
 	float field0xc4;
 	uint32_t field0xc8;
 	float field0xcc;
@@ -1820,6 +1868,8 @@ struct CreatureActionInfo
 	uint32_t field0xf4;
 	uint32_t field0xf8;
 };
+static_assert(offsetof(CreatureActionInfo, desire) == 0x98);
+static_assert(offsetof(CreatureActionInfo, desireMultiplier) == 0xc0);
 
 struct InfoConstants
 {
