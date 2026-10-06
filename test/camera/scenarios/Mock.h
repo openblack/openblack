@@ -76,10 +76,12 @@ class MockTerrain final: public openblack::LandIslandInterface
 	[[nodiscard]] std::vector<openblack::LandBlock>& GetBlocks() final { assert(false); }
 	[[nodiscard]] const std::vector<openblack::LandBlock>& GetBlocks() const final { assert(false); }
 	[[nodiscard]] const std::vector<openblack::lnd::LNDCountry>& GetCountries() const final { assert(false); }
-	[[nodiscard]] const openblack::graphics::Texture2D& GetAlbedoArray() const final { assert(false); }
-	[[nodiscard]] const openblack::graphics::Texture2D& GetBump() const final { assert(false); }
 	[[nodiscard]] const openblack::graphics::Texture2D& GetHeightMap() const final { assert(false); }
+	[[nodiscard]] const openblack::graphics::Texture2D& GetLuminosityMap() const final { assert(false); }
+	[[nodiscard]] const openblack::graphics::Texture2D& GetCellColourMap() const final { assert(false); }
+	[[nodiscard]] const openblack::graphics::Texture2D& GetBlockTextures() const final { assert(false); }
 	[[nodiscard]] const openblack::graphics::FrameBuffer& GetFootprintFramebuffer() const final { assert(false); }
+	[[nodiscard]] const openblack::graphics::FrameBuffer& GetLandAlphaFramebuffer() const final { assert(false); }
 	[[nodiscard]] openblack::U16Extent2 GetIndexExtent() const final { assert(false); }
 	[[nodiscard]] glm::mat4 GetOrthoView() const final { assert(false); }
 	[[nodiscard]] glm::mat4 GetOrthoProj() const final { assert(false); }

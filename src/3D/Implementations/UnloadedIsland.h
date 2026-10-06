@@ -36,6 +36,7 @@ public:
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
+
 	[[nodiscard]] const lnd::LNDCell* FindCell(const glm::u16vec2&) const override { return nullptr; }
 
 	void DumpTextures() const override { throw std::runtime_error("Cannot get landscape before any are loaded"); }
@@ -57,22 +58,32 @@ public:
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
-	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override
-	{
-		throw std::runtime_error("Cannot get landscape before any are loaded");
-	}
-
-	[[nodiscard]] const graphics::Texture2D& GetBump() const override
-	{
-		throw std::runtime_error("Cannot get landscape before any are loaded");
-	}
-
 	[[nodiscard]] const graphics::Texture2D& GetHeightMap() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
 
+	[[nodiscard]] const graphics::Texture2D& GetLuminosityMap() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
+	[[nodiscard]] const graphics::Texture2D& GetCellColourMap() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
+	[[nodiscard]] const graphics::Texture2D& GetBlockTextures() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
 	[[nodiscard]] const graphics::FrameBuffer& GetFootprintFramebuffer() const override
+	{
+		throw std::runtime_error("Cannot get landscape before any are loaded");
+	}
+
+	[[nodiscard]] const graphics::FrameBuffer& GetLandAlphaFramebuffer() const override
 	{
 		throw std::runtime_error("Cannot get landscape before any are loaded");
 	}
