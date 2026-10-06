@@ -19,6 +19,7 @@
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
 #include "Creature/CreatureRig.h"
+#include "Creature/CreatureSkin.h"
 #include "Level.h"
 
 namespace openblack
@@ -122,6 +123,25 @@ struct CreatureRigLoader final: BaseLoader<creature::CreatureRig>
 	[[nodiscard]] result_type operator()(FromBufferTag, const std::vector<uint8_t>& block,
 	                                     const std::filesystem::path& specDirectory,
 	                                     const std::filesystem::path& meshDirectory) const;
+};
+
+/// What creatures' tattoos and marks are painted with, read from raw images: the tattoo designs from the atlas of
+/// players' symbols, the fresh and old damage atlases with their alphas, and the tattoo palette
+struct CreatureSkinArtLoader final: BaseLoader<creature_skin::Art>
+{
+	struct Paths
+	{
+		/// The players' symbols as the game last wrote them, and the symbols it ships with, for the cells no player's
+		/// symbol has been written into
+		std::filesystem::path symbols;
+		std::filesystem::path defaultSymbols;
+		std::filesystem::path freshDamage;
+		std::filesystem::path freshDamageAlpha;
+		std::filesystem::path oldDamage;
+		std::filesystem::path oldDamageAlpha;
+		std::filesystem::path palette;
+	};
+	[[nodiscard]] result_type operator()(FromDiskTag, const Paths& paths) const;
 };
 
 struct SoundLoader final: BaseLoader<audio::Sound>

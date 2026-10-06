@@ -13,6 +13,8 @@
 
 #include <cmath>
 
+#include <chrono>
+
 #include <glm/gtx/transform.hpp>
 
 #include "3D/CreatureBody.h"
@@ -28,6 +30,7 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -62,11 +65,6 @@ CreatureRig::Mesh EvilGoodMesh(float value)
 CreatureRig::Mesh ThinFatMesh(float value)
 {
 	return value < 0.0f ? CreatureRig::Mesh::Thin : CreatureRig::Mesh::Fat;
-}
-
-CreatureRig::Mesh WeakStrongMesh(float value)
-{
-	return value < 0.0f ? CreatureRig::Mesh::Weak : CreatureRig::Mesh::Strong;
 }
 
 /// A variant's animation, the base's adjusted to the variant's stand where the variant has none of its own, and the
@@ -125,14 +123,6 @@ std::optional<Animation> BlendAnimation(const CreatureRig& rig, const creature_m
 	                                  .weight = thinFat.animation != nullptr ? std::abs(morph.thinFat) : 0.0f});
 }
 
-glm::mat4 ModelMatrix(const Transform& transform)
-{
-	// As the renderer places the creature
-	auto model = glm::mat4(transform.rotation);
-	model = glm::translate(model, transform.position * transform.rotation);
-	return glm::scale(model, transform.scale);
-}
-
 /// An eye's point on the body as drawn: each vertex blended as the body is, placed by its bone, in the world
 std::optional<creature_eyes::SurfacePoint> EyePointOf(const CreatureRig::EyePoint& point, const creature_morph::Morph& morph,
                                                       const std::vector<glm::mat4>& bones, const glm::mat4& model)
@@ -141,26 +131,14 @@ std::optional<creature_eyes::SurfacePoint> EyePointOf(const CreatureRig::EyePoin
 	{
 		return std::nullopt;
 	}
-	std::array<glm::vec3, 3> world {};
-	for (size_t i = 0; i < 3; ++i)
-	{
-		const auto vertexOf = [&point, i](CreatureRig::Mesh mesh) {
-			return point.vertices.at(static_cast<size_t>(mesh)).at(i);
-		};
-		const auto local =
-		    creature_morph::Blend(vertexOf(CreatureRig::Mesh::Base), vertexOf(EvilGoodMesh(morph.evilGood)),
-		                          vertexOf(ThinFatMesh(morph.thinFat)), vertexOf(WeakStrongMesh(morph.weakStrong)), morph);
-		const auto bone = point.bones.at(i);
-		const auto& boneMatrix = bone < bones.size() ? bones[bone] : glm::mat4(1.0f);
-		world.at(i) = glm::vec3(model * boneMatrix * glm::vec4(local, 1.0f));
-	}
+	const auto world = creature::PosedTriangle(point.vertices, point.bones, morph, bones, model);
 	return creature_eyes::PointOnTriangle(world[0], world[1], world[2], point.u, point.v);
 }
 
 void PlaceEyes(CreatureEyes& eyes, const CreatureRig::Eyes& rig, const creature_morph::Morph& morph,
                const std::vector<glm::mat4>& bones, const Transform& transform, float size, float seconds)
 {
-	const auto model = ModelMatrix(transform);
+	const auto model = creature::PlacementMatrix(transform.position, transform.rotation, transform.scale);
 	const auto eyeSize = creature_eyes::EyeSize(size, rig.scale, morph.evilGood, eyes.mode);
 	const auto ahead = glm::normalize(transform.rotation * k_MeshBack);
 	bool lidColourSet = false;
@@ -337,6 +315,12 @@ void CreatureAnimationSystem::ProcessTurn()
 	registry.Each<const Creature, CreatureMorph>([](const Creature& creature, CreatureMorph& morph) {
 		morph.shownFatness = creature_morph::EaseFatness(morph.shownFatness, creature.fatness);
 	});
+	// Breathing settles towards the period it should be at a step a turn; standing, that is its resting period
+	constexpr auto k_TurnSeconds = std::chrono::duration<float>(TimeSystemInterface::k_TurnDuration).count();
+	registry.Each<const Creature, CreatureAnimation>([](const Creature& creature, CreatureAnimation& animation) {
+		const auto resting = creature_animation::BreathPeriod(creature.size);
+		animation.breathPeriod = creature_animation::EaseBreathPeriod(animation.breathPeriod, resting, resting, k_TurnSeconds);
+	});
 }
 
 void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> gameTime)
@@ -384,9 +368,12 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 			    animation.mirror = skeletal_animation::MirrorJoints(rest);
 		    }
 
-		    // Standing, the creature breathes in and out over its stand animation
-		    const auto targetPeriod = creature_animation::BreathPeriod(creature.size);
-		    animation.breathPeriod = creature_animation::EaseBreathPeriod(animation.breathPeriod, targetPeriod, seconds);
+		    // Standing, the creature breathes in and out over its stand animation, from its first frame at its resting
+		    // period
+		    if (animation.breathPeriod <= 0.0f)
+		    {
+			    animation.breathPeriod = creature_animation::BreathPeriod(creature.size);
+		    }
 		    animation.breathPhase = creature_animation::AdvanceBreath(animation.breathPhase, seconds, animation.breathPeriod);
 
 		    if (rig != nullptr)

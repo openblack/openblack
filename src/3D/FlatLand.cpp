@@ -27,6 +27,32 @@ lnd::LNDCell FlatCell()
 	cell.flags = flat_land::k_SoundFlags;
 	return cell;
 }
+
+/// The pool's cells in a block: down at the sea and, inside its edges, open sea, where no land is drawn
+void LetInPool(lnd::LNDBlock& block, int blockX, int blockZ)
+{
+	constexpr uint8_t k_OpenSea = 0x02;
+	constexpr int k_CellsPerSide = k_CellsPerBlock + 1;
+	for (int x = 0; x < k_CellsPerSide; ++x)
+	{
+		for (int z = 0; z < k_CellsPerSide; ++z)
+		{
+			const auto mapX = (blockX * k_CellsPerBlock) + x;
+			const auto mapZ = (blockZ * k_CellsPerBlock) + z;
+			if (mapX < flat_land::k_PoolMinX || mapX > flat_land::k_PoolMaxX || mapZ < flat_land::k_PoolMinZ ||
+			    mapZ > flat_land::k_PoolMaxZ)
+			{
+				continue;
+			}
+			auto& cell = block.cells.at(static_cast<size_t>((x * k_CellsPerSide) + z));
+			cell.altitude = 0;
+			if (mapX < flat_land::k_PoolMaxX && mapZ < flat_land::k_PoolMaxZ)
+			{
+				cell.flags = static_cast<uint8_t>(cell.flags | k_OpenSea);
+			}
+		}
+	}
+}
 } // namespace
 
 flat_land::Colour flat_land::MaterialColour(int x, int z)
@@ -39,12 +65,16 @@ flat_land::Colour flat_land::MaterialColour(int x, int z)
 	return odd ? k_DarkSquare : k_LightSquare;
 }
 
-LandData flat_land::Build()
+LandData flat_land::Build(bool pool)
 {
 	LandData data;
 
 	// Every block of the map, in order along z then x
-	const auto cell = FlatCell();
+	auto cell = FlatCell();
+	if (pool)
+	{
+		cell.altitude = k_LowAltitude;
+	}
 	data.blocks.reserve(data.blockIndexLookup.size());
 	for (int x = 0; x < LandData::k_BlocksPerSide; ++x)
 	{
@@ -57,6 +87,10 @@ LandData flat_land::Build()
 			block.mapZ = static_cast<float>(z) * k_BlockSize;
 			block.blockX = static_cast<uint32_t>(x);
 			block.blockZ = static_cast<uint32_t>(z);
+			if (pool)
+			{
+				LetInPool(block, x, z);
+			}
 			data.blockIndexLookup.at(static_cast<size_t>(x * LandData::k_BlocksPerSide + z)) =
 			    static_cast<uint16_t>(block.index);
 		}

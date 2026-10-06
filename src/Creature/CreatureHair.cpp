@@ -32,6 +32,8 @@ constexpr float k_HeadScalePerSize = 0.5f;
 constexpr float k_MaxHeadScaleSize = 2.0f;
 /// The springs' stiffness is given in thousandths
 constexpr float k_StiffnessScale = 1000.0f;
+/// A bones' frame flatter than this has no inverse to turn a strand in
+constexpr float k_MinFrameDeterminant = 1e-8f;
 
 glm::vec3 Capped(const glm::vec3& value)
 {
@@ -104,7 +106,7 @@ Physics creature_hair::PhysicsFor(const Look& look, float scale, uint32_t segmen
 
 glm::vec3 creature_hair::GrowthDirection(const glm::vec3& inwardNormal)
 {
-	return -inwardNormal;
+	return NormalisedOr(-inwardNormal, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 glm::vec3 creature_hair::GrowthDirection(const glm::vec3& inwardNormal, const glm::mat3& frame, const glm::vec3& angles)
@@ -120,15 +122,32 @@ glm::vec3 creature_hair::GrowthDirection(const glm::vec3& inwardNormal, const gl
 			turn[c][r] = rows.at(static_cast<size_t>(c)).at(static_cast<size_t>(r));
 		}
 	}
-	return frame * turn * glm::transpose(frame) * -inwardNormal;
+	// A frame that has collapsed flat can't be undone, so the strand grows straight out
+	if (std::abs(glm::determinant(frame)) <= k_MinFrameDeterminant)
+	{
+		return GrowthDirection(inwardNormal);
+	}
+	return NormalisedOr(frame * turn * glm::inverse(frame) * -inwardNormal, GrowthDirection(inwardNormal));
 }
 
-glm::mat3 creature_hair::Orthonormalised(const glm::mat3& sum)
+glm::mat3 creature_hair::BoneFrame(std::span<const glm::mat3> bones)
 {
-	const auto x = NormalisedOr(sum[0], {1.0f, 0.0f, 0.0f});
-	const auto y = NormalisedOr(sum[1] - (glm::dot(sum[1], x) * x), {0.0f, 1.0f, 0.0f});
-	const auto z = glm::cross(x, y);
-	return {x, y, z};
+	const auto unitAxes = [](const glm::mat3& matrix) {
+		return glm::mat3(NormalisedOr(matrix[0], glm::vec3(1.0f, 0.0f, 0.0f)),
+		                 NormalisedOr(matrix[1], glm::vec3(0.0f, 1.0f, 0.0f)),
+		                 NormalisedOr(matrix[2], glm::vec3(0.0f, 0.0f, 1.0f)));
+	};
+	glm::mat3 sum(0.0f);
+	for (const auto& bone : bones)
+	{
+		sum += unitAxes(bone);
+	}
+	return unitAxes(sum);
+}
+
+glm::ivec3 creature_hair::StrandColour(const glm::ivec3& colour, const glm::ivec3& light, const glm::ivec3& added)
+{
+	return glm::min((glm::clamp(colour, 0, 255) * glm::clamp(light, 0, 255)) / 255 + glm::max(added, 0), glm::ivec3(255));
 }
 
 Strand creature_hair::Straight(const Root& root, const Physics& physics, uint32_t segmentCount)

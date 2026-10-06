@@ -9,6 +9,7 @@
 
 #include "CreatureSkin.h"
 
+#include <cassert>
 #include <cmath>
 
 #include <algorithm>
@@ -55,4 +56,52 @@ std::optional<uint32_t> creature_skin::PairedSkin(std::span<const uint32_t> base
 		return std::nullopt;
 	}
 	return variantSkins[index];
+}
+
+void creature_skin::Compose(std::span<uint16_t> out, std::span<const uint16_t> base, std::span<const uint16_t> variant,
+                            uint8_t weight, const Layers& layers)
+{
+	assert(out.size() == base.size());
+	if (variant.size() == base.size() && weight > 0)
+	{
+		std::ranges::transform(base, variant, out.begin(),
+		                       [weight](uint16_t from, uint16_t to) { return BlendTexel(from, to, weight); });
+	}
+	else
+	{
+		std::ranges::copy(base, out.begin());
+	}
+	if (layers.art == nullptr || out.size() != static_cast<size_t>(creature_tattoo::k_SkinSize) * creature_tattoo::k_SkinSize)
+	{
+		return;
+	}
+	if (layers.sites.has_value())
+	{
+		for (const auto& slot : layers.tattoos)
+		{
+			if (slot.Empty() || slot.design >= layers.art->designs.size())
+			{
+				continue;
+			}
+			const auto& site = layers.sites->at(slot.site);
+			if (site.enabled && site.skin == layers.skinIndex)
+			{
+				creature_tattoo::Paint(out, layers.art->designs.at(slot.design), slot.colour, site);
+			}
+		}
+	}
+	for (const auto& wound : layers.marks.wounds)
+	{
+		if (wound.skin == layers.skinIndex)
+		{
+			creature_marks::PaintWound(out, layers.art->damage, wound);
+		}
+	}
+	for (const auto& blood : layers.marks.blood)
+	{
+		if (blood.skin == layers.skinIndex)
+		{
+			creature_marks::PaintBlood(out, blood);
+		}
+	}
 }

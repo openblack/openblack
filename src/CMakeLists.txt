@@ -109,6 +109,7 @@ target_link_libraries(
           anm
           glw
           morph
+          rawimage
           imgui::imgui
           imgui_user
           ScriptLibrary

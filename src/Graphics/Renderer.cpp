@@ -62,6 +62,7 @@
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureHair.h"
+#include "ECS/Components/CreatureSkin.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
@@ -138,7 +139,7 @@ public:
 		}};
 		// As L3DSubMesh packs a vertex: position, texture coordinates, normal and bone indices
 		constexpr uint8_t k_TexCoordBytes = 2 * sizeof(float);
-		constexpr uint8_t k_IndicesBytes = 2 * sizeof(int16_t);
+		constexpr uint8_t k_IndicesBytes = 4 * sizeof(int16_t);
 		for (size_t axis = 0; axis < k_Attributes.size(); ++axis)
 		{
 			bgfx::VertexLayout layout;
@@ -437,6 +438,10 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 	_handShadowFrameBuffer =
 	    std::make_unique<FrameBuffer>("Hand Shadow", HandShadow::k_TextureSize, HandShadow::k_TextureSize, TextureFormat::R8,
 	                                  std::nullopt, static_cast<uint8_t>(8), Wrapping::ClampEdge);
+	// The creatures' silhouettes side by side, with the same soft edges
+	_creatureShadowFrameBuffer = std::make_unique<FrameBuffer>(
+	    "Creature Shadows", static_cast<uint16_t>(CreatureShadow::k_CellSize * CreatureShadow::k_MaxShadows),
+	    CreatureShadow::k_CellSize, TextureFormat::R8, std::nullopt, static_cast<uint8_t>(8), Wrapping::ClampEdge);
 
 	// give debug names to views
 	// TODO (#749) use std::views::enumerate
@@ -454,6 +459,7 @@ Renderer::~Renderer() noexcept
 	_plane.reset();
 	_morphStreamLayouts.reset();
 	_handShadowFrameBuffer.reset();
+	_creatureShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
 	_templeMapFrameBuffer.reset();
 	if (_landLightTexture)
@@ -537,6 +543,14 @@ const Texture2D* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, st
 
 namespace
 {
+/// The land's light a creature, its eyes and its hair take: halved in the sea's reflection, as the game halves every
+/// level of the land's light while it draws the reflection
+float CreatureLandLightScale(RenderPass viewId)
+{
+	constexpr float k_ReflectionLight = 0.5f;
+	return viewId == RenderPass::Reflection || viewId == RenderPass::ReflectionTranslucent ? k_ReflectionLight : 1.0f;
+}
+
 /// Binds the submeshes of a creature's variant meshes that match one of its base mesh as the second to fourth vertex
 /// streams; the base's own where a variant's doesn't match
 void BindMorphTargets(const L3DMesh& mesh, const L3DSubMesh& subMesh,
@@ -559,6 +573,46 @@ void BindMorphTargets(const L3DMesh& mesh, const L3DSubMesh& subMesh,
 			}
 		}
 		buffer->BindStream(static_cast<uint8_t>(axis + 1), layouts.Get(axis));
+	}
+}
+
+/// Binds every vertex's position and bone in the submesh and in its matches of the creature's variant meshes, for the
+/// vertex shader to blend the seams with; the base's own where a variant's doesn't match. Off where the submesh has no
+/// blends, or where the blends are turned off.
+void BindBlendSources(const L3DMesh& mesh, const L3DSubMesh& subMesh,
+                      const RendererInterface::L3DMeshSubmitDesc::MorphTargets& targets, const ShaderProgram& program)
+{
+	const auto* base = subMesh.GetBlendSource();
+	const bool blended = targets.blendSeams && subMesh.HasBlends() && base != nullptr;
+	const auto width = base != nullptr ? static_cast<float>(base->GetResolution().x) : 1.0f;
+	const glm::vec4 u_vertexBlend {blended ? 1.0f : 0.0f, width, 0.0f, 0.0f};
+	program.SetUniformValue("u_vertexBlend", &u_vertexBlend);
+	if (!blended)
+	{
+		return;
+	}
+	const auto& subMeshes = mesh.GetSubMeshes();
+	const auto found = std::ranges::find_if(subMeshes, [&subMesh](const auto& other) { return other.get() == &subMesh; });
+	const auto index = static_cast<size_t>(std::distance(subMeshes.begin(), found));
+	constexpr std::array<std::pair<const char*, uint8_t>, 3> k_Samplers {{
+	    {"s_blendEvilGood", 3},
+	    {"s_blendThinFat", 4},
+	    {"s_blendWeakStrong", 9},
+	}};
+	program.SetTextureSampler("s_blendBase", 2, *base);
+	for (size_t axis = 0; axis < targets.meshes.size(); ++axis)
+	{
+		const auto* target = targets.meshes.at(axis);
+		const auto* source = base;
+		if (target != nullptr && index < target->GetSubMeshes().size())
+		{
+			const auto* candidate = target->GetSubMeshes()[index]->GetBlendSource();
+			if (candidate != nullptr && candidate->GetResolution() == base->GetResolution())
+			{
+				source = candidate;
+			}
+		}
+		program.SetTextureSampler(k_Samplers.at(axis).first, k_Samplers.at(axis).second, *source);
 	}
 }
 } // namespace
@@ -672,6 +726,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				const glm::vec4 u_morphWeights {desc.morphTargets->weights, 0.0f};
 				program->SetUniformValue("u_morphWeights", &u_morphWeights);
 			}
+			if (desc.morphTargets != nullptr && program->HasUniform("u_vertexBlend"))
+			{
+				BindBlendSources(mesh, subMesh, *desc.morphTargets, *program);
+			}
 			if (program->HasUniform("u_uvOffset"))
 			{
 				const glm::vec4 u_uvOffset {desc.uvOffset, 0.0f, 0.0f};
@@ -772,6 +830,14 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if (program->HasUniform("u_modelLight"))
 			{
 				program->SetUniformValue("u_modelLight", &_modelLight);
+			}
+			if (program->HasUniform("u_creatureShadowInfo"))
+			{
+				// They fall on what stands on the land, not on the creatures, nor in the reflection
+				const bool mainView = desc.viewId == RenderPass::Main || desc.viewId == RenderPass::Translucent;
+				const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+				SetCreatureShadowUniforms(*program, desc.creatureShadows && mainView && !inTemple && !desc.isSky &&
+				                                        !desc.drawAll && desc.morphTargets == nullptr);
 			}
 			if (!desc.isSky && program->HasUniform("u_skyAlphaThreshold"))
 			{
@@ -1314,6 +1380,9 @@ void Renderer::DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, 
 	submitDesc.matrixCount = 1;
 	submitDesc.lightMultiply = bodyDesc.lightMultiply;
 	submitDesc.lightAdd = bodyDesc.lightAdd;
+	submitDesc.landLightScale = bodyDesc.landLightScale;
+	submitDesc.mirrored = bodyDesc.mirrored;
+	submitDesc.creatureShadows = false;
 	submitDesc.sortDepth = bodyDesc.sortDepth;
 	const auto tint = glm::vec4(bodyDesc.tint.r, bodyDesc.tint.g, bodyDesc.tint.b, 0.0f);
 	for (const auto& eye : eyes->drawn)
@@ -1358,9 +1427,22 @@ void Renderer::DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) 
 		return layout;
 	}();
 	const bool hasTexture = textures.Contains(CreatureHair::k_TextureId) && textures.Contains(CreatureHair::k_AlphaTextureId);
+	const auto* transform = desc.entities.TryGet<const ecs::components::Transform>(entity);
+	if (transform == nullptr)
+	{
+		return;
+	}
 	const auto eye = desc.camera->GetOrigin();
 	const auto viewId = static_cast<bgfx::ViewId>(TranslucentPassOf(desc.viewId));
-	const auto* program = _shaderManager->GetShader("WorldTextured");
+	const auto* program = _shaderManager->GetShader("CreatureHair");
+	// The hair takes the land's light and colour under the creature, and the haze at it, as its body does
+	const auto extent = Locator::terrainSystem::value().GetExtent();
+	const auto islandExtent = glm::vec4(extent.minimum, extent.maximum);
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	const bool landLit = !inTemple && _landLightTexture.has_value();
+	const glm::vec4 u_landLight {landLit ? 1.0f : 0.0f, CreatureLandLightScale(desc.viewId), 0.0f, 0.0f};
+	const glm::vec4 u_hairOrigin {transform->position, 0.0f};
+	const auto u_haze = inTemple ? glm::vec4(0.0f) : _haze[0];
 	std::vector<creature_hair::RibbonVertex> ribbon;
 	for (const auto& group : hair->groups)
 	{
@@ -1389,6 +1471,7 @@ void Renderer::DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) 
 		bgfx::allocTransientIndexBuffer(&indexBuffer, indexCount);
 		const auto vertices = std::span(reinterpret_cast<Vertex*>(vertexBuffer.data), vertexCount);
 		const auto indices = std::span(reinterpret_cast<uint16_t*>(indexBuffer.data), indexCount);
+		// The texture multiplies the strands' colour, which the shader lights
 		const auto colour = glm::clamp(group.colour, 0, 255);
 		const auto abgr = 0xFF000000u | (static_cast<uint32_t>(colour.b) << 16u) | (static_cast<uint32_t>(colour.g) << 8u) |
 		                  static_cast<uint32_t>(colour.r);
@@ -1430,6 +1513,14 @@ void Renderer::DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) 
 			program->SetTextureSampler("s_diffuse", 0, *_whiteTexture);
 			program->SetTextureSampler("s_alpha", 1, *_whiteTexture);
 		}
+		program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
+		program->SetTextureSampler("s_landLight", 7, GetLandLightTexture());
+		program->SetTextureSampler("s_landColour", 8, GetLandColour());
+		program->SetUniformValue("u_islandExtent", &islandExtent);
+		program->SetUniformValue("u_landLight", &u_landLight);
+		program->SetUniformValue("u_hairOrigin", &u_hairOrigin);
+		program->SetUniformValue("u_haze", &u_haze);
+		program->SetUniformValue("u_hazeColour", &_haze[1]);
 		bgfx::setVertexBuffer(0, &vertexBuffer);
 		bgfx::setIndexBuffer(&indexBuffer);
 		// Blended over what is behind by the texture's alpha, both sides, tested against depth but leaving none
@@ -2927,76 +3018,39 @@ const Texture2D& Renderer::GetLandColour() const
 	return Locator::terrainSystem::value().GetCellColourMap();
 }
 
-void Renderer::DrawCreatureSkinPass(const DrawSceneDesc& drawDesc) const
+void Renderer::UploadCreatureSkins(const DrawSceneDesc& drawDesc) const
 {
-	const auto& meshes = Locator::resources::value().GetMeshes();
-	const auto contains = [&meshes](entt::id_type id) { return meshes.Contains(id); };
-	constexpr uint16_t k_SkinSize = 256;
 	std::vector<entt::entity> seen;
-	// A skin is blended in a view of its own, so only one is blended a frame; the others keep their last blend until
-	// their turn, or show their base skin before their first
-	bool blendedOne = false;
-	drawDesc.entities.Each<const ecs::components::Creature, const ecs::components::CreatureMorph>(
-	    [&](entt::entity entity, const ecs::components::Creature& creature, const ecs::components::CreatureMorph& morph) {
-		    const auto ids = creature_morph::MeshesOf(creature.species, morph.drawn, contains);
-		    if (!meshes.Contains(ids.base))
-		    {
-			    return;
-		    }
-		    seen.push_back(entity);
-		    const auto base = meshes.Handle(ids.base);
-		    const auto variant = meshes.Handle(ids.evilGood);
-		    auto& entry = _creatureSkins[entity];
-		    if (entry.skins.empty() || entry.baseMesh != ids.base)
-		    {
-			    entry = {.baseMesh = ids.base, .skins = {}, .drawn = {}};
-			    for (const auto id : base->GetSkinOrder())
-			    {
-				    entry.skins.push_back({.id = id, .target = nullptr, .blended = std::nullopt});
-			    }
-		    }
-		    // The skins follow the alignment the body is drawn with, which moves on only past the morph threshold
-		    const auto weight = creature_skin::BlendWeight(morph.drawn.evilGood);
-		    entry.drawn.clear();
-		    for (auto& skin : entry.skins)
-		    {
-			    const auto paired = ids.evilGood != ids.base
-			                            ? creature_skin::PairedSkin(base->GetSkinOrder(), variant->GetSkinOrder(), skin.id)
-			                            : std::nullopt;
-			    const auto found = paired.has_value() ? variant->GetSkins().find(*paired) : variant->GetSkins().end();
-			    const auto* other = found != variant->GetSkins().end() ? found->second.get() : nullptr;
-			    const auto baseSkin = base->GetSkins().find(skin.id);
-			    // A neutral creature, or one whose evil or good mesh lacks the skin, shows its base skin
-			    if (other == nullptr || weight == 0 || baseSkin == base->GetSkins().end())
-			    {
-				    continue;
-			    }
-			    const std::pair<const Texture2D*, uint8_t> wanted {other, weight};
-			    if (skin.blended != wanted && !blendedOne)
-			    {
-				    if (!skin.target)
-				    {
-					    skin.target = std::make_unique<FrameBuffer>("CreatureSkin", k_SkinSize, k_SkinSize,
-					                                                graphics::TextureFormat::RGBA8);
-				    }
-				    const auto viewId = SetUpLandView(RenderPass::CreatureSkin, *skin.target, {k_SkinSize, k_SkinSize});
-				    const auto& program = *_shaderManager->GetShader("CreatureSkin");
-				    program.SetTextureSampler("s_diffuse", 0, *baseSkin->second);
-				    program.SetTextureSampler("s_variant", 1, *other);
-				    const glm::vec4 u_skinBlend {weight, 0.0f, 0.0f, 0.0f};
-				    program.SetUniformValue("u_skinBlend", &u_skinBlend);
-				    constexpr auto k_Size = static_cast<float>(k_SkinSize);
-				    SubmitLandQuad(viewId, program, {0.0f, 0.0f}, {k_Size, k_Size}, {0.0f, 0.0f}, {1.0f, 1.0f},
-				                   BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-				    skin.blended = wanted;
-				    blendedOne = true;
-			    }
-			    if (skin.blended.has_value())
-			    {
-				    entry.drawn.emplace_back(skin.id, &skin.target->GetColorAttachment());
-			    }
-		    }
-	    });
+	drawDesc.entities.Each<const ecs::components::CreatureSkin>([&](entt::entity entity,
+	                                                                const ecs::components::CreatureSkin& skin) {
+		if (skin.skins.empty())
+		{
+			return;
+		}
+		seen.push_back(entity);
+		auto& entry = _creatureSkins[entity];
+		if (entry.revision == skin.revision && entry.textures.size() == skin.skins.size())
+		{
+			return;
+		}
+		// The skins as painted this frame, before the body is drawn with them
+		entry.textures.resize(skin.skins.size());
+		entry.drawn.clear();
+		for (size_t i = 0; i < skin.skins.size(); ++i)
+		{
+			const auto& painted = skin.skins[i];
+			auto& texture = entry.textures[i];
+			if (!texture)
+			{
+				texture = std::make_unique<Texture2D>("Creature Skin");
+				texture->CreateWithinFrame(creature_tattoo::k_SkinSize, creature_tattoo::k_SkinSize, 1, TextureFormat::BGRA4,
+				                           Wrapping::Repeat, Filter::Linear, nullptr);
+			}
+			texture->Update(painted.texels.data(), static_cast<uint32_t>(painted.texels.size() * sizeof(painted.texels[0])));
+			entry.drawn.emplace_back(painted.id, texture.get());
+		}
+		entry.revision = skin.revision;
+	});
 	std::erase_if(_creatureSkins, [&seen](const auto& entry) { return std::ranges::find(seen, entry.first) == seen.end(); });
 }
 
@@ -3343,9 +3397,136 @@ void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
 	DrawMesh(*handMesh, submitDesc, std::numeric_limits<uint8_t>::max());
 }
 
+void Renderer::DrawCreatureShadowPass(const DrawSceneDesc& drawDesc) const
+{
+	auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::CreatureShadowPass);
+	const auto viewId = static_cast<bgfx::ViewId>(RenderPass::CreatureShadow);
+	_creatureShadowCount = 0;
+	uint16_t width = 0;
+	uint16_t height = 0;
+	_creatureShadowFrameBuffer->GetSize(width, height);
+	_creatureShadowFrameBuffer->Bind(RenderPass::CreatureShadow);
+	bgfx::setViewRect(viewId, 0, 0, width, height);
+	bgfx::setViewClear(viewId, BGFX_CLEAR_COLOR, 0x00000000);
+	bgfx::touch(viewId);
+
+	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+	if (!Locator::config::value().drawCreatureShadows || !drawDesc.drawEntities || !drawDesc.drawIsland || inTemple ||
+	    !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	// Each silhouette's matrices are folded into its bones, so the view itself places nothing
+	const auto identity = glm::mat4(1.0f);
+	bgfx::setViewTransform(viewId, &identity, &identity);
+
+	const auto& meshManager = Locator::resources::value().GetMeshes();
+	const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
+	const auto& land = Locator::terrainSystem::value();
+	const auto camera = drawDesc.camera->GetOrigin();
+	struct Caster
+	{
+		entt::entity entity;
+		const L3DMesh* mesh;
+		glm::mat4 model;
+		glm::vec3 centre;
+		float radius;
+		float distance;
+	};
+	std::vector<Caster> casters;
+	for (const auto& [entity, instance] : renderCtx.entityDraws)
+	{
+		const auto* mesh = drawDesc.entities.TryGet<const ecs::components::Mesh>(entity);
+		if (mesh == nullptr || !drawDesc.entities.AnyOf<ecs::components::Creature>(entity) || !meshManager.Contains(mesh->id) ||
+		    instance >= renderCtx.instanceUniforms.size())
+		{
+			continue;
+		}
+		const auto* body = &*meshManager.Handle(mesh->id);
+		const auto& model = renderCtx.instanceUniforms[instance].model;
+		const auto box = body->GetBoundingBox();
+		const auto scale =
+		    std::max({glm::length(glm::vec3(model[0])), glm::length(glm::vec3(model[1])), glm::length(glm::vec3(model[2]))});
+		const auto centre = glm::vec3(model * glm::vec4(box.Center(), 1.0f));
+		casters.push_back({.entity = entity,
+		                   .mesh = body,
+		                   .model = model,
+		                   .centre = centre,
+		                   .radius = glm::length(box.Size()) * 0.5f * scale,
+		                   .distance = glm::distance(camera, centre)});
+	}
+	std::ranges::sort(casters, {}, &Caster::distance);
+
+	// Cast from the scene's light, as the bodies are lit
+	const auto light = glm::vec3(GetModelLight());
+	const auto* caps = bgfx::getCaps();
+	L3DMeshSubmitDesc submitDesc = {};
+	submitDesc.viewId = RenderPass::CreatureShadow;
+	submitDesc.program = _shaderManager->GetShader("ShadowCaster");
+	// Only the silhouette matters: no depth and both sides
+	submitDesc.state = BGFX_STATE_WRITE_R;
+	std::vector<glm::mat4> bones;
+	for (const auto& caster : casters)
+	{
+		if (_creatureShadowCount >= CreatureShadow::k_MaxShadows)
+		{
+			break;
+		}
+		const auto ground = land.GetHeightAt(glm::vec2(caster.centre.x, caster.centre.z));
+		const auto shadow =
+		    CreatureShadow::Compute(caster.centre, caster.radius, ground, light, camera, _creatureShadowCount,
+		                            CreatureShadow::k_MaxShadows, caps->originBottomLeft, caps->homogeneousDepth);
+		if (!shadow)
+		{
+			continue;
+		}
+		const auto* animation = drawDesc.entities.TryGet<const ecs::components::CreatureAnimation>(caster.entity);
+		const auto& pose = animation != nullptr && animation->boneMatrices.size() == caster.mesh->GetBoneMatrices().size()
+		                       ? animation->boneMatrices
+		                       : caster.mesh->GetBoneMatrices();
+		if (pose.empty())
+		{
+			continue;
+		}
+		const auto toCell = CreatureShadow::CellMatrix(_creatureShadowCount, CreatureShadow::k_MaxShadows) *
+		                    shadow->projection * shadow->view * caster.model;
+		bones.clear();
+		for (const auto& bone : pose)
+		{
+			bones.push_back(toCell * bone);
+		}
+		submitDesc.modelMatrices = bones.data();
+		submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
+		DrawMesh(*caster.mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+
+		_creatureShadowMatrices.at(_creatureShadowCount) = shadow->receiverMatrix;
+		_creatureShadowParameters.at(_creatureShadowCount) =
+		    glm::vec4(shadow->strength * HandShadow::k_MaxDarkness, shadow->startDepth, 0.0f, 0.0f);
+		++_creatureShadowCount;
+	}
+}
+
+void Renderer::SetCreatureShadowUniforms(const ShaderProgram& program, bool receives) const
+{
+	uint16_t width = 0;
+	uint16_t height = 0;
+	_creatureShadowFrameBuffer->GetSize(width, height);
+	const auto count = receives ? _creatureShadowCount : uint8_t {0};
+	const glm::vec4 u_creatureShadowInfo {static_cast<float>(count), static_cast<float>(CreatureShadow::k_MaxShadows),
+	                                      1.0f / static_cast<float>(std::max<uint16_t>(width, 1)),
+	                                      1.0f / static_cast<float>(std::max<uint16_t>(height, 1))};
+	program.SetUniformValue("u_creatureShadowInfo", &u_creatureShadowInfo);
+	program.SetTextureSampler("s_creatureShadows", 14, _creatureShadowFrameBuffer->GetColorAttachment());
+	if (count > 0)
+	{
+		program.SetUniformArray("u_creatureShadowMatrix", _creatureShadowMatrices.data(), count);
+		program.SetUniformArray("u_creatureShadow", _creatureShadowParameters.data(), count);
+	}
+}
+
 void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
-	DrawCreatureSkinPass(drawDesc);
+	UploadCreatureSkins(drawDesc);
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawLandLuminosityPass(drawDesc);
 	DrawLandColourPass(drawDesc);
@@ -3366,6 +3547,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 			_handShadow.reset();
 		}
 	}
+	DrawCreatureShadowPass(drawDesc);
 	// Reflection Pass
 	{
 		auto section = Locator::profiler::value().BeginScoped(Profiler::Stage::ReflectionPass);
@@ -3627,6 +3809,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				terrainShader->SetTextureSampler("s4_handShadow", 4, _handShadowFrameBuffer->GetColorAttachment());
 				terrainShader->SetUniformValue("u_handShadowMatrix", &handShadowMatrix);
 				terrainShader->SetUniformValue("u_handShadow", &u_handShadow);
+				// The creatures' shadows fall on the land, not on its reflection
+				SetCreatureShadowUniforms(*terrainShader, desc.viewId == RenderPass::Main);
 				setTerrainSnow();
 			};
 
@@ -3688,6 +3872,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.lightAdd = light.add;
 				submitDesc.landLightScale = meshId == ecs::components::Hand::k_MeshId ? 1.5f : 1.0f;
 				submitDesc.snow = !inTemple && meshId != ecs::components::Hand::k_MeshId;
+				submitDesc.creatureShadows = meshId != ecs::components::Hand::k_MeshId;
 				submitDesc.unlit = placers.unlit;
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, first, count);
@@ -3742,6 +3927,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.morphTargets = nullptr;
 				if (pose != nullptr)
 				{
+					submitDesc.landLightScale = CreatureLandLightScale(desc.viewId);
 					submitDesc.modelMatrices = pose->bones.data();
 					submitDesc.matrixCount = static_cast<uint8_t>(pose->bones.size());
 					if (pose->morphTargets != nullptr)
@@ -3791,6 +3977,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					               &*meshManager.Handle(ids.weakStrong)},
 					    .weights = glm::abs(glm::vec3(morph->drawn.evilGood, morph->drawn.thinFat, morph->drawn.weakStrong)),
 					    .skins = {},
+					    .blendSeams = Locator::config::value().blendCreatureSeams,
 					};
 					if (const auto skins = _creatureSkins.find(entity); skins != _creatureSkins.end())
 					{

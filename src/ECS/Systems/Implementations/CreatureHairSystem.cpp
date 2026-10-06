@@ -40,56 +40,25 @@ namespace
 /// The longest step the hair takes at once, in seconds
 constexpr float k_MaxStepSeconds = 1.0f;
 
-glm::mat4 ModelMatrix(const Transform& transform)
-{
-	// As the renderer places the creature
-	auto model = glm::mat4(transform.rotation);
-	model = glm::translate(model, transform.position * transform.rotation);
-	return glm::scale(model, transform.scale);
-}
-
-/// A strand's triangle on the body as drawn: each vertex blended as the body is and placed by its bone, in the world
-std::array<glm::vec3, 3> PosedTriangle(const CreatureRig::HairStrand& strand, const creature_morph::Morph& morph,
-                                       const std::vector<glm::mat4>& bones, const glm::mat4& model)
-{
-	const auto evilGood = morph.evilGood < 0.0f ? CreatureRig::Mesh::Evil : CreatureRig::Mesh::Good;
-	const auto thinFat = morph.thinFat < 0.0f ? CreatureRig::Mesh::Thin : CreatureRig::Mesh::Fat;
-	const auto weakStrong = morph.weakStrong < 0.0f ? CreatureRig::Mesh::Weak : CreatureRig::Mesh::Strong;
-	std::array<glm::vec3, 3> world {};
-	for (size_t i = 0; i < world.size(); ++i)
-	{
-		const auto vertexOf = [&strand, i](CreatureRig::Mesh mesh) {
-			return strand.vertices.at(static_cast<size_t>(mesh)).at(i);
-		};
-		const auto local = creature_morph::Blend(vertexOf(CreatureRig::Mesh::Base), vertexOf(evilGood), vertexOf(thinFat),
-		                                         vertexOf(weakStrong), morph);
-		const auto bone = strand.bones.at(i);
-		const auto& boneMatrix = bone < bones.size() ? bones[bone] : glm::mat4(1.0f);
-		world.at(i) = glm::vec3(model * boneMatrix * glm::vec4(local, 1.0f));
-	}
-	return world;
-}
-
-/// Where a strand is rooted this frame and which way it grows out, or none where its triangle has no area
+/// Where a strand is rooted this frame and which way it grows out, or none where its triangle has no area. The root
+/// is sunk along the triangle's normal as it comes, unnormalised.
 std::optional<creature_hair::Root> RootOf(const CreatureRig::HairStrand& strand, const creature_morph::Morph& morph,
                                           const std::vector<glm::mat4>& bones, const glm::mat4& model)
 {
-	const auto triangle = PosedTriangle(strand, morph, bones, model);
+	const auto triangle = creature::PosedTriangle(strand.vertices, strand.bones, morph, bones, model);
 	const auto point = creature_eyes::PointOnTriangle(triangle[0], triangle[1], triangle[2], strand.u, strand.v);
-	const auto length = glm::length(point.normal);
-	if (length <= 0.0f)
+	if (glm::length(point.normal) <= 0.0f)
 	{
 		return std::nullopt;
 	}
-	const auto inward = point.normal / length;
-	auto direction = creature_hair::GrowthDirection(inward);
+	auto direction = creature_hair::GrowthDirection(point.normal);
 	if (strand.turned)
 	{
 		// Turned in the frame of the bones that move the triangle
-		glm::mat3 sum(0.0f);
-		for (const auto bone : strand.bones)
+		std::array<glm::mat3, 3> frames {};
+		for (size_t i = 0; i < frames.size(); ++i)
 		{
-			sum += glm::mat3(model * (bone < bones.size() ? bones[bone] : glm::mat4(1.0f)));
+			frames.at(i) = glm::mat3(creature::PosedBone(strand.bones.at(i), bones, model));
 		}
 		// Each angle moves with the alignment the body is drawn with
 		const auto angle = [&strand, &morph](glm::length_t axis) {
@@ -97,9 +66,9 @@ std::optional<creature_hair::Root> RootOf(const CreatureRig::HairStrand& strand,
 			    std::array {strand.angles[0][axis], strand.angles[1][axis], strand.angles[2][axis]}, morph.evilGood);
 		};
 		const glm::vec3 turn {angle(0), angle(1), angle(2)};
-		direction = creature_hair::GrowthDirection(inward, creature_hair::Orthonormalised(sum), turn);
+		direction = creature_hair::GrowthDirection(point.normal, creature_hair::BoneFrame(frames), turn);
 	}
-	return creature_hair::Root {.position = point.position, .inwardNormal = inward, .direction = direction};
+	return creature_hair::Root {.position = point.position, .inwardNormal = point.normal, .direction = direction};
 }
 } // namespace
 
@@ -140,7 +109,7 @@ void CreatureHairSystem::Update(std::chrono::duration<float, std::milli> gameTim
 		    // The hair takes the look of the alignment the body is drawn with
 		    const auto alignment = morph.drawn.evilGood;
 		    const auto scale = creature_hair::HairScale(creature.size);
-		    const auto model = ModelMatrix(transform);
+		    const auto model = creature::PlacementMatrix(transform.position, transform.rotation, transform.scale);
 		    for (size_t g = 0; g < rig.hairGroups.size(); ++g)
 		    {
 			    const auto& source = rig.hairGroups[g];

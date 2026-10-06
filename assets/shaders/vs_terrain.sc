@@ -1,5 +1,5 @@
 $input a_position
-$output v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze
+$output v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze, v_world
 
 #include <bgfx_shader.sh>
 
@@ -50,6 +50,7 @@ void main()
 	v_lightColour = floor(light * 255.0f * u_skyAndBump.y + 0.001f) / 255.0f;
 
 	v_shadowCoord = mul(u_handShadowMatrix, vec4(transformedPosition, 1.0f));
+	v_world = transformedPosition;
 	// The game gives the land's shadow vertices no alpha below altitude 2 (1.34 units), so shadows fade out towards the
 	// water's edge
 	v_shadowCoord.w = a_position.y > 1.0f ? 1.0f : 0.0f;

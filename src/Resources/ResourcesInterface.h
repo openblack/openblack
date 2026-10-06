@@ -23,6 +23,7 @@ using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
 using CreatureMindManager = ResourceManager<CreatureMindLoader>;
 using CreatureRigManager = ResourceManager<CreatureRigLoader>;
+using CreatureSkinArtManager = ResourceManager<CreatureSkinArtLoader>;
 using SoundManager = ResourceManager<SoundLoader>;
 using GlowManager = ResourceManager<LightLoader>;
 using CameraPathManager = ResourceManager<CameraPathLoader>;
@@ -41,6 +42,8 @@ public:
 	virtual CreatureMindManager& GetCreatureMinds() = 0;
 	/// What moves each species' body, by creature::GetRigId
 	virtual CreatureRigManager& GetCreatureRigs() = 0;
+	/// What creatures' tattoos and marks are painted with, by creature_skin::k_ArtId
+	virtual CreatureSkinArtManager& GetCreatureSkinArt() = 0;
 	virtual SoundManager& GetSounds() = 0;
 	virtual GlowManager& GetGlows() = 0;
 	virtual CameraPathManager& GetCameraPaths() = 0;

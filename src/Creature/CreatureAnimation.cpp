@@ -19,8 +19,9 @@ using namespace openblack::skeletal_animation;
 
 namespace
 {
-/// Seconds breathing takes to settle most of the way into a new period
-constexpr float k_BreathEaseSeconds = 1.0f;
+/// The time constant breathing settles back to its resting period with, and the one it changes to any other with
+constexpr float k_BreathRestSeconds = 10.0f;
+constexpr float k_BreathChangeSeconds = 0.5f;
 /// Breathing is five seconds at size 1, by the square root of the size
 constexpr float k_BreathSecondsAtSizeOne = 5.0f;
 
@@ -236,13 +237,17 @@ float creature_animation::AdvanceBreath(float phase, float seconds, float period
 	return next - std::floor(next);
 }
 
-float creature_animation::EaseBreathPeriod(float current, float target, float seconds)
+float creature_animation::EaseBreathPeriod(float current, float target, float restingPeriod, float turnSeconds)
 {
 	if (current <= 0.0f)
 	{
 		return target;
 	}
-	return current + ((target - current) * std::min(seconds / k_BreathEaseSeconds, 1.0f));
+	// Exactly the resting period, as the creature stopping sets it, calms slowly; anything else is taken up quickly
+	const auto seconds = target == restingPeriod ? k_BreathRestSeconds : k_BreathChangeSeconds;
+	// A whole number of turns, truncated
+	const auto turns = turnSeconds > 0.0f ? static_cast<int32_t>(seconds / turnSeconds) : 1;
+	return current + ((target - current) / static_cast<float>(std::max(turns, 1)));
 }
 
 uint32_t creature_animation::BreathTime(float phase, uint32_t duration)

@@ -79,6 +79,7 @@
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -136,6 +137,7 @@ Game::Game(Arguments&& args) noexcept
     : _gamePath(args.gamePath)
     , _startMap(args.startLevel)
     , _startTestbed(args.startTestbed)
+    , _testbedWater(args.testbedWater)
     , _requestScreenshot(args.requestScreenshot)
 {
 	Locator::camera::emplace(glm::zero<glm::vec3>());
@@ -412,8 +414,9 @@ bool Game::GameLogicLoop() noexcept
 	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	// The crops in the fields grow
 	Locator::fieldSystem::value().ProcessTurn(Locator::time::value().GetTurn());
-	// The creatures' bodies follow their fatness
+	// The creatures' bodies follow their fatness, and their marks heal
 	Locator::creatureAnimationSystem::value().ProcessTurn();
+	Locator::creatureSkinSystem::value().ProcessTurn();
 	{
 		// The creatures want things, and decide what to do while idle
 		auto creatureMind = profiler.BeginScoped(Profiler::Stage::CreatureMindUpdate);
@@ -667,6 +670,11 @@ bool Game::Update() noexcept
 		// Their hair swings from the posed bodies
 		auto creatureHair = profiler.BeginScoped(Profiler::Stage::CreatureHairUpdate);
 		Locator::creatureHairSystem::value().Update(gameTime);
+	}
+	{
+		// Their skins are painted again where their alignment, tattoos or marks have changed
+		auto creatureSkin = profiler.BeginScoped(Profiler::Stage::CreatureSkinUpdate);
+		Locator::creatureSkinSystem::value().Update();
 	}
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
@@ -1348,6 +1356,27 @@ bool Game::Initialize() noexcept
 		}
 	}
 
+	// What creatures' tattoos and marks are painted with
+	try
+	{
+		const auto data = fileSystem.GetPath<Path::Data>();
+		Locator::resources::value().GetCreatureSkinArt().Load(
+		    creature_skin::k_ArtId, resources::CreatureSkinArtLoader::FromDiskTag {},
+		    resources::CreatureSkinArtLoader::Paths {
+		        .symbols = fileSystem.GetPath<Path::Textures>() / "PlayersSymbols.raw",
+		        .defaultSymbols = fileSystem.GetPath<Path::Textures>() / "I_PLAYER_SYMBOLS_.raw",
+		        .freshDamage = data / "damage_new256.raw",
+		        .freshDamageAlpha = data / "damage_new256A.raw",
+		        .oldDamage = data / "damage_old256.raw",
+		        .oldDamageAlpha = data / "damage_old256A.raw",
+		        .palette = data / "tattoocols.raw",
+		    });
+	}
+	catch (std::runtime_error& err)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	}
+
 	// The noise that makes the snow's edges on the land ragged
 	try
 	{
@@ -1368,7 +1397,7 @@ bool Game::Run() noexcept
 
 	if (_startTestbed)
 	{
-		LoadTestbed();
+		LoadTestbed(_testbedWater);
 	}
 	else if (!LoadMap(_startMap))
 	{
@@ -1540,10 +1569,10 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	return true;
 }
 
-void Game::LoadTestbed() noexcept
+void Game::LoadTestbed(bool water) noexcept
 {
 	PrepareNewLand();
-	InitializeLevel(flat_land::Build());
+	InitializeLevel(flat_land::Build(water));
 	SetUpLandscape();
 
 	// Looking down over the middle of the map, from the south

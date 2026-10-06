@@ -27,3 +27,4 @@ vec4 v_shadowCoord       : TEXCOORD2 = vec4(0.0, 0.0, -1.0, 1.0);
 vec4 v_haze              : TEXCOORD3 = vec4(0.0, 0.0, 0.0, 1.0);
 vec4 v_snow              : TEXCOORD5 = vec4(0.0, 0.0, 0.0, 0.0); // xy: where the snow texture is read, z: the snow's level
 vec3 v_snowLight         : COLOR1;
+vec3 v_world             : TEXCOORD6 = vec3(0.0, 0.0, 0.0); // where the land is, for the creatures' shadows

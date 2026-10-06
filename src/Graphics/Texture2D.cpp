@@ -38,6 +38,14 @@ Texture2D::~Texture2D()
 void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
                        const void* memory) noexcept
 {
+	CreateWithinFrame(width, height, layers, format, wrapping, filter, memory);
+	bgfx::frame();
+	bgfx::frame();
+}
+
+void Texture2D::CreateWithinFrame(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping,
+                                  Filter filter, const void* memory) noexcept
+{
 	uint64_t flags = BGFX_TEXTURE_NONE;
 	switch (wrapping)
 	{
@@ -66,7 +74,6 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Texture
 	_handle = fromBgfx(bgfx::createTexture2D(width, height, false, layers, toBgfx(format), flags,
 	                                         reinterpret_cast<const bgfx::Memory*>(memory)));
 	bgfx::setName(toBgfx(_handle), _name.c_str());
-	bgfx::frame();
 
 	bgfx::TextureInfo textureInfo;
 	bgfx::calcTextureSize(textureInfo, width, height, 1, false, false, layers, toBgfx(format));
@@ -75,8 +82,6 @@ void Texture2D::Create(uint16_t width, uint16_t height, uint16_t layers, Texture
 	_format = fromBgfx(textureInfo.format);
 	_stride = textureInfo.width * textureInfo.bitsPerPixel / 8;
 	_storageSize = textureInfo.storageSize;
-
-	bgfx::frame();
 }
 
 void Texture2D::Update(const void* data, uint32_t size) const

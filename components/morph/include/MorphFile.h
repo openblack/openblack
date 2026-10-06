@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <array>
 #include <filesystem>
 #include <optional>
@@ -198,6 +200,25 @@ struct CreatureEyes
 	std::array<std::array<float, 3>, 3> lidAngles;
 };
 
+/// A place on a creature's body a tattoo can be painted, from the creature block of a .cbn file
+struct TattooSite
+{
+	/// Whether the species can have a tattoo there
+	bool enabled;
+	/// The tattoo's centre in texels of the skin, and which of the base mesh's skins, in the order the mesh lists them
+	uint8_t u;
+	uint8_t v;
+	uint8_t skin;
+	/// How wide the tattoo is, a fraction of the skin's width
+	float size;
+	/// Whether the design is flipped left to right, after it is turned
+	bool mirror;
+	/// How many quarter turns the design is turned by, 0 to 3
+	uint32_t rotation;
+};
+/// A creature has eight places for tattoos
+using TattooSites = std::array<TattooSite, 8>;
+
 /**
   This class is used to read the Creature block of CBN and the Hand block of HBN files.
  */
@@ -220,14 +241,18 @@ protected:
 	std::vector<std::vector<ExtraData>> _extraData; ///< related to \ref _base_animation
 	/// The creature's eyes, in creature files from version 14 on
 	std::optional<CreatureEyes> _creatureEyes;
+	/// Where the creature's tattoos go, in creature files from version 15 on
+	std::optional<TattooSites> _tattooSites;
 
 	/// Read file from the input source
 	MorphResult ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept;
 	MorphResult ReadSpecFile(const std::filesystem::path& specFilePath) noexcept;
 	std::vector<Animation> ReadAnimations(std::istream& stream, const std::vector<uint32_t>& offsets) noexcept;
 	HairGroup ReadHairGroup(std::istream& stream) noexcept;
-	/// The creature block that follows the morph data in creature files, as far as the eyes
-	void ReadCreatureEyes(std::istream& stream) noexcept;
+	/// The creature block that follows the morph data in creature files, as far as the tattoo sites
+	void ReadCreatureBlock(std::istream& stream) noexcept;
+	/// The rest of the block after the eyes, as far as the tattoo sites
+	void ReadTattooSites(std::istream& stream, uint32_t version) noexcept;
 
 public:
 	MorphFile() noexcept;
@@ -268,6 +293,7 @@ public:
 	[[nodiscard]] const std::vector<HairGroup>& GetHairGroups() const noexcept { return _hairGroups; }
 	[[nodiscard]] const std::vector<std::vector<ExtraData>>& GetExtraData() const noexcept { return _extraData; }
 	[[nodiscard]] const std::optional<CreatureEyes>& GetCreatureEyes() const noexcept { return _creatureEyes; }
+	[[nodiscard]] const std::optional<TattooSites>& GetTattooSites() const noexcept { return _tattooSites; }
 };
 
 } // namespace openblack::morph

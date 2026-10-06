@@ -225,14 +225,60 @@ TEST(CreatureHair, TurnedStrandsTurnInTheirBonesFrame)
 	EXPECT_NEAR(glm::dot(inFrame, glm::vec3(0.0f, 1.0f, 0.0f)), 0.0f, k_Tolerance);
 }
 
-TEST(CreatureHair, OrthonormalisedFrameHasUnitRightAngledAxes)
+TEST(CreatureHair, BoneFrameAddsUnitAxesAndKeepsTheSkew)
 {
-	const glm::mat3 sum {{2.0f, 0.1f, 0.0f}, {0.2f, 3.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
-	const auto frame = Orthonormalised(sum);
-	EXPECT_NEAR(glm::length(frame[0]), 1.0f, k_Tolerance);
-	EXPECT_NEAR(glm::length(frame[1]), 1.0f, k_Tolerance);
-	EXPECT_NEAR(glm::dot(frame[0], frame[1]), 0.0f, k_Tolerance);
-	EXPECT_NEAR(glm::dot(frame[2], glm::cross(frame[0], frame[1])), 1.0f, k_Tolerance);
+	// Two bones, one scaled by 3 and one turned a quarter about z: each axis is made unit length before they are added,
+	// so the scale counts for nothing, and the sum's axes are made unit length again but not set square
+	const glm::mat3 scaled(3.0f);
+	const glm::mat3 turned {{0.0f, 1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+	const std::array bones {scaled, turned};
+	const auto frame = BoneFrame(bones);
+	const auto half = std::sqrt(0.5f);
+	ExpectNear(frame[0], {half, half, 0.0f});
+	ExpectNear(frame[1], {-half, half, 0.0f});
+	ExpectNear(frame[2], {0.0f, 0.0f, 1.0f});
+
+	// A skewed pair: the frame's x and y axes come out unit length but not at right angles
+	const glm::mat3 sheared {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+	const std::array skewed {glm::mat3(1.0f), sheared};
+	const auto skewedFrame = BoneFrame(skewed);
+	EXPECT_NEAR(glm::length(skewedFrame[0]), 1.0f, k_Tolerance);
+	EXPECT_NEAR(glm::length(skewedFrame[1]), 1.0f, k_Tolerance);
+	EXPECT_GT(glm::dot(skewedFrame[0], skewedFrame[1]), 0.1f);
+}
+
+TEST(CreatureHair, SkewedFramesTurnByTheirInverse)
+{
+	// In a skewed frame the direction is taken in by the frame's inverse, turned and taken back out: with no turn it
+	// comes back as it was, which the transpose would not give
+	const glm::mat3 skewed {{1.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f)), {0.0f, 0.0f, 1.0f}};
+	const glm::vec3 inward = glm::normalize(glm::vec3(0.3f, -1.0f, 0.2f));
+	ExpectNear(GrowthDirection(inward, skewed, glm::vec3(0.0f)), -inward);
+	// A half turn about the frame's z axis: up is (-1, 1.414) in the frame's axes, turned to (1, -1.414), which is down
+	ExpectNear(GrowthDirection({0.0f, -1.0f, 0.0f}, skewed, {0.0f, 0.0f, k_Pi}), {0.0f, -1.0f, 0.0f});
+}
+
+TEST(CreatureHair, UnnormalisedNormalSinksTheRootDeeperOnBiggerTriangles)
+{
+	const Physics physics {.segmentLength = 1.0f, .stiffness = 0.0f, .damping = 1.0f, .rootDepth = 0.5f, .halfWidth = 0.5f};
+	// A normal twice as long, from a triangle twice the area, sinks the root twice as deep
+	const Root root {
+	    .position = {0.0f, 0.0f, 0.0f}, .inwardNormal = {0.0f, 2.0f, 0.0f}, .direction = GrowthDirection({0.0f, 2.0f, 0.0f})};
+	const auto strand = Straight(root, physics, 2);
+	ExpectNear(strand.positions[0], {0.0f, 1.0f, 0.0f});
+	ExpectNear(root.direction, {0.0f, -1.0f, 0.0f});
+}
+
+TEST(CreatureHair, StrandsTakeTheLandsLightAndColour)
+{
+	// The colour scaled by the light, in whole numbers, then the land's colour and the haze added
+	EXPECT_EQ(StrandColour({200, 100, 50}, {255, 255, 255}, {0, 0, 0}), glm::ivec3(200, 100, 50));
+	EXPECT_EQ(StrandColour({200, 100, 50}, {128, 64, 255}, {0, 0, 0}), glm::ivec3(100, 25, 50));
+	EXPECT_EQ(StrandColour({200, 100, 50}, {128, 64, 255}, {10, 20, 30}), glm::ivec3(110, 45, 80));
+	// Night: a dark blue light leaves little of a ginger strand
+	EXPECT_EQ(StrandColour({155, 31, 0}, {40, 50, 90}, {0, 0, 0}), glm::ivec3(24, 6, 0));
+	// At most white
+	EXPECT_EQ(StrandColour({250, 250, 250}, {255, 255, 255}, {40, 0, 255}), glm::ivec3(255, 250, 255));
 }
 
 TEST(CreatureHair, RibbonFacesTheEye)

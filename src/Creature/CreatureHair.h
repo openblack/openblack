@@ -82,8 +82,9 @@ struct Physics
 };
 [[nodiscard]] Physics PhysicsFor(const Look& look, float scale, uint32_t segmentCount);
 
-/// Where a strand is rooted this frame: the point on its triangle, the triangle's unit normal into the body and the
-/// unit direction the strand grows out in
+/// Where a strand is rooted this frame: the point on its triangle, the triangle's normal into the body and the unit
+/// direction the strand grows out in. The normal is the cross product of the triangle's edges, not made unit length:
+/// the root is sunk along it by the strand's root depth times its length, so deeper on bigger triangles.
 struct Root
 {
 	glm::vec3 position;
@@ -93,12 +94,19 @@ struct Root
 
 /// The way a strand grows out of the surface: straight out, against the inward normal, or, for a turned strand, turned
 /// from that by x, y and z angles, combined y, x then z, in the frame of the bones that move its triangle. frame's
-/// columns are that frame's unit axes.
+/// columns are that frame's axes, which needn't be at right angles: the direction is taken into the frame by its
+/// inverse, turned there, and taken back out.
 [[nodiscard]] glm::vec3 GrowthDirection(const glm::vec3& inwardNormal);
 [[nodiscard]] glm::vec3 GrowthDirection(const glm::vec3& inwardNormal, const glm::mat3& frame, const glm::vec3& angles);
 
-/// A frame of unit axes from the sum of some bones' rotations, each column made at right angles to those before
-[[nodiscard]] glm::mat3 Orthonormalised(const glm::mat3& sum);
+/// The frame a turned strand is turned in, from the rotations of the bones that move its triangle's vertices: each
+/// bone's axes made unit length one by one, added up, and made unit length again. The axes are not set at right angles
+/// to each other, so the frame can be skewed.
+[[nodiscard]] glm::mat3 BoneFrame(std::span<const glm::mat3> bones);
+
+/// A strand's colour drawn in a light, each channel 0 to 255: its own colour scaled by the light's, then the colour
+/// added to the light (the land's colour and the haze) on top, at most white. Strands aren't shaded by the sun.
+[[nodiscard]] glm::ivec3 StrandColour(const glm::ivec3& colour, const glm::ivec3& light, const glm::ivec3& added);
 
 /// A strand's points, its root first, and their speeds in world units a second
 struct Strand

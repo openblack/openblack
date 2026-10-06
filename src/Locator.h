@@ -107,6 +107,7 @@ class WaterRingSystemInterface;
 class CreatureAnimationSystemInterface;
 class CreatureMindSystemInterface;
 class CreatureHairSystemInterface;
+class CreatureSkinSystemInterface;
 class CinematicDirectorSystemInterface;
 class SoundTagSystemInterface;
 class RainSystemInterface;
@@ -178,6 +179,7 @@ struct Locator
 	using creatureAnimationSystem = entt::locator<ecs::systems::CreatureAnimationSystemInterface>;
 	using creatureMindSystem = entt::locator<ecs::systems::CreatureMindSystemInterface>;
 	using creatureHairSystem = entt::locator<ecs::systems::CreatureHairSystemInterface>;
+	using creatureSkinSystem = entt::locator<ecs::systems::CreatureSkinSystemInterface>;
 	using cinematicDirectorSystem = entt::locator<ecs::systems::CinematicDirectorSystemInterface>;
 	using soundTagSystem = entt::locator<ecs::systems::SoundTagSystemInterface>;
 	using rainSystem = entt::locator<ecs::systems::RainSystemInterface>;

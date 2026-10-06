@@ -34,6 +34,7 @@ namespace openblack::graphics
 class L3DMesh;
 class Mesh;
 class ShaderProgram;
+class Texture2D;
 
 class L3DSubMesh
 {
@@ -99,12 +100,20 @@ public:
 	/// How far along a ray, in the mesh's space, it first meets the submesh, which the temple's rooms keep the triangles
 	/// of to find
 	[[nodiscard]] std::optional<float> Pick(glm::vec3 origin, glm::vec3 direction) const;
+	/// Whether some of the vertices are blended towards others where the body's parts meet (see vertex_blend). Each
+	/// vertex then names its partner in its bone indices' second and its weight, in 32767ths, in their third.
+	[[nodiscard]] bool HasBlends() const { return _hasBlends; }
+	/// For a boned submesh, every vertex's position and bone index, a texel each in a row, for the vertex shader to place
+	/// a blended vertex's partner by. The texels of a creature's variant mesh follow the same order.
+	[[nodiscard]] const Texture2D* GetBlendSource() const { return _blendSource.get(); }
 
 private:
 	/// The submesh's vertices as they are drawn, in bgfx memory
 	[[nodiscard]] const bgfx::Memory* PackVertices(const l3d::L3DFile& l3d, uint32_t meshIndex) const;
 	/// The box about the submesh's vertices, as they are placed by its bones
 	void BoundVertices(const l3d::L3DFile& l3d, uint32_t meshIndex);
+	/// The blend source texture of count packed vertices, where the renderer can read one in the vertex shader
+	void CreateBlendSource(const bgfx::Memory* vertices, uint32_t count);
 
 	graphics::L3DMesh& _l3dMesh;
 	/// Which of its file's submeshes it is
@@ -123,5 +132,8 @@ private:
 	std::vector<glm::vec3> _pickTriangles;
 
 	AxisAlignedBoundingBox _boundingBox;
+	bool _hasBlends {false};
+	std::unique_ptr<Texture2D> _blendSource;
+	uint32_t _blendSourceWidth {0};
 };
 } // namespace openblack::graphics

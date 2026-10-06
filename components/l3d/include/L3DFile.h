@@ -303,9 +303,13 @@ struct L3DVertexGroup
 };
 static_assert(sizeof(L3DVertexGroup) == 4);
 
+/// A vertex of a primitive moved part of the way to another of the same primitive, after each has been placed by its
+/// own bone: the seams where the body's parts meet, which would otherwise come apart as the joints bend
 struct L3DBlend
 {
+	/// The vertex that moves, then the vertex it moves towards, counted in the primitive
 	std::array<uint16_t, 2> indices;
+	/// How far it moves, at most a half
 	float weight;
 };
 static_assert(sizeof(L3DBlend) == 8);
@@ -388,6 +392,8 @@ protected:
 	std::vector<std::span<L3DVertex>> _vertexSpans;
 	std::vector<std::span<uint16_t>> _indexSpans;
 	std::vector<std::span<L3DVertexGroup>> _vertexGroupSpans;
+	/// Each submesh's blends, its primitives' in turn
+	std::vector<std::span<L3DBlend>> _blendSpans;
 	std::vector<std::span<L3DBone>> _boneSpans;
 	std::optional<L3DFootprint> _footprint;
 	std::vector<uint8_t> _uv2Data;
@@ -470,6 +476,12 @@ public:
 	[[nodiscard]] const std::span<L3DVertexGroup>& GetVertexGroupSpan(uint32_t submeshIndex) const noexcept
 	{
 		return _vertexGroupSpans[submeshIndex];
+	}
+	/// A submesh's blends, each primitive's in turn, as many as each primitive's header counts
+	[[nodiscard]] std::span<const L3DBlend> GetBlendSpan(uint32_t submeshIndex) const noexcept
+	{
+		return submeshIndex < _blendSpans.size() ? std::span<const L3DBlend>(_blendSpans[submeshIndex])
+		                                         : std::span<const L3DBlend> {};
 	}
 
 	void AddSubmesh(const L3DSubmeshHeader& header) noexcept;

@@ -291,7 +291,7 @@ std::vector<Animation> MorphFile::ReadAnimations(std::istream& stream, const std
 	return animations;
 }
 
-void MorphFile::ReadCreatureEyes(std::istream& stream) noexcept
+void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 {
 	// The creature block's version is the header's first field. Each field below came in at a version, and the eyes
 	// at version 14.
@@ -358,6 +358,58 @@ void MorphFile::ReadCreatureEyes(std::istream& stream) noexcept
 	if (stream.good())
 	{
 		_creatureEyes = eyes;
+		ReadTattooSites(stream, version);
+	}
+}
+
+void MorphFile::ReadTattooSites(std::istream& stream, uint32_t version) noexcept
+{
+	// Each field below came in at a version, and the tattoo sites at version 15
+	constexpr uint32_t k_TattooVersion = 15;
+	if (version < k_TattooVersion)
+	{
+		return;
+	}
+	const auto skip = [&stream](std::streamoff bytes) { stream.seekg(bytes, std::ios_base::cur); };
+	constexpr std::streamoff k_Field = sizeof(uint32_t);
+	// The sound bank's name, then seven sizes, then twelve pairs or triples of numbers
+	if (version > 18)
+	{
+		skip(0x20);
+	}
+	skip((version < 11 ? 1 : 7) * k_Field);
+	skip(12 * (version > 12 ? 3 : 2) * k_Field);
+
+	TattooSites sites {};
+	for (auto& site : sites)
+	{
+		site = {};
+		uint32_t enabled = 0;
+		stream.read(reinterpret_cast<char*>(&enabled), sizeof(enabled));
+		if (enabled == 0)
+		{
+			continue;
+		}
+		// The last byte of the packed place is left over
+		std::array<uint8_t, 4> packed {};
+		stream.read(reinterpret_cast<char*>(packed.data()), packed.size());
+		stream.read(reinterpret_cast<char*>(&site.size), sizeof(site.size));
+		site.enabled = true;
+		site.u = packed[0];
+		site.v = packed[1];
+		site.skin = static_cast<uint8_t>(packed[2] >> 6u);
+		if (version > 16)
+		{
+			uint32_t mirror = 0;
+			stream.read(reinterpret_cast<char*>(&mirror), sizeof(mirror));
+			stream.read(reinterpret_cast<char*>(&site.rotation), sizeof(site.rotation));
+			site.mirror = mirror != 0;
+			site.rotation &= 3u;
+		}
+	}
+	if (stream.good())
+	{
+		_tattooSites = sites;
 	}
 }
 
@@ -491,7 +543,7 @@ MorphResult MorphFile::ReadFile(std::istream& stream, const std::filesystem::pat
 	// Creature files go on with the creature's own block
 	if (_header.unknown0x0 != 0u)
 	{
-		ReadCreatureEyes(stream);
+		ReadCreatureBlock(stream);
 	}
 
 	_isLoaded = true;

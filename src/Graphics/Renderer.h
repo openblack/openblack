@@ -28,6 +28,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "3D/SkyDome.h"
+#include "Graphics/CreatureShadow.h"
 #include "Graphics/HandShadow.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/RendererInterface.h"
@@ -133,6 +134,10 @@ private:
 	void DrawObjectShadowPass(const DrawSceneDesc& drawDesc) const;
 	/// Draws the hand's silhouette for its shadow, or clears the shadow when there is none
 	void DrawHandShadowPass(const DrawSceneDesc& drawDesc) const;
+	/// Draws the silhouettes of the creatures nearest the camera from the light, for their shadows
+	void DrawCreatureShadowPass(const DrawSceneDesc& drawDesc) const;
+	/// Hands the creatures' shadows to a program that takes them, or none where it isn't to receive them
+	void SetCreatureShadowUniforms(const ShaderProgram& program, bool receives) const;
 	/// Draws a submesh, with a texture in place of its skins when given one
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState,
 	                 const TextureHandle* texture = nullptr, glm::vec3 glow = glm::vec3(0.0f)) const;
@@ -160,9 +165,9 @@ private:
 	void DrawCreatureEyes(const DrawSceneDesc& desc, entt::entity entity, const L3DMeshSubmitDesc& bodyDesc) const;
 	/// A creature's strands of hair, as ribbons facing the camera blended over the scene
 	void DrawCreatureHair(const DrawSceneDesc& desc, entt::entity entity) const;
-	/// Blends the creatures' skins towards their evil or good skins where that has changed, one skin a frame; drops
+	/// Takes up the creatures' skins where they have been painted again, before their bodies are drawn with them; drops
 	/// those of creatures no longer on the land
-	void DrawCreatureSkinPass(const DrawSceneDesc& drawDesc) const;
+	void UploadCreatureSkins(const DrawSceneDesc& drawDesc) const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -180,6 +185,12 @@ private:
 	mutable std::optional<uint32_t> _templeMapVisit;
 	/// The hand's shadow of the frame being drawn
 	mutable std::optional<HandShadow> _handShadow;
+	/// The creatures' silhouettes, a cell each, and the shadows of the frame being drawn
+	std::unique_ptr<FrameBuffer> _creatureShadowFrameBuffer;
+	mutable std::array<glm::mat4, CreatureShadow::k_MaxShadows> _creatureShadowMatrices {};
+	/// x: how much a fully covered texel darkens, y: where along the light the shadow starts
+	mutable std::array<glm::vec4, CreatureShadow::k_MaxShadows> _creatureShadowParameters {};
+	mutable uint8_t _creatureShadowCount {0};
 	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on
@@ -209,19 +220,13 @@ private:
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};
-	/// A creature's skins: each of its base mesh's, blended towards the matching skin of its evil or good mesh
+	/// A creature's skins as painted (see components::CreatureSkin), one texture each
 	struct CreatureSkins
 	{
-		struct Skin
-		{
-			uint32_t id;
-			std::unique_ptr<FrameBuffer> target;
-			/// The variant skin and weight the target was last blended with, before which it is not drawn with
-			std::optional<std::pair<const Texture2D*, uint8_t>> blended;
-		};
-		entt::id_type baseMesh;
-		std::vector<Skin> skins;
-		/// The blended skins the body is drawn with in place of its base mesh's, by skin id
+		/// The painting the textures hold
+		uint32_t revision {0};
+		std::vector<std::unique_ptr<Texture2D>> textures;
+		/// The painted skins the body is drawn with in place of its base mesh's, by skin id
 		std::vector<std::pair<uint32_t, const Texture2D*>> drawn;
 	};
 	mutable std::unordered_map<entt::entity, CreatureSkins> _creatureSkins;

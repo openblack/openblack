@@ -84,6 +84,22 @@ void ShaderProgram::SetTextureSampler(const char* samplerName, uint8_t bindPoint
 	}
 }
 
+void ShaderProgram::SetUniformArray(const char* uniformName, const void* values, uint16_t count) const
+{
+	if (count == 0)
+	{
+		return;
+	}
+	if (const auto uniform = _uniforms.find(uniformName); uniform != _uniforms.cend())
+	{
+		bgfx::setUniform(toBgfx(uniform->second), values, count);
+	}
+	else
+	{
+		WarnMissing(uniformName);
+	}
+}
+
 void ShaderProgram::SetUniformValue(const char* uniformName, const void* value) const
 {
 	auto uniform = _uniforms.find(uniformName);

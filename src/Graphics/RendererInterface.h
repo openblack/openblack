@@ -126,6 +126,8 @@ public:
 		bool unlit {false};
 		/// The snow lying where the mesh stands shows on it
 		bool snow {false};
+		/// The creatures' shadows fall on the mesh, where its program takes them: not on the creatures themselves
+		bool creatureShadows {true};
 		glm::vec3 lightAdd {0.0f};
 		/// A creature's body, blended from its base mesh, which is drawn, towards other meshes of the same shape: the
 		/// mesh each of the evil to good, thin to fat and weak to strong axes pulls towards, and how far
@@ -136,6 +138,8 @@ public:
 			/// The skins the body is drawn with in place of its base mesh's, by skin id: blended towards how evil or
 			/// good it is
 			std::span<const std::pair<uint32_t, const Texture2D*>> skins;
+			/// Draws the vertices at the seams blended towards their partners (see vertex_blend)
+			bool blendSeams {true};
 		};
 		const MorphTargets* morphTargets {nullptr};
 	};

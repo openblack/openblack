@@ -1,7 +1,8 @@
-$input v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze
+$input v_texcoord0, v_texcoord1, v_lightColour, v_smallBumpFade, v_shadowCoord, v_haze, v_world
 
 #include <bgfx_shader.sh>
 
+#include "creature_shadow.sh"
 #include "snow.sh"
 
 #define M_PI 3.1415926535897932384626433832795
@@ -104,6 +105,11 @@ void main()
 	{
 		float coverage = texture2D(s4_handShadow, shadowCoord.xy).r;
 		col.rgb = col.rgb * (1.0f - coverage * v_shadowCoord.w * u_handShadow.x);
+	}
+	// The creatures' shadows, which fade out towards the water's edge as the hand's does
+	if (u_creatureShadowInfo.x > 0.0f && v_shadowCoord.w > 0.0f)
+	{
+		col.rgb = col.rgb * CreatureShadowLight(v_world);
 	}
 
 	// The small bump detail is a second layer over the lit land, its colour unlit, blended by its alpha whatever the

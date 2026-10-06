@@ -264,6 +264,7 @@ void CreatureSpawner::DrawSelected() noexcept
 	}
 	if (_selected.has_value())
 	{
+		DrawAppearance(*_selected);
 		DrawMind(*_selected);
 	}
 }

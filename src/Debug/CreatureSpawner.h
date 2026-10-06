@@ -43,6 +43,8 @@ private:
 	void DrawSelected() noexcept;
 	/// The picked creature's mind: what it is doing, wants and looks at, and buttons to make it do things
 	void DrawMind(entt::entity entity) noexcept;
+	/// The picked creature's tattoos and marks, to put on and take off, and how its shadow and seams are drawn
+	void DrawAppearance(entt::entity entity) noexcept;
 	void DrawPlacing() noexcept;
 	void DrawCreatures() noexcept;
 	void Spawn(glm::vec2 screenCoord) noexcept;
@@ -68,6 +70,20 @@ private:
 	/// The action and gesture picked to play on the selected creature
 	size_t _action {0};
 	size_t _gesture {0};
+	/// The tattoo being edited: its slot, design, site and colour from the palette at a brightness
+	int _tattooSlot {0};
+	int _tattooDesign {0};
+	int _tattooSite {0};
+	int _paletteColumn {0};
+	int _paletteRow {64};
+	float _tattooBrightness {0.5f};
+	/// Where the next wound, burn or blood goes, unless at random, and the wound's kind and column of the damage atlas
+	bool _randomMarkPlace {true};
+	int _markU {128};
+	int _markV {128};
+	int _markSkin {0};
+	int _woundType {3};
+	int _woundColumn {3};
 };
 
 } // namespace openblack::debug::gui

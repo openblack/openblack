@@ -31,6 +31,7 @@ public:
 		CreatureMindUpdate,
 		CreatureAnimationUpdate,
 		CreatureHairUpdate,
+		CreatureSkinUpdate,
 		VegetationUpdate,
 		SdlInput,
 		UpdateUniforms,
@@ -41,6 +42,7 @@ public:
 		SceneDraw,
 		FootprintPass,
 		ObjectShadowPass,
+		CreatureShadowPass,
 		ReflectionPass,
 		ReflectionDrawSky,
 		ReflectionDrawWater,
@@ -68,6 +70,7 @@ public:
 	    "Creature Mind",        //
 	    "Creature Animation",   //
 	    "Creature Hair",        //
+	    "Creature Skin",        //
 	    "Vegetation Update",    //
 	    "SDL Input",            //
 	    "Update Uniforms",      //
@@ -78,6 +81,7 @@ public:
 	    "Encode Draw Scene",    //
 	    "Footprint Pass",       //
 	    "Object Shadow Pass",   //
+	    "Creature Shadow Pass", //
 	    "Reflection Pass",      //
 	    "Draw Sky",             //
 	    "Draw Water",           //

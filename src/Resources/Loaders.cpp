@@ -21,6 +21,7 @@
 #include <L3DFile.h>
 #include <MorphFile.h>
 #include <PackFile.h>
+#include <RawImage.h>
 #include <bgfx/bgfx.h>
 #include <spdlog/spdlog.h>
 
@@ -481,6 +482,25 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 		}
 	}
 
+	rig->meshNames = meshNames;
+	if (const auto& sites = file.GetTattooSites(); sites.has_value())
+	{
+		auto& tattooSites = rig->tattooSites.emplace();
+		for (size_t i = 0; i < tattooSites.size(); ++i)
+		{
+			const auto& site = sites->at(i);
+			tattooSites.at(i) = {
+			    .enabled = site.enabled,
+			    .u = site.u,
+			    .v = site.v,
+			    .skin = site.skin,
+			    .size = site.size,
+			    .mirror = site.mirror,
+			    .rotation = static_cast<uint8_t>(site.rotation & 3u),
+			};
+		}
+	}
+
 	// The eyes and the hair sit on triangles of the meshes
 	const auto& eyes = file.GetCreatureEyes();
 	if (eyes.has_value() || !file.GetHairGroups().empty())
@@ -507,6 +527,43 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 		rig->hairGroups = LoadHair(file.GetHairGroups(), meshes);
 	}
 	return rig;
+}
+
+CreatureSkinArtLoader::result_type CreatureSkinArtLoader::operator()(FromDiskTag, const Paths& paths) const
+{
+	auto& fileSystem = Locator::filesystem::value();
+	constexpr uint32_t k_Size = creature_marks::k_AtlasSize;
+	const auto rgb = [&fileSystem](const std::filesystem::path& path, uint32_t width, uint32_t height) {
+		auto image = rawimage::DecodeRgb(fileSystem.ReadAll(path), width, height);
+		if (!image)
+		{
+			throw std::runtime_error("Unexpected size of " + path.string());
+		}
+		return std::move(image->pixels);
+	};
+	const auto grey = [&fileSystem](const std::filesystem::path& path, uint32_t width, uint32_t height) {
+		auto image = rawimage::DecodeGrey(fileSystem.ReadAll(path), width, height);
+		if (!image)
+		{
+			throw std::runtime_error("Unexpected size of " + path.string());
+		}
+		return std::move(image->pixels);
+	};
+	auto art = std::make_shared<creature_skin::Art>();
+	const auto symbols =
+	    fileSystem.Exists(paths.symbols) ? rgb(paths.symbols, k_Size, k_Size) : std::vector<std::array<uint8_t, 3>> {};
+	const auto defaults = rgb(paths.defaultSymbols, k_Size, k_Size);
+	for (uint32_t design = 0; design < art->designs.size(); ++design)
+	{
+		auto written = creature_tattoo::DesignFromAtlas(symbols, k_Size, design);
+		const bool blank = std::ranges::all_of(written.front().levels, [](uint8_t level) { return level == 0; });
+		art->designs.at(design) = blank ? creature_tattoo::DesignFromAtlas(defaults, k_Size, design) : std::move(written);
+	}
+	art->damage.fresh = {.colours = rgb(paths.freshDamage, k_Size, k_Size),
+	                     .alpha = grey(paths.freshDamageAlpha, k_Size, k_Size)};
+	art->damage.old = {.colours = rgb(paths.oldDamage, k_Size, k_Size), .alpha = grey(paths.oldDamageAlpha, k_Size, k_Size)};
+	art->palette = rgb(paths.palette, creature_tattoo::k_PaletteColumns, creature_tattoo::k_PaletteRows);
+	return art;
 }
 
 SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromBufferTag,

@@ -29,6 +29,7 @@ public:
 	LevelManager& GetLevels() override { return _levels; }
 	CreatureMindManager& GetCreatureMinds() override { return _creatureMinds; }
 	CreatureRigManager& GetCreatureRigs() override { return _creatureRigs; }
+	CreatureSkinArtManager& GetCreatureSkinArt() override { return _creatureSkinArt; }
 	SoundManager& GetSounds() override { return _sounds; }
 	GlowManager& GetGlows() override { return _glows; }
 	CameraPathManager& GetCameraPaths() override { return _cameraPaths; }
@@ -43,6 +44,7 @@ private:
 	LevelManager _levels;
 	CreatureMindManager _creatureMinds;
 	CreatureRigManager _creatureRigs;
+	CreatureSkinArtManager _creatureSkinArt;
 	SoundManager _sounds;
 	GlowManager _glows;
 	CameraPathManager _cameraPaths;

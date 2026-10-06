@@ -536,6 +536,15 @@ bool Gui::ShowMenu() noexcept
 			{
 				ImGui::SetTooltip("A flat plane over the whole map, for trying out how creatures move and are animated");
 			}
+			if (ImGui::MenuItem("Creature Testbed with Water"))
+			{
+				game.LoadTestbed(true);
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("The testbed just above the sea, with a pool of it in front of the camera, to see what the "
+				                  "water reflects");
+			}
 			ImGui::EndMenu();
 		}
 

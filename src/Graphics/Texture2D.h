@@ -165,6 +165,9 @@ public:
 
 	void Create(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping, Filter filter,
 	            const void* memory) noexcept;
+	/// As Create, but without moving bgfx on a frame, for textures made while a frame is being drawn
+	void CreateWithinFrame(uint16_t width, uint16_t height, uint16_t layers, TextureFormat format, Wrapping wrapping,
+	                       Filter filter, const void* memory) noexcept;
 
 	/// Replaces the first layer's texels of a texture created without any, with size bytes from data
 	void Update(const void* data, uint32_t size) const;

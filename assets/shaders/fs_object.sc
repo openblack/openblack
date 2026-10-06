@@ -2,6 +2,7 @@ $input v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 #include <bgfx_shader.sh>
 
+#include "creature_shadow.sh"
 #include "snow_object.sh"
 
 SAMPLER2D(s_diffuse, 0);
@@ -36,6 +37,11 @@ void main()
 	if (snowLevel > 0.0f && SnowShows(snowLevel, texture2D(s_snowAlpha, v_snow.xy).r))
 	{
 		diffuseTex.rgb = texture2D(s_snow, v_snow.xy).rgb * (tinted ? vec3_splat(1.0f) : v_snowLight) * u_tint.rgb;
+	}
+	// The creatures' shadows fall on it, under the haze
+	if (u_creatureShadowInfo.x > 0.0f)
+	{
+		diffuseTex.rgb = diffuseTex.rgb * CreatureShadowLight(v_position.xyz);
 	}
 #ifdef USE_ENVIRONMENT
 	// The second texture stage adds the environment map, which saturates

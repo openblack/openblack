@@ -13,15 +13,20 @@
 
 #include <array>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
+#include <glm/mat3x3.hpp>
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include "3D/SkeletalAnimation.h"
 #include "Creature/CreatureEyes.h"
 #include "Creature/CreatureHair.h"
+#include "Creature/CreatureMorph.h"
+#include "Creature/CreatureTattoo.h"
 
 namespace openblack::creature
 {
@@ -46,6 +51,8 @@ struct CreatureRig
 
 	/// The base mesh's name, which says the species
 	std::string baseMeshName;
+	/// Each mesh's file name in Data/CreatureMesh, without its extension, empty for the meshes the species lacks
+	std::array<std::string, k_MeshCount> meshNames;
 	/// Whether the species has each mesh other than the base
 	std::array<bool, k_MeshCount> hasMesh {};
 	/// Each animated mesh's animations, in the order of the creature spec file, absent where it has none of its own
@@ -101,7 +108,25 @@ struct CreatureRig
 	/// The species' hair, none for most
 	std::vector<HairGroup> hairGroups;
 
+	/// Where the species' tattoos go, for species that have places for them
+	std::optional<creature_tattoo::Sites> tattooSites;
+
 	/// An animated mesh's animation, falling back on the base's when the mesh has none of its own
 	[[nodiscard]] const skeletal_animation::Animation* GetAnimation(Mesh mesh, size_t index) const;
 };
+
+/// The matrix the renderer places a creature's mesh with: scaled, then turned and moved
+[[nodiscard]] glm::mat4 PlacementMatrix(const glm::vec3& position, const glm::mat3& rotation, const glm::vec3& scale);
+
+/// A triangle of the body as it is drawn this frame, in the world: each vertex blended between the meshes as the body
+/// is, then placed by its bone's posed matrix and the creature's placement. vertices are the triangle's in each mesh,
+/// in the space of the bone that moves each.
+[[nodiscard]] std::array<glm::vec3, 3>
+PosedTriangle(const std::array<std::array<glm::vec3, 3>, CreatureRig::k_MeshCount>& vertices,
+              const std::array<uint32_t, 3>& bones, const creature_morph::Morph& morph, std::span<const glm::mat4> boneMatrices,
+              const glm::mat4& placement);
+
+/// The world matrix of a bone as posed this frame, the creature's placement included; the placement alone for a bone
+/// the pose lacks
+[[nodiscard]] glm::mat4 PosedBone(uint32_t bone, std::span<const glm::mat4> boneMatrices, const glm::mat4& placement);
 } // namespace openblack::creature

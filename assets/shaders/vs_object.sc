@@ -36,6 +36,13 @@ uniform vec4 u_uvOffset;
 // How far a creature's body is pulled towards its evil or good, thin or fat and weak or strong mesh, whose vertices
 // come in the second to fourth streams
 uniform vec4 u_morphWeights;
+// x: 1 to blend the vertices at the seams towards their partners, y: how many vertices each blend source has
+uniform vec4 u_vertexBlend;
+// Every vertex's position and bone, of the base mesh and of the mesh each axis pulls towards, a texel each
+SAMPLER2D(s_blendBase, 2);
+SAMPLER2D(s_blendEvilGood, 3);
+SAMPLER2D(s_blendThinFat, 4);
+SAMPLER2D(s_blendWeakStrong, 9);
 #endif // USE_MORPH
 
 #ifdef USE_HEIGHT_MAP
@@ -60,8 +67,16 @@ void main()
 
 #if BGFX_SHADER_LANGUAGE_HLSL > 300 || BGFX_SHADER_LANGUAGE_PSSL || BGFX_SHADER_LANGUAGE_SPIRV
 	uint modelIndex = uint(max(0, asint(a_indices.x)));
+#ifdef USE_MORPH
+	float blendPartner = float(asint(a_indices.y));
+	float blendWeight = float(asint(a_indices.z)) / 32767.0f;
+#endif // USE_MORPH
 #else
 	uint modelIndex = uint(max(0, a_indices.x));
+#ifdef USE_MORPH
+	float blendPartner = a_indices.y;
+	float blendWeight = a_indices.z / 32767.0f;
+#endif // USE_MORPH
 #endif
 
 #ifdef USE_INSTANCING
@@ -87,6 +102,26 @@ void main()
 #endif // USE_MORPH
 
 	v_position = TO_WORLD(vec4(position, 1.0f));
+#ifdef USE_MORPH
+	// At the seams, the vertex moves part of the way to where its partner, blended between the meshes as the body is and
+	// placed by its own bone, is drawn. Only the position moves: the light stays the vertex's own.
+	if (u_vertexBlend.x > 0.5f && blendPartner >= 0.0f && blendWeight > 0.0f)
+	{
+		vec2 partnerUv = vec2((blendPartner + 0.5f) / u_vertexBlend.y, 0.5f);
+		vec4 partnerBase = texture2DLod(s_blendBase, partnerUv, 0.0f);
+		vec3 partnerPosition = partnerBase.xyz +
+		                       u_morphWeights.x * (texture2DLod(s_blendEvilGood, partnerUv, 0.0f).xyz - partnerBase.xyz) +
+		                       u_morphWeights.y * (texture2DLod(s_blendThinFat, partnerUv, 0.0f).xyz - partnerBase.xyz) +
+		                       u_morphWeights.z * (texture2DLod(s_blendWeakStrong, partnerUv, 0.0f).xyz - partnerBase.xyz);
+		uint partnerBone = uint(max(0.0f, partnerBase.w + 0.5f));
+#ifdef USE_INSTANCING
+		vec4 partnerWorld = instMul(model, mul(u_model[partnerBone], vec4(partnerPosition, 1.0f)));
+#else
+		vec4 partnerWorld = mul(u_model[partnerBone], vec4(partnerPosition, 1.0f));
+#endif // USE_INSTANCING
+		v_position = mix(v_position, partnerWorld, blendWeight);
+	}
+#endif // USE_MORPH
 
 	// The game's light, from the origin of the mesh's bone, meets the vertex's normal in the bone's own space
 	vec3 origin = TO_WORLD(vec4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;

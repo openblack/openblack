@@ -154,9 +154,33 @@ TEST(CreatureAnimation, BreathingTakesFiveSecondsAtSizeOne)
 
 TEST(CreatureAnimation, TheBreathingPeriodEasesToItsTarget)
 {
-	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(0.0f, 5.0f, 0.016f), 5.0f);
-	const auto eased = creature_animation::EaseBreathPeriod(5.0f, 10.0f, 0.1f);
-	EXPECT_GT(eased, 5.0f);
-	EXPECT_LT(eased, 10.0f);
-	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(5.0f, 10.0f, 5.0f), 10.0f);
+	constexpr float k_Turn = 0.1f;
+	constexpr float k_Resting = 5.0f;
+	// A creature not yet breathing starts at its target
+	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(0.0f, k_Resting, k_Resting, k_Turn), k_Resting);
+	// Faster breathing is taken up over half a second: five turns, a fifth of the gap a turn
+	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(k_Resting, 2.2f, k_Resting, k_Turn),
+	                k_Resting - ((k_Resting - 2.2f) / 5.0f));
+	// Back to resting over ten seconds: a hundred turns, a hundredth of the gap a turn
+	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(2.0f, k_Resting, k_Resting, k_Turn),
+	                2.0f + ((k_Resting - 2.0f) / 100.0f));
+	// Turns longer than the time constant close the whole gap
+	EXPECT_FLOAT_EQ(creature_animation::EaseBreathPeriod(k_Resting, 3.0f, k_Resting, 1.0f), 3.0f);
+}
+
+TEST(CreatureAnimation, BreathingCalmsSlowlyAndQuickensFast)
+{
+	constexpr float k_Turn = 0.1f;
+	constexpr float k_Resting = 5.0f;
+	float quickening = k_Resting;
+	float calming = 1.4f;
+	for (int turn = 0; turn < 10; ++turn)
+	{
+		quickening = creature_animation::EaseBreathPeriod(quickening, 1.4f, k_Resting, k_Turn);
+		calming = creature_animation::EaseBreathPeriod(calming, k_Resting, k_Resting, k_Turn);
+	}
+	// A second on, quickening has almost arrived; calming has barely started
+	EXPECT_LT(quickening - 1.4f, 0.5f);
+	EXPECT_LT(calming - 1.4f, 0.5f);
+	EXPECT_GT(calming, 1.4f);
 }

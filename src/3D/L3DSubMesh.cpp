@@ -10,6 +10,7 @@
 #include "L3DSubMesh.h"
 
 #include <algorithm>
+#include <limits>
 
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -20,8 +21,10 @@
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/RenderModes.h"
 #include "Graphics/ShaderProgram.h"
+#include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "L3DMesh.h"
+#include "VertexBlend.h"
 
 using namespace openblack::graphics;
 
@@ -33,7 +36,8 @@ struct EnhancedL3DVertex
 	glm::vec3 pos;
 	glm::vec2 uv;
 	glm::vec3 norm;
-	glm::i16vec2 index;
+	/// The bone, the vertex it is blended towards or -1, and how far in 32767ths
+	glm::i16vec4 index;
 };
 
 /// A vertex of a mesh with lightmaps, with its lightmap coordinates
@@ -158,6 +162,10 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 
 	// Get vertices
 	const bgfx::Memory* verticesMem = PackVertices(l3d, meshIndex);
+	if (_flags.hasBones)
+	{
+		CreateBlendSource(verticesMem, nVertices);
+	}
 
 	if (nIndices == 0)
 	{
@@ -232,7 +240,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
 	decl.emplace_back(VertexAttrib::Attribute::Normal, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
-	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(2), VertexAttrib::Type::Int16);
+	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(4), VertexAttrib::Type::Int16);
 	if (_hasLightmapCoordinates)
 	{
 		decl.emplace_back(VertexAttrib::Attribute::TexCoord3, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
@@ -325,8 +333,7 @@ const bgfx::Memory* L3DSubMesh::PackVertices(const l3d::L3DFile& l3d, uint32_t m
 		vertex.uv = glm::make_vec2(&verticesSpan[i].texCoord.x);
 		// TODO(bwrsandman): build normals from mesh
 		vertex.norm = glm::make_vec3(&verticesSpan[i].normal.x);
-		vertex.index.x = -1;
-		vertex.index.y = -1;
+		vertex.index = glm::i16vec4(-1, -1, 0, 0);
 		if (_hasLightmapCoordinates)
 		{
 			const auto& lightmapUv = lightmapCoordinates[vertexOffset + i];
@@ -341,17 +348,74 @@ const bgfx::Memory* L3DSubMesh::PackVertices(const l3d::L3DFile& l3d, uint32_t m
 		for (uint32_t i = 0; i < vertexGroupSpan.vertexCount; ++i)
 		{
 			vertexAt(vertexIndex)->index[0] = static_cast<int16_t>(vertexGroupSpan.boneIndex);
-			vertexAt(vertexIndex)->index[1] = -1;
 			vertexIndex++;
+		}
+	}
+
+	// The vertices blended towards others at the seams
+	std::vector<uint32_t> primitiveVertices;
+	std::vector<uint32_t> primitiveBlends;
+	for (const auto& primitive : l3d.GetPrimitiveSpan(meshIndex))
+	{
+		primitiveVertices.push_back(primitive.numVertices);
+		const bool read = primitive.vertexBlendsOffset != std::numeric_limits<uint32_t>::max();
+		primitiveBlends.push_back(read ? primitive.numVertexBlends : 0);
+	}
+	std::vector<vertex_blend::Blend> blends;
+	for (const auto& blend : l3d.GetBlendSpan(meshIndex))
+	{
+		blends.push_back({.vertex = blend.indices[0], .towards = blend.indices[1], .weight = blend.weight});
+	}
+	const auto partners = vertex_blend::Partners(primitiveVertices, primitiveBlends, blends);
+	for (uint32_t i = 0; i < nVertices && i < partners.size(); ++i)
+	{
+		const auto& partner = partners[i];
+		if (partner.Blended() && partner.vertex <= std::numeric_limits<int16_t>::max())
+		{
+			vertexAt(i)->index[1] = static_cast<int16_t>(partner.vertex);
+			vertexAt(i)->index[2] = vertex_blend::QuantiseWeight(partner.weight);
 		}
 	}
 	return verticesMem;
 }
 
+void L3DSubMesh::CreateBlendSource(const bgfx::Memory* vertices, uint32_t count)
+{
+	_hasBlends = false;
+	const auto stride = _hasLightmapCoordinates ? sizeof(LightmappedL3DVertex) : sizeof(EnhancedL3DVertex);
+	const auto* caps = bgfx::getCaps();
+	if (count == 0 || caps == nullptr || count > caps->limits.maxTextureSize ||
+	    (caps->formats[bgfx::TextureFormat::RGBA32F] & BGFX_CAPS_FORMAT_TEXTURE_VERTEX) == 0)
+	{
+		_blendSource.reset();
+		return;
+	}
+	std::vector<glm::vec4> texels(count);
+	for (uint32_t i = 0; i < count; ++i)
+	{
+		const auto& vertex = *reinterpret_cast<const EnhancedL3DVertex*>(vertices->data + (stride * i));
+		texels[i] = glm::vec4(vertex.pos, static_cast<float>(std::max<int16_t>(vertex.index.x, 0)));
+		_hasBlends = _hasBlends || vertex.index.y >= 0;
+	}
+	if (!_blendSource || _blendSourceWidth != count)
+	{
+		_blendSource = std::make_unique<Texture2D>(_l3dMesh.GetDebugName() + " blend source");
+		_blendSource->CreateWithinFrame(static_cast<uint16_t>(count), 1, 1, TextureFormat::RGBA32F, Wrapping::ClampEdge,
+		                                Filter::Nearest, nullptr);
+		_blendSourceWidth = count;
+	}
+	_blendSource->Update(texels.data(), static_cast<uint32_t>(texels.size() * sizeof(texels[0])));
+}
+
 void L3DSubMesh::UpdateVertices(const l3d::L3DFile& l3d) noexcept
 {
 	BoundVertices(l3d, _meshIndex);
-	_mesh->GetVertexBuffer().Update(PackVertices(l3d, _meshIndex));
+	const auto* vertices = PackVertices(l3d, _meshIndex);
+	if (_flags.hasBones && _blendSource)
+	{
+		CreateBlendSource(vertices, _blendSourceWidth);
+	}
+	_mesh->GetVertexBuffer().Update(vertices);
 }
 
 Mesh& L3DSubMesh::GetMesh() const

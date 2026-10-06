@@ -358,6 +358,7 @@ L3DFile& L3DFile::operator=(const L3DFile& other)
 	_vertexSpans = Rebind(other._vertexSpans, other._vertices, _vertices);
 	_indexSpans = Rebind(other._indexSpans, other._indices, _indices);
 	_vertexGroupSpans = Rebind(other._vertexGroupSpans, other._vertexGroups, _vertexGroups);
+	_blendSpans = Rebind(other._blendSpans, other._blends, _blends);
 	_boneSpans = Rebind(other._boneSpans, other._bones, _bones);
 	_footprint = other._footprint;
 	_uv2Data = other._uv2Data;
@@ -912,28 +913,38 @@ L3DResult L3DFile::ReadFile(std::istream& stream) noexcept
 	_vertexSpans.reserve(_submeshHeaders.size());
 	_indexSpans.reserve(_submeshHeaders.size());
 	_vertexGroupSpans.reserve(_submeshHeaders.size());
+	_blendSpans.reserve(_submeshHeaders.size());
 	{
 		uint32_t vertexStart = 0;
 		uint32_t indexStart = 0;
 		uint32_t vertexGroupStart = 0;
+		uint32_t blendStart = 0;
 		for (uint32_t i = 0; i < _submeshHeaders.size(); ++i)
 		{
 			uint32_t vertexLength = 0;
 			uint32_t indexLength = 0;
 			uint32_t vertexGroupLength = 0;
+			uint32_t blendLength = 0;
 			for (auto& primitive : GetPrimitiveSpan(i))
 			{
 				vertexLength += primitive.numVertices;
 				indexLength += primitive.numTriangles * 3;
 				vertexGroupLength += primitive.numGroups;
+				// The primitives whose blends weren't read have none
+				if (primitive.vertexBlendsOffset != std::numeric_limits<uint32_t>::max())
+				{
+					blendLength += primitive.numVertexBlends;
+				}
 			}
 
 			add_span(_vertexSpans, _vertices, vertexStart, vertexLength);
 			add_span(_indexSpans, _indices, indexStart, indexLength);
 			add_span(_vertexGroupSpans, _vertexGroups, vertexGroupStart, vertexGroupLength);
+			add_span(_blendSpans, _blends, blendStart, std::min<size_t>(blendLength, _blends.size() - blendStart));
 			vertexStart += vertexLength;
 			indexStart += indexLength;
 			vertexGroupStart += vertexGroupLength;
+			blendStart += std::min<uint32_t>(blendLength, static_cast<uint32_t>(_blends.size()) - blendStart);
 		}
 	}
 

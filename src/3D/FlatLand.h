@@ -41,5 +41,16 @@ constexpr Colour k_BlockEdge {7, 8, 6};
 /// The colour of texel (x, z) of the material, which every block shows whole
 [[nodiscard]] Colour MaterialColour(int x, int z);
 
-[[nodiscard]] LandData Build();
+/// Low enough over the sea for what stands on it to show in a pool of it
+constexpr uint8_t k_LowAltitude = 3;
+/// The pool's cells, from the first to before the last, in cells of the map: in front of the testbed's camera, just
+/// short of the middle of the map
+constexpr int k_PoolMinX = 240;
+constexpr int k_PoolMaxX = 272;
+constexpr int k_PoolMinZ = 244;
+constexpr int k_PoolMaxZ = 254;
+
+/// The plane; with a pool, lower, just above the sea, with a pool of the sea let into it, for checking what the water
+/// reflects
+[[nodiscard]] LandData Build(bool pool = false);
 } // namespace openblack::flat_land

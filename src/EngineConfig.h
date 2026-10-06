@@ -52,6 +52,10 @@ struct EngineConfig
 	/// The hand mesh is a left hand, which Black & White mirrors into a right hand unless the player profile asks for
 	/// a left hand
 	bool rightHandedHand {true};
+	/// Creatures' vertices at the seams between their bones are blended towards their partners, as the game draws them
+	bool blendCreatureSeams {true};
+	/// Creatures cast their shadows onto the land and what stands on it
+	bool drawCreatureShadows {true};
 
 	bool vsync {false};
 	bool running {false};

@@ -53,8 +53,10 @@ struct BlendTerm
 [[nodiscard]] float BreathPeriod(float size);
 /// How far through a breath it is, 0 to 1, after some seconds more
 [[nodiscard]] float AdvanceBreath(float phase, float seconds, float period);
-/// The period breathing is at eases towards the one it should be at
-[[nodiscard]] float EaseBreathPeriod(float current, float target, float seconds);
+/// The period breathing is at a game turn of turnSeconds on: a step towards the one it should be at. It settles back to
+/// its resting period over ten seconds' worth of turns and changes to any other over half a second's, each turn closing
+/// that share of the gap. A creature not yet breathing starts at its target.
+[[nodiscard]] float EaseBreathPeriod(float current, float target, float restingPeriod, float turnSeconds);
 /// The time in a looping animation of the stand pose that a point in the breath shows
 [[nodiscard]] uint32_t BreathTime(float phase, uint32_t duration);
 } // namespace openblack::creature_animation

@@ -39,6 +39,8 @@ public:
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const Texture2D& texture) const;
 	void SetTextureSampler(const char* samplerName, uint8_t bindPoint, const graphics::TextureHandle& texture) const;
 	void SetUniformValue(const char* uniformName, const void* value) const;
+	/// The first count elements of an array uniform
+	void SetUniformArray(const char* uniformName, const void* values, uint16_t count) const;
 	[[nodiscard]] bool HasUniform(const char* uniformName) const { return _uniforms.contains(uniformName); }
 
 	[[nodiscard]] ProgramHandle GetRawHandle() const { return _program; }
