@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,7 @@ public:
 	[[nodiscard]] glm::vec3 GetNormalAt(glm::vec2) const override;
 	[[nodiscard]] const LandBlock* GetBlock(const glm::u8vec2& coordinates) const;
 	[[nodiscard]] const lnd::LNDCell& GetCell(const glm::u16vec2& coordinates) const override;
+	[[nodiscard]] const lnd::LNDCell* FindCell(const glm::u16vec2& coordinates) const override;
 
 	// Debug
 	void DumpTextures() const override;
@@ -44,6 +46,7 @@ private:
 	[[nodiscard]] std::vector<uint8_t> CreateHeightMap() const;
 	std::vector<LandBlock> _landBlocks;
 	std::vector<lnd::LNDCountry> _countries;
+	std::vector<uint16_t> _materialTypes;
 
 	std::array<uint8_t, 1024> _blockIndexLookup {0};
 
@@ -52,6 +55,7 @@ public:
 	[[nodiscard]] std::vector<LandBlock>& GetBlocks() override { return _landBlocks; }
 	[[nodiscard]] const std::vector<LandBlock>& GetBlocks() const override { return _landBlocks; }
 	[[nodiscard]] const std::vector<lnd::LNDCountry>& GetCountries() const override { return _countries; }
+	[[nodiscard]] std::span<const uint16_t> GetMaterialTypes() const override { return _materialTypes; }
 
 	[[nodiscard]] const graphics::Texture2D& GetAlbedoArray() const override { return *_materialArray; }
 	[[nodiscard]] const graphics::Texture2D& GetBump() const override { return *_textureBumpMap; }

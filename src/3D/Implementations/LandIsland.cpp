@@ -12,6 +12,10 @@
 
 #include "LandIsland.h"
 
+#include <cmath>
+
+#include <algorithm>
+#include <iterator>
 #include <stdexcept>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -23,6 +27,8 @@
 #include <stb_image_write.h>
 
 #include "3D/LandBlock.h"
+#include "3D/LandNormal.h"
+#include "3D/MapCoords.h"
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
@@ -36,6 +42,87 @@ using namespace openblack::graphics;
 const uint8_t LandIslandInterface::k_CellCount = 16;
 const float LandIslandInterface::k_HeightUnit = 0.67f;
 const float LandIslandInterface::k_CellSize = 10.0f;
+
+namespace
+{
+constexpr int32_t k_MapSize = 0x200;
+// The 1/256 of the game's integer altitude interpolation
+constexpr double k_AltitudeFraction = 1.0 / 256.0;
+// Land at or below this altitude is at sea level. The game draws it at height 0, and GetAltitude treats it the same
+// in cells no higher than k_SeaLevelClampAltitude. The game only turns the latter off while it creates a fish farm.
+constexpr uint8_t k_SeaLevelAltitude = 3;
+constexpr uint8_t k_SeaLevelClampAltitude = 4;
+} // namespace
+
+int32_t LandIslandInterface::ToMapCoords(float unit)
+{
+	return map_coords::ToFixed(unit);
+}
+
+float LandIslandInterface::GetDrawnAltitude(uint8_t altitude)
+{
+	return altitude <= k_SeaLevelAltitude ? 0.0f : static_cast<float>(altitude) * k_HeightUnit;
+}
+
+double LandIslandInterface::GetAltitude(int32_t mapX, int32_t mapZ) const
+{
+	const auto cellX = static_cast<int16_t>(static_cast<uint32_t>(mapX) >> 16);
+	const auto cellZ = static_cast<int16_t>(static_cast<uint32_t>(mapZ) >> 16);
+	if (cellX < 0 || cellX >= k_MapSize || cellZ < 0 || cellZ >= k_MapSize)
+	{
+		return 0.0;
+	}
+	const auto* cell = FindCell({static_cast<uint16_t>(cellX), static_cast<uint16_t>(cellZ)});
+	if (cell == nullptr)
+	{
+		return 0.0;
+	}
+
+	// Neighbours within the block's 17x17 cell array: +1 is z + 1, +17 is x + 1
+	const auto clamp = cell[0].altitude <= k_SeaLevelClampAltitude;
+	const auto altitude = [clamp](const lnd::LNDCell& c) -> int32_t {
+		return clamp && c.altitude <= k_SeaLevelAltitude ? 0 : c.altitude;
+	};
+	const auto a00 = altitude(cell[0]);
+	const auto a01 = altitude(cell[1]);
+	const auto a10 = altitude(cell[17]);
+	const auto a11 = altitude(cell[18]);
+
+	const auto fractionX = static_cast<uint32_t>(mapX) & 0xFFFF;
+	const auto fractionZ = static_cast<uint32_t>(mapZ) & 0xFFFF;
+
+	// Complete the plane of the triangle the point is in. Cells split from x + 1 to z + 1 rather than corner to corner.
+	int32_t v00 = a00;
+	int32_t v01 = a01;
+	int32_t v10 = a10;
+	int32_t v11 = a11;
+	if (cell[0].properties.split != 0)
+	{
+		if (fractionZ > 0xFFFF - fractionX)
+		{
+			v00 = a10 - a11 + a01;
+		}
+		else
+		{
+			v11 = a10 - a00 + a01;
+		}
+	}
+	else if (fractionX > fractionZ)
+	{
+		v01 = a00 - a10 + a11;
+	}
+	else
+	{
+		v10 = a00 - a01 + a11;
+	}
+
+	const auto z8 = static_cast<int32_t>(fractionZ >> 8);
+	const auto x8 = static_cast<int32_t>(fractionX >> 8);
+	const auto edgeX0 = ((v01 - v00) * z8) + (v00 << 8);
+	const auto edgeX1 = ((v11 - v10) * z8) + (v10 << 8);
+	const auto height = (((edgeX1 - edgeX0) * x8) >> 8) + edgeX0;
+	return static_cast<double>(height) * static_cast<double>(k_HeightUnit) * k_AltitudeFraction;
+}
 
 LandIsland::LandIsland(const std::filesystem::path& path)
 {
@@ -112,6 +199,9 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} countries", lnd.GetCountries().size());
 	_countries = lnd.GetCountries();
+	_materialTypes.clear();
+	std::ranges::transform(lnd.GetMaterials(), std::back_inserter(_materialTypes),
+	                       [](const lnd::LNDMaterial& material) { return material.type; });
 
 	auto materialCount = static_cast<uint16_t>(lnd.GetMaterials().size());
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "[LandIsland] loading {} textures", materialCount);
@@ -153,34 +243,29 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 float LandIsland::GetHeightAt(glm::vec2 vec) const
 {
-	return GetCell(vec * 0.1f).altitude * LandIsland::k_HeightUnit;
+	return static_cast<float>(GetAltitude(ToMapCoords(vec.x), ToMapCoords(vec.y)));
 }
 
 glm::vec3 LandIsland::GetNormalAt(glm::vec2 vec) const
 {
-	const auto delta = 0.1f;
-	const auto posLeft = vec - glm::vec2(delta, 0.0f);
-	const auto posRight = vec + glm::vec2(delta, 0.0f);
-	const auto posBack = vec - glm::vec2(0.0f, delta);
-	const auto posForward = vec + glm::vec2(0.0f, delta);
-
-	const auto heightLeft = GetHeightAt(posLeft);
-	const auto heightRight = GetHeightAt(posRight);
-	const auto heightBack = GetHeightAt(posBack);
-	const auto heightForward = GetHeightAt(posForward);
-
-	const auto slopeLeftRight = glm::vec3(2.0f * delta, heightRight - heightLeft, 0.0f);
-	const auto slopeBackForward = glm::vec3(0.0f, heightForward - heightBack, 2.0f * delta);
-
-	auto normal = glm::cross(slopeBackForward, slopeLeftRight);
-	normal = glm::normalize(normal);
-
-	if (normal.y < 0)
+	// The flat normal of the cell triangle under the point, straight up off the map
+	const auto mapX = ToMapCoords(vec.x);
+	const auto mapZ = ToMapCoords(vec.y);
+	const auto cellX = static_cast<int16_t>(static_cast<uint32_t>(mapX) >> 16);
+	const auto cellZ = static_cast<int16_t>(static_cast<uint32_t>(mapZ) >> 16);
+	if (cellX < 0 || cellX >= k_MapSize || cellZ < 0 || cellZ >= k_MapSize)
 	{
-		normal = -normal;
+		return {0.0f, 1.0f, 0.0f};
 	}
-
-	return normal;
+	const auto* cell = FindCell({static_cast<uint16_t>(cellX), static_cast<uint16_t>(cellZ)});
+	if (cell == nullptr)
+	{
+		return {0.0f, 1.0f, 0.0f};
+	}
+	// Neighbours within the block's 17x17 cell array: +1 is z + 1, +17 is x + 1
+	return land_normal::OfCell(static_cast<uint32_t>(mapX) & 0xFFFF, static_cast<uint32_t>(mapZ) & 0xFFFF,
+	                           cell[0].properties.split != 0, cell[0].altitude, cell[1].altitude, cell[17].altitude,
+	                           cell[18].altitude);
 }
 
 uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
@@ -191,12 +276,12 @@ uint8_t LandIsland::GetNoise(glm::u8vec2 pos)
 const LandBlock* LandIsland::GetBlock(const glm::u8vec2& coordinates) const
 {
 	// our blocks can only be between [0-31, 0-31]
-	if (coordinates.x > 32 || coordinates.y > 32)
+	if (coordinates.x > 31 || coordinates.y > 31)
 	{
 		return nullptr;
 	}
 
-	const uint8_t blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
+	const auto blockIndex = _blockIndexLookup.at(coordinates.x * 32 + coordinates.y);
 	if (blockIndex == 0)
 	{
 		return nullptr;
@@ -234,6 +319,28 @@ const lnd::LNDCell& LandIsland::GetCell(const glm::u16vec2& coordinates) const
 	}
 	assert(_landBlocks.size() >= blockIndex);
 	return _landBlocks[blockIndex - 1].GetCells()[cellIndex];
+}
+
+const lnd::LNDCell* LandIsland::FindCell(const glm::u16vec2& coordinates) const
+{
+	if (coordinates.x > 511 || coordinates.y > 511)
+	{
+		return nullptr;
+	}
+
+	const auto mapCoordinates = coordinates >> static_cast<uint16_t>(0x4);
+	const auto cellCoordinates = static_cast<glm::u8vec2>(coordinates) & static_cast<uint8_t>(0xF);
+	const auto lookupIndex = mapCoordinates.x << 5u | mapCoordinates.y;
+	const auto cellIndex = cellCoordinates.x * 0x11u + cellCoordinates.y;
+
+	const auto blockIndex = _blockIndexLookup.at(lookupIndex);
+
+	if (blockIndex == 0)
+	{
+		return nullptr;
+	}
+	assert(_landBlocks.size() >= blockIndex);
+	return &_landBlocks[blockIndex - 1].GetCells()[cellIndex];
 }
 
 void LandIsland::DumpTextures() const
