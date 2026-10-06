@@ -63,6 +63,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/GraphicsHandleBgfx.h"
+#include "Gui/CreatureCaveScreen.h"
 #include "ImGuiUtils.h"
 #include "KeyBindingsWindow.h"
 #include "LandIsland.h"
@@ -339,6 +340,8 @@ bool Gui::Loop() noexcept
 	ShowVillagerNames();
 	ShowDispenserNames();
 	ShowCameraPositionOverlay();
+	// The game's Creature Cave screen, drawn with the debug windows' ImGui
+	openblack::gui::DrawCreatureCaveScreen();
 
 	ImGui::Render();
 

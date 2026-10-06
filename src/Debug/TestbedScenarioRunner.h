@@ -128,6 +128,8 @@ private:
 	std::string GiveLeashCommand(entt::entity creature, const Command& command);
 	/// The commands of fights, and of being knocked out and brought round
 	std::string GiveFightCommand(entt::entity creature, const Command& command);
+	/// Creature Mode's and the Creature Cave's commands, as the player's keys and clicks give them
+	std::string GiveCreatureModeCommand(entt::entity creature, const Command& command);
 	/// Sets a desire or the stage of growing up, or rewards what the creature last did by the kind of thing it was to
 	std::string TeachMind(entt::entity entity, const Command& command);
 	/// Loads a mind file named as a scenario names it into a creature

@@ -34,6 +34,7 @@
 #include "Camera/Camera.h"
 #include "Camera/TempleCameraModel.h"
 #include "Common/EventManager.h"
+#include "Creature/CreatureCave.h"
 #include "ECS/Archetypes/GlowArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/Mesh.h"
@@ -42,6 +43,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/CreatureCaveSystemInterface.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystemTemple.h"
@@ -206,6 +208,12 @@ TempleScrolls::Facts GatherScrollFacts()
 	// The game's count of the people in the world
 	facts.population = static_cast<int32_t>(Locator::entitiesRegistry::value().Size<ecs::components::Villager>());
 	facts.timePlayed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - k_GameStarted);
+	// The creature's scrolls tell of the player's own creature, and are blank without one
+	if (Locator::creatureCaveSystem::has_value())
+	{
+		const auto snapshot = Locator::creatureCaveSystem::value().Snapshot();
+		facts.creature = snapshot.has_value() ? std::optional(creature_cave::FactsOf(*snapshot)) : std::nullopt;
+	}
 	return facts;
 }
 } // namespace

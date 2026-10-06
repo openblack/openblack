@@ -43,6 +43,7 @@ public:
 		CreatureLeashUpdate,
 		CreatureCombatUpdate,
 		CreatureModeUpdate,
+		CreatureCaveUpdate,
 		VegetationUpdate,
 		ParticlesUpdate,
 		MagicUpdate,
@@ -102,6 +103,7 @@ public:
 	    "Creature Leash",       //
 	    "Creature Combat",      //
 	    "Creature Mode",        //
+	    "Creature Cave",        //
 	    "Vegetation Update",    //
 	    "Particles",            //
 	    "Magic",                //

@@ -80,6 +80,8 @@ enum class Facet : uint8_t
 	/// Crowds of hundreds to thousands of creatures or villagers, all fully simulated, for measuring how the game's
 	/// costs grow with their number
 	Benchmark,
+	/// Creature Mode, the camera locked onto a creature, and the Creature Cave
+	CreatureMode,
 
 	_Count
 };
@@ -362,6 +364,19 @@ struct Command
 		SeeSkill,
 		SeeMiracle,
 		PlayerDid,
+		/// C pressed: Creature Mode locks onto the player's creature, or lets go of it; a double click on the creature;
+		/// the cursor keys (value: left, right, up or down) held with Shift, or with Ctrl, for some seconds (amount);
+		/// Ctrl and Shift pressed together for a clear view; the camera given back
+		CreatureKey,
+		DoubleClick,
+		CameraKeys,
+		ClearCameraView,
+		LeaveCreatureMode,
+		/// F5 pressed: the Creature Cave opens, on a page (value); a symbol (value) tattooed on a place (body part), or
+		/// the place's symbols taken off
+		OpenCreatureCave,
+		ApplyTattoo,
+		RemoveTattoo,
 	};
 	Kind kind {Kind::Stop};
 	/// Which creature, by its place in the scenario's creatures
@@ -393,8 +408,10 @@ struct Command
 	float radius {0.0f};
 	/// How long a blow's click is held, charging it
 	float chargeMs {0.0f};
-	/// A desire's fraction of its maximum
+	/// A desire's fraction of its maximum, or the seconds the camera's keys are held
 	float amount {1.0f};
+	/// The camera's keys are held with Ctrl rather than Shift
+	bool ctrl {false};
 };
 [[nodiscard]] std::string_view Name(Command::Kind kind);
 
@@ -424,6 +441,8 @@ struct Scenario
 
 /// The miracles' scenarios, added to every scenario by the registry
 void AddMiracleScenarios(std::vector<Scenario>& all);
+/// Creature Mode's and the Creature Cave's scenarios
+void AddCreatureModeScenarios(std::vector<Scenario>& all);
 
 /// Every scenario, in the order the window lists them
 [[nodiscard]] std::span<const Scenario> All();

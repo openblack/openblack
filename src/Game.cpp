@@ -84,6 +84,7 @@
 #include "ECS/Systems/CloudSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureAudioSystemInterface.h"
+#include "ECS/Systems/CreatureCaveSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
 #include "ECS/Systems/CreatureHandSystemInterface.h"
@@ -211,6 +212,10 @@ Game::~Game() noexcept
 	if (Locator::temple::has_value())
 	{
 		Locator::temple::value().SetInterface(nullptr);
+	}
+	if (Locator::creatureCaveSystem::has_value())
+	{
+		Locator::creatureCaveSystem::value().SetInterface(nullptr);
 	}
 	_interface.reset();
 	ShutDownServices();
@@ -852,6 +857,11 @@ bool Game::Update() noexcept
 		auto creatureMode = profiler.BeginScoped(Profiler::Stage::CreatureModeUpdate);
 		Locator::creatureModeSystem::value().Update(deltaTime, {.handGripping = _handGripping});
 	}
+	if (Locator::creatureCaveSystem::has_value())
+	{
+		auto creatureCave = profiler.BeginScoped(Profiler::Stage::CreatureCaveUpdate);
+		Locator::creatureCaveSystem::value().Update();
+	}
 
 	camera.Update(deltaTime);
 	// Outside a camera with a lens of its own, the near plane follows the camera's height over the land
@@ -1217,6 +1227,12 @@ bool Game::Initialize() noexcept
 				Locator::temple::value().Escape();
 				return;
 			}
+			// The Creature Cave shown on its own closes on Escape
+			if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && event.key.repeat == 0 &&
+			    Locator::creatureCaveSystem::has_value() && Locator::creatureCaveSystem::value().Escape())
+			{
+				return;
+			}
 			// The game's menu takes Escape, and the keyboard and mouse while it is open
 			if (_interface && Locator::windowing::has_value() &&
 			    _interface->ProcessEvent(event, static_cast<glm::u16vec2>(Locator::windowing::value().GetSize())))
@@ -1530,6 +1546,10 @@ bool Game::Initialize() noexcept
 			if (Locator::temple::has_value())
 			{
 				Locator::temple::value().SetInterface(_interface.get());
+			}
+			if (Locator::creatureCaveSystem::has_value())
+			{
+				Locator::creatureCaveSystem::value().SetInterface(_interface.get());
 			}
 		}
 	}

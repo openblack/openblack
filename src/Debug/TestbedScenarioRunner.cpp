@@ -58,10 +58,12 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureCaveSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureModeSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
@@ -225,6 +227,15 @@ std::string RefusedText(const ecs::systems::LeashSystemInterface& leashes)
 void Runner::Start(const Scenario& scenario)
 {
 	Stop();
+	// The camera is the player's again before the scenario frames it, and the cave closes
+	if (Locator::creatureModeSystem::has_value())
+	{
+		Locator::creatureModeSystem::value().Leave();
+	}
+	if (Locator::creatureCaveSystem::has_value() && Locator::creatureCaveSystem::value().IsOpen())
+	{
+		Locator::creatureCaveSystem::value().Close();
+	}
 	_scenario = &scenario;
 	_running = true;
 	_seconds = 0.0f;
@@ -890,6 +901,16 @@ void Runner::Give(const Command& command)
 	case Kind::TieLeashToCreature:
 		result = GiveFightCommand(*entity, command);
 		break;
+	case Kind::CreatureKey:
+	case Kind::DoubleClick:
+	case Kind::CameraKeys:
+	case Kind::ClearCameraView:
+	case Kind::LeaveCreatureMode:
+	case Kind::OpenCreatureCave:
+	case Kind::ApplyTattoo:
+	case Kind::RemoveTattoo:
+		result = GiveCreatureModeCommand(*entity, command);
+		break;
 	case Kind::SetHour:
 		break;
 	case Kind::SetDesire:
@@ -911,6 +932,66 @@ void Runner::Give(const Command& command)
 	}
 	}
 	Log(fmt::format("{:.1f}s: {} {}{}{}", _seconds, who, Name(command.kind), result.empty() ? "" : ": ", result));
+}
+
+std::string Runner::GiveCreatureModeCommand(entt::entity creature, const Command& command)
+{
+	if (!Locator::creatureModeSystem::has_value() || !Locator::creatureCaveSystem::has_value())
+	{
+		return "no creature mode";
+	}
+	auto& mode = Locator::creatureModeSystem::value();
+	auto& cave = Locator::creatureCaveSystem::value();
+	const auto following = [&mode] {
+		const auto followed = mode.GetCreature();
+		return followed.has_value() ? fmt::format("following entity {}", static_cast<uint32_t>(*followed))
+		                            : std::string("the camera is the player's");
+	};
+	switch (command.kind)
+	{
+	case Kind::CreatureKey:
+		mode.PressCreatureKey();
+		return following();
+	case Kind::DoubleClick:
+	{
+		// Two presses of the left button on the creature, a fifth of a second apart
+		const auto now = static_cast<uint32_t>(_seconds * 1000.0f) + 1;
+		mode.Press({.milliseconds = now, .creature = creature});
+		mode.Press({.milliseconds = now + 200, .creature = creature});
+		return following();
+	}
+	case Kind::CameraKeys:
+	{
+		constexpr std::array<glm::ivec2, 4> k_Directions {{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}};
+		const auto direction = k_Directions.at(std::min<size_t>(command.value, k_Directions.size() - 1));
+		mode.HoldKeys(direction.x, direction.y, !command.ctrl, command.ctrl, command.amount);
+		return mode.IsActive() ? "" : "not in Creature Mode";
+	}
+	case Kind::ClearCameraView:
+		mode.ClearView();
+		if (const auto view = mode.GetView(); view.has_value())
+		{
+			return fmt::format("heading {:.2f}, pitch {:.2f}", view->yaw, view->pitch);
+		}
+		return "not in Creature Mode";
+	case Kind::LeaveCreatureMode:
+		mode.Leave();
+		return following();
+	case Kind::OpenCreatureCave:
+		cave.Open();
+		cave.GetScreen().page = static_cast<creature_cave::Page>(command.value);
+		cave.GetScreen().pageRequested = true;
+		return cave.GetCreature().has_value() ? "" : "the player has no creature";
+	case Kind::ApplyTattoo:
+		return cave.ApplyTattoo(static_cast<uint8_t>(command.bodyPart), static_cast<uint8_t>(command.value),
+		                        glm::u8vec3(180, 30, 30))
+		           ? ""
+		           : "can't";
+	case Kind::RemoveTattoo:
+		return cave.RemoveTattoo(static_cast<uint8_t>(command.bodyPart)) ? "" : "nothing there";
+	default:
+		return {};
+	}
 }
 
 std::string Runner::TeachMind(entt::entity entity, const Command& command)
@@ -996,6 +1077,12 @@ void Runner::UpdateCamera()
 {
 	if (!_shot.has_value() || _scenario == nullptr || !Locator::terrainSystem::has_value())
 	{
+		return;
+	}
+	// Creature Mode takes the camera from the scenario's shot for good
+	if (Locator::creatureModeSystem::has_value() && Locator::creatureModeSystem::value().IsActive())
+	{
+		_shot.reset();
 		return;
 	}
 	auto& camera = Locator::camera::value();

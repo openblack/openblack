@@ -19,6 +19,7 @@
 #include <glm/geometric.hpp>
 
 #include "3D/FlatLand.h"
+#include "Creature/CreatureCave.h"
 #include "Creature/CreatureFace.h"
 #include "Creature/CreatureFeedback.h"
 #include "Creature/CreatureFight.h"
@@ -490,8 +491,9 @@ void AddNeeds(std::vector<Scenario>& all)
 	    .facet = Facet::Needs,
 	    .description = "An already tired tiger is made to run back and forth across the testbed, its body's time twenty "
 	                   "times as fast.",
-	    .expected = "Running tires it; past 0.8 exhaustion it slows down, and at 1 it faints, lies out cold and gets up "
-	                "again before running on.",
+	    .expected = "Running tires it; past 0.8 exhaustion it slows down, and at 1 it faints and lies out cold, then is "
+	                "carried in a fizz to its pen, the middle of the testbed, where it rests and gets up again before "
+	                "running on.",
 	    .environment = {.bodyTimeScale = 20.0f},
 	    .framing = {.shot = Shot::Overview},
 	    .creatures = {CreatureSetup {
@@ -2011,6 +2013,7 @@ std::vector<Scenario> Build()
 	AddEditor(all);
 	AddMiracleScenarios(all);
 	AddBenchmark(all);
+	AddCreatureModeScenarios(all);
 	return all;
 }
 
@@ -2105,8 +2108,9 @@ std::string_view CommandProblem(const Command& command, std::span<const ObjectSe
 std::string_view testbed_scenarios::Name(Facet facet)
 {
 	constexpr std::array<std::string_view, k_FacetCount> k_Names {
-	    "Idle",    "Expressions", "Senses", "Needs",  "Growth", "Appearance", "Light",  "Movement", "Footprints", "Audio",
-	    "Objects", "Hand",        "Leash",  "Combat", "Mind",   "Particles",  "Editor", "Miracles", "Benchmark",
+	    "Idle",     "Expressions", "Senses", "Needs",    "Growth",    "Appearance",    "Light",
+	    "Movement", "Footprints",  "Audio",  "Objects",  "Hand",      "Leash",         "Combat",
+	    "Mind",     "Particles",   "Editor", "Miracles", "Benchmark", "Creature Mode",
 	};
 	return k_Names.at(static_cast<size_t>(facet));
 }
@@ -2125,7 +2129,7 @@ std::string_view testbed_scenarios::Name(Shot shot)
 
 std::string_view testbed_scenarios::Name(Command::Kind kind)
 {
-	constexpr std::array<std::string_view, 59> k_Names {
+	constexpr std::array<std::string_view, 67> k_Names {
 	    "walk to",
 	    "run to",
 	    "follow",
@@ -2185,6 +2189,14 @@ std::string_view testbed_scenarios::Name(Command::Kind kind)
 	    "see skill",
 	    "see miracle",
 	    "player did",
+	    "press C",
+	    "double click",
+	    "camera keys",
+	    "clear the view",
+	    "give the camera back",
+	    "press F5",
+	    "tattoo",
+	    "take tattoo off",
 	};
 	return k_Names.at(static_cast<size_t>(kind));
 }
@@ -2385,7 +2397,11 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 		    (command.kind == Kind::ShowFeeling && command.value >= creature_face::k_CueCount) ||
 		    (command.kind == Kind::SeeSkill && command.value >= k_Skills) ||
 		    (command.kind == Kind::SeeMiracle && command.value >= k_Miracles) ||
-		    (command.kind == Kind::PlayerDid && command.value >= k_Deeds))
+		    (command.kind == Kind::PlayerDid && command.value >= k_Deeds) ||
+		    (command.kind == Kind::CameraKeys && (command.value >= 4 || command.amount <= 0.0f)) ||
+		    (command.kind == Kind::OpenCreatureCave && command.value >= creature_cave::k_PageCount) ||
+		    ((command.kind == Kind::ApplyTattoo || command.kind == Kind::RemoveTattoo) &&
+		     (command.value >= creature_tattoo::k_DesignCount || command.bodyPart >= creature_tattoo::k_SlotCount)))
 		{
 			problems.push_back(fmt::format("{}: value {} out of range", what, command.value));
 		}
