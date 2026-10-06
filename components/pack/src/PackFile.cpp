@@ -65,7 +65,7 @@
  * The layout of a LHAudioBankSampleTable block is as follows:
  *
  * - 2 byte int, containing the number of sound samples in the block.
- * - 2 byte int, unknown
+ * - 2 byte int, non-zero for atmosphere banks
  * - 640 byte audio metadata * number of sound samples, containing
  *         name - 256 characters
  *         unknown - TODO: 4 bytes
@@ -354,8 +354,7 @@ PackResult PackFile::ResolveAudioBankSampleTableBlock() noexcept
 	uint16_t sampleCount;
 	stream.read(reinterpret_cast<char*>(&sampleCount), sizeof(sampleCount));
 
-	uint16_t unknown;
-	stream.read(reinterpret_cast<char*>(&unknown), sizeof(unknown));
+	stream.read(reinterpret_cast<char*>(&_audioBankAtmosCount), sizeof(_audioBankAtmosCount));
 
 	if (sampleCount == 0)
 	{
@@ -472,6 +471,28 @@ PackResult PackFile::ExtractAnimationsFromBlock() noexcept
 		stream.read(reinterpret_cast<char*>(_animations[i].data()), animationHeaderSize);
 		memcpy(_animations[i].data() + animationHeaderSize, animationData.data(), animationData.size());
 	}
+
+	return PackResult::Success;
+}
+
+PackResult PackFile::ResolveFileSegmentBankInfoBlock() noexcept
+{
+	// The game won't load a sound bank without this block; here it stays optional so that the packs that only have a
+	// sample table keep loading.
+	_audioBankInfo = {};
+	if (!HasBlock("LHFileSegmentBankInfo"))
+	{
+		return PackResult::Success;
+	}
+
+	const auto& data = GetBlock("LHFileSegmentBankInfo");
+	// The game doesn't check the block is long enough; every .sad of the game has 532 bytes
+	if (data.size() < sizeof(_audioBankInfo))
+	{
+		return PackResult::ErrFileTooSmall;
+	}
+
+	std::memcpy(&_audioBankInfo, data.data(), sizeof(_audioBankInfo));
 
 	return PackResult::Success;
 }
@@ -735,11 +756,11 @@ PackResult PackFile::ReadFile(std::istream& stream) noexcept
 			return result;
 		}
 
-		// ResolveFileSegmentBankBlock();
-		// if (result != PackResult::Success)
-		// {
-		// 	return result;
-		// }
+		result = ResolveFileSegmentBankInfoBlock();
+		if (result != PackResult::Success)
+		{
+			return result;
+		}
 		result = ExtractSoundsFromBlock();
 		if (result != PackResult::Success)
 		{
