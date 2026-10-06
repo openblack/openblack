@@ -9,14 +9,19 @@
 
 #pragma once
 
-#include <cstdint>
+#include <MindFile.h>
 
 namespace openblack::creature
 {
 
+/// A creature mind file as the resource cache holds it: what was read, or why it couldn't be, in which case the
+/// creature starts with a fresh mind of its species
 struct CreatureMind
 {
-	uint8_t dummy;
+	creaturemind::MindResult result {creaturemind::MindResult::ErrCantOpen};
+	creaturemind::MindFileData data;
+
+	[[nodiscard]] bool Loaded() const { return result == creaturemind::MindResult::Success; }
 };
 
 } // namespace openblack::creature
