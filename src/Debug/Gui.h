@@ -56,6 +56,8 @@ private:
 	                                             float arrowLength, std::function<void(void)> debugCallback) const noexcept;
 	bool ShowMenu() noexcept;
 	void ShowVillagerNames() noexcept;
+	/// Each miracle dispenser's miracle over it
+	void ShowDispenserNames() noexcept;
 	void ShowCameraPositionOverlay() noexcept;
 
 	ImGuiContext* _imgui;

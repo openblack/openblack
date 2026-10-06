@@ -61,6 +61,7 @@
 #include "Common/StringUtils.h"
 #include "Creature/CreatureHandRules.h"
 #include "Debug/DebugGuiInterface.h"
+#include "Debug/FrameStatsLog.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/Components/CameraBookmark.h"
 #include "ECS/Components/Creature.h"
@@ -191,6 +192,8 @@ Game::Game(Arguments&& args) noexcept
 
 	auto& config = Locator::config::emplace();
 	config.numFramesToSimulate = args.numFramesToSimulate;
+	config.frameStatsInterval = args.frameStatsInterval;
+	config.frameStatsViews = args.frameStatsViews;
 	config.resolution = {args.windowWidth, args.windowHeight};
 	config.displayMode = args.displayMode;
 	config.graphicsBackend = args.graphicsBackend;
@@ -1788,6 +1791,16 @@ bool Game::Run() noexcept
 	_frameCount = 0;
 	auto lastTime = std::chrono::high_resolution_clock::now();
 	auto& profiler = Locator::profiler::value();
+	std::optional<debug::FrameStatsLog> frameStats;
+	if (config.frameStatsInterval > 0)
+	{
+		frameStats.emplace(config.frameStatsInterval, config.frameStatsViews);
+		if (config.frameStatsViews)
+		{
+			Locator::rendererInterface::value().SetProfile(true);
+		}
+	}
+	auto frameStart = std::chrono::steady_clock::now();
 	while (Update())
 	{
 		auto duration = std::chrono::high_resolution_clock::now() - lastTime;
@@ -1852,6 +1865,13 @@ bool Game::Run() noexcept
 		}
 
 		_frameCount++;
+
+		const auto frameEnd = std::chrono::steady_clock::now();
+		if (frameStats.has_value())
+		{
+			frameStats->Frame(std::chrono::duration<float, std::milli>(frameEnd - frameStart).count(), profiler);
+		}
+		frameStart = frameEnd;
 	}
 
 	return true;

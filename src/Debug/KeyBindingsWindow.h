@@ -9,31 +9,34 @@
 
 #pragma once
 
-#include "Audio/AudioManagerInterface.h"
+#include <optional>
+
+#include <SDL_scancode.h>
+
 #include "Window.h"
 
 namespace openblack::debug::gui
 {
-class Audio final: public Window
+
+/// The options screen's controls: every action with its category, key and mouse input and whether it does anything
+/// yet. A key can be bound anew, and each action pressed as its key would press it, to try out its handling.
+class KeyBindingsWindow final: public Window
 {
 public:
-	Audio() noexcept;
+	KeyBindingsWindow() noexcept;
 
 protected:
 	void Draw() noexcept override;
 	void Update() noexcept override;
 	void ProcessEventOpen(const SDL_Event& event) noexcept override;
 	void ProcessEventAlways(const SDL_Event& event) noexcept override;
+	[[nodiscard]] bool TakesEvent(const SDL_Event& event) const noexcept override;
 
 private:
-	void Emitters() noexcept;
-	void Music() noexcept;
-	void AudioSettings() noexcept;
-	void Atmos() noexcept;
-	audio::PlayType _playType {audio::PlayType::Once};
-	entt::id_type _selectedSound;
-	std::string _selectedSoundPack;
-	std::string _selectedMusicPack;
-	entt::entity _selectedEmitter;
+	/// The row waiting for its new key
+	std::optional<size_t> _rebinding;
+	/// A modifier key pressed while waiting, which is bound alone if it is let go before another key is pressed
+	std::optional<SDL_Scancode> _modifierDown;
 };
+
 } // namespace openblack::debug::gui

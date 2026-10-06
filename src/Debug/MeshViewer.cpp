@@ -367,7 +367,7 @@ void MeshViewer::Update() noexcept
 			bgfx::setTransform(glm::value_ptr(model));
 			_boundingBox->GetVertexBuffer().Bind();
 			bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES, 0);
-			bgfx::submit(static_cast<bgfx::ViewId>(k_ViewId), toBgfx(debugShader->GetRawHandle()));
+			debugShader->Submit(static_cast<bgfx::ViewId>(k_ViewId));
 		}
 	}
 

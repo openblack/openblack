@@ -86,6 +86,10 @@ struct Arguments
 	std::string startLevel;
 	/// Start on the flat creature testbed rather than startLevel
 	bool startTestbed {false};
+	/// Log frame time statistics every so many frames, never when 0
+	uint32_t frameStatsInterval {0};
+	/// With the frame statistics, the GPU time of each render view
+	bool frameStatsViews {false};
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> requestScreenshot;
 };
 

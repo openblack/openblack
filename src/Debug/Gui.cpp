@@ -13,6 +13,9 @@
 
 #include <cinttypes>
 #include <cmath>
+#include <cstring>
+
+#include <algorithm>
 
 #include <bgfx/embedded_shader.h>
 // BGFX has support for WSL to use windows d3d. We disable it here from the BGFX_EMBEDDED_SHADER macro.
@@ -43,6 +46,7 @@
 
 #include "3D/SkyInterface.h"
 #include "Audio.h"
+#include "Camera.h"
 #include "Camera/Camera.h"
 #include "Console.h"
 #include "ECS/Components/LivingAction.h"
@@ -52,14 +56,16 @@
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/Systems/MagicSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "ImGuiUtils.h"
-#include "LHVMViewer.h"
+#include "KeyBindingsWindow.h"
 #include "LandIsland.h"
 #include "Locator.h"
+#include "Magic/MagicTables.h"
 #include "MeshViewer.h"
 #include "PathFinding.h"
 #include "Profiler.h"
@@ -114,10 +120,11 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new TextureViewer);
 	debugWindows.emplace_back(new Console);
 	debugWindows.emplace_back(new LandIsland);
-	debugWindows.emplace_back(new LHVMViewer);
 	debugWindows.emplace_back(new PathFinding);
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
+	debugWindows.emplace_back(new gui::Camera);
+	debugWindows.emplace_back(new KeyBindingsWindow);
 
 	auto gui = std::unique_ptr<DebugGuiInterface>(
 	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
@@ -203,15 +210,16 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
 
+	auto takenByWindow = false;
 	for (auto& window : _debugWindows)
 	{
-		window->WindowProcessEvent(event);
+		takenByWindow = window->WindowProcessEvent(event) || takenByWindow;
 	}
 
 	ImGui_ImplSDL2_ProcessEvent(&event);
 
 	const auto& io = ImGui::GetIO();
-	_stealsFocus = io.WantCaptureMouse;
+	_stealsFocus = io.WantCaptureMouse || takenByWindow;
 	switch (event.type)
 	{
 	default:
@@ -224,7 +232,8 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 		break;
 	case SDL_KEYDOWN:
 	case SDL_KEYUP:
-		_stealsFocus = io.WantCaptureKeyboard;
+		// A window's own keys, as the editor's tools, and typing in a field are kept from the game's keys
+		_stealsFocus = io.WantCaptureKeyboard || takenByWindow;
 		break;
 	case SDL_WINDOWEVENT:
 		if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
@@ -315,6 +324,7 @@ bool Gui::Loop() noexcept
 		window->WindowDraw();
 	}
 	ShowVillagerNames();
+	ShowDispenserNames();
 	ShowCameraPositionOverlay();
 
 	ImGui::Render();
@@ -531,6 +541,16 @@ bool Gui::ShowMenu() noexcept
 				}
 				ImGui::EndMenu();
 			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Creature Testbed"))
+			{
+				game.LoadTestbed();
+			}
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("A flat plane over the whole map with a lake north of the middle, for trying out how "
+				                  "creatures move, are animated, drink and wade, and what the water reflects");
+			}
 			ImGui::EndMenu();
 		}
 
@@ -574,6 +594,7 @@ bool Gui::ShowMenu() noexcept
 			if (ImGui::BeginMenu("Villager Names"))
 			{
 				ImGui::Checkbox("Show", &config.showVillagerNames);
+				ImGui::Checkbox("Show Details", &config.showVillagerDetails);
 				ImGui::Checkbox("Show States", &config.debugVillagerStates);
 				ImGui::Checkbox("Debug", &config.debugVillagerNames);
 
@@ -592,6 +613,13 @@ bool Gui::ShowMenu() noexcept
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
 				ImGui::Checkbox("Footpaths", &config.drawFootpaths);
 				ImGui::Checkbox("Streams", &config.drawStreams);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Hand"))
+			{
+				ImGui::Checkbox("Right Handed", &config.rightHandedHand);
 
 				ImGui::EndMenu();
 			}
@@ -786,7 +814,7 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 		textColor = ImVec4(adjustedColor.r, adjustedColor.g, adjustedColor.b, adjustedColor.a);
 	}
 
-	const std::string fullText = name + "\n" + text;
+	const std::string fullText = text.empty() ? name : name + "\n" + text;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 	glm::vec4 boxExtent;
@@ -844,13 +872,56 @@ std::optional<glm::uvec4> Gui::RenderVillagerName(const std::vector<glm::vec4>& 
 	return std::make_optional<glm::uvec4>(boxExtent);
 }
 
+void Gui::ShowDispenserNames() noexcept
+{
+	const auto& config = Locator::config::value();
+	if (!config.showDispenserNames || !Locator::magicSystem::has_value() || !Locator::infoConstants::has_value())
+	{
+		return;
+	}
+	const auto& displaySize = ImGui::GetIO().DisplaySize;
+	const glm::vec4 viewport {0.0f, 0.0f, displaySize.x, displaySize.y};
+	const auto& camera = Locator::camera::value();
+	auto* drawList = ImGui::GetBackgroundDrawList();
+	// Only near enough to read
+	constexpr float k_MaxDistance = 250.0f;
+	constexpr float k_LabelHeight = 9.0f;
+	for (const auto& dispenser : Locator::magicSystem::value().GetDispensers())
+	{
+		if (glm::distance(camera.GetOrigin(), dispenser.position) > k_MaxDistance)
+		{
+			continue;
+		}
+		glm::vec3 screen;
+		if (!camera.ProjectWorldToScreen(dispenser.position + glm::vec3(0.0f, k_LabelHeight, 0.0f), viewport, screen))
+		{
+			continue;
+		}
+		const auto& raw = magic::GetMagicEffectInfo(Locator::infoConstants::value(), dispenser.magicType).debugString;
+		// Its miracle's name as the tables spell it, in lower case, the creature spells' shortened
+		std::string name(raw.data(), strnlen(raw.data(), raw.size()));
+		constexpr std::string_view k_CreaturePrefix = "CREATURE_SPELL_";
+		if (name.starts_with(k_CreaturePrefix))
+		{
+			name = "creature " + name.substr(k_CreaturePrefix.size());
+		}
+		std::ranges::replace(name, '_', ' ');
+		std::ranges::transform(name, name.begin(), [](char c) { return static_cast<char>(std::tolower(c)); });
+		const auto size = ImGui::CalcTextSize(name.c_str());
+		const ImVec2 at(screen.x - size.x * 0.5f, screen.y - size.y);
+		drawList->AddRectFilled(ImVec2(at.x - 3.0f, at.y - 1.0f), ImVec2(at.x + size.x + 3.0f, at.y + size.y + 1.0f),
+		                        IM_COL32(0, 0, 0, 150), 3.0f);
+		drawList->AddText(at, dispenser.hasOrb ? IM_COL32(255, 240, 160, 255) : IM_COL32(170, 170, 170, 255), name.c_str());
+	}
+}
+
 void Gui::ShowVillagerNames() noexcept
 {
 	using namespace ecs::components;
 	using namespace ecs::systems;
 
 	const auto& config = Locator::config::value();
-	if (!config.showVillagerNames)
+	if (!config.showVillagerNames && !config.showVillagerDetails)
 	{
 		return;
 	}
@@ -893,8 +964,9 @@ void Gui::ShowVillagerNames() noexcept
 
 		    const std::string name = "Villager #" + std::to_string(i);
 		    const std::string stateHelpText = "TODO: STATE HELP TEXT";
-		    std::string details =
-		        fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age, villager.health, villager.hunger);
+		    std::string details = config.showVillagerDetails ? fmt::format("{}\nA:{} L:{}%, H:{}%", stateHelpText, villager.age,
+		                                                                   villager.health, villager.hunger)
+		                                                     : std::string();
 		    const auto& actionSystem = Locator::livingActionSystem::value();
 		    if (config.debugVillagerStates)
 		    {

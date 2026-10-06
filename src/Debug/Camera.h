@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2018-2026 openblack developers
+ * Copyright (c) 2018-2024 openblack developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/openblack/openblack
@@ -9,15 +9,21 @@
 
 #pragma once
 
-#include "Audio/AudioManagerInterface.h"
+#include <map>
+#include <vector>
+
+#include <entt/core/fwd.hpp>
+#include <entt/entity/entity.hpp>
+
 #include "Window.h"
 
 namespace openblack::debug::gui
 {
-class Audio final: public Window
+
+class Camera final: public Window
 {
 public:
-	Audio() noexcept;
+	Camera();
 
 protected:
 	void Draw() noexcept override;
@@ -26,14 +32,11 @@ protected:
 	void ProcessEventAlways(const SDL_Event& event) noexcept override;
 
 private:
-	void Emitters() noexcept;
-	void Music() noexcept;
-	void AudioSettings() noexcept;
-	void Atmos() noexcept;
-	audio::PlayType _playType {audio::PlayType::Once};
-	entt::id_type _selectedSound;
-	std::string _selectedSoundPack;
-	std::string _selectedMusicPack;
-	entt::entity _selectedEmitter;
+	void DrawControls();
+	void DrawCameraResourceList();
+	entt::id_type _selectedCameraPath;
+	std::map<entt::id_type, std::tuple<bool, entt::entity>> _drawingCameraPaths;
+	std::map<entt::id_type, std::vector<entt::entity>> _cameraPathEntities;
 };
+
 } // namespace openblack::debug::gui
