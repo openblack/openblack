@@ -910,10 +910,21 @@ struct GCreatureInfo: GLivingInfo
 	float slowSpeed;
 	float walkSpeed;
 	float runSpeed;
-	std::array<uint8_t, 0x8c> field0x24c;
+	std::array<uint8_t, 0x18> field0x24c;
+	/// The least any of its desires can be
+	float desireFloor;
+	std::array<uint8_t, 0x1c> field0x268;
+	/// A creature casting a miracle pays for it with its energy: it has this many chants for each of its size and strength
+	/// above its energy's floor, below which it can't pay
+	float chantsPerEnergy;
+	float spellEnergyFloor;
+	std::array<uint8_t, 0x4c> field0x28c;
 	/// Running away, the creature goes at least this far from what it flees, and up to 40 further
 	float runAwayDistance;
-	std::array<uint8_t, 0x88> field0x2dc;
+	std::array<uint8_t, 0x5c> field0x2dc;
+	/// Each turn the change waiting for its alignment, held between -1 and 1, moves it by that share of this
+	float alignmentChangePerTurn;
+	std::array<uint8_t, 0x28> field0x33c;
 	/// How long it sleeps for its size, once rested
 	float sleepLength;
 	/// A meal's food value over this, and over its size, is the energy it gains
@@ -921,9 +932,14 @@ struct GCreatureInfo: GLivingInfo
 	float field0x36c;
 	/// The poo a meal builds up for each unit of energy it gains
 	float pooPerEnergy;
-	std::array<uint8_t, 0x10> field0x374;
+	std::array<uint8_t, 0xc> field0x374;
+	/// How much its size counts against its strength in turning chants into energy
+	float spellSizeFactor;
 };
 static_assert(sizeof(GCreatureInfo) == 0x384);
+static_assert(offsetof(GCreatureInfo, chantsPerEnergy) == 0x284);
+static_assert(offsetof(GCreatureInfo, desireFloor) == 0x264);
+static_assert(offsetof(GCreatureInfo, spellSizeFactor) == 0x380);
 static_assert(offsetof(GCreatureInfo, startEnergy) == 0x1f4);
 static_assert(offsetof(GCreatureInfo, comfortTemperature) == 0x1fc);
 static_assert(offsetof(GCreatureInfo, growUpMinutes) == 0x204);
@@ -933,6 +949,7 @@ static_assert(offsetof(GCreatureInfo, sleepLength) == 0x364);
 static_assert(offsetof(GCreatureInfo, pooPerEnergy) == 0x370);
 static_assert(offsetof(GCreatureInfo, slowSpeed) == 0x240);
 static_assert(offsetof(GCreatureInfo, runAwayDistance) == 0x2d8);
+static_assert(offsetof(GCreatureInfo, alignmentChangePerTurn) == 0x338);
 
 struct GMagicRadiusSpellInfo: GMagicInfo
 {
@@ -1108,26 +1125,32 @@ struct GMagicForestInfo: GMagicInfo
 
 struct GVillagerStateTableInfo
 {
-	uint32_t field0x0;
+	/// The animation a villager plays in the state
+	uint32_t animation;
 	int field0x4;
 	float field0x8;
 	uint32_t isFinalState;
-	int field0x10;
+	/// A villager storing its state to come back to stores the one it stored before instead of this one
+	int keepsPreviousState;
 	uint32_t field0x14;
 	uint32_t isScriptState;
 	uint32_t isScriptInterruptableState;
-	int field0x20;
-	uint32_t field0x24;
+	/// The state a villager goes back to once it stops reacting, if it was in this one
+	int resumeState;
+	/// Which of the villager's speeds it moves at in this state: 1 for fleeing
+	uint32_t speedIndex;
 	std::array<char, 0x80> name;
 	int field0xa8;
 	uint32_t field0xac;
 	uint32_t field0xb0;
 	uint32_t field0xb4;
-	int field0xb8;
+	/// A state of reacting to something
+	int isReactionState;
 	uint32_t field0xbc;
 	/// A villager leaving a home state for this one stays inside
 	int staysAtHomeOnExit;
-	int field0xc4;
+	/// A villager going into the state may pause for a second first
+	int canPauseForASecond;
 	float field0xc8;
 	float field0xcc;
 	uint32_t field0xd0;
@@ -1137,7 +1160,8 @@ struct GVillagerStateTableInfo
 	uint32_t field0xe0;
 	uint32_t field0xe4;
 	uint32_t field0xe8;
-	uint32_t field0xec;
+	/// A villager whose state this is may start reacting to things
+	uint32_t availableForReaction;
 	uint32_t field0xf0;
 	uint32_t field0xf4;
 	float field0xf8;
@@ -1618,18 +1642,20 @@ struct GSpellSeedInfo: GObjectInfo
 	float holdYRotate;                 ///< 0x144
 	HoldType holdType;                 ///< 0x148: MAGIC (2) is forced until the seed is ready
 	uint32_t attachInHandEffectToBone; ///< 0x14C: attaches the in-hand particle effect to a bone
-	float unknown0x150;                ///< -1.5 in most entries (unused by the game)
-	float unknown0x154;                ///< (unused by the game)
-	uint32_t deleteSeedOnceCast;       ///< 0x158
-	float unknown0x15C;                ///< 0.1 in every entry (unused by the game)
-	uint32_t unknown0x160;             ///< 1 in every entry (unused by the game)
-	ParticleType holderParticle;       ///< 0x164: the effect on the worship icon's holder
-	uint32_t useMesh;                  ///< 0x168 (inferred)
-	uint32_t exists;                   ///< 0x16C: 1 = a real spell, 0 = unused slot
-	uint32_t iconIndex;                ///< 0x170: icon slot (inferred)
-	HelpText tooltip;                  ///< 0x174
-	uint32_t unknown0x178;             ///< (unused by the game)
-	uint32_t unknown0x17C;             ///< 1 for FIRE, LIGHTNING_BOLT, HEAL, WEAK, STRONG (unused by the game)
+	/// 0x150: how far above (below, mostly) the middle of a globe or icon the seed's model is, times its scale
+	float meshHeight;
+	/// 0x154: how far above the middle the holder particle effect plays, times its scale
+	float holderHeight;
+	uint32_t deleteSeedOnceCast; ///< 0x158
+	float unknown0x15C;          ///< 0.1 in every entry (unused by the game)
+	uint32_t unknown0x160;       ///< 1 in every entry (unused by the game)
+	ParticleType holderParticle; ///< 0x164: the effect on the worship icon's holder
+	uint32_t useMesh;            ///< 0x168: the seed's model is drawn in a globe or above an icon
+	uint32_t exists;             ///< 0x16C: 1 = a real spell, 0 = unused slot
+	uint32_t iconIndex;          ///< 0x170: icon slot (inferred)
+	HelpText tooltip;            ///< 0x174
+	uint32_t unknown0x178;       ///< (unused by the game)
+	uint32_t unknown0x17C;       ///< 1 for FIRE, LIGHTNING_BOLT, HEAL, WEAK, STRONG (unused by the game)
 };
 static_assert(offsetof(GSpellSeedInfo, selectionGesture) == 0xf0);
 static_assert(offsetof(GSpellSeedInfo, magicTypes) == 0x114);
@@ -1868,7 +1894,8 @@ struct CreatureActionInfo
 	uint32_t desire;
 	uint32_t field0x9c;
 	uint32_t field0xa0;
-	uint32_t field0xa4;
+	/// The miracle the action casts, 0 for none
+	uint32_t magicType;
 	uint32_t field0xa8;
 	uint32_t field0xac;
 	uint32_t field0xb0;
@@ -1894,6 +1921,7 @@ struct CreatureActionInfo
 };
 static_assert(offsetof(CreatureActionInfo, desire) == 0x98);
 static_assert(offsetof(CreatureActionInfo, desireMultiplier) == 0xc0);
+static_assert(offsetof(CreatureActionInfo, magicType) == 0xa4);
 
 struct InfoConstants
 {

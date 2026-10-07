@@ -219,15 +219,8 @@ void HandAnimation::ComposeBoneMatrices(const std::vector<Pose>& poses)
 	_boneMatrices = skeletal_animation::ComposeBoneMatrices(poses, _skeleton.parents);
 }
 
-void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycle, glm::ivec2 cursor)
+void HandAnimation::StepCursorSpring(float seconds, glm::vec2 mouse)
 {
-	if (!IsLoaded())
-	{
-		return;
-	}
-	const auto seconds = std::chrono::duration<float>(dt).count();
-	const auto mouse = glm::vec2(cursor);
-
 	// A spring-damped copy of the cursor that is never more than k_MaxCursorLag pixels behind it
 	if (!_springStarted)
 	{
@@ -245,12 +238,103 @@ void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycl
 			_smoothedVelocity[axis] *= std::pow(k_CursorDamping, seconds);
 		}
 	}
+	_cursorLag =
+	    glm::clamp(glm::vec2(_smoothedCursor.x - mouse.x, mouse.y - _smoothedCursor.y), -k_MaxCursorLag, k_MaxCursorLag);
+}
+
+void HandAnimation::StartFade()
+{
+	_fadeFrom = _lastPoses;
+	_fadeTime = 0.0f;
+}
+
+void HandAnimation::ApplyFade(float seconds, std::vector<Pose>& poses)
+{
+	if (!_fadeTime)
+	{
+		return;
+	}
+	*_fadeTime += seconds;
+	if (*_fadeTime < k_FadeDuration && _fadeFrom.size() == poses.size())
+	{
+		const auto t = *_fadeTime / k_FadeDuration;
+		for (size_t i = 0; i < poses.size(); ++i)
+		{
+			poses[i].rotation = Lerp(_fadeFrom[i].rotation, poses[i].rotation, t);
+			poses[i].translation = (poses[i].translation - _fadeFrom[i].translation) * t + _fadeFrom[i].translation;
+		}
+	}
+	else
+	{
+		_fadeTime.reset();
+	}
+}
+
+glm::vec3 HandAnimation::LeafBoneCentre() const
+{
+	std::vector<bool> hasChild(_skeleton.parents.size(), false);
+	for (const auto parent : _skeleton.parents)
+	{
+		if (parent != k_NoParent && parent < hasChild.size())
+		{
+			hasChild[parent] = true;
+		}
+	}
+	glm::vec3 sum(0.0f);
+	size_t count = 0;
+	for (size_t bone = 0; bone < _boneMatrices.size() && bone < hasChild.size(); ++bone)
+	{
+		if (!hasChild[bone])
+		{
+			sum += glm::vec3(_boneMatrices[bone][3]);
+			++count;
+		}
+	}
+	return count > 0 ? sum / static_cast<float>(count) : glm::vec3(0.0f);
+}
+
+void HandAnimation::UpdateHeld(std::chrono::microseconds dt, Cycle cycle, uint32_t timeMs, glm::ivec2 cursor)
+{
+	if (!IsLoaded())
+	{
+		return;
+	}
+	const auto seconds = std::chrono::duration<float>(dt).count();
+	StepCursorSpring(seconds, glm::vec2(cursor));
+	_lean = glm::vec2(0.0f);
+	if (!_holding)
+	{
+		StartFade();
+		_holding = true;
+	}
+	_cycle = cycle;
+	auto poses = EvaluatePoses(cycle, timeMs, std::nullopt);
+	ApplyFade(seconds, poses);
+	_lastPoses = poses;
+	ComposeBoneMatrices(poses);
+}
+
+void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycle, glm::ivec2 cursor)
+{
+	if (!IsLoaded())
+	{
+		return;
+	}
+	const auto seconds = std::chrono::duration<float>(dt).count();
+	const auto mouse = glm::vec2(cursor);
+	StepCursorSpring(seconds, mouse);
 	// Hovering, the hand leans towards where the cursor came from. Dragging the camera, it leans the other way
 	// sideways as if pulling the land along.
 	const auto sideways = state == State::Normal ? _smoothedCursor.x - mouse.x : mouse.x - _smoothedCursor.x;
 	_lean = glm::clamp(glm::vec2(sideways, mouse.y - _smoothedCursor.y), -k_MaxCursorLag, k_MaxCursorLag);
 
 	auto& time = _cycleTimes.at(static_cast<size_t>(state));
+	// Letting go of a seed fades back from the holding pose
+	if (_holding)
+	{
+		_holding = false;
+		StartFade();
+	}
 	if (state != _state || cycle != _cycle)
 	{
 		if (state != _state && state == State::Camera)
@@ -274,24 +358,7 @@ void HandAnimation::Update(std::chrono::microseconds dt, State state, Cycle cycl
 	const auto timeMs = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(time).count());
 
 	auto poses = EvaluatePoses(cycle, timeMs, _lean);
-
-	if (_fadeTime)
-	{
-		*_fadeTime += seconds;
-		if (*_fadeTime < k_FadeDuration && _fadeFrom.size() == poses.size())
-		{
-			const auto t = *_fadeTime / k_FadeDuration;
-			for (size_t i = 0; i < poses.size(); ++i)
-			{
-				poses[i].rotation = Lerp(_fadeFrom[i].rotation, poses[i].rotation, t);
-				poses[i].translation = (poses[i].translation - _fadeFrom[i].translation) * t + _fadeFrom[i].translation;
-			}
-		}
-		else
-		{
-			_fadeTime.reset();
-		}
-	}
+	ApplyFade(seconds, poses);
 
 	_lastPoses = poses;
 	ComposeBoneMatrices(poses);

@@ -77,6 +77,14 @@ public:
 
 	/// Advances the animation by a frame. cursor is the mouse position in window pixels.
 	void Update(std::chrono::microseconds dt, State state, Cycle cycle, glm::ivec2 cursor);
+	/// A frame of the hand holding a miracle's seed: a still frame of a cycle, without leaning. Taking hold, and letting
+	/// go (the next Update), cross-fade from the last pose; changing how it holds doesn't.
+	void UpdateHeld(std::chrono::microseconds dt, Cycle cycle, uint32_t timeMs, glm::ivec2 cursor);
+	/// How far the cursor runs ahead of the spring-smoothed copy of it, in pixels: positive when the smoothed copy is to the
+	/// right of the cursor, and when the cursor is below it
+	[[nodiscard]] glm::vec2 GetCursorLag() const { return _cursorLag; }
+	/// The middle of the bones at the ends of the hand's skeleton, the fingertips, in the pose's model space
+	[[nodiscard]] glm::vec3 LeafBoneCentre() const;
 
 	/// Model space matrices of the hand's bones, in the form L3DMesh::GetBoneMatrices gives the rest pose
 	[[nodiscard]] const std::vector<glm::mat4>& GetBoneMatrices() const { return _boneMatrices; }
@@ -101,6 +109,12 @@ private:
 	void ApplyCycle(const Animation& animation, uint32_t timeMs, std::vector<Pose>& poses) const;
 	void ApplyLean(const Animation& animation, uint32_t timeMs, std::vector<Pose>& poses) const;
 	void ComposeBoneMatrices(const std::vector<Pose>& poses);
+	/// The spring-smoothed cursor follows the cursor for some seconds
+	void StepCursorSpring(float seconds, glm::vec2 mouse);
+	/// The poses blended from the pose faded from, while a cross-fade lasts
+	void ApplyFade(float seconds, std::vector<Pose>& poses);
+	/// Starts a cross-fade from the last pose
+	void StartFade();
 
 	std::vector<std::optional<Animation>> _animations;
 	skeletal_animation::Skeleton _skeleton;
@@ -117,6 +131,9 @@ private:
 	glm::vec2 _smoothedCursor {0.0f, 0.0f};
 	glm::vec2 _smoothedVelocity {0.0f, 0.0f};
 	glm::vec2 _lean {0.0f, 0.0f};
+	glm::vec2 _cursorLag {0.0f, 0.0f};
+	/// It holds a miracle's seed
+	bool _holding {false};
 
 	/// The pose being faded from after the cycle or state changed
 	std::vector<Pose> _fadeFrom;

@@ -229,6 +229,40 @@ TEST(HandSize, FollowsCHandSetDistanceFromView)
 	EXPECT_FLOAT_EQ(HandAnimation::SizeAtDistance(5000.0f), HandAnimation::SizeAtDistance(1800.0f));
 }
 
+TEST_F(HandAnimationTest, HoldingASeedTakesAStillFrameAndFadesInAndOut)
+{
+	using Cycle = HandAnimation::Cycle;
+	_animation.Update(k_Frame, HandAnimation::State::Normal, Cycle::Wiggle, {320, 240});
+	const auto normal = _animation.GetBoneMatrices();
+	// Taking hold cross-fades to the side hold's frame, which then stays still however long it is held
+	_animation.UpdateHeld(k_Frame, Cycle::HoldSide, 66, {320, 240});
+	const auto fading = _animation.GetBoneMatrices();
+	for (int frame = 0; frame < 20; ++frame)
+	{
+		_animation.UpdateHeld(k_Frame, Cycle::HoldSide, 66, {320, 240});
+	}
+	const auto held = _animation.GetBoneMatrices();
+	_animation.UpdateHeld(k_Frame, Cycle::HoldSide, 66, {320, 240});
+	float still = 0.0f;
+	float faded = 0.0f;
+	float moved = 0.0f;
+	for (size_t i = 0; i < held.size(); ++i)
+	{
+		still = std::max(still, Distance(held[i], _animation.GetBoneMatrices()[i]));
+		faded = std::max(faded, Distance(fading[i], held[i]));
+		moved = std::max(moved, Distance(normal[i], held[i]));
+	}
+	EXPECT_LT(still, 1e-5f);
+	EXPECT_GT(moved, 1e-3f);
+	EXPECT_GT(faded, 1e-4f);
+	// Without leaning, whatever the cursor does
+	_animation.UpdateHeld(k_Frame, Cycle::HoldSide, 66, {900, 700});
+	EXPECT_EQ(_animation.GetLean(), glm::vec2(0.0f));
+	EXPECT_NE(_animation.GetCursorLag(), glm::vec2(0.0f));
+	// The fingertips' middle is somewhere in the hand
+	EXPECT_GT(glm::length(_animation.LeafBoneCentre()), 0.0f);
+}
+
 TEST_F(HandAnimationTest, StandardSizeSpansThreeUnitsTwo)
 {
 	// The rest pose's bones of Hand_Boned_Base2 span 536.75 units from top to bottom
