@@ -46,9 +46,13 @@ constexpr uint32_t k_Zoom = 0x04;
 constexpr uint32_t k_Strafe = 0x08;
 } // namespace feature
 
-/// The cursor on the screen, across from -0.5 at the left to 0.5 at the right, and down from -0.5 at the top to 0.5 at
-/// the bottom
-[[nodiscard]] glm::vec2 NormalisedCursor(glm::ivec2 cursor, glm::ivec2 screenSize);
+/// The height of the picture the camera's mouse controls measure by: the screen's, or with the cinema bars in, that of
+/// a 16:9 picture across the screen's width
+[[nodiscard]] int ViewHeight(glm::ivec2 screenSize, bool cinemaBars);
+
+/// The cursor on the screen, across from -0.5 at the left to 0.5 at the right, and down from the middle of the screen
+/// by the view's height, -0.5 at the top and 0.5 at the bottom without the cinema bars
+[[nodiscard]] glm::vec2 NormalisedCursor(glm::ivec2 cursor, glm::ivec2 screenSize, int viewHeight);
 
 /// The hints offered with nothing dragged: the sides and the bottom offer turning, the very bottom tilting too, and the
 /// top (or a cursor over no land in the upper part of the screen) all of them
@@ -73,7 +77,7 @@ public:
 	/// The drag starts, with the hints of the cursor just before it was pressed, where the cursor was and when
 	void Start(uint32_t tricons, glm::vec2 normalisedCursor, uint32_t milliseconds);
 	/// The mouse moved by so many pixels; the drag is decided once it has moved far enough
-	void Move(glm::ivec2 delta, glm::ivec2 screenSize, uint32_t milliseconds, bool landUnderCursor,
+	void Move(glm::ivec2 delta, glm::ivec2 screenSize, int viewHeight, uint32_t milliseconds, bool landUnderCursor,
 	          uint32_t features = k_DefaultFeatures);
 
 	[[nodiscard]] std::optional<DragMode> GetMode() const { return _mode; }
@@ -100,7 +104,7 @@ struct RingStep
 	/// The turn, in radians
 	float angle;
 };
-[[nodiscard]] RingStep EdgeRotate(glm::ivec2 cursor, glm::ivec2 previousOnRing, glm::ivec2 screenSize);
+[[nodiscard]] RingStep EdgeRotate(glm::ivec2 cursor, glm::ivec2 previousOnRing, glm::ivec2 screenSize, int viewHeight);
 
 /// How far a drag down the screen tilts the camera up, in radians, through the camera's field of view across
 [[nodiscard]] float PitchStep(int deltaY, int screenHeight, float horizontalFieldOfView);

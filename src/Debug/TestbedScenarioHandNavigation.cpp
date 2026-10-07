@@ -72,14 +72,17 @@ void testbed_scenarios::AddHandNavigationScenarios(std::vector<Scenario>& all)
 	    .id = "hand.two_buttons",
 	    .name = "Turn and zoom the camera with both buttons",
 	    .facet = Facet::Hand,
-	    .description = "The pointer rests low on the right, on bare land. Both buttons are held while the mouse moves right "
-	                   "and down over a second and a half; then they are let go.",
-	    .expected = "Moving down zooms the camera and, once the mouse has moved sideways far enough, moving across turns "
-	                "it. The hand doesn't grip the land: it keeps its idle hover and stays with the cursor where it was on "
+	    .description = "The pointer rests low on the right, on bare land. Both buttons are held while the mouse moves down "
+	                   "over a second and a half, then jumps right by a twentieth of the screen in a frame and moves on "
+	                   "right slowly for a second; then they are let go.",
+	    .expected = "Moving down zooms the camera and, once the mouse has moved a fortieth of the screen's width across in "
+	                "a frame, moving across turns it. The hand doesn't grip the land: it keeps its idle hover and stays with "
+	                "the cursor where it was on "
 	                "the screen, and stays there once the buttons are let go.",
 	    .framing = {.shot = Shot::Testbed},
 	    .commands = {PointerTo({0.7f, 0.85f}, 1.0f), Press(k_Left, 1.0f), Press(k_Right, 0.0f),
-	                 Sweep({0.2f, 0.15f}, 1.5f, 0.2f), Release(k_Right, 1.6f), Release(k_Left, 0.0f)},
+	                 Sweep({0.0f, 0.15f}, 1.5f, 0.2f), Sweep({0.05f, 0.0f}, 0.001f, 1.6f), Sweep({0.1f, 0.0f}, 1.0f, 0.1f),
+	                 Release(k_Right, 1.2f), Release(k_Left, 0.0f)},
 	});
 
 	all.push_back({
@@ -94,6 +97,75 @@ void testbed_scenarios::AddHandNavigationScenarios(std::vector<Scenario>& all)
 	                "far the gripped land was from the camera.",
 	    .framing = {.shot = Shot::Testbed},
 	    .commands = {PointerTo({0.85f, 0.85f}, 1.0f), Press(k_Left, 1.0f), Sweep({-0.15f, -0.15f}, 1.0f, 0.2f),
+	                 Release(k_Left, 1.2f)},
+	});
+
+	all.push_back({
+	    .id = "hand.edge_hover",
+	    .name = "Hover at the edges of the screen",
+	    .facet = Facet::Hand,
+	    .description = "The pointer rests in the middle, then at the right edge, the bottom edge, the very bottom, and "
+	                   "the top of the screen, a second at each.",
+	    .expected = "In the middle the hand hovers in its ordinary pose. Near the sides (beyond 45% of the half width), "
+	                "near the bottom (below 43%) and at the top (above 49%, or 40% over no land) it shows the turning "
+	                "pose, standing up towards where the camera looks; the very bottom (below 49%) offers tilting too, "
+	                "but turning shows.",
+	    .framing = {.shot = Shot::Testbed},
+	    .commands = {PointerTo({0.5f, 0.6f}, 1.0f), PointerTo({0.98f, 0.6f}, 1.0f), PointerTo({0.5f, 0.95f}, 1.0f),
+	                 PointerTo({0.5f, 0.995f}, 1.0f), PointerTo({0.5f, 0.004f}, 1.0f), PointerTo({0.5f, 0.6f}, 1.0f)},
+	});
+
+	all.push_back({
+	    .id = "hand.edge_rotate",
+	    .name = "Drag round the edge to turn the camera",
+	    .facet = Facet::Hand,
+	    .description = "The left button is pressed at the right edge of the screen, and the mouse moves down slowly for a "
+	                   "second and a half, then is let go.",
+	    .expected = "Once the mouse has moved a fiftieth of the screen the drag turns the camera: the cursor and the hand "
+	                "are held on a ring nine tenths of the way out from the middle, and the camera turns by the angle "
+	                "they sweep round the middle. The hand shows the turning pose, a third of its height higher.",
+	    .framing = {.shot = Shot::Testbed},
+	    .commands = {PointerTo({0.98f, 0.55f}, 1.0f), Press(k_Left, 1.0f), Sweep({0.0f, 0.3f}, 1.5f, 0.2f),
+	                 Release(k_Left, 1.6f)},
+	});
+
+	all.push_back({
+	    .id = "hand.edge_pan",
+	    .name = "A quick drag in from the edge pans",
+	    .facet = Facet::Hand,
+	    .description = "The left button is pressed at the right edge of the screen, and the mouse moves quickly in towards "
+	                   "the middle, then is let go.",
+	    .expected = "Pressed at the edge the hand offers turning, but moving quickly (within 0.3 s) towards the middle "
+	                "the drag pans: the hand grips the land and the land follows it.",
+	    .framing = {.shot = Shot::Testbed},
+	    .commands = {PointerTo({0.98f, 0.6f}, 1.0f), Press(k_Left, 1.0f), Sweep({-0.2f, 0.0f}, 0.2f, 0.0f),
+	                 Sweep({-0.2f, 0.0f}, 0.8f, 0.25f), Release(k_Left, 1.0f)},
+	});
+
+	all.push_back({
+	    .id = "hand.top_pitch",
+	    .name = "Drag up and down at the top to tilt",
+	    .facet = Facet::Hand,
+	    .description = "The left button is pressed at the top of the screen and the mouse moves down slowly, then up, "
+	                   "then is let go.",
+	    .expected = "The drag tilts the camera, by seven thirds of the field of view across for a screen's height of "
+	                "movement, down and then back up; the hand shows the tilting pose and keeps to the cursor.",
+	    .framing = {.shot = Shot::Testbed},
+	    .commands = {PointerTo({0.5f, 0.004f}, 1.0f), Press(k_Left, 1.0f), Sweep({0.0f, 0.15f}, 1.0f, 0.2f),
+	                 Sweep({0.0f, -0.1f}, 1.0f, 1.1f), Release(k_Left, 1.1f)},
+	});
+
+	all.push_back({
+	    .id = "hand.fast_pan",
+	    .name = "Drag the land quickly",
+	    .facet = Facet::Hand,
+	    .description = "The left button is pressed low in the middle of the screen, the mouse moves a quarter of the "
+	                   "screen up and left in a fifth of a second, rests a second, and the button is let go.",
+	    .expected = "The land gripped follows the cursor: the camera eases after it over about 0.3 seconds, as the game's "
+	                "camera does, so the hand trails the cursor while it moves and settles under it once it stops. "
+	                "Letting go, nothing jumps: the hand is already under the cursor.",
+	    .framing = {.shot = Shot::Testbed},
+	    .commands = {PointerTo({0.5f, 0.8f}, 1.0f), Press(k_Left, 1.0f), Sweep({-0.25f, -0.25f}, 0.2f, 0.2f),
 	                 Release(k_Left, 1.2f)},
 	});
 

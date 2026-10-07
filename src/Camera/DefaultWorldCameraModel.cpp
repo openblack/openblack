@@ -14,6 +14,7 @@
 #include <tuple>
 
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/polar_coordinates.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
@@ -24,6 +25,9 @@
 #include "Camera.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Systems/CameraHelpSystemInterface.h"
+#include "ECS/Systems/CinematicDirectorSystemInterface.h"
+#include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
@@ -63,10 +67,11 @@ constexpr auto k_TwoButtonZoomFactor = 1.9f;
 constexpr auto k_TwoButtonTurnFactor = 1.9f;
 // The tilt of a unit of pitch input, in radians
 constexpr auto k_PitchPerInput = 0.002f;
+// The clear view eases in and out over this long, and the hand grips while it is further in than this
+constexpr auto k_ClearViewSeconds = 0.5f;
+constexpr auto k_ClearViewGrips = 0.01f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
 constexpr auto k_MinimalCameraAnimationDuration = 1'500'000us;
-constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
-constexpr auto k_HandDragVectorAlignmentRatioThreshold = 0.000'1f;
 constexpr auto k_FlyingDistanceThresholds = std::array<float, 4> {100.0f, 60.0f, 30.0f, 15.0f};
 constexpr auto k_FlyingThresholdFactor = 1.5f;
 constexpr auto k_GroundDistanceMinimum = 10.0f;
@@ -272,9 +277,16 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
 	_originAtClick = _targetOrigin;
 	_mouseAtClick = Locator::gameActionSystem::value().GetMousePosition();
 	_originFocusDistanceAtInteractionStart = glm::distance(origin, focus);
-	// TODO(#713): calculate a y-basis based on the projection on land of camera origin and hand
-	_originToHandPlaneNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-	// TODO(#713): Calculate the with _originToHandPlaneNormal and the mouse hit point to put in _alignmentAtInteractionStart
+	// Dragging the land, the camera, the cursor and the plane are those of the press
+	if (_mode == Mode::DraggingLandscape && _dragging && _landGrip.has_value())
+	{
+		_originAtClick = _landGrip->origin;
+		_focusAtClick = _landGrip->focus;
+		_mouseAtClick = _landGrip->cursor;
+		_originToHandPlaneNormal = _landGrip->plane.normal;
+		_alignmentAtInteractionStart = _landGrip->plane.distance;
+		_originFocusDistanceAtInteractionStart = glm::distance(_landGrip->origin, _landGrip->focus);
+	}
 	_averageIslandDistance = GetVerticalLineInverseDistanceWeighingRayCast(camera);
 	{
 		const auto diff = _targetOrigin - _targetFocus;
@@ -295,26 +307,7 @@ void DefaultWorldCameraModel::UpdateFocusPointInteractionParameters(glm::vec3 or
 	_averageIslandDistance += extra;
 }
 
-glm::vec3 ScreenToWorld(const Camera& camera, glm::u16vec2 pixelCoord)
-{
-	const auto& window = Locator::windowing ::value();
-
-	const auto screenSize = window.GetSize();
-	const auto aspect = window.GetAspectRatio();
-	const auto yFov = 2.0f * glm::atan(1.0f / camera.GetProjectionMatrix()[1][1]);
-
-	const auto screenCoord = static_cast<glm::vec2>(pixelCoord) / static_cast<glm::vec2>(screenSize);
-	const auto clipSpaceCoordinates = ((screenCoord - 0.5f) * 2.0f) * glm::vec2(1.0f, -1.0f);
-
-	const auto tanHalfFov = glm::tan(yFov / 2.0f);
-	const auto extents = glm::vec3(tanHalfFov * aspect, tanHalfFov, 1.0f);
-	const auto point = glm::vec4(glm::vec3(clipSpaceCoordinates, 1.0f) * extents, 1.0f);
-
-	return camera.GetRotationMatrix() * point;
-}
-
-void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent,
-                                         float mouseMovementDistance)
+void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent)
 {
 	switch (_mode)
 	{
@@ -328,7 +321,7 @@ void DefaultWorldCameraModel::UpdateMode(const Camera& camera, glm::vec3 eulerAn
 		UpdateModeArcBall(eulerAngles, mouseCurrent, camera.GetHorizontalFieldOfView());
 		break;
 	case Mode::DraggingLandscape:
-		UpdateModeDragging(camera, mouseCurrent, mouseMovementDistance);
+		UpdateModeDragging(camera, mouseCurrent);
 		break;
 	case Mode::FlyingToPoint:
 		UpdateModeFlying(eulerAngles);
@@ -399,54 +392,55 @@ void DefaultWorldCameraModel::UpdateModeArcBall(glm::vec3 eulerAngles, glm::u16v
 	_focusAtClick = _targetFocus;
 }
 
-void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance)
+void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent)
 {
-	// TODO(#713): Check on optional of _originToHandPlaneNormal to see if there even is a valid grabbing
-
-	// deproject with camera at origin (0, 0, 0), you can use the current
-	// rotation, because during this operation, we cannot rotate so the
-	// current rotation will be the same as rotation at click
-	// Use the current projection matrix too because we don't want fov
-	// changes to affect the current operation.
-	// In fact, using the regular deprojection followed by removing the
-	// current translation will have the same effect
-	const auto depth = glm::mix(0.3f, 3.5f, glm::clamp(camera.GetOrigin().y / 20.0f, 0.0f, 1.0f));
-	const auto mouseDeltaCurrent = ScreenToWorld(camera, mouseCurrent) * depth;
-	const auto mouseDeltaAtClick = ScreenToWorld(camera, _mouseAtClick) * depth;
-
-	// Get dot product of mouse-camera vector and the normal of the up maximizing plane between the camera and hand
-	// Note that mouseAlignment could be unit vectors, but they are scaled by the near plane
-	const auto mouseAlignmentCurrent = glm::dot(mouseDeltaCurrent, _originToHandPlaneNormal);
-	const auto mouseAlignmentAtClick = glm::dot(mouseDeltaAtClick, _originToHandPlaneNormal);
-
-	if ((mouseAlignmentCurrent < -k_HandDragVectorAlignmentThreshold &&
-	     mouseAlignmentAtClick < -k_HandDragVectorAlignmentThreshold) ||
-	    (mouseAlignmentCurrent > k_HandDragVectorAlignmentThreshold &&
-	     mouseAlignmentAtClick > k_HandDragVectorAlignmentThreshold))
+	// Panning is strafing, and the land must be under the cursor now and where the land was gripped
+	if ((_features & camera_help::feature::k_Strafe) == 0 || !_screenSpaceMouseRaycastHit.has_value() ||
+	    (_landGrip.has_value() && !_landGrip->land))
 	{
-		const auto originAlignmentAtClick = glm::dot(_originAtClick, _originToHandPlaneNormal);
-		const auto alignmentDelta = _alignmentAtInteractionStart - originAlignmentAtClick;
+		return;
+	}
+	// Land gripped too far ahead isn't dragged, until the buttons are let go
+	if (_landGrip.has_value() && _landGrip->depth > camera_pan::k_MaxGripDepth)
+	{
+		_dragGivenUp = true;
+		return;
+	}
 
-		const auto alignmentRatioCurrent = alignmentDelta / mouseAlignmentCurrent;
-		const auto alignmentRatioAtClick = alignmentDelta / mouseAlignmentAtClick;
+	// The lines of sight through the cursor now and at the grip, both from the camera as it was at the grip
+	const auto screenSize = glm::vec2(Locator::windowing::value().GetSize());
+	const auto inverseViewProjection = glm::inverse(camera.GetProjectionMatrix(Camera::Projection::Normal) *
+	                                                glm::lookAt(_originAtClick, _focusAtClick, glm::vec3(0.0f, 1.0f, 0.0f)));
+	const auto rayThrough = [&inverseViewProjection, screenSize](glm::vec2 cursor) {
+		const auto ndc = glm::vec2((cursor.x / screenSize.x - 0.5f) * 2.0f, ((1.0f - cursor.y / screenSize.y) - 0.5f) * 2.0f);
+		const auto near = inverseViewProjection * glm::vec4(ndc, 0.0f, 1.0f);
+		const auto far = inverseViewProjection * glm::vec4(ndc, 0.5f, 1.0f);
+		return glm::normalize(glm::vec3(far) / far.w - glm::vec3(near) / near.w);
+	};
+	const auto place =
+	    camera_pan::Pan({.normal = _originToHandPlaneNormal, .distance = _alignmentAtInteractionStart}, _originAtClick,
+	                    _focusAtClick, _originFocusDistanceAtInteractionStart, rayThrough(glm::vec2(mouseCurrent)),
+	                    rayThrough(glm::vec2(_mouseAtClick)), glm::ivec2(mouseCurrent), glm::ivec2(_mouseAtClick));
+	if (!place.has_value())
+	{
+		return;
+	}
 
-		if (alignmentRatioCurrent > k_HandDragVectorAlignmentRatioThreshold &&
-		    alignmentRatioAtClick > k_HandDragVectorAlignmentRatioThreshold)
+	// The camera stops short of land in its way, or of the sea
+	auto stopped = *place;
+	const auto move = place->origin - _originAtClick;
+	if (glm::length(move) > 0.0f && Locator::dynamicsSystem::has_value())
+	{
+		const auto land =
+		    Locator::dynamicsSystem::value().RayCastLand(_originAtClick, glm::normalize(move), k_ConstrainDiscRadius * 4.0f);
+		const auto hit = land.has_value() ? land : camera_pan::SeaHit(_originAtClick, place->origin, camera.GetOrigin());
+		if (hit.has_value())
 		{
-			auto movement = mouseDeltaCurrent * alignmentRatioCurrent - mouseDeltaAtClick * alignmentRatioAtClick;
-			const auto movementDistance2 = glm::length2(movement);
-			if (movementDistance2 > mouseMovementDistance)
-			{
-				// movement *= mouseMovementDistance *glm::sqrt(movementDistance2); // FIXME: This whole section is broken
-			}
-
-			_targetOrigin = _originAtClick - movement;
-			_targetFocus = _focusAtClick - movement;
-
-			_targetOrigin =
-			    _targetFocus + glm::normalize(_targetOrigin - _targetFocus) * _originFocusDistanceAtInteractionStart;
+			stopped = camera_pan::StopShortOfLand(*place, _originAtClick, *hit);
 		}
 	}
+	_targetOrigin = stopped.origin;
+	_targetFocus = stopped.focus;
 }
 
 void DefaultWorldCameraModel::UpdateModeFlying(glm::vec3 eulerAngles)
@@ -561,8 +555,26 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	_elapsedTime += dt;
 
 	UpdateCameraInterpolationValues(camera);
+	const auto originAtFrameStart = _targetOrigin;
 	UpdateRaycastHitPoints(camera);
 	UpdateFocusDistance();
+
+	// A drag just pressed grips the land under the cursor, or the focus with no land there
+	if (_dragging && !_landGrip.has_value())
+	{
+		const auto gripped = _screenSpaceMouseRaycastHit.value_or(_targetFocus);
+		const auto ground = Locator::terrainSystem::has_value()
+		                        ? Locator::terrainSystem::value().GetHeightAt(glm::xz(_targetOrigin))
+		                        : gripped.y;
+		_landGrip = LandGrip {
+		    .origin = _targetOrigin,
+		    .focus = _targetFocus,
+		    .cursor = glm::u16vec2(Locator::gameActionSystem::value().GetMousePosition()),
+		    .plane = camera_pan::PlaneThrough(gripped, _targetOrigin, ground),
+		    .land = _screenSpaceMouseRaycastHit.has_value(),
+		    .depth = PointDistanceAlongLineSegment(_targetOrigin, _targetFocus, gripped),
+		};
+	}
 
 	// Get angles (yaw, pitch, roll). Roll is always 0
 	glm::vec3 eulerAngles = EulerFromPoints(_targetOrigin, _focusAtClick);
@@ -593,9 +605,24 @@ std::optional<CameraModel::CameraInterpolationUpdateInfo> DefaultWorldCameraMode
 	                 _originFocusDistanceAtInteractionStart * 0.11f,
 	             50.0f);
 
-	UpdateMode(camera, eulerAngles, zoomDelta, mouseCurrent, mouseMovementDistance);
+	UpdateMode(camera, eulerAngles, zoomDelta, mouseCurrent);
 
 	const bool originHasBeenAdjusted = ConstrainCamera(dt, mouseMovementDistance, eulerAngles, camera);
+
+	// The self-tilting camera keeps to its height over the land, where it was at the start of the frame, looking the way
+	// it now does, unless the land is dragged without turning or zooming
+	if ((_features & camera_help::feature::k_AutoPitch) != 0 &&
+	    (!_dragging || _rotateAroundDelta != glm::vec3() || _mode == Mode::ArcBall))
+	{
+		const auto height = Locator::cameraHelpSystem::has_value() ? Locator::cameraHelpSystem::value().Get().autoPitchHeight
+		                                                           : camera_help::k_DefaultAutoPitchHeight;
+		const auto ground = Locator::terrainSystem::has_value()
+		                        ? Locator::terrainSystem::value().GetHeightAt(glm::xz(originAtFrameStart))
+		                        : 0.0f;
+		const auto origin = glm::vec3(originAtFrameStart.x, ground + height, originAtFrameStart.z);
+		_targetFocus += origin - _targetOrigin;
+		_targetOrigin = origin;
+	}
 
 	return ComputeUpdateReturnInfo(originHasBeenAdjusted, camera.GetInterpolatorTime());
 }
@@ -644,6 +671,14 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	// Compute delta position (dp) based on the elapsed time and speed.
 	const auto dp = k_InteractionSpeedMultiplier * std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const auto& actionSystem = Locator::gameActionSystem::value();
+
+	// What the scripts let the player do, less going to watch fights while watching one
+	const auto help =
+	    Locator::cameraHelpSystem::has_value() ? Locator::cameraHelpSystem::value().Get() : camera_help::CameraHelp {};
+	const bool onFight = Locator::creatureFightSystem::has_value() && Locator::creatureFightSystem::value().IsCameraOnFight();
+	_features = onFight ? camera_help::DuringFight(help.features) : help.features;
+	const bool aroundMouse = (_features & camera_help::feature::k_RotateAroundMouse) != 0;
+	const bool rotateAroundMouse = aroundMouse && actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON);
 
 	// TODO(#709): Set tricons based on ZOOM or TILT if any move is detected
 
@@ -708,7 +743,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		    actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? -k_WheelZoomPerNotch : k_WheelZoomPerNotch;
 	}
 
-	const bool twoButtons = actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK);
+	const bool twoButtons = aroundMouse && actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK);
 	if (twoButtons)
 	{
 		_rotateAroundDelta.z += actionSystem.GetMouseDelta().y * k_TwoButtonZoomFactor;
@@ -722,28 +757,70 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		_rotateAroundDelta.y += static_cast<float>(across) * k_TwoButtonTurnFactor;
 	}
 
-	if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	if (rotateAroundMouse)
 	{
 		const auto mouseDelta = static_cast<glm::vec2>(actionSystem.GetMouseDelta());
 		_rotateAroundDelta += glm::vec3(glm::yx(mouseDelta * k_RotateOnSpeedMultiplier), 0.0f);
 	}
 
+	// Ctrl and Shift together ease the clear view in over half a second, and out again
+	_clearView.SetDestination(
+	    actionSystem.Get(input::BindableActionMap::ZOOM_ON) && actionSystem.Get(input::BindableActionMap::ROTATE_ON) ? 1.0f
+	                                                                                                                 : 0.0f,
+	    k_ClearViewSeconds);
+	_clearView.Update(std::chrono::duration<float>(dt).count());
+
 	const auto handPositions = actionSystem.GetHandPositions();
 	_handPosition = handPositions[0].or_else([handPositions] { return handPositions[1]; });
 
 	_controlsTime += dt;
-	if (!(_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE)) ||
-	    actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	if (!(_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE)) || rotateAroundMouse)
 	{
 		std::ignore = HandleDrag(false);
 	}
-	// The hints follow the cursor while nothing is dragged and the camera isn't being turned, moved or zoomed
-	if (!_dragging && !actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON) &&
-	    _rotateAroundDelta == glm::vec3() && _keyBoardMoveDelta == glm::vec2() && Locator::windowing::has_value())
+
+	// Without zooming the zoom does nothing, without turning nothing turns, without tilting nothing tilts unless the
+	// camera tilts itself, and without strafing the movement keys do nothing
+	if ((_features & camera_help::feature::k_Zoom) == 0)
 	{
+		_rotateAroundDelta.z = 0.0f;
+	}
+	if ((_features & camera_help::feature::k_Rotate) == 0)
+	{
+		_rotateAroundDelta.y = 0.0f;
+	}
+	if ((_features & camera_help::feature::k_Strafe) == 0)
+	{
+		_keyBoardMoveDelta = glm::vec2();
+	}
+	// The self-tilting camera tilts towards its pitch while the land isn't dragged
+	bool autoTilting = false;
+	if ((_features & camera_help::feature::k_AutoPitch) != 0 && !_dragging)
+	{
+		const auto pitch = EulerFromPoints(_targetOrigin, _focusAtClick).y;
+		if (const auto input = camera_help::AutoPitchInput(help.autoPitch, pitch, std::chrono::duration<float>(dt).count()))
+		{
+			_rotateAroundDelta.x = *input;
+			autoTilting = true;
+		}
+	}
+	if ((_features & camera_help::feature::k_Pitch) == 0 && !autoTilting)
+	{
+		_rotateAroundDelta.x = 0.0f;
+	}
+	// The hints follow the cursor while nothing is dragged and the camera isn't being turned, moved or zoomed
+	if (!_dragging && !rotateAroundMouse && _rotateAroundDelta == glm::vec3() && _keyBoardMoveDelta == glm::vec2() &&
+	    Locator::windowing::has_value())
+	{
+		const auto screenSize = Locator::windowing::value().GetSize();
 		const auto cursor =
-		    camera_drag::NormalisedCursor(glm::ivec2(actionSystem.GetMousePosition()), Locator::windowing::value().GetSize());
+		    camera_drag::NormalisedCursor(glm::ivec2(actionSystem.GetMousePosition()), screenSize, ViewHeight(screenSize));
 		_tricons = camera_drag::IdleTricons(cursor, _screenSpaceMouseRaycastHit.has_value());
+		// Watching a fight, the camera offers no tilting
+		if (onFight)
+		{
+			_tricons &= ~camera_drag::tricon::k_Pitch;
+		}
 	}
 
 	_modePrev = _mode;
@@ -751,7 +828,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	{
 		_mode = Mode::FlyingToPoint;
 	}
-	else if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	else if (rotateAroundMouse)
 	{
 		_mode = Mode::ArcBall;
 	}
@@ -775,7 +852,12 @@ DefaultWorldCameraModel::Mode DefaultWorldCameraModel::HandleDrag(bool held)
 	if (!held)
 	{
 		_dragging = false;
+		_dragGivenUp = false;
 		return _mode;
+	}
+	if (_dragGivenUp)
+	{
+		return Mode::Cartesian;
 	}
 	if (!Locator::windowing::has_value())
 	{
@@ -790,12 +872,15 @@ DefaultWorldCameraModel::Mode DefaultWorldCameraModel::HandleDrag(bool held)
 	{
 		// The drag takes the hints of the cursor before it was pressed
 		_dragging = true;
-		_drag.Start(_tricons, camera_drag::NormalisedCursor(cursor, screenSize), milliseconds);
+		_drag.Start(_tricons, camera_drag::NormalisedCursor(cursor, screenSize, ViewHeight(screenSize)), milliseconds);
 		_ringCursor = cursor;
+		// The land is gripped as the camera next looks at it
+		_landGrip.reset();
 	}
 	else
 	{
-		_drag.Move(actionSystem.GetMouseDelta(), screenSize, milliseconds, _screenSpaceMouseRaycastHit.has_value());
+		_drag.Move(actionSystem.GetMouseDelta(), screenSize, ViewHeight(screenSize), milliseconds,
+		           _screenSpaceMouseRaycastHit.has_value(), _features);
 	}
 
 	const auto mode = _drag.GetMode();
@@ -811,9 +896,12 @@ DefaultWorldCameraModel::Mode DefaultWorldCameraModel::HandleDrag(bool held)
 	case DragMode::EdgeRotate:
 	{
 		// The cursor is held on the ring, and the camera turns about its focus by the angle swept round the middle
-		const auto step = camera_drag::EdgeRotate(cursor, _ringCursor, screenSize);
+		const auto step = camera_drag::EdgeRotate(cursor, _ringCursor, screenSize, ViewHeight(screenSize));
 		_ringCursor = step.cursor;
-		_rotateAroundDelta.y += step.angle * static_cast<float>(screenSize.x) / glm::pi<float>();
+		if ((_features & camera_help::feature::k_Rotate) != 0)
+		{
+			_rotateAroundDelta.y += step.angle * static_cast<float>(screenSize.x) / glm::pi<float>();
+		}
 		actionSystem.WarpCursor(step.cursor);
 		return Mode::Polar;
 	}
@@ -821,18 +909,31 @@ DefaultWorldCameraModel::Mode DefaultWorldCameraModel::HandleDrag(bool held)
 	case DragMode::PitchFromTop:
 	{
 		const auto fov = Locator::camera::has_value() ? Locator::camera::value().GetHorizontalFieldOfView() : 0.0f;
-		_rotateAroundDelta.x += camera_drag::PitchStep(actionSystem.GetMouseDelta().y, screenSize.y, fov) / k_PitchPerInput;
+		if ((_features & camera_help::feature::k_Pitch) != 0)
+		{
+			_rotateAroundDelta.x += camera_drag::PitchStep(actionSystem.GetMouseDelta().y, screenSize.y, fov) / k_PitchPerInput;
+		}
 		return Mode::Polar;
 	}
 	}
 	return Mode::DraggingLandscape;
 }
 
+int DefaultWorldCameraModel::ViewHeight(glm::ivec2 screenSize)
+{
+	const bool bars =
+	    Locator::cinematicDirectorSystem::has_value() && Locator::cinematicDirectorSystem::value().IsWideScreenOn();
+	return camera_drag::ViewHeight(screenSize, bars);
+}
+
 CameraModel::HandCues DefaultWorldCameraModel::GetHandCues() const
 {
 	if (_dragging)
 	{
-		return {.tricons = _drag.GetTricons(), .dragging = true, .dragMode = _drag.GetMode()};
+		return {.tricons = _drag.GetTricons(),
+		        .dragging = true,
+		        .dragMode = _drag.GetMode(),
+		        .clearViewGrip = _clearView.GetValue() > k_ClearViewGrips};
 	}
 	return {.tricons = _tricons};
 }

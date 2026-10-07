@@ -44,6 +44,9 @@ constexpr float k_RingBandMax = 0.91f;
 /// A share of the field of view across the drag down the whole screen tilts by
 constexpr float k_PitchPerScreen = 2.33333f;
 
+/// With the cinema bars in, the picture is 16:9
+constexpr float k_WideScreen = 0.5625f;
+
 /// Both buttons turn the camera once the mouse has moved this share of the screen's width across
 constexpr float k_TwoButtonTurnShare = 0.025f;
 
@@ -54,10 +57,19 @@ glm::vec2 Direction(glm::vec2 vector)
 }
 } // namespace
 
-glm::vec2 NormalisedCursor(glm::ivec2 cursor, glm::ivec2 screenSize)
+int ViewHeight(glm::ivec2 screenSize, bool cinemaBars)
+{
+	if (!cinemaBars)
+	{
+		return screenSize.y;
+	}
+	return screenSize.y - static_cast<int>(static_cast<float>(screenSize.y) - static_cast<float>(screenSize.x) * k_WideScreen);
+}
+
+glm::vec2 NormalisedCursor(glm::ivec2 cursor, glm::ivec2 screenSize, int viewHeight)
 {
 	const auto width = static_cast<float>(screenSize.x);
-	const auto height = static_cast<float>(screenSize.y);
+	const auto height = static_cast<float>(viewHeight);
 	return {static_cast<float>(cursor.x) / width - 0.5f, static_cast<float>(cursor.y - (screenSize.y >> 1)) / height};
 }
 
@@ -106,11 +118,11 @@ void DragClassifier::Start(uint32_t tricons, glm::vec2 normalisedCursor, uint32_
 	}
 }
 
-void DragClassifier::Move(glm::ivec2 delta, glm::ivec2 screenSize, uint32_t milliseconds, bool landUnderCursor,
+void DragClassifier::Move(glm::ivec2 delta, glm::ivec2 screenSize, int viewHeight, uint32_t milliseconds, bool landUnderCursor,
                           uint32_t features)
 {
 	// Across by the height and down by the width, as the game adds them up
-	_moved += glm::vec2(static_cast<float>(delta.x) / static_cast<float>(screenSize.y),
+	_moved += glm::vec2(static_cast<float>(delta.x) / static_cast<float>(viewHeight),
 	                    static_cast<float>(delta.y) / static_cast<float>(screenSize.x));
 	if (!_mode.has_value() && k_DecideDistance * k_DecideDistance < _moved.x * _moved.x + _moved.y * _moved.y)
 	{
@@ -179,19 +191,20 @@ void DragClassifier::Decide(uint32_t milliseconds, bool landUnderCursor, uint32_
 	}
 }
 
-RingStep EdgeRotate(glm::ivec2 cursor, glm::ivec2 previousOnRing, glm::ivec2 screenSize)
+RingStep EdgeRotate(glm::ivec2 cursor, glm::ivec2 previousOnRing, glm::ivec2 screenSize, int viewHeight)
 {
 	const auto width = static_cast<float>(screenSize.x);
 	const auto height = static_cast<float>(screenSize.y);
+	const auto view = static_cast<float>(viewHeight);
 	const auto x = (static_cast<float>(cursor.x) - width * 0.5f) / (width * 0.5f);
-	const auto y = (static_cast<float>(cursor.y) - height * 0.5f) / (height * 0.5f);
+	const auto y = (static_cast<float>(cursor.y) - height * 0.5f) / (view * 0.5f);
 	auto onRing = cursor;
 	const auto squared = x * x + y * y;
 	if (squared < k_RingBandMin || k_RingBandMax < squared)
 	{
 		const auto scale = squared != 0.0f ? k_RingRadius / std::sqrt(squared) : 0.0f;
 		onRing = {static_cast<int>(((scale * x + 1.0f) * width + 1.0f) * 0.5f),
-		          static_cast<int>((scale * y * height + height + 1.0f) * 0.5f)};
+		          static_cast<int>((scale * y * view + height + 1.0f) * 0.5f)};
 	}
 	const auto halfWidth = screenSize.x / 2;
 	const auto halfHeight = screenSize.y >> 1;

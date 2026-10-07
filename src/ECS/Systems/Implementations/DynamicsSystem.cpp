@@ -119,6 +119,30 @@ void DynamicsSystem::UpdatePhysicsTransforms()
 	});
 }
 
+std::optional<glm::vec3> DynamicsSystem::RayCastLand(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
+{
+	// The closest hit among the land's bodies only
+	struct LandOnly final: btCollisionWorld::ClosestRayResultCallback
+	{
+		using ClosestRayResultCallback::ClosestRayResultCallback;
+		[[nodiscard]] bool needsCollision(btBroadphaseProxy* proxy) const override
+		{
+			const auto* object = static_cast<const btCollisionObject*>(proxy->m_clientObject);
+			return object != nullptr && static_cast<RigidBodyType>(object->getUserIndex()) == RigidBodyType::Terrain &&
+			       ClosestRayResultCallback::needsCollision(proxy);
+		}
+	};
+	const auto from = btVector3(origin.x, origin.y, origin.z);
+	const auto to = from + tMax * btVector3(direction.x, direction.y, direction.z);
+	LandOnly callback(from, to);
+	_world->rayTest(from, to, callback);
+	if (!callback.hasHit())
+	{
+		return std::nullopt;
+	}
+	return glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
+}
+
 std::optional<std::pair<Transform, RigidBodyDetails>>
 DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
 {

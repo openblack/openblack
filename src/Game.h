@@ -20,6 +20,7 @@
 #include <spdlog/common.h>
 
 #include "3D/HandCrossFade.h"
+#include "3D/HandNavigationPose.h"
 #include "Common/Zoomer.h"
 #include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "EngineConfig.h"
@@ -129,6 +130,8 @@ public:
 	/// Seconds the hand eases over to land further from and nearer to the camera
 	static constexpr float k_HandEaseOutTime = 0.28f;
 	static constexpr float k_HandEaseInTime = 0.1f;
+	/// Seconds the hand takes to hold its distance from the camera as it drags by the edge of the screen
+	static constexpr float k_HandHoldTime = 0.4f;
 
 	explicit Game(Arguments&& args) noexcept;
 	virtual ~Game() noexcept;
@@ -205,7 +208,14 @@ private:
 	glm::vec3 _handRayDirection {0.0f, -1.0f, 0.0f};
 	float _handDistance {k_HandMinDistance};
 	Zoomer _handHoverZoomer;
-	bool _handWasDragging {false};
+	bool _handWasGripping {false};
+	/// Where the hand is, before it is faded from where it was
+	glm::vec3 _handPosition {0.0f, 0.0f, 0.0f};
+	/// Dragging the land, and the pose the camera's hints give the hand
+	bool _handCameraState {false};
+	hand_navigation_pose::Pose _handPose {hand_navigation_pose::Pose::Idle};
+	/// How far from the camera the hand holds while it drags by the edge of the screen
+	Zoomer _handHoldZoomer;
 	/// The land the hand grips while it drags it, and where the hand was when it gripped
 	glm::vec3 _handGripPoint {0.0f, 0.0f, 0.0f};
 	/// The fade from where the hand was to where it is now held, as it grips the land or lets go
@@ -238,6 +248,8 @@ private:
 	/// Turns the hand to face along the line of sight through the cursor and stands it on the slope under it
 	void OrientHand(ecs::components::Transform& handTransform, const glm::mat3& facingCamera, glm::vec3 surfaceUp,
 	                float deltaSeconds);
+	/// Decides how the hand moves this frame, gripping the land, held as it drags by the edge, or hovering, and its pose
+	void UpdateHandNavigation(const ecs::components::Transform& handTransform);
 	/// Places the hand on the line of sight through the cursor the way the game does
 	void PlaceHand(ecs::components::Transform& handTransform, float deltaSeconds);
 	/// Loads the hand animations of Data/CTR/hh.hbn for the hand mesh

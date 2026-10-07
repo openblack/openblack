@@ -31,6 +31,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
+#include "ECS/Systems/Implementations/CameraHelpSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
 #include "ECS/Systems/Implementations/ChimneySmokeSystem.h"
 #include "ECS/Systems/Implementations/CinematicDirectorSystem.h"
@@ -98,6 +99,7 @@ using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
+using openblack::ecs::systems::CameraHelpSystem;
 using openblack::ecs::systems::CameraPathSystem;
 using openblack::ecs::systems::ChimneySmokeSystem;
 using openblack::ecs::systems::CinematicDirectorSystem;
@@ -203,6 +205,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
 	Locator::alignmentSystem::emplace<AlignmentSystem>();
+	Locator::cameraHelpSystem::emplace<CameraHelpSystem>();
 	Locator::templeExteriorSystem::emplace<TempleExteriorSystem>();
 	Locator::time::emplace<TimeSystem>();
 	Locator::vegetation::emplace<VegetationSystem>();

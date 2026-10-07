@@ -14,6 +14,8 @@
 #include <glm/vec2.hpp>
 
 #include "CameraModel.h"
+#include "CameraPan.h"
+#include "Common/Zoomer.h"
 
 class TestDefaultCameraModel;
 class TestDefaultCameraModel_single_line_Test;
@@ -50,13 +52,14 @@ private:
 	/// What a drag of the land does, from where it was pressed and how the mouse moves: pans, turns round the edge or
 	/// tilts. Gives the mode the camera takes for it.
 	[[nodiscard]] Mode HandleDrag(bool held);
+	/// The height the mouse controls measure by, the cinema bars' picture's while they are in
+	[[nodiscard]] static int ViewHeight(glm::ivec2 screenSize);
 
-	void UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent,
-	                float mouseMovementDistance);
+	void UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent);
 	void UpdateModeCartesian();
 	void UpdateModePolar(glm::vec3 eulerAngles, bool recalculatePoint);
 	void UpdateModeArcBall(glm::vec3 eulerAngles, glm::u16vec2 mouseCurrent, float xFov);
-	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent, float mouseMovementDistance);
+	void UpdateModeDragging(const Camera& camera, glm::u16vec2 mouseCurrent);
 	void UpdateModeFlying(glm::vec3 eulerAngles);
 
 	/// Updates the model's focus point parameters after a change in position or focus point of view
@@ -137,7 +140,25 @@ private:
 	bool _dragging {false};
 	camera_drag::DragClassifier _drag;
 	glm::ivec2 _ringCursor {0, 0};
+	/// Where the land was gripped as the drag was pressed: the camera then, the cursor, the plane the land is dragged
+	/// across, whether there was land under the cursor and how far ahead it was
+	struct LandGrip
+	{
+		glm::vec3 origin;
+		glm::vec3 focus;
+		glm::u16vec2 cursor;
+		camera_pan::GripPlane plane;
+		bool land;
+		float depth;
+	};
+	std::optional<LandGrip> _landGrip;
+	/// What the camera lets the player do this frame, as the scripts allow and a fight changes it
+	uint32_t _features {camera_drag::k_DefaultFeatures};
+	/// A drag gripping land too far ahead is given up until the buttons are let go
+	bool _dragGivenUp {false};
 	camera_drag::TwoButtonTurn _twoButtonTurn;
+	/// How far the clear view of Ctrl and Shift held together has come, easing in and out over half a second
+	Zoomer _clearView;
 	/// Time spent handling the controls, for timing the start of a drag
 	std::chrono::microseconds _controlsTime {std::chrono::microseconds::zero()};
 

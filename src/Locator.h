@@ -127,6 +127,7 @@ class InfluenceSystemInterface;
 class TownDesireSystemInterface;
 class PathfindingSystemInterface;
 class AlignmentSystemInterface;
+class CameraHelpSystemInterface;
 class TempleExteriorSystemInterface;
 class PlayerSystemInterface;
 class RenderingSystemInterface;
@@ -177,6 +178,7 @@ struct Locator
 	using entitiesMap = entt::locator<ecs::MapInterface>;
 	using playerSystem = entt::locator<ecs::systems::PlayerSystemInterface>;
 	using alignmentSystem = entt::locator<ecs::systems::AlignmentSystemInterface>;
+	using cameraHelpSystem = entt::locator<ecs::systems::CameraHelpSystemInterface>;
 	using templeExteriorSystem = entt::locator<ecs::systems::TempleExteriorSystemInterface>;
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;

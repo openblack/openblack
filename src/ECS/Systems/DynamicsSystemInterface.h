@@ -14,6 +14,7 @@
 #include <tuple>
 
 #include <glm/fwd.hpp>
+#include <glm/vec3.hpp>
 
 class btRigidBody;
 
@@ -53,6 +54,13 @@ public:
 	virtual void UpdatePhysicsTransforms() = 0;
 	[[nodiscard]] virtual std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
 	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const = 0;
+	/// Where a line first meets the land itself, passing through everything on it; none without land to meet
+	[[nodiscard]] virtual std::optional<glm::vec3> RayCastLand([[maybe_unused]] const glm::vec3& origin,
+	                                                           [[maybe_unused]] const glm::vec3& direction,
+	                                                           [[maybe_unused]] float tMax) const
+	{
+		return std::nullopt;
+	}
 };
 
 } // namespace openblack::ecs::systems

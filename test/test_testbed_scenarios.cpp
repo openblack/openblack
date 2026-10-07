@@ -390,7 +390,8 @@ TEST(TestbedScenarios, PointerCommandsAreChecked)
 
 TEST(TestbedScenarios, CoversTheHandFindingItsWay)
 {
-	for (const auto* id : {"hand.rotate_release", "hand.two_buttons", "hand.drag", "hand.zoom", "hand.click"})
+	for (const auto* id : {"hand.rotate_release", "hand.two_buttons", "hand.drag", "hand.zoom", "hand.click", "hand.edge_hover",
+	                       "hand.edge_rotate", "hand.edge_pan", "hand.top_pitch", "hand.fast_pan"})
 	{
 		const auto* scenario = Find(id);
 		ASSERT_NE(scenario, nullptr) << id;

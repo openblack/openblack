@@ -164,7 +164,7 @@ void GameActionMap::ApplyQueuedPresses()
 
 bool GameActionMap::GetBindable(BindableActionMap action) const
 {
-	return (static_cast<uint64_t>(_bindableMap) & static_cast<uint64_t>(action)) != 0;
+	return (static_cast<uint64_t>(_bindableMap) & static_cast<uint64_t>(action) & ~static_cast<uint64_t>(_blocked)) != 0;
 }
 
 bool GameActionMap::GetUnbindable(UnbindableActionMap action) const
@@ -175,7 +175,7 @@ bool GameActionMap::GetUnbindable(UnbindableActionMap action) const
 bool GameActionMap::GetBindableChanged(BindableActionMap action) const
 {
 	return ((static_cast<uint64_t>(_bindableMap) ^ static_cast<uint64_t>(_bindableMapPrevious)) &
-	        static_cast<uint64_t>(action)) != 0;
+	        static_cast<uint64_t>(action) & ~static_cast<uint64_t>(_blocked)) != 0;
 }
 
 bool GameActionMap::GetUnbindableChanged(UnbindableActionMap action) const
@@ -187,7 +187,7 @@ bool GameActionMap::GetUnbindableChanged(UnbindableActionMap action) const
 bool GameActionMap::GetBindableRepeat(BindableActionMap action) const
 {
 	return ((static_cast<uint64_t>(_bindableMap) & static_cast<uint64_t>(_bindableMapPrevious)) &
-	        static_cast<uint64_t>(action)) != 0;
+	        static_cast<uint64_t>(action) & ~static_cast<uint64_t>(_blocked)) != 0;
 }
 
 bool GameActionMap::GetUnbindableRepeat(UnbindableActionMap action) const

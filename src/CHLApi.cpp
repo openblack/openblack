@@ -34,6 +34,7 @@
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
@@ -766,9 +767,16 @@ void GetInfluence() // 062 GET_INFLUENCE
 
 void SetInterfaceInteraction() // 063 SET_INTERFACE_INTERACTION
 {
-	// const auto level = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto level = Pop().intVal;
+	// What the camera lets the player do at this level of the interface, as the tutorials step through them
+	if (!Locator::cameraHelpSystem::value().Get().SetInterfaceLevel(level))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Unexpected interaction : {}", level);
+		return;
+	}
+	// TODO(raffclar): the level also sets two flags of the player's interface. One makes the tooltip of an object held in
+	// the hand come from another source; openblack has no objects held in the hand yet. The other flag's reader wasn't
+	// found in the game, so what it does isn't known.
 }
 
 void Played() // 064 PLAYED

@@ -24,6 +24,7 @@
 #include <PackFile.h>
 #include <SDL.h>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/intersect.hpp>
@@ -40,6 +41,7 @@
 #include "3D/FlatLand.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
+#include "3D/HandNavigationPose.h"
 #include "3D/HandOrientation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
@@ -80,6 +82,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
+#include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
 #include "ECS/Systems/ChimneySmokeSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
@@ -810,8 +813,12 @@ bool Game::Update() noexcept
 		// The debug windows' presses of the options screen's actions are made by the action map's frame
 		auto& actions = Locator::gameActionSystem::value();
 		// The world's camera is the one turned with the mouse, which holds the cursor and the hand still meanwhile
-		actions.AllowCursorFreeze(!(Locator::temple::has_value() && Locator::temple::value().Active()) &&
-		                          dynamic_cast<DefaultWorldCameraModel*>(&camera.GetModel()) != nullptr);
+		actions.AllowCursorFreeze(
+		    !(Locator::temple::has_value() && Locator::temple::value().Active()) &&
+		    dynamic_cast<DefaultWorldCameraModel*>(&camera.GetModel()) != nullptr &&
+		    (Locator::cameraHelpSystem::value().Get().features & camera_help::feature::k_RotateAroundMouse) != 0);
+		// The land's scripts may take the camera's keys away, as the tutorials do
+		actions.SetBlockedActions(Locator::cameraHelpSystem::value().Get().BlockedActions());
 		if (!Locator::debugGui::value().StealsFocus() || actions.HasQueuedPresses())
 		{
 			actions.Frame();
@@ -826,6 +833,10 @@ bool Game::Update() noexcept
 			_mousePosition = glm::ivec2(actions.GetMousePosition());
 		}
 		camera.HandleActions(deltaTime);
+		if (const auto warp = actions.GetCursorWarp(); warp.has_value())
+		{
+			_mousePosition = *warp;
+		}
 		ProcessTempleRoomKeys();
 		_shortcutKeys.Update();
 	}
@@ -1080,6 +1091,7 @@ bool Game::Update() noexcept
 			const auto handEntity = Locator::handSystem::value()
 			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
 			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
+			UpdateHandNavigation(handTransform);
 			if (Locator::temple::has_value() && Locator::temple::value().Active())
 			{
 				if (!_handGripping)
@@ -1148,9 +1160,26 @@ bool Game::Update() noexcept
 		{
 			using HandState = HandAnimation::State;
 			using HandCycle = HandAnimation::Cycle;
-			const bool dragging = _handGripping && !_handRotating;
-			const auto state = dragging ? HandState::Camera : HandState::Normal;
-			auto cycle = dragging ? HandCycle::Grip : HandCycle::Wiggle;
+			using hand_navigation_pose::Pose;
+			const auto state = _handCameraState ? HandState::Camera : HandState::Normal;
+			auto cycle = HandCycle::Wiggle;
+			switch (_handPose)
+			{
+			case Pose::Idle:
+				break;
+			case Pose::Grip:
+				cycle = HandCycle::Grip;
+				break;
+			case Pose::Rotate:
+				cycle = HandCycle::Rotate;
+				break;
+			case Pose::Pitch:
+				cycle = HandCycle::Pitch;
+				break;
+			case Pose::Zoom:
+				cycle = HandCycle::Zoom;
+				break;
+			}
 			// On a creature, it strokes it or shows its slap
 			if (_handOnCreature.has_value())
 			{
@@ -1163,7 +1192,8 @@ bool Game::Update() noexcept
 			const auto handEntity = Locator::handSystem::value()
 			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
 			auto& registry = Locator::entitiesRegistry::value();
-			if (auto* hand = registry.TryGet<ecs::components::Hand>(handEntity))
+			auto* hand = registry.TryGet<ecs::components::Hand>(handEntity);
+			if (hand != nullptr)
 			{
 				hand->boneMatrices = _handAnimation->GetBoneMatrices();
 			}
@@ -1174,6 +1204,21 @@ bool Game::Update() noexcept
 				// The game mirrors the mesh's left hand along its x axis to make a right hand
 				const auto scale = _handAnimation->ScaleAtDistance(distance);
 				handTransform->scale = glm::vec3(config.rightHandedHand ? -scale : scale, scale, scale);
+				// Showing it turns the camera as it drags the land, the hand is drawn a third of its height higher, the
+				// place it holds staying where it is
+				if (hand != nullptr && _handCameraState && _handPose == Pose::Rotate &&
+				    glm::determinant(handTransform->rotation) != 0.0f && scale != 0.0f)
+				{
+					const auto lift =
+					    hand_navigation_pose::k_RotateLiftShare * k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
+					const auto toModel =
+					    glm::inverse(handTransform->rotation * glm::mat3(glm::scale(glm::mat4(1.0f), handTransform->scale)));
+					const auto raise = glm::translate(glm::mat4(1.0f), toModel * glm::vec3(0.0f, lift, 0.0f));
+					for (auto& bone : hand->boneMatrices)
+					{
+						bone = raise * bone;
+					}
+				}
 			}
 		}
 
@@ -2023,6 +2068,7 @@ void Game::PrepareNewLand()
 		Locator::waterRingSystem::value().Reset();
 	}
 	Locator::cinematicDirectorSystem::value().Reset();
+	Locator::cameraHelpSystem::value().Get().ResetForNewLand();
 	Locator::influenceSystem::value().Reset();
 	// Nor its creatures' footprints
 	Locator::footprintSystem::value().Reset();
@@ -2254,7 +2300,8 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 {
 	const auto& camera = Locator::camera::value();
 	const auto eye = camera.GetOrigin();
-	const bool dragging = _handGripping && !_handRotating;
+	// How far the hand reaches from the camera, as the land's scripts allow
+	const auto handReach = Locator::cameraHelpSystem::value().Get().handReach;
 
 	// In the temple the hand hangs on the line of sight through the cursor, a little short of where it
 	// meets the room, slowly away from the camera and quickly towards it
@@ -2280,28 +2327,55 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		return;
 	}
 
-	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and the hand stays on the land it
-	// gripped, so it moves with it. It fades onto it from where it was as it changes pose, and back to hovering once
-	// let go. Its hover carries on from how far the gripped land was from the camera.
-	if (dragging)
+	// Gripping the land, the camera keeps the land the hand gripped under the cursor, and the hand stays on the land it
+	// gripped, so it moves with it. Its hover carries on from how far the gripped land was from the camera.
+	const bool gripsLand = _handCameraState && _handPose == hand_navigation_pose::Pose::Grip;
+	if (gripsLand)
 	{
-		if (!_handWasDragging)
+		if (!_handWasGripping)
 		{
-			_handGripPoint = _cursorWorldPosition.value_or(handTransform.position);
-			_handCrossFade.Start(handTransform.position);
+			_handGripPoint = _cursorWorldPosition.value_or(_handPosition);
 		}
-		_handCrossFade.Update(deltaSeconds);
-		handTransform.position = _handCrossFade.Apply(_handGripPoint);
-		_handDistance = glm::clamp(glm::distance(eye, _handGripPoint), k_HandMinDistance, k_HandMaxDistance);
+		_handPosition = _handGripPoint;
+		_handDistance = glm::clamp(glm::distance(eye, _handGripPoint), k_HandMinDistance, handReach);
 		_handHoverZoomer.Reset(_handDistance);
-		_handWasDragging = true;
+		_handHoldZoomer.Reset(_handDistance);
+		_handWasGripping = true;
+		_handCrossFade.Update(deltaSeconds);
+		handTransform.position = _handCrossFade.Apply(_handPosition);
 		return;
 	}
-	if (_handWasDragging)
+	_handWasGripping = false;
+
+	// Dragging by the edge of the screen, before the drag is decided or as it turns or tilts the camera, the hand keeps
+	// on the line of sight through the cursor, holding how far it is from the camera over 0.4 seconds but never past
+	// the land
+	if (_handCameraState)
 	{
-		_handCrossFade.Start(handTransform.position);
+		const auto screenSize =
+		    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
+		if (screenSize.x > 0 && screenSize.y > 0)
+		{
+			glm::vec3 rayOrigin;
+			glm::vec3 rayDirection;
+			camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+			                              rayOrigin, rayDirection);
+			if (!glm::any(glm::isnan(rayDirection)))
+			{
+				_handRayDirection = glm::normalize(rayDirection);
+			}
+		}
+		_handHoldZoomer.SetDestination(glm::distance(eye, _handPosition), k_HandHoldTime);
+		_handHoldZoomer.Update(deltaSeconds);
+		const auto landDistance = _cursorWorldPosition.has_value() ? glm::distance(eye, *_cursorWorldPosition) : handReach;
+		_handDistance = glm::clamp(glm::min(_handHoldZoomer.GetValue(), landDistance), k_HandMinDistance, handReach);
+		_handHoverZoomer.Reset(_handDistance);
+		_handPosition = eye + _handRayDirection * _handDistance;
+		_handCrossFade.Update(deltaSeconds);
+		handTransform.position = _handCrossFade.Apply(_handPosition);
+		return;
 	}
-	_handWasDragging = false;
+	_handHoldZoomer.Reset(_handDistance);
 
 	// The game puts the origin of the hand, by its fingertips, on the line of sight through the cursor, so the hand is
 	// always under the cursor on screen. How far along it depends on the land the cursor is over. Turning the camera
@@ -2320,8 +2394,7 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		// down to the land. Over the sea it rests on the water.
 		const auto overSea = Locator::terrainSystem::value().GetHeightAt(glm::xz(*_cursorWorldPosition)) < k_HandSeaAltitude;
 		const auto handHeight = k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
-		const auto nearest =
-		    glm::clamp(overSea ? landDistance : landDistance - handHeight, k_HandMinDistance, k_HandMaxDistance);
+		const auto nearest = glm::clamp(overSea ? landDistance : landDistance - handHeight, k_HandMinDistance, handReach);
 
 		// The hand eases out to the land, slowly away from the camera and quickly towards it
 		const auto target = glm::max(landDistance, 1.0f);
@@ -2333,10 +2406,37 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 			_handHoverZoomer.Reset(1.0f);
 		}
 		// The hand's distance from the camera, no further out than the land less the hand's height
-		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, k_HandMaxDistance);
+		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, handReach);
 	}
+	_handPosition = eye + _handRayDirection * _handDistance;
 	_handCrossFade.Update(deltaSeconds);
-	handTransform.position = _handCrossFade.Apply(eye + _handRayDirection * _handDistance);
+	handTransform.position = _handCrossFade.Apply(_handPosition);
+}
+
+void Game::UpdateHandNavigation(const ecs::components::Transform& handTransform)
+{
+	using namespace hand_navigation_pose;
+	const auto cues = Locator::camera::value().GetModel().GetHandCues();
+	// Dragging the land is the hand's camera state; turning the camera with the middle button or both buttons isn't
+	const bool cameraState = _handGripping && !_handRotating;
+	auto pose = Pose::Idle;
+	if (cameraState)
+	{
+		// Other cameras than the world's don't sort their drags: the hand grips the land at once
+		const bool gripsLand = !cues.dragging || cues.dragMode == camera_drag::DragMode::Pan || cues.clearViewGrip;
+		pose = WhileDragging(gripsLand, cues.tricons);
+	}
+	else if (!_cursorOnObject && !_creatureUnderHand.has_value() && !_handOnCreature.has_value())
+	{
+		pose = WhileHovering(cues.tricons).value_or(Pose::Idle);
+	}
+	// Changing state or pose, the hand fades from where it was drawn to its new place
+	if (cameraState != _handCameraState || pose != _handPose)
+	{
+		_handCrossFade.Start(handTransform.position);
+	}
+	_handCameraState = cameraState;
+	_handPose = pose;
 }
 
 void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3& facingCamera, glm::vec3 surfaceUp,
@@ -2361,12 +2461,20 @@ void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3
 	const auto cameraHeading = HeadingAlongRay(camera.GetForward(), _handHeading);
 
 	// Its up eases over 0.4 seconds to the slope of the land under it, or to the face of what the cursor is on, given
-	// afresh only as the cursor moves across the screen. Gripping the land it holds its up, and letting go it stands
-	// up straight and eases from there.
-	const bool dragging = _handGripping && !_handRotating;
+	// afresh only as the cursor moves across the screen. Offering to turn the camera at the edge of the screen it
+	// stands up towards where the camera looks instead. Dragging the land it holds its up, or stands straight towards
+	// the camera's focus showing it turns the camera; letting go it stands up straight and eases from there.
+	using hand_navigation_pose::Pose;
 	const bool cursorMovedAcross = _mousePosition.x != _handLastCursorX;
 	_handLastCursorX = _mousePosition.x;
-	if (!dragging)
+	if (_handCameraState)
+	{
+		if (_handPose == Pose::Rotate)
+		{
+			_handUp.Reset(hand_navigation_pose::UpTowardsFocus(_handPosition, camera.GetFocus()));
+		}
+	}
+	else
 	{
 		if (_handUpWasHeld)
 		{
@@ -2374,14 +2482,18 @@ void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3
 		}
 		if (cursorMovedAcross)
 		{
-			const auto slope = _cursorOnObject || !Locator::terrainSystem::has_value()
-			                       ? surfaceUp
-			                       : Locator::terrainSystem::value().GetNormalAt(glm::xz(handTransform.position));
-			_handUp.SetDestination(slope, k_UpEaseSeconds);
+			auto up = _cursorOnObject || !Locator::terrainSystem::has_value()
+			              ? surfaceUp
+			              : Locator::terrainSystem::value().GetNormalAt(glm::xz(handTransform.position));
+			if (_handPose == Pose::Rotate)
+			{
+				up = hand_navigation_pose::UpTowardsFocus(_cursorWorldPosition.value_or(_handPosition), camera.GetFocus());
+			}
+			_handUp.SetDestination(up, k_UpEaseSeconds);
 		}
 		_handUp.Update(deltaSeconds);
 	}
-	_handUpWasHeld = dragging;
+	_handUpWasHeld = _handCameraState;
 
 	const auto up = _handUp.GetValue();
 	const auto onLevelLand = TurnToHeading(facingCamera, cameraHeading, _handHeading);

@@ -58,6 +58,7 @@ public:
 	[[nodiscard]] std::optional<ScriptedPointer> GetScriptedPointer() const final;
 	void WarpCursor(glm::ivec2 position) final;
 	[[nodiscard]] std::optional<glm::ivec2> GetCursorWarp() const final;
+	void SetBlockedActions(BindableActionMap actions) final { _blocked = actions; }
 	void AllowCursorFreeze(bool allowed) final;
 	[[nodiscard]] bool IsCursorFrozen() const final;
 
@@ -99,5 +100,6 @@ private:
 	bool _cursorFreezeAllowed {false};
 	std::optional<ScriptedPointer> _scriptedPointer;
 	std::optional<glm::ivec2> _cursorWarp;
+	BindableActionMap _blocked = BindableActionMap::NONE;
 };
 } // namespace openblack::input

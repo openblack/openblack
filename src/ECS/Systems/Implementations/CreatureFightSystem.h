@@ -51,6 +51,7 @@ public:
 	[[nodiscard]] bool GetAngerStartsFights() const override { return _angerStartsFights; }
 	void SetCameraWatches(bool enabled) override { _cameraWatches = enabled; }
 	[[nodiscard]] bool GetCameraWatches() const override { return _cameraWatches; }
+	[[nodiscard]] bool IsCameraOnFight() const final { return _watched.has_value(); }
 
 private:
 	/// The turn's parts: fights picked by angry creatures and started by the leash, the stages before and after the

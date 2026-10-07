@@ -63,6 +63,8 @@ public:
 		/// The land is being dragged, and what the drag has turned into once decided
 		bool dragging {false};
 		std::optional<camera_drag::DragMode> dragMode;
+		/// Ctrl and Shift held for a clear view: dragging, the hand grips
+		bool clearViewGrip {false};
 	};
 
 	static std::unique_ptr<CameraModel> CreateModel(Model model);

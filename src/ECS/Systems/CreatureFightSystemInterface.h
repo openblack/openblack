@@ -90,6 +90,8 @@ public:
 	[[nodiscard]] virtual bool GetAngerStartsFights() const = 0;
 	virtual void SetCameraWatches(bool enabled) = 0;
 	[[nodiscard]] virtual bool GetCameraWatches() const = 0;
+	/// Whether the camera is watching the player's creature fight now
+	[[nodiscard]] virtual bool IsCameraOnFight() const = 0;
 };
 
 } // namespace openblack::ecs::systems
