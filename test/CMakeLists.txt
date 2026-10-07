@@ -78,6 +78,7 @@ openblack_setup_and_add_test(
 )
 openblack_setup_and_add_test(test_hand_morph hand/test_hand_morph.cpp)
 openblack_setup_and_add_test(test_hand_hold_pose test_hand_hold_pose.cpp)
+openblack_setup_and_add_test(test_tribal_power_spin test_tribal_power_spin.cpp)
 openblack_setup_and_add_test(
   test_object_shadows graphics/test_object_shadows.cpp
 )
@@ -270,6 +271,10 @@ target_link_libraries(test_gesture_effects PRIVATE psys)
 openblack_setup_and_add_test(
   test_creature_miracle_reactions test_creature_miracle_reactions.cpp
 )
+openblack_setup_and_add_test(
+  test_creature_spell_particles test_creature_spell_particles.cpp
+)
+target_link_libraries(test_creature_spell_particles PRIVATE psys)
 openblack_setup_and_add_test(
   test_particle_sound_release test_particle_sound_release.cpp
 )

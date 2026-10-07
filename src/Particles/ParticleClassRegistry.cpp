@@ -97,6 +97,8 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterFireballRules(registry);
 	RegisterLightningRules(registry);
 	RegisterArcRules(registry);
+	RegisterBeliefRules(registry);
+	RegisterCreatureSpellRules(registry);
 	RegisterGlintRules(registry);
 	RegisterShieldRules(registry);
 	RegisterStormRules(registry);
