@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 
+#include "Camera/KeyboardMoveSpeed.h"
 #include "ECS/Systems/EditorSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -45,6 +46,8 @@ public:
 	[[nodiscard]] CameraMode GetCameraMode() const override { return _cameraMode; }
 	void TurnCamera(glm::vec2 radians) override;
 	void ZoomCamera(float steps) override;
+	void SetCameraMoveSpeed(float speed) override;
+	[[nodiscard]] float GetCameraMoveSpeed() const override { return _cameraMoveSpeed; }
 	void FrameSelection() override;
 	void StepTurn() override;
 	[[nodiscard]] bool IsStepping() const override { return _stepFrom.has_value(); }
@@ -56,12 +59,15 @@ private:
 	void ReleaseCamera();
 	/// Tells the editor's camera where the picked thing is
 	void AimCamera();
+	/// Gives the camera the editor's movement speed while open, and the game's own while closed
+	void ApplyCameraMoveSpeed() const;
 
 	bool _open {false};
 	editor::EditorSelection _selection;
 	Tool _tool {Tool::Select};
 	editor::Snapping _snapping;
 	CameraMode _cameraMode {CameraMode::Free};
+	float _cameraMoveSpeed {k_KeyboardMoveSpeedDefault};
 	/// The editor's camera model while it has the camera, and the player's, kept to be handed back
 	EditorCameraModel* _cameraModel {nullptr};
 	std::unique_ptr<CameraModel> _playerCameraModel;

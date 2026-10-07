@@ -671,6 +671,10 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	// Compute delta position (dp) based on the elapsed time and speed.
 	const auto dp = k_InteractionSpeedMultiplier * std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const auto& actionSystem = Locator::gameActionSystem::value();
+	// Moving over the land can be sped up or slowed down; turning, tilting and zooming keep the game's speed
+	const auto moveSpeed =
+	    Locator::camera::has_value() ? Locator::camera::value().GetKeyboardMoveSpeed() : k_KeyboardMoveSpeedDefault;
+	const auto moveDp = ScaleKeyboardMove(dp, moveSpeed);
 
 	// What the scripts let the player do, less going to watch fights while watching one
 	const auto help =
@@ -696,7 +700,8 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 
 	if (actionSystem.GetAny(input::BindableActionMap::MOVE_FORWARDS, input::BindableActionMap::MOVE_BACKWARDS))
 	{
-		const float distance = (actionSystem.Get(input::BindableActionMap::MOVE_FORWARDS) ? -1.0f : 1.0f) * dp;
+		const float direction = actionSystem.Get(input::BindableActionMap::MOVE_FORWARDS) ? -1.0f : 1.0f;
+		const float distance = direction * dp;
 		// If ZOOM_ON is active, apply the movement as a zoom action.
 		if (actionSystem.Get(input::BindableActionMap::ZOOM_ON))
 		{
@@ -711,13 +716,14 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		// Otherwise, apply the movement normally.
 		else
 		{
-			_keyBoardMoveDelta.x += distance;
+			_keyBoardMoveDelta.x += direction * moveDp;
 		}
 	}
 
 	if (actionSystem.GetAny(input::BindableActionMap::MOVE_RIGHT, input::BindableActionMap::MOVE_LEFT))
 	{
-		const float distance = (actionSystem.Get(input::BindableActionMap::MOVE_RIGHT) ? -1.0f : 1.0f) * dp;
+		const float direction = actionSystem.Get(input::BindableActionMap::MOVE_RIGHT) ? -1.0f : 1.0f;
+		const float distance = direction * dp;
 		// If ZOOM_ON is active, apply the movement as a zoom action.
 		// If ROTATE_ON is active, apply the movement as a tilt action.
 		// TODO(#710): fight will always be rotating
@@ -728,7 +734,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		// Otherwise, apply the movement normally.
 		else
 		{
-			_keyBoardMoveDelta.y -= distance;
+			_keyBoardMoveDelta.y -= direction * moveDp;
 		}
 	}
 

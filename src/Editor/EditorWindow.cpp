@@ -21,6 +21,7 @@
 #include <imgui.h>
 
 #include "Camera/Camera.h"
+#include "Camera/KeyboardMoveSpeed.h"
 #include "Debug/CreatureSpawner.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Hand.h"
@@ -357,6 +358,13 @@ bool EditorWindow::IsEditorKey(const SDL_Event& event) const noexcept
 	case SDLK_LEFTBRACKET:
 	case SDLK_RIGHTBRACKET:
 		return _placement.item.has_value();
+	case SDLK_EQUALS:
+	case SDLK_KP_PLUS:
+	case SDLK_MINUS:
+	case SDLK_KP_MINUS:
+	case SDLK_0:
+	case SDLK_KP_0:
+		return ctrl;
 	case SDLK_ESCAPE:
 		// Escape is only the editor's while there is something of it to let go of; otherwise the game has it
 		return _placement.item.has_value() || _drag != Drag::None || picked ||
@@ -429,6 +437,18 @@ void EditorWindow::HandleKey(const SDL_Event& event) noexcept
 		break;
 	case SDLK_RIGHTBRACKET:
 		_placement.yawRadians = WrapAngle(_placement.yawRadians + turn);
+		break;
+	case SDLK_EQUALS:
+	case SDLK_KP_PLUS:
+		system.SetCameraMoveSpeed(StepKeyboardMoveSpeed(system.GetCameraMoveSpeed(), 1));
+		break;
+	case SDLK_MINUS:
+	case SDLK_KP_MINUS:
+		system.SetCameraMoveSpeed(StepKeyboardMoveSpeed(system.GetCameraMoveSpeed(), -1));
+		break;
+	case SDLK_0:
+	case SDLK_KP_0:
+		system.SetCameraMoveSpeed(k_KeyboardMoveSpeedDefault);
 		break;
 	case SDLK_ESCAPE:
 		if (_placement.item.has_value())
@@ -611,14 +631,17 @@ void EditorWindow::WindowDraw() noexcept
 	const auto origin = viewport->WorkPos;
 	const auto size = viewport->WorkSize;
 	const auto& imguiStyle = ImGui::GetStyle();
-	const auto toolbarHeight = ImGui::GetFrameHeight() + (imguiStyle.WindowPadding.y * 2.0f);
+	const auto oneRowHeight = ImGui::GetFrameHeight() + (imguiStyle.WindowPadding.y * 2.0f);
+	const auto toolbarHeight = std::max(_toolbarHeight, oneRowHeight);
 
 	ImGui::SetNextWindowPos(origin);
-	ImGui::SetNextWindowSize(ImVec2(size.x, toolbarHeight));
+	// The toolbar is as tall as its rows need
+	ImGui::SetNextWindowSize(ImVec2(size.x, 0.0f));
 	if (ImGui::Begin("Editor##Toolbar", nullptr,
 	                 k_PanelFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))
 	{
 		DrawToolbar(*context);
+		_toolbarHeight = ImGui::GetWindowHeight();
 	}
 	ImGui::End();
 
@@ -672,6 +695,18 @@ void EditorWindow::DrawToolbar(EditorContext& context) noexcept
 	auto& system = context.system;
 	const auto separator = [] {
 		ImGui::SameLine();
+		ImGui::TextColored(style::k_Muted, "|");
+		ImGui::SameLine();
+	};
+	// Starts the next group on a new row when it would not fit on this one
+	const auto separatorOrWrap = [](float groupWidth) {
+		ImGui::SameLine();
+		const auto separatorWidth = ImGui::CalcTextSize("|").x + (ImGui::GetStyle().ItemSpacing.x * 2.0f);
+		if (separatorWidth + groupWidth > ImGui::GetContentRegionAvail().x)
+		{
+			ImGui::NewLine();
+			return;
+		}
 		ImGui::TextColored(style::k_Muted, "|");
 		ImGui::SameLine();
 	};
@@ -736,8 +771,9 @@ void EditorWindow::DrawToolbar(EditorContext& context) noexcept
 		ImGui::DragFloat("##SnapAngle", &snapping.angleDegrees, 1.0f, 1.0f, 90.0f, "%.0f deg");
 		ImGui::SetItemTooltip("Turns snap to this many degrees");
 	}
-	separator();
+	separatorOrWrap(_cameraGroupWidth);
 
+	ImGui::BeginGroup();
 	constexpr std::array<std::pair<const char*, CameraMode>, 3> k_Cameras {{
 	    {"Free", CameraMode::Free},
 	    {"Orbit (O)", CameraMode::Orbit},
@@ -761,14 +797,41 @@ void EditorWindow::DrawToolbar(EditorContext& context) noexcept
 	}
 	ImGui::EndDisabled();
 	ImGui::SetItemTooltip("Orbit and follow: drag with the right button to turn, the wheel to draw in and out");
-	separator();
+	ImGui::SameLine();
+	auto moveSpeed = system.GetCameraMoveSpeed();
+	ImGui::SetNextItemWidth(ImGui::GetFontSize() * 7.0f);
+	if (ImGui::SliderFloat("##CameraMoveSpeed", &moveSpeed, k_KeyboardMoveSpeedMin, k_KeyboardMoveSpeedMax, "move %.2fx",
+	                       ImGuiSliderFlags_Logarithmic | ImGuiSliderFlags_AlwaysClamp))
+	{
+		system.SetCameraMoveSpeed(moveSpeed);
+	}
+	ImGui::SetItemTooltip("How fast the movement keys move the camera over the land while the editor is open "
+	                      "(Ctrl+Plus and Ctrl+Minus to step, Ctrl+0 to reset)");
+	ImGui::SameLine();
+	ImGui::BeginDisabled(system.GetCameraMoveSpeed() == k_KeyboardMoveSpeedDefault);
+	if (ImGui::Button("1x##CameraMoveSpeedReset"))
+	{
+		system.SetCameraMoveSpeed(k_KeyboardMoveSpeedDefault);
+	}
+	ImGui::EndDisabled();
+	ImGui::SetItemTooltip("Back to the game's own camera speed (Ctrl+0)");
+	ImGui::EndGroup();
+	_cameraGroupWidth = ImGui::GetItemRectSize().x;
 
+	const auto closeX = ImGui::GetWindowWidth() - (ImGui::GetFontSize() * 7.0f);
+	separatorOrWrap(_panelGroupWidth);
+	ImGui::BeginGroup();
 	ImGui::Checkbox("Outliner", &_showOutliner);
 	ImGui::SameLine();
 	ImGui::Checkbox("Inspector", &_showInspector);
 	ImGui::SameLine();
 	ImGui::Checkbox("Tabs", &_showBottom);
-	ImGui::SameLine(ImGui::GetWindowWidth() - (ImGui::GetFontSize() * 7.0f));
+	ImGui::EndGroup();
+	// The close button keeps to the right edge, and is measured without the gap before it
+	_panelGroupWidth = ImGui::GetItemRectSize().x + ImGui::GetStyle().ItemSpacing.x + ImGui::CalcTextSize("Close (F2)").x +
+	                   (ImGui::GetStyle().FramePadding.x * 2.0f);
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(std::max(ImGui::GetCursorPosX(), closeX));
 	if (ImGui::Button("Close (F2)"))
 	{
 		Close();

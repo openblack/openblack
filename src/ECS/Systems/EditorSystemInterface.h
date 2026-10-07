@@ -22,8 +22,8 @@ namespace openblack::ecs::systems
 {
 
 /// The in-game editor's state, which its panels share: whether it is open, the thing picked, the tool the mouse works
-/// in the world, snapping, the camera on the picked thing, and stepping the game one turn at a time. While the editor is
-/// closed it does nothing and leaves the camera to the player.
+/// in the world, snapping, the camera on the picked thing, how fast the keys move the camera, and stepping the game one turn at
+/// a time. While the editor is closed it does nothing and leaves the camera to the player.
 class EditorSystemInterface
 {
 public:
@@ -72,6 +72,10 @@ public:
 	virtual void TurnCamera(glm::vec2 radians) = 0;
 	/// Draws the orbiting or following camera in by steps of the wheel, out for negative steps
 	virtual void ZoomCamera(float steps) = 0;
+	/// How much faster than the game's own speed the movement keys move the player's camera over the land while the
+	/// editor is open. Closing the editor gives the camera back the game's speed; opening it again brings this back.
+	virtual void SetCameraMoveSpeed(float speed) = 0;
+	[[nodiscard]] virtual float GetCameraMoveSpeed() const = 0;
 	/// Brings the picked thing into view: the player's camera flies to it, an orbit or follow comes in close
 	virtual void FrameSelection() = 0;
 

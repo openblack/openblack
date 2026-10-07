@@ -103,6 +103,11 @@ private:
 	float _leftWidth {300.0f};
 	float _rightWidth {440.0f};
 	float _bottomHeight {320.0f};
+	/// The toolbar wraps onto more rows when the window is too narrow for it. Its height, and the widths of the
+	/// groups that may move down a row, are taken from the frame before.
+	float _toolbarHeight {0.0f};
+	float _cameraGroupWidth {0.0f};
+	float _panelGroupWidth {0.0f};
 	std::optional<BottomTab> _showTab;
 
 	/// Clicks in the world to act on at the next update, as points of the screen from 0 to 1

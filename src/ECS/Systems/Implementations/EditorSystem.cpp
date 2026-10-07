@@ -52,6 +52,21 @@ void EditorSystem::SetOpen(bool open)
 		SetCameraMode(CameraMode::Free);
 		_tool = Tool::Select;
 	}
+	ApplyCameraMoveSpeed();
+}
+
+void EditorSystem::SetCameraMoveSpeed(float speed)
+{
+	_cameraMoveSpeed = ClampKeyboardMoveSpeed(speed);
+	ApplyCameraMoveSpeed();
+}
+
+void EditorSystem::ApplyCameraMoveSpeed() const
+{
+	if (Locator::camera::has_value())
+	{
+		Locator::camera::value().SetKeyboardMoveSpeed(_open ? _cameraMoveSpeed : k_KeyboardMoveSpeedDefault);
+	}
 }
 
 bool EditorSystem::OwnsCamera() const

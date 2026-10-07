@@ -252,6 +252,11 @@ void Camera::HandleActions(std::chrono::microseconds dt)
 	_model->HandleActions(dt);
 }
 
+void Camera::SetKeyboardMoveSpeed(float speed)
+{
+	_keyboardMoveSpeed = ClampKeyboardMoveSpeed(speed);
+}
+
 std::unique_ptr<CameraModel> Camera::SetModel(std::unique_ptr<CameraModel> model)
 {
 	std::swap(_model, model);

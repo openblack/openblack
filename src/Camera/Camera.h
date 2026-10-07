@@ -20,6 +20,7 @@
 #include "CameraModel.h"
 #include "Common/ZoomInterpolator.h"
 #include "ECS/Components/Transform.h"
+#include "KeyboardMoveSpeed.h"
 
 namespace openblack
 {
@@ -115,6 +116,10 @@ public:
 	/// Hands the camera's control to another model, as the temple does inside, giving back the one it had
 	std::unique_ptr<CameraModel> SetModel(std::unique_ptr<CameraModel> model);
 
+	/// How much faster than the game's own speed the movement keys move the camera, kept within the allowed range
+	void SetKeyboardMoveSpeed(float speed);
+	[[nodiscard]] float GetKeyboardMoveSpeed() const { return _keyboardMoveSpeed; }
+
 protected:
 	ZoomInterpolator3f _originInterpolators;
 	ZoomInterpolator3f _focusInterpolators;
@@ -129,6 +134,7 @@ protected:
 	glm::mat4 _projectionMatrixReversedZ = glm::mat4 {1.0f};
 	std::unique_ptr<CameraModel> _model;
 	Projection _cameraProjection = Projection::ReversedZ;
+	float _keyboardMoveSpeed = k_KeyboardMoveSpeedDefault;
 };
 
 } // namespace openblack

@@ -45,6 +45,7 @@ openblack_setup_and_add_test(test_fixed test_fixed.cpp)
 openblack_setup_and_add_test(test_alignment test_alignment.cpp)
 openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
 openblack_setup_and_add_test(test_set_camera_pos camera/test_set_camera_pos.cpp)
+openblack_setup_and_add_test(test_keyboard_move_speed camera/test_keyboard_move_speed.cpp)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
