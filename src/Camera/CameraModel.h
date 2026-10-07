@@ -17,6 +17,8 @@
 
 #include <glm/vec3.hpp>
 
+#include "CameraDrag.h"
+
 namespace openblack
 {
 
@@ -53,6 +55,16 @@ public:
 		float nearClip;
 	};
 
+	/// What the camera does with the mouse, for the hand to show
+	struct HandCues
+	{
+		/// The camera hints, as camera_drag::tricon
+		uint32_t tricons {0};
+		/// The land is being dragged, and what the drag has turned into once decided
+		bool dragging {false};
+		std::optional<camera_drag::DragMode> dragMode;
+	};
+
 	static std::unique_ptr<CameraModel> CreateModel(Model model);
 
 	static FlightPath CharterFlight(glm::vec3 origin, glm::vec3 focus, glm::vec3 currentOrigin, float heightFactor);
@@ -66,6 +78,9 @@ public:
 	[[nodiscard]] virtual glm::vec3 GetTargetFocus() const = 0;
 	[[nodiscard]] virtual std::chrono::seconds GetIdleTime() const = 0;
 	[[nodiscard]] virtual std::optional<Lens> GetLens() const { return std::nullopt; }
+	/// What the camera does with the mouse, which the hand shows: the hints the cursor's place offers, and what a
+	/// drag of the land has turned into
+	[[nodiscard]] virtual HandCues GetHandCues() const { return {}; }
 };
 
 } // namespace openblack

@@ -24,10 +24,13 @@
 #include <variant>
 
 #include <MindFile.h>
+#include <SDL_events.h>
+#include <SDL_mouse.h>
 #include <bgfx/bgfx.h>
 #include <fmt/format.h>
 #include <glm/gtx/vec_swizzle.hpp>
 #include <glm/trigonometric.hpp>
+#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include "3D/DayNightClock.h"
@@ -68,6 +71,7 @@
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
+#include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
@@ -75,6 +79,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
 #include "InfoConstants.h"
+#include "Input/GameActionMapInterface.h"
 #include "Locator.h"
 #include "Magic/MagicTables.h"
 #include "Magic/SpellRules.h"
@@ -196,6 +201,17 @@ glm::vec2 AheadOf(const Transform& transform)
 	return {ahead.x, ahead.z};
 }
 
+/// The debug windows leave the mouse alone while a scenario drives it, so that the real pointer resting on one of them
+/// doesn't take the scenario's presses
+void KeepDebugWindowsOffTheMouse(bool off)
+{
+	if (ImGui::GetCurrentContext() == nullptr)
+	{
+		return;
+	}
+	auto& io = ImGui::GetIO();
+	io.ConfigFlags = off ? (io.ConfigFlags | ImGuiConfigFlags_NoMouse) : (io.ConfigFlags & ~ImGuiConfigFlags_NoMouse);
+}
 /// Whether a command sends its creature somewhere, or has it face, throw or point somewhere
 bool HasPoint(Kind kind)
 {
@@ -310,6 +326,16 @@ void Runner::Stop()
 		return;
 	}
 	_running = false;
+	// The mouse is the player's again
+	_sweep.reset();
+	if (Locator::gameActionSystem::has_value())
+	{
+		if (Locator::gameActionSystem::value().GetScriptedPointer().has_value())
+		{
+			Locator::gameActionSystem::value().SetScriptedPointer(std::nullopt);
+			KeepDebugWindowsOffTheMouse(false);
+		}
+	}
 	// Its particle effects die away
 	if (Locator::particleSystem::has_value())
 	{
@@ -763,6 +789,14 @@ bool Runner::IsFree(size_t creature) const
 
 void Runner::Give(const Command& command)
 {
+	if (IsPointerCommand(command.kind))
+	{
+		const auto result = GivePointerCommand(command);
+		const auto line = fmt::format("{:.2f}s: {}: {}", _seconds, Name(command.kind), result);
+		SPDLOG_LOGGER_INFO(spdlog::get("game"), "Testbed {}", line);
+		Log(line);
+		return;
+	}
 	if (command.kind == Kind::SetHour)
 	{
 		if (Locator::skySystem::has_value())
@@ -1183,6 +1217,7 @@ void Runner::Update(float seconds)
 	UpdateParticles(seconds);
 	UpdateMiracles();
 	ApplyStates();
+	UpdatePointer(seconds);
 	const auto due = Advance(_timeline, _scenario->commands, _scenario->repeatFrom, seconds,
 	                         [this](size_t creature) { return IsFree(creature); });
 	for (const auto index : due)
@@ -1331,6 +1366,155 @@ void Runner::UpdateParticles(float seconds)
 			running = {StartParticle(i), 0.0f};
 		}
 	}
+}
+
+namespace
+{
+glm::vec2 WindowSize()
+{
+	return Locator::windowing::has_value() ? glm::vec2(Locator::windowing::value().GetSize()) : glm::vec2(1.0f);
+}
+
+/// Sends a move of the pointer to where it is, by so much, with the buttons held, as the mouse does
+void PushMotion(const input::GameActionInterface::ScriptedPointer& pointer, glm::ivec2 moved)
+{
+	SDL_Event event {};
+	event.type = SDL_MOUSEMOTION;
+	event.motion.windowID = Locator::windowing::has_value() ? Locator::windowing::value().GetID() : 0;
+	event.motion.state = pointer.buttons;
+	event.motion.x = pointer.position.x;
+	event.motion.y = pointer.position.y;
+	event.motion.xrel = moved.x;
+	event.motion.yrel = moved.y;
+	SDL_PushEvent(&event);
+}
+} // namespace
+
+std::string Runner::GivePointerCommand(const Command& command)
+{
+	if (!Locator::gameActionSystem::has_value())
+	{
+		return "no controls";
+	}
+	auto& actions = Locator::gameActionSystem::value();
+	const auto size = WindowSize();
+	auto pointer = actions.GetScriptedPointer().value_or(input::GameActionInterface::ScriptedPointer {
+	    .position = glm::ivec2(actions.GetMousePosition()),
+	});
+	KeepDebugWindowsOffTheMouse(true);
+	switch (command.kind)
+	{
+	case Kind::PointerTo:
+	{
+		const auto to = glm::ivec2(glm::round(command.point * size));
+		const auto moved = to - pointer.position;
+		pointer.position = to;
+		actions.SetScriptedPointer(pointer);
+		PushMotion(pointer, moved);
+		break;
+	}
+	case Kind::PointerPress:
+	case Kind::PointerRelease:
+	{
+		const bool press = command.kind == Kind::PointerPress;
+		const auto button = static_cast<uint8_t>(command.value);
+		pointer.buttons = press ? (pointer.buttons | SDL_BUTTON(button)) : (pointer.buttons & ~SDL_BUTTON(button));
+		actions.SetScriptedPointer(pointer);
+		SDL_Event event {};
+		event.type = press ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
+		event.button.windowID = Locator::windowing::has_value() ? Locator::windowing::value().GetID() : 0;
+		event.button.button = button;
+		event.button.state = press ? SDL_PRESSED : SDL_RELEASED;
+		event.button.clicks = 1;
+		event.button.x = pointer.position.x;
+		event.button.y = pointer.position.y;
+		SDL_PushEvent(&event);
+		_handWatchSeconds = 0.5f;
+		break;
+	}
+	case Kind::PointerSweep:
+		actions.SetScriptedPointer(pointer);
+		_sweep = PointerSweep {.pixelsPerSecond = command.point * size / command.amount, .secondsLeft = command.amount};
+		break;
+	case Kind::WheelTurn:
+	{
+		actions.SetScriptedPointer(pointer);
+		SDL_Event event {};
+		event.type = SDL_MOUSEWHEEL;
+		event.wheel.windowID = Locator::windowing::has_value() ? Locator::windowing::value().GetID() : 0;
+		event.wheel.y = static_cast<int32_t>(command.value) * (command.ctrl ? -1 : 1);
+		event.wheel.preciseY = static_cast<float>(event.wheel.y);
+		SDL_PushEvent(&event);
+		break;
+	}
+	default:
+		break;
+	}
+	return HandOnScreen();
+}
+
+void Runner::UpdatePointer(float seconds)
+{
+	if (!Locator::gameActionSystem::has_value())
+	{
+		return;
+	}
+	auto& actions = Locator::gameActionSystem::value();
+	// Once the commands are done and the buttons let go, the mouse is the player's again
+	if (const auto pointer = actions.GetScriptedPointer();
+	    pointer.has_value() && pointer->buttons == 0 && !_sweep.has_value() && _timeline.done && _handWatchSeconds <= 0.0f)
+	{
+		actions.SetScriptedPointer(std::nullopt);
+		KeepDebugWindowsOffTheMouse(false);
+	}
+	if (_handWatchSeconds > 0.0f || _sweep.has_value())
+	{
+		_handWatchSeconds -= seconds;
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Testbed {:.3f}s: {}", _seconds, HandOnScreen());
+	}
+	if (_sweep.has_value())
+	{
+		auto pointer = actions.GetScriptedPointer().value_or(input::GameActionInterface::ScriptedPointer {});
+		const auto step = std::min(seconds, _sweep->secondsLeft);
+		const auto exact = _sweep->pixelsPerSecond * step + _sweep->remainder;
+		const auto moved = glm::ivec2(exact);
+		_sweep->remainder = exact - glm::vec2(moved);
+		// While the camera turns with the mouse its pointer is held, and only the movement comes through
+		if (!actions.IsCursorFrozen())
+		{
+			pointer.position = glm::clamp(pointer.position + moved, glm::ivec2(0), glm::ivec2(WindowSize()) - 1);
+		}
+		actions.SetScriptedPointer(pointer);
+		PushMotion(pointer, moved);
+		_sweep->secondsLeft -= step;
+		if (_sweep->secondsLeft <= 0.0f)
+		{
+			_sweep.reset();
+			const auto line = fmt::format("{:.2f}s: moved: {}", _seconds, HandOnScreen());
+			SPDLOG_LOGGER_INFO(spdlog::get("game"), "Testbed {}", line);
+			Log(line);
+		}
+	}
+}
+
+std::string Runner::HandOnScreen() const
+{
+	if (!Locator::gameActionSystem::has_value() || !Locator::handSystem::has_value() || !Locator::camera::has_value())
+	{
+		return {};
+	}
+	const auto cursor = Locator::gameActionSystem::value().GetMousePosition();
+	const auto hand = Locator::handSystem::value().GetPlayerHands()[0];
+	const auto& transform = Locator::entitiesRegistry::value().Get<Transform>(hand);
+	const auto& position = transform.position;
+	const auto size = WindowSize();
+	glm::vec3 screen {0.0f};
+	Locator::camera::value().ProjectWorldToScreen(position, {0.0f, 0.0f, size.x, size.y}, screen);
+	return fmt::format("cursor ({}, {}), hand ({:.0f}, {:.0f}) at ({:.1f}, {:.1f}, {:.1f}), {:.1f} from the camera, scale "
+	                   "{:.3f}{}",
+	                   cursor.x, cursor.y, screen.x, screen.y, position.x, position.y, position.z,
+	                   glm::distance(position, Locator::camera::value().GetOrigin()), transform.scale.y,
+	                   Locator::gameActionSystem::value().IsCursorFrozen() ? ", held" : "");
 }
 
 void Runner::Log(std::string line)

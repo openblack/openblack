@@ -165,6 +165,25 @@ public:
 	/// Whether presses are waiting to be made
 	[[nodiscard]] virtual bool HasQueuedPresses() const { return false; }
 
+	/// A pointer the testbed's scenarios move and press in place of the mouse: where it is in the window and the
+	/// buttons held, as SDL's button masks
+	struct ScriptedPointer
+	{
+		glm::ivec2 position {0, 0};
+		uint32_t buttons {0};
+	};
+	/// Reads the scripted pointer in place of the mouse, or the mouse again
+	virtual void SetScriptedPointer([[maybe_unused]] std::optional<ScriptedPointer> pointer) {}
+	[[nodiscard]] virtual std::optional<ScriptedPointer> GetScriptedPointer() const { return std::nullopt; }
+	/// Puts the cursor, and the pointer, somewhere in the window, as the camera does dragging round the screen's edge
+	virtual void WarpCursor([[maybe_unused]] glm::ivec2 position) {}
+	/// Where the cursor was put this frame, if it was
+	[[nodiscard]] virtual std::optional<glm::ivec2> GetCursorWarp() const { return std::nullopt; }
+	/// Whether the camera the player has can be turned with the mouse, which holds the cursor still while it is
+	virtual void AllowCursorFreeze([[maybe_unused]] bool allowed) {}
+	/// The cursor is held still while the mouse turns the camera, and the pointer's position isn't followed
+	[[nodiscard]] virtual bool IsCursorFrozen() const { return false; }
+
 	virtual void Frame() = 0;
 	virtual void ProcessEvent(const SDL_Event& event) = 0;
 };

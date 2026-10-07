@@ -130,6 +130,12 @@ private:
 	std::string GiveFightCommand(entt::entity creature, const Command& command);
 	/// Creature Mode's and the Creature Cave's commands, as the player's keys and clicks give them
 	std::string GiveCreatureModeCommand(entt::entity creature, const Command& command);
+	/// The player's mouse: presses, moves and the wheel, made as the mouse's own events
+	std::string GivePointerCommand(const Command& command);
+	/// Moves the mouse on along a sweep, and lets go of it once the scenario's commands are done
+	void UpdatePointer(float seconds);
+	/// Where the cursor and the hand are on the screen, for the log
+	[[nodiscard]] std::string HandOnScreen() const;
 	/// Sets a desire or the stage of growing up, or rewards what the creature last did by the kind of thing it was to
 	std::string TeachMind(entt::entity entity, const Command& command);
 	/// Loads a mind file named as a scenario names it into a creature
@@ -167,6 +173,18 @@ private:
 	std::vector<bool> _started;
 
 	std::deque<std::string> _log;
+
+	/// The mouse moving along a sweep, in pixels a second, and for how much longer
+	struct PointerSweep
+	{
+		glm::vec2 pixelsPerSecond {0.0f};
+		float secondsLeft {0.0f};
+		/// The part of a pixel left over from the frames before
+		glm::vec2 remainder {0.0f};
+	};
+	std::optional<PointerSweep> _sweep;
+	/// The hand's place on the screen is logged every frame for a while after the mouse's buttons change
+	float _handWatchSeconds {0.0f};
 
 	/// The crowd laid out, the next of it to spawn, its homes and towns as they have spawned, and how long it took
 	std::vector<CrowdCreature> _crowdCreatures;

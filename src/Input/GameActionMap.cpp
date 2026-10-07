@@ -201,6 +201,70 @@ glm::uvec2 GameActionMap::GetMousePosition() const
 	return _mousePosition;
 }
 
+void GameActionMap::SetScriptedPointer(std::optional<ScriptedPointer> pointer)
+{
+	_scriptedPointer = pointer;
+}
+
+std::optional<GameActionMap::ScriptedPointer> GameActionMap::GetScriptedPointer() const
+{
+	return _scriptedPointer;
+}
+
+uint32_t GameActionMap::PointerState(glm::ivec2* position) const
+{
+	if (_scriptedPointer.has_value())
+	{
+		if (position != nullptr)
+		{
+			*position = _scriptedPointer->position;
+		}
+		return _scriptedPointer->buttons;
+	}
+	if (position != nullptr)
+	{
+		return SDL_GetMouseState(&position->x, &position->y);
+	}
+	return SDL_GetMouseState(nullptr, nullptr);
+}
+
+void GameActionMap::WarpCursor(glm::ivec2 position)
+{
+	_mousePosition = position;
+	_cursorWarp = position;
+	if (_scriptedPointer.has_value())
+	{
+		_scriptedPointer->position = position;
+		// The game follows the pointer by its moves, which a warp of the real one makes too
+		SDL_Event event {};
+		event.type = SDL_MOUSEMOTION;
+		event.motion.state = _scriptedPointer->buttons;
+		event.motion.x = position.x;
+		event.motion.y = position.y;
+		SDL_PushEvent(&event);
+		return;
+	}
+	if (Locator::windowing::has_value())
+	{
+		SDL_WarpMouseInWindow(static_cast<SDL_Window*>(Locator::windowing::value().GetHandle()), position.x, position.y);
+	}
+}
+
+std::optional<glm::ivec2> GameActionMap::GetCursorWarp() const
+{
+	return _cursorWarp;
+}
+
+void GameActionMap::AllowCursorFreeze(bool allowed)
+{
+	_cursorFreezeAllowed = allowed;
+}
+
+bool GameActionMap::IsCursorFrozen() const
+{
+	return _cursorFreeze.IsFrozen();
+}
+
 glm::ivec2 GameActionMap::GetMouseDelta() const
 {
 	return _mouseDelta;
@@ -213,10 +277,11 @@ float GameActionMap::GetMouseWheelDelta() const
 
 void GameActionMap::Frame()
 {
+	_cursorWarp.reset();
 	ReleaseKeysNoLongerHeld();
 
 	// Lets go of the buttons whose letting go went elsewhere, as to the menu or the debug windows
-	const auto heldButtons = SDL_GetMouseState(nullptr, nullptr);
+	const auto heldButtons = PointerState(nullptr);
 	for (uint8_t button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; ++button)
 	{
 		if ((_currentMouseButtons & SDL_BUTTON(button)) != 0 && (heldButtons & SDL_BUTTON(button)) == 0)
@@ -229,7 +294,7 @@ void GameActionMap::Frame()
 		}
 	}
 
-	if ((SDL_GetMouseState(nullptr, nullptr) & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
+	if ((PointerState(nullptr) & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK))
 	{
 		_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
 		                                                  static_cast<uint8_t>(UnbindableActionMap::TWO_BUTTON_CLICK));
@@ -270,10 +335,34 @@ void GameActionMap::Frame()
 
 	{
 		glm::ivec2 absoluteMousePosition;
-		SDL_GetMouseState(&absoluteMousePosition.x, &absoluteMousePosition.y);
+		PointerState(&absoluteMousePosition);
 		const auto screenSize =
 		    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2(1.0f, 1.0f);
-		_mousePosition = glm::clamp(absoluteMousePosition, glm::zero<decltype(screenSize)>(), screenSize);
+		// Turning the camera around the hand with the middle button, or turning and zooming it with both buttons, the
+		// mouse's movement turns the camera and the cursor and the hand stay where they were. Once it ends, the
+		// pointer is put back where the cursor was held, so the hand carries on from there.
+		const bool turning = _cursorFreezeAllowed && (GetBindable(BindableActionMap::ROTATE_AROUND_MOUSE_ON) ||
+		                                              GetUnbindable(UnbindableActionMap::TWO_BUTTON_CLICK));
+		const auto cursor = _cursorFreeze.Update(turning, absoluteMousePosition);
+		if (cursor.started && !_scriptedPointer.has_value())
+		{
+			// The pointer is held in the window while the mouse's movement still comes through
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+		}
+		if (cursor.warpTo.has_value() && _scriptedPointer.has_value())
+		{
+			_scriptedPointer->position = *cursor.warpTo;
+		}
+		else if (cursor.warpTo.has_value())
+		{
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+			if (Locator::windowing::has_value())
+			{
+				SDL_WarpMouseInWindow(static_cast<SDL_Window*>(Locator::windowing::value().GetHandle()), cursor.warpTo->x,
+				                      cursor.warpTo->y);
+			}
+		}
+		_mousePosition = glm::clamp(cursor.cursor, glm::zero<decltype(screenSize)>(), screenSize);
 	}
 	_mouseDelta = glm::ivec2(0, 0);
 	_mouseWheelDelta = 0.0f;

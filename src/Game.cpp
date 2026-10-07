@@ -40,6 +40,7 @@
 #include "3D/FlatLand.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
+#include "3D/HandOrientation.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/LandLightFrame.h"
@@ -54,6 +55,7 @@
 #include "Audio/GameMusic.h"
 #include "CHLApi.h"
 #include "Camera/Camera.h"
+#include "Camera/DefaultWorldCameraModel.h"
 #include "Camera/NearClipping.h"
 #include "Common/EventManager.h"
 #include "Common/GameRandom.h"
@@ -340,7 +342,7 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 
 	_handGripping =
 	    !inTemple && (middleMouseButton || (leftMouseButton && !onCreature && !fights.IsPressed() && !magic.IsHandBusy()));
-	_handRotating = !inTemple && middleMouseButton;
+	_handRotating = !inTemple && (middleMouseButton || (leftMouseButton && rightMouseButton));
 
 	auto& window = Locator::windowing::value();
 	auto& camera = Locator::camera::value();
@@ -436,21 +438,13 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 		break;
 	case SDL_MOUSEMOTION:
 	{
-		SDL_GetMouseState(&_mousePosition.x, &_mousePosition.y);
+		// While the mouse turns the camera the cursor is held where it was, and the pointer isn't followed
+		if (!Locator::gameActionSystem::value().IsCursorFrozen())
+		{
+			_mousePosition = {event.motion.x, event.motion.y};
+		}
 		break;
 	}
-	case SDL_MOUSEBUTTONUP:
-		switch (event.button.button)
-		{
-		case SDL_BUTTON_MIDDLE:
-		{
-			const glm::ivec2 screenSize = window.GetSize();
-			SDL_SetRelativeMouseMode((event.type == SDL_MOUSEBUTTONDOWN) ? SDL_TRUE : SDL_FALSE);
-			SDL_WarpMouseInWindow(static_cast<SDL_Window*>(window.GetHandle()), screenSize.x / 2, screenSize.y / 2);
-		}
-		break;
-		}
-		break;
 	}
 
 	return true;
@@ -814,14 +808,22 @@ bool Game::Update() noexcept
 	{
 		auto sdlInput = profiler.BeginScoped(Profiler::Stage::SdlInput);
 		// The debug windows' presses of the options screen's actions are made by the action map's frame
-		if (!Locator::debugGui::value().StealsFocus() || Locator::gameActionSystem::value().HasQueuedPresses())
+		auto& actions = Locator::gameActionSystem::value();
+		// The world's camera is the one turned with the mouse, which holds the cursor and the hand still meanwhile
+		actions.AllowCursorFreeze(!(Locator::temple::has_value() && Locator::temple::value().Active()) &&
+		                          dynamic_cast<DefaultWorldCameraModel*>(&camera.GetModel()) != nullptr);
+		if (!Locator::debugGui::value().StealsFocus() || actions.HasQueuedPresses())
 		{
-			Locator::gameActionSystem::value().Frame();
+			actions.Frame();
 		}
 		SDL_Event e;
 		while (SDL_PollEvent(&e) != 0)
 		{
 			Locator::events::value().Create<SDL_Event>(e);
+		}
+		if (actions.IsCursorFrozen())
+		{
+			_mousePosition = glm::ivec2(actions.GetMousePosition());
 		}
 		camera.HandleActions(deltaTime);
 		ProcessTempleRoomKeys();
@@ -1042,10 +1044,12 @@ bool Game::Update() noexcept
 						                  static_cast<glm::vec2>(_mousePosition) / static_cast<float>(screenSize.y), seconds,
 						                  handFree);
 					}
+					_cursorOnObject = false;
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
 						intersectionTransform = hit->first;
 						_cursorWorldPosition = intersectionTransform.position;
+						_cursorOnObject = hit->second.type == RigidBodyType::Entity;
 					}
 					else // For the water
 					{
@@ -1076,11 +1080,19 @@ bool Game::Update() noexcept
 			const auto handEntity = Locator::handSystem::value()
 			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
 			auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
-			if (!_handGripping)
+			if (Locator::temple::has_value() && Locator::temple::value().Active())
 			{
-				// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-				handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
-				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
+				if (!_handGripping)
+				{
+					handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
+					handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
+				}
+			}
+			else
+			{
+				OrientHand(handTransform, glm::mat3(glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection),
+				           intersectionTransform.rotation * glm::vec3(0.0f, 1.0f, 0.0f),
+				           std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 			}
 			PlaceHand(handTransform, std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 			// Held to a creature, the hand rests on its body under the cursor, stroking and slapping it
@@ -2243,7 +2255,6 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 	const auto& camera = Locator::camera::value();
 	const auto eye = camera.GetOrigin();
 	const bool dragging = _handGripping && !_handRotating;
-	const bool rotating = _handGripping && _handRotating;
 
 	// In the temple the hand hangs on the line of sight through the cursor, a little short of where it
 	// meets the room, slowly away from the camera and quickly towards it
@@ -2269,58 +2280,33 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		return;
 	}
 
-	// Turning the camera, the hand holds on to the land under the cursor like it does dragging it, though it keeps
-	// its idle pose, so it hovers its height above the land as it does over it
-	if (rotating)
-	{
-		if (!_handWasRotating)
-		{
-			auto hold = handTransform.position;
-			if (_cursorWorldPosition)
-			{
-				const auto overSea =
-				    Locator::terrainSystem::value().GetHeightAt(glm::xz(*_cursorWorldPosition)) < k_HandSeaAltitude;
-				const auto towardsLand = glm::normalize(*_cursorWorldPosition - eye);
-				const auto handHeight = k_HandHeight * HandAnimation::SizeAtDistance(_handDistance);
-				hold = overSea ? *_cursorWorldPosition : *_cursorWorldPosition - towardsLand * handHeight;
-			}
-			_handHoldPoint = hold;
-			_handGripFrom = handTransform.position;
-			_handGripBlend.Reset(0.0f);
-			_handGripBlend.SetDestination(1.0f, k_HandGripSettleTime);
-		}
-		_handGripBlend.Update(deltaSeconds);
-		handTransform.position = glm::mix(_handGripFrom, _handHoldPoint, _handGripBlend.GetValue());
-		_handDistance = glm::clamp(glm::distance(eye, handTransform.position), k_HandMinDistance, k_HandMaxDistance);
-		_handHoverZoomer.Reset(_handDistance);
-		_handWasRotating = true;
-		_handWasDragging = false;
-		return;
-	}
-	_handWasRotating = false;
-
-	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and the hand is kept under the
-	// cursor, so the hand holds on to that land and moves with it. It settles onto it as quickly as it changes pose.
+	// Dragging the land, the camera keeps the land the hand gripped under the cursor, and the hand stays on the land it
+	// gripped, so it moves with it. It fades onto it from where it was as it changes pose, and back to hovering once
+	// let go. Its hover carries on from how far the gripped land was from the camera.
 	if (dragging)
 	{
 		if (!_handWasDragging)
 		{
 			_handGripPoint = _cursorWorldPosition.value_or(handTransform.position);
-			_handGripFrom = handTransform.position;
-			_handGripBlend.Reset(0.0f);
-			_handGripBlend.SetDestination(1.0f, k_HandGripSettleTime);
+			_handCrossFade.Start(handTransform.position);
 		}
-		_handGripBlend.Update(deltaSeconds);
-		handTransform.position = glm::mix(_handGripFrom, _handGripPoint, _handGripBlend.GetValue());
-		_handDistance = glm::clamp(glm::distance(eye, handTransform.position), k_HandMinDistance, k_HandMaxDistance);
+		_handCrossFade.Update(deltaSeconds);
+		handTransform.position = _handCrossFade.Apply(_handGripPoint);
+		_handDistance = glm::clamp(glm::distance(eye, _handGripPoint), k_HandMinDistance, k_HandMaxDistance);
 		_handHoverZoomer.Reset(_handDistance);
 		_handWasDragging = true;
 		return;
 	}
+	if (_handWasDragging)
+	{
+		_handCrossFade.Start(handTransform.position);
+	}
 	_handWasDragging = false;
 
 	// The game puts the origin of the hand, by its fingertips, on the line of sight through the cursor, so the hand is
-	// always under the cursor on screen. How far along it depends on the land the cursor is over.
+	// always under the cursor on screen. How far along it depends on the land the cursor is over. Turning the camera
+	// with the mouse holds the cursor still, so the hand stays where it is on screen and eases to the land coming under
+	// it.
 	if (_cursorWorldPosition)
 	{
 		const auto toLand = *_cursorWorldPosition - eye;
@@ -2349,7 +2335,57 @@ void Game::PlaceHand(ecs::components::Transform& handTransform, float deltaSecon
 		// The hand's distance from the camera, no further out than the land less the hand's height
 		_handDistance = glm::clamp(glm::min(_handHoverZoomer.GetValue(), nearest), k_HandMinDistance, k_HandMaxDistance);
 	}
-	handTransform.position = eye + _handRayDirection * _handDistance;
+	_handCrossFade.Update(deltaSeconds);
+	handTransform.position = _handCrossFade.Apply(eye + _handRayDirection * _handDistance);
+}
+
+void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3& facingCamera, glm::vec3 surfaceUp,
+                      float deltaSeconds)
+{
+	using namespace hand_orientation;
+	const auto& camera = Locator::camera::value();
+	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
+
+	// The hand faces along the line of sight through the cursor, laid flat
+	if (screenSize.x > 0 && screenSize.y > 0)
+	{
+		glm::vec3 rayOrigin;
+		glm::vec3 rayDirection;
+		camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize), rayOrigin,
+		                              rayDirection);
+		if (!glm::any(glm::isnan(rayDirection)))
+		{
+			_handHeading = HeadingAlongRay(rayDirection, _handHeading);
+		}
+	}
+	const auto cameraHeading = HeadingAlongRay(camera.GetForward(), _handHeading);
+
+	// Its up eases over 0.4 seconds to the slope of the land under it, or to the face of what the cursor is on, given
+	// afresh only as the cursor moves across the screen. Gripping the land it holds its up, and letting go it stands
+	// up straight and eases from there.
+	const bool dragging = _handGripping && !_handRotating;
+	const bool cursorMovedAcross = _mousePosition.x != _handLastCursorX;
+	_handLastCursorX = _mousePosition.x;
+	if (!dragging)
+	{
+		if (_handUpWasHeld)
+		{
+			_handUp.Reset(glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+		if (cursorMovedAcross)
+		{
+			const auto slope = _cursorOnObject || !Locator::terrainSystem::has_value()
+			                       ? surfaceUp
+			                       : Locator::terrainSystem::value().GetNormalAt(glm::xz(handTransform.position));
+			_handUp.SetDestination(slope, k_UpEaseSeconds);
+		}
+		_handUp.Update(deltaSeconds);
+	}
+	_handUpWasHeld = dragging;
+
+	const auto up = _handUp.GetValue();
+	const auto onLevelLand = TurnToHeading(facingCamera, cameraHeading, _handHeading);
+	handTransform.rotation = glm::length(up) > 0.0f ? StandOnSlope(onLevelLand, _handHeading, up) : onLevelLand;
 }
 
 void Game::UpdateMagicHand(const glm::vec3& handPosition, float deltaSeconds)

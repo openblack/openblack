@@ -377,6 +377,15 @@ struct Command
 		OpenCreatureCave,
 		ApplyTattoo,
 		RemoveTattoo,
+		/// The player's mouse, through the same input the real one goes through: the pointer put at a point on the
+		/// screen (point, as fractions of its width and height from the top left); a button (value: 1 left, 2 middle,
+		/// 3 right) pressed or let go; the mouse moved by point, as fractions of the screen, over some seconds
+		/// (amount); the wheel turned some notches (value) away from the player, or towards with ctrl
+		PointerTo,
+		PointerPress,
+		PointerRelease,
+		PointerSweep,
+		WheelTurn,
 	};
 	Kind kind {Kind::Stop};
 	/// Which creature, by its place in the scenario's creatures
@@ -414,6 +423,8 @@ struct Command
 	bool ctrl {false};
 };
 [[nodiscard]] std::string_view Name(Command::Kind kind);
+/// Whether a command is the player's mouse, which needs no creature
+[[nodiscard]] bool IsPointerCommand(Command::Kind kind);
 
 struct Scenario
 {
@@ -443,6 +454,8 @@ struct Scenario
 void AddMiracleScenarios(std::vector<Scenario>& all);
 /// Creature Mode's and the Creature Cave's scenarios
 void AddCreatureModeScenarios(std::vector<Scenario>& all);
+/// The player's hand moving over the land, dragging it and turning and zooming the camera
+void AddHandNavigationScenarios(std::vector<Scenario>& all);
 
 /// Every scenario, in the order the window lists them
 [[nodiscard]] std::span<const Scenario> All();

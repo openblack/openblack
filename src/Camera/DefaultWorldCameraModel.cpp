@@ -11,6 +11,7 @@
 
 #include <numeric>
 #include <ranges>
+#include <tuple>
 
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/norm.hpp>
@@ -58,6 +59,10 @@ constexpr auto k_InteractionSpeedMultiplier = 400.0f;
 constexpr auto k_CameraModelHalfPi = 1.53938043f;
 constexpr auto k_RotateOnSpeedMultiplier = glm::vec2(1.9f, -1.7f);
 constexpr auto k_TwoButtonZoomFactor = 1.9f;
+// Both buttons turn the camera by the same amount for the mouse's movement across, once it has moved far enough
+constexpr auto k_TwoButtonTurnFactor = 1.9f;
+// The tilt of a unit of pitch input, in radians
+constexpr auto k_PitchPerInput = 0.002f;
 constexpr auto k_CameraInteractionStepSize = 3.0f;
 constexpr auto k_MinimalCameraAnimationDuration = 1'500'000us;
 constexpr auto k_HandDragVectorAlignmentThreshold = 0.001f;
@@ -128,7 +133,7 @@ void DefaultWorldCameraModel::TiltZoom(glm::vec3& eulerAngles, float scalingFact
 	// Update the camera's pitch if there's significant vertical movement.
 	if (glm::abs(_rotateAroundDelta.x) > glm::epsilon<float>())
 	{
-		const auto pitchStep = _rotateAroundDelta.x * 0.002f;
+		const auto pitchStep = _rotateAroundDelta.x * k_PitchPerInput;
 		eulerAngles.y -= pitchStep;
 		// Clamp the pitch angle to keep the camera within between -30 and 78.75 degrees.
 		eulerAngles.y = glm::clamp(eulerAngles.y, -1.0f / 6.0f * glm::pi<float>(), 7.0f / 16.0f * glm::pi<float>());
@@ -703,10 +708,18 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 		    actionSystem.Get(input::BindableActionMap::ZOOM_IN) ? -k_WheelZoomPerNotch : k_WheelZoomPerNotch;
 	}
 
-	if (actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK))
+	const bool twoButtons = actionSystem.Get(input::UnbindableActionMap::TWO_BUTTON_CLICK);
+	if (twoButtons)
 	{
 		_rotateAroundDelta.z += actionSystem.GetMouseDelta().y * k_TwoButtonZoomFactor;
-		// TODO(#711): the mouse has to be reset
+	}
+	// Moving across turns the camera too, once the mouse has moved a fortieth of the screen's width across in a frame,
+	// or since both were pressed
+	{
+		const auto width = Locator::windowing::has_value() ? Locator::windowing::value().GetSize().x : 1;
+		const auto across = _twoButtonTurn.Update(twoButtons, actionSystem.GetMouseDelta().x,
+		                                          static_cast<int>(actionSystem.GetMousePosition().x), width);
+		_rotateAroundDelta.y += static_cast<float>(across) * k_TwoButtonTurnFactor;
 	}
 
 	if (actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
@@ -717,6 +730,21 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 
 	const auto handPositions = actionSystem.GetHandPositions();
 	_handPosition = handPositions[0].or_else([handPositions] { return handPositions[1]; });
+
+	_controlsTime += dt;
+	if (!(_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE)) ||
+	    actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON))
+	{
+		std::ignore = HandleDrag(false);
+	}
+	// The hints follow the cursor while nothing is dragged and the camera isn't being turned, moved or zoomed
+	if (!_dragging && !actionSystem.Get(input::BindableActionMap::ROTATE_AROUND_MOUSE_ON) &&
+	    _rotateAroundDelta == glm::vec3() && _keyBoardMoveDelta == glm::vec2() && Locator::windowing::has_value())
+	{
+		const auto cursor =
+		    camera_drag::NormalisedCursor(glm::ivec2(actionSystem.GetMousePosition()), Locator::windowing::value().GetSize());
+		_tricons = camera_drag::IdleTricons(cursor, _screenSpaceMouseRaycastHit.has_value());
+	}
 
 	_modePrev = _mode;
 	if (_handPosition.has_value() && actionSystem.Get(input::UnbindableActionMap::DOUBLE_CLICK))
@@ -729,7 +757,7 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	}
 	else if (_handPosition.has_value() && actionSystem.Get(input::BindableActionMap::MOVE))
 	{
-		_mode = Mode::DraggingLandscape;
+		_mode = HandleDrag(true);
 	}
 	else if (_keyBoardMoveDelta != glm::vec2() || _rotateAroundDelta != glm::vec3())
 	{
@@ -739,6 +767,74 @@ void DefaultWorldCameraModel::HandleActions(std::chrono::microseconds dt)
 	{
 		_mode = Mode::Cartesian;
 	}
+}
+
+DefaultWorldCameraModel::Mode DefaultWorldCameraModel::HandleDrag(bool held)
+{
+	using camera_drag::DragMode;
+	if (!held)
+	{
+		_dragging = false;
+		return _mode;
+	}
+	if (!Locator::windowing::has_value())
+	{
+		return Mode::DraggingLandscape;
+	}
+	auto& actionSystem = Locator::gameActionSystem::value();
+	const auto screenSize = Locator::windowing::value().GetSize();
+	const auto cursor = glm::ivec2(actionSystem.GetMousePosition());
+	const auto milliseconds =
+	    static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(_controlsTime).count());
+	if (!_dragging)
+	{
+		// The drag takes the hints of the cursor before it was pressed
+		_dragging = true;
+		_drag.Start(_tricons, camera_drag::NormalisedCursor(cursor, screenSize), milliseconds);
+		_ringCursor = cursor;
+	}
+	else
+	{
+		_drag.Move(actionSystem.GetMouseDelta(), screenSize, milliseconds, _screenSpaceMouseRaycastHit.has_value());
+	}
+
+	const auto mode = _drag.GetMode();
+	if (!mode.has_value())
+	{
+		// Until it is decided, the camera stays put
+		return Mode::Cartesian;
+	}
+	switch (*mode)
+	{
+	case DragMode::Pan:
+		return Mode::DraggingLandscape;
+	case DragMode::EdgeRotate:
+	{
+		// The cursor is held on the ring, and the camera turns about its focus by the angle swept round the middle
+		const auto step = camera_drag::EdgeRotate(cursor, _ringCursor, screenSize);
+		_ringCursor = step.cursor;
+		_rotateAroundDelta.y += step.angle * static_cast<float>(screenSize.x) / glm::pi<float>();
+		actionSystem.WarpCursor(step.cursor);
+		return Mode::Polar;
+	}
+	case DragMode::Pitch:
+	case DragMode::PitchFromTop:
+	{
+		const auto fov = Locator::camera::has_value() ? Locator::camera::value().GetHorizontalFieldOfView() : 0.0f;
+		_rotateAroundDelta.x += camera_drag::PitchStep(actionSystem.GetMouseDelta().y, screenSize.y, fov) / k_PitchPerInput;
+		return Mode::Polar;
+	}
+	}
+	return Mode::DraggingLandscape;
+}
+
+CameraModel::HandCues DefaultWorldCameraModel::GetHandCues() const
+{
+	if (_dragging)
+	{
+		return {.tricons = _drag.GetTricons(), .dragging = true, .dragMode = _drag.GetMode()};
+	}
+	return {.tricons = _tricons};
 }
 
 void DefaultWorldCameraModel::SetFlight(glm::vec3 origin, glm::vec3 focus)

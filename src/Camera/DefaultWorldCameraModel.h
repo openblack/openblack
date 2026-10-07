@@ -41,11 +41,15 @@ public:
 	[[nodiscard]] glm::vec3 GetTargetOrigin() const final;
 	[[nodiscard]] glm::vec3 GetTargetFocus() const final;
 	[[nodiscard]] std::chrono::seconds GetIdleTime() const final;
+	[[nodiscard]] HandCues GetHandCues() const final;
 
 private:
 	void UpdateCameraInterpolationValues(const Camera& camera);
 	void UpdateRaycastHitPoints(const Camera& camera);
 	void UpdateFocusDistance();
+	/// What a drag of the land does, from where it was pressed and how the mouse moves: pans, turns round the edge or
+	/// tilts. Gives the mode the camera takes for it.
+	[[nodiscard]] Mode HandleDrag(bool held);
 
 	void UpdateMode(const Camera& camera, glm::vec3 eulerAngles, float zoomDelta, glm::uvec2 mouseCurrent,
 	                float mouseMovementDistance);
@@ -126,6 +130,16 @@ private:
 	glm::u16vec2 _mouseAtClick = glm::u16vec2(0.0f, 0.0f);
 	std::chrono::microseconds _elapsedTime = std::chrono::microseconds::zero();
 	std::optional<FlightPath> _flightPath;
+
+	/// The camera hints where the cursor is, with nothing dragged
+	uint32_t _tricons {camera_drag::tricon::k_Idle};
+	/// A drag of the land, and where the cursor is held dragging round the edge
+	bool _dragging {false};
+	camera_drag::DragClassifier _drag;
+	glm::ivec2 _ringCursor {0, 0};
+	camera_drag::TwoButtonTurn _twoButtonTurn;
+	/// Time spent handling the controls, for timing the start of a drag
+	std::chrono::microseconds _controlsTime {std::chrono::microseconds::zero()};
 
 	// For unit testing
 	friend TestDefaultCameraModel;

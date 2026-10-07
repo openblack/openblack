@@ -9,6 +9,7 @@
 
 #include <cmath>
 
+#include <algorithm>
 #include <array>
 #include <set>
 #include <string>
@@ -359,6 +360,46 @@ TEST(TestbedScenarios, CommandsOnThingsAreChecked)
 	                   {.kind = Kind::PutOnLeash, .leash = LeashType::Good},
 	                   {.kind = Kind::ConfineToHome, .radius = 10.0f}};
 	EXPECT_TRUE(Problems(broken).empty());
+}
+
+TEST(TestbedScenarios, PointerCommandsAreChecked)
+{
+	using Kind = Command::Kind;
+	// The mouse needs no creature, but its points are on the screen and its buttons are the mouse's three
+	Scenario mouse {
+	    .id = "broken.mouse",
+	    .name = "Broken",
+	    .description = "Broken on purpose",
+	    .expected = "Every problem found",
+	    .commands = {{.kind = Kind::PointerTo, .point = {1.5f, 0.5f}},
+	                 {.kind = Kind::PointerPress, .value = 0},
+	                 {.kind = Kind::PointerRelease, .value = 4},
+	                 {.kind = Kind::PointerSweep, .point = {0.1f, 0.0f}, .amount = 0.0f}},
+	};
+	EXPECT_EQ(Problems(mouse).size(), 4u);
+
+	mouse.commands = {{.kind = Kind::PointerTo, .point = {0.75f, 0.5f}},
+	                  {.kind = Kind::PointerPress, .value = 2},
+	                  {.kind = Kind::PointerSweep, .point = {-0.3f, 0.0f}, .amount = 1.5f},
+	                  {.kind = Kind::PointerRelease, .value = 2},
+	                  {.kind = Kind::WheelTurn, .value = 3}};
+	EXPECT_TRUE(Problems(mouse).empty());
+	EXPECT_TRUE(IsPointerCommand(Kind::WheelTurn));
+	EXPECT_FALSE(IsPointerCommand(Kind::WalkTo));
+}
+
+TEST(TestbedScenarios, CoversTheHandFindingItsWay)
+{
+	for (const auto* id : {"hand.rotate_release", "hand.two_buttons", "hand.drag", "hand.zoom", "hand.click"})
+	{
+		const auto* scenario = Find(id);
+		ASSERT_NE(scenario, nullptr) << id;
+		EXPECT_EQ(scenario->facet, Facet::Hand) << id;
+		EXPECT_TRUE(scenario->creatures.empty()) << id;
+		EXPECT_TRUE(std::ranges::all_of(scenario->commands, [](const Command& command) {
+			return IsPointerCommand(command.kind);
+		})) << id;
+	}
 }
 
 TEST(TestbedScenarios, ProblemsAreFound)

@@ -2014,6 +2014,7 @@ std::vector<Scenario> Build()
 	AddMiracleScenarios(all);
 	AddBenchmark(all);
 	AddCreatureModeScenarios(all);
+	AddHandNavigationScenarios(all);
 	return all;
 }
 
@@ -2129,7 +2130,7 @@ std::string_view testbed_scenarios::Name(Shot shot)
 
 std::string_view testbed_scenarios::Name(Command::Kind kind)
 {
-	constexpr std::array<std::string_view, 67> k_Names {
+	constexpr std::array<std::string_view, 72> k_Names {
 	    "walk to",
 	    "run to",
 	    "follow",
@@ -2197,8 +2198,19 @@ std::string_view testbed_scenarios::Name(Command::Kind kind)
 	    "press F5",
 	    "tattoo",
 	    "take tattoo off",
+	    "pointer to",
+	    "press button",
+	    "let go of button",
+	    "move mouse",
+	    "turn wheel",
 	};
 	return k_Names.at(static_cast<size_t>(kind));
+}
+
+bool testbed_scenarios::IsPointerCommand(Command::Kind kind)
+{
+	return kind == Kind::PointerTo || kind == Kind::PointerPress || kind == Kind::PointerRelease ||
+	       kind == Kind::PointerSweep || kind == Kind::WheelTurn;
 }
 
 bool NeedOverrides::Empty() const
@@ -2370,7 +2382,7 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 	{
 		const auto& command = scenario.commands.at(i);
 		const auto what = fmt::format("command {} ({})", i, Name(command.kind));
-		if (command.kind != Kind::SetHour && command.creature >= creatures)
+		if (command.kind != Kind::SetHour && !IsPointerCommand(command.kind) && command.creature >= creatures)
 		{
 			problems.push_back(fmt::format("{}: no such creature", what));
 		}
@@ -2399,6 +2411,11 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 		    (command.kind == Kind::SeeMiracle && command.value >= k_Miracles) ||
 		    (command.kind == Kind::PlayerDid && command.value >= k_Deeds) ||
 		    (command.kind == Kind::CameraKeys && (command.value >= 4 || command.amount <= 0.0f)) ||
+		    (command.kind == Kind::PointerTo &&
+		     (!InRange(command.point.x, 0.0f, 1.0f) || !InRange(command.point.y, 0.0f, 1.0f))) ||
+		    ((command.kind == Kind::PointerPress || command.kind == Kind::PointerRelease) &&
+		     (command.value < 1 || command.value > 3)) ||
+		    (command.kind == Kind::PointerSweep && command.amount <= 0.0f) ||
 		    (command.kind == Kind::OpenCreatureCave && command.value >= creature_cave::k_PageCount) ||
 		    ((command.kind == Kind::ApplyTattoo || command.kind == Kind::RemoveTattoo) &&
 		     (command.value >= creature_tattoo::k_DesignCount || command.bodyPart >= creature_tattoo::k_SlotCount)))

@@ -20,6 +20,7 @@
 #include <SDL_mouse.h>
 #include <glm/vec3.hpp>
 
+#include "CursorFreeze.h"
 #include "GameActionMapInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -53,6 +54,13 @@ public:
 	void QueuePress(BindableActionMap action) final;
 	[[nodiscard]] bool HasQueuedPresses() const final;
 
+	void SetScriptedPointer(std::optional<ScriptedPointer> pointer) final;
+	[[nodiscard]] std::optional<ScriptedPointer> GetScriptedPointer() const final;
+	void WarpCursor(glm::ivec2 position) final;
+	[[nodiscard]] std::optional<glm::ivec2> GetCursorWarp() const final;
+	void AllowCursorFreeze(bool allowed) final;
+	[[nodiscard]] bool IsCursorFrozen() const final;
+
 	void Frame() final;
 	void ProcessEvent(const SDL_Event& event) final;
 
@@ -65,6 +73,8 @@ private:
 	void ApplyMouseBindings();
 	/// Lets go of the keys whose letting go went elsewhere, as to a text field of the debug windows
 	void ReleaseKeysNoLongerHeld();
+	/// The buttons held and where the pointer is, the mouse's or the scripted pointer's
+	uint32_t PointerState(glm::ivec2* position) const;
 	/// Makes the presses queued for testing, and lets go of last frame's
 	void ApplyQueuedPresses();
 
@@ -84,5 +94,10 @@ private:
 	glm::uvec2 _mousePosition;
 	glm::ivec2 _mouseDelta {0};
 	float _mouseWheelDelta = 0.0f;
+	/// Holds the cursor while the mouse turns the camera
+	CursorFreeze _cursorFreeze;
+	bool _cursorFreezeAllowed {false};
+	std::optional<ScriptedPointer> _scriptedPointer;
+	std::optional<glm::ivec2> _cursorWarp;
 };
 } // namespace openblack::input
