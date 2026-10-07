@@ -112,6 +112,8 @@ openblack_setup_and_add_test(test_particle_effect test_particle_effect.cpp)
 target_link_libraries(test_particle_effect PRIVATE psys)
 openblack_setup_and_add_test(test_particle_draw test_particle_draw.cpp)
 target_link_libraries(test_particle_draw PRIVATE psys)
+openblack_setup_and_add_test(test_particle_beam test_particle_beam.cpp)
+target_link_libraries(test_particle_beam PRIVATE psys)
 openblack_setup_and_add_test(test_map_coords test_map_coords.cpp)
 openblack_setup_and_add_test(test_land_normal test_land_normal.cpp)
 openblack_setup_and_add_test(test_tree_brightness test_tree_brightness.cpp)
@@ -250,6 +252,7 @@ openblack_setup_and_add_test(test_blast test_blast.cpp)
 openblack_setup_and_add_test(
   test_magic_shield_forest test_magic_shield_forest.cpp
 )
+openblack_setup_and_add_test(test_lightning_maths test_lightning_maths.cpp)
 openblack_setup_and_add_test(
   test_creature_spell_mind test_creature_spell_mind.cpp
 )

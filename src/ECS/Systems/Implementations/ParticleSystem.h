@@ -50,7 +50,7 @@ public:
 	[[nodiscard]] glm::vec3 LandNormal(glm::vec2 xz) const override;
 	[[nodiscard]] bool IsRainingAt(glm::vec3 point) const override;
 	[[nodiscard]] glm::vec3 WindAt(glm::vec3 point) const override;
-	[[nodiscard]] std::vector<particles::StrikeCandidate> StrikeCandidates(glm::vec3 centre, float radius) const override;
+	[[nodiscard]] std::vector<particles::StrikeCandidate> StrikeCandidates(glm::vec3 centre, size_t cells) const override;
 	[[nodiscard]] bool LandBlocks(glm::vec3 from, glm::vec3 to) const override;
 	void AddShield(const std::shared_ptr<particles::ShieldSphere>& shield) override;
 	[[nodiscard]] std::shared_ptr<particles::ShieldSphere> FindShield(glm::vec3 point, float margin) const override;

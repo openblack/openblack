@@ -300,8 +300,10 @@ glm::vec3 GameParticleWorld::WindAt(glm::vec3 point) const
 	return {static_cast<float>(weather.windX), 0.0f, static_cast<float>(weather.windZ)};
 }
 
-std::vector<particles::StrikeCandidate> GameParticleWorld::StrikeCandidates(glm::vec3 centre, float radius) const
+std::vector<particles::StrikeCandidate> GameParticleWorld::StrikeCandidates(glm::vec3 centre, size_t cells) const
 {
+	// The cells of a spiral cover about cells x 100 square units: search the circle of that area
+	const float radius = glm::sqrt(static_cast<float>(cells) * 31.830988f);
 	std::vector<particles::StrikeCandidate> candidates;
 	if (!Locator::entitiesRegistry::has_value())
 	{

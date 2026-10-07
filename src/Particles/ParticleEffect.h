@@ -273,7 +273,7 @@ public:
 	/// What a lightning bolt may strike round a point on the land, as the game finds it: everything standing in the first
 	/// cells of a spiral out from the point's cell, whatever its distance, in each cell what stays put and then what moves
 	/// in the map's order, a building only in the cell it stands in, but for the dead and the miracles' seeds
-	[[nodiscard]] virtual std::vector<StrikeCandidate> StrikeCandidates(glm::vec3 /*centre*/, float /*radius*/) const
+	[[nodiscard]] virtual std::vector<StrikeCandidate> StrikeCandidates(glm::vec3 /*centre*/, size_t /*cells*/) const
 	{
 		return {};
 	}
