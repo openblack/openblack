@@ -91,15 +91,15 @@ std::vector<int32_t> OfTribe(const Table& table, int tribe)
 
 bool TribeCombo(int& tribe)
 {
-	constexpr auto count = static_cast<int>(Tribe::_COUNT);
+	constexpr auto k_Count = static_cast<int>(Tribe::_COUNT);
 	const auto name = [](int index) {
-		return index < count ? TitleCase(k_TribeStrs.at(static_cast<size_t>(index))) : std::string("Others");
+		return index < k_Count ? TitleCase(k_TribeStrs.at(static_cast<size_t>(index))) : std::string("Others");
 	};
 	bool changed = false;
 	ImGui::SetNextItemWidth(ImGui::GetFontSize() * 9.0f);
 	if (ImGui::BeginCombo("Tribe", name(tribe).c_str()))
 	{
-		for (int i = 0; i <= count; ++i)
+		for (int i = 0; i <= k_Count; ++i)
 		{
 			if (ImGui::Selectable(name(i).c_str(), i == tribe))
 			{
