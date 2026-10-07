@@ -99,8 +99,11 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterGlintRules(registry);
 	RegisterShieldRules(registry);
 	RegisterStormRules(registry);
+	RegisterFlockRules(registry);
 	RegisterSurfaceRules(registry);
 	RegisterObjectRules(registry);
+	RegisterTornadoRules(registry);
+	RegisterFlockingRules(registry);
 	RegisterForestRules(registry);
 	RegisterBlastRules(registry);
 	return registry;

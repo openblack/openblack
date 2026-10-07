@@ -248,6 +248,9 @@ openblack_setup_and_add_test(test_teleport_rules test_teleport_rules.cpp)
 openblack_setup_and_add_test(test_fire test_fire.cpp)
 openblack_setup_and_add_test(test_blast test_blast.cpp)
 openblack_setup_and_add_test(
+  test_magic_shield_forest test_magic_shield_forest.cpp
+)
+openblack_setup_and_add_test(
   test_creature_spell_mind test_creature_spell_mind.cpp
 )
 openblack_setup_and_add_test(
@@ -278,6 +281,8 @@ openblack_setup_and_add_test(test_particle_miracles test_particle_miracles.cpp)
 target_link_libraries(test_particle_miracles PRIVATE psys)
 openblack_setup_and_add_test(test_storm_miracle test_storm_miracle.cpp)
 target_link_libraries(test_storm_miracle PRIVATE psys)
+openblack_setup_and_add_test(test_tornado test_tornado.cpp)
+target_link_libraries(test_tornado PRIVATE psys)
 openblack_setup_and_add_test(test_chl_compiler lhvm/test_chl_compiler.cpp)
 target_link_libraries(test_chl_compiler PRIVATE lhvmcompiler)
 openblack_setup_and_add_test(test_chl_roundtrip lhvm/test_chl_roundtrip.cpp)
