@@ -20,6 +20,7 @@
 #include "Creature/CreatureMindModel.h"
 #include "Creature/CreaturePlanner.h"
 #include "Creature/LeashRules.h"
+#include "Creature/PerceivedDesires.h"
 
 namespace openblack::ecs::components
 {
@@ -45,6 +46,8 @@ struct CreatureMindState
 	/// How it feels about the player, which each stroke or slap nudges, and the average of what it has been given
 	float attitudeToPlayer {0.0f};
 	float averageFeedback {0.0f};
+	/// What it thinks its player wants, from what it has seen the player do
+	creature_perceived_desires::PerceivedDesires perceivedDesires {};
 	/// The last feedback the player gave it as the hand let go, from -1 (slapped) to 1 (stroked), and what it was doing
 	/// then, for it to learn from
 	struct Feedback
@@ -72,6 +75,9 @@ struct CreatureMindState
 	/// The agenda carrying out the plan, and the last agenda remembered for feedback, by the idle mind's count of them
 	uint32_t planSerial {0};
 	uint32_t agendaSeen {0};
+	/// Turns its agenda's steps have run, counted on from step to step, which a walk up to something checks every fifty
+	/// for having got stuck
+	uint32_t stepTurns {0};
 	/// Game turns the mind has thought, and the turn it last planned
 	uint32_t turn {0};
 	uint32_t plannedTurn {0};

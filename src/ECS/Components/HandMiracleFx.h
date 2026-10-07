@@ -9,16 +9,19 @@
 
 #pragma once
 
+#include "Magic/MiracleVisuals.h"
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// How a hand holding a miracle shows it: the bands flying on and off and the bracelets it wears, one for a plain
+/// miracle and one more for each power-up, and the glow flowing over it in its player's colour
+struct HandMiracleFx
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	magic::visuals::HandBands bands;
+	/// The glow shows while the hand holds a miracle; its frame runs on all the while
+	bool glowing {false};
+	float glowFrame {0.0f};
 };
 
 } // namespace openblack::ecs::components

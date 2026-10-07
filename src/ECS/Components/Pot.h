@@ -18,8 +18,8 @@ namespace openblack::ecs::components
 
 struct Pot
 {
-	uint16_t amount;
-	uint16_t maxAmount;
+	uint32_t amount;
+	uint32_t maxAmount;
 	/// What kind of pot or pile it is, which says what it holds
 	PotInfo type {PotInfo::FoodPot};
 };

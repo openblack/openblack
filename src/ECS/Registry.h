@@ -157,6 +157,17 @@ public:
 		return _registry.view<Components...>().size();
 	}
 	[[nodiscard]] decltype(auto) Valid(entt::entity entity) const { return _registry.valid(entity); }
+	/// Told whenever an entity gains a component, or loses one (also as it is destroyed)
+	template <typename Component>
+	[[nodiscard]] decltype(auto) OnConstruct()
+	{
+		return _registry.on_construct<Component>();
+	}
+	template <typename Component>
+	[[nodiscard]] decltype(auto) OnDestroy()
+	{
+		return _registry.on_destroy<Component>();
+	}
 	virtual ~Registry() = default;
 
 protected:

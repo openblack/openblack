@@ -14,6 +14,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/ResourcePile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
@@ -34,6 +35,17 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 	{
 		return entt::null;
 	}
+	const auto entity = CreateEmpty(position, yAngleRadians, type);
+	Locator::entitiesRegistry::value().Get<Pot>(entity).amount = static_cast<uint32_t>(amount);
+	return entity;
+}
+
+entt::entity PotArchetype::CreateEmpty(const glm::vec3& position, float yAngleRadians, PotInfo type)
+{
+	if (static_cast<int32_t>(type) < 0 || static_cast<int32_t>(type) >= static_cast<int32_t>(PotInfo::_COUNT))
+	{
+		return entt::null;
+	}
 
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
@@ -41,12 +53,17 @@ entt::entity PotArchetype::Create(const glm::vec3& position, float yAngleRadians
 	const auto& info = Locator::infoConstants::value().pot.at(static_cast<size_t>(type));
 
 	registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(1.0f));
-	registry.Assign<Pot>(entity, static_cast<uint16_t>(amount), static_cast<uint16_t>(info.maxAmountInPot), type);
+	registry.Assign<Pot>(entity, 0u, info.maxAmountInPot, type);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 	if (info.potType == PotType::PileFood)
 	{
 		registry.Assign<MorphWithTerrain>(entity);
+	}
+	// A pile rises out of the ground for what it holds
+	if (info.potType == PotType::PileFood || info.potType == PotType::PileWood)
+	{
+		registry.Assign<ResourcePile>(entity);
 	}
 
 	return entity;

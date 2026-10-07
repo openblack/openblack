@@ -14,8 +14,10 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+#include "Common/GameRandom.h"
 #include "Common/RandomNumberManager.h"
 #include "ECS/Components/Fixed.h"
+#include "ECS/Components/ForestMember.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Swayable.h"
 #include "ECS/Components/Transform.h"
@@ -30,7 +32,13 @@ using namespace openblack;
 using namespace openblack::ecs::archetypes;
 using namespace openblack::ecs::components;
 
-entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm::vec3& position, TreeInfo type,
+namespace
+{
+/// The turns a tree's growth clock takes to go round
+constexpr uint32_t k_GrowthClockTurns = 0x10000;
+} // namespace
+
+entt::entity TreeArchetype::Create(uint32_t forestId, const glm::vec3& position, TreeInfo type,
                                    [[maybe_unused]] bool isNonScenic, float yAngleRadians, float maxSize, float scale)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -41,7 +49,18 @@ entt::entity TreeArchetype::Create([[maybe_unused]] uint32_t forestId, const glm
 	const auto& transform = registry.Assign<Transform>(entity, position, glm::eulerAngleY(-yAngleRadians), glm::vec3(scale));
 	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, transform);
 	registry.Assign<Fixed>(entity, point, radius);
-	registry.Assign<Tree>(entity, type, maxSize);
+	auto& tree = registry.Assign<Tree>(entity, type, maxSize);
+	if (forestId != 0)
+	{
+		registry.Assign<ForestMember>(entity, forestId);
+	}
+	// A tree short of its full size first grows after a random part of its kind's wait. The game counts it down on a 16
+	// bit clock, so a wait of none goes the whole clock round.
+	if (maxSize != scale && Locator::gameRandom::has_value())
+	{
+		const auto wait = Locator::gameRandom::value().GameRand(info.growsAfterNumGameTurns);
+		tree.turnsToGrowth = wait != 0 ? wait : k_GrowthClockTurns;
+	}
 	const auto resourceId = resources::HashIdentifier(info.normal);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(-1));
 	// As a tree is made, one of 16 sways by the tree's facing, so neighbours facing alike sway alike.

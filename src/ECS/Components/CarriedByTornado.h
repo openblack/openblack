@@ -9,16 +9,26 @@
 
 #pragma once
 
+#include <memory>
+
+namespace openblack::particles
+{
+struct CarriedObject;
+}
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// Something a tornado has picked up: it is off the ground, its own doings stop, and it follows the particle carrying
+/// it until the particle has gone and it is let go where it was flung
+struct CarriedByTornado
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	std::shared_ptr<particles::CarriedObject> carried;
+};
+
+/// A creature a tornado has caught: too big to be picked up, it stands helpless and is let off the leash, once
+struct CaughtByTornado
+{
 };
 
 } // namespace openblack::ecs::components

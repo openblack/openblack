@@ -9,16 +9,20 @@
 
 #pragma once
 
+#include <cstdint>
+
+#include <optional>
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// A heap of rubble a blast left on the land: it lies there for a while of the game's time and fades away in its last
+/// second
+struct GroundMark
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	float millisecondsLeft {0.0f};
+	/// Its alpha, 0 to 255, once it is fading; drawn without blending until then
+	std::optional<uint8_t> alpha;
 };
 
 } // namespace openblack::ecs::components

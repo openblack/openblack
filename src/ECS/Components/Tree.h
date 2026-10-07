@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "Enums.h"
 
 namespace openblack::ecs::components
@@ -21,7 +23,10 @@ enum class MagicTreeType
 struct Tree
 {
 	TreeInfo type;
+	/// The largest it grows to
 	float maxSize;
+	/// Turns until it next grows, while smaller than its largest
+	uint32_t turnsToGrowth {1};
 };
 
 } // namespace openblack::ecs::components

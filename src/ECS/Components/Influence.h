@@ -9,8 +9,19 @@
 
 #pragma once
 
+#include "Enums.h"
+
 namespace openblack::ecs::components
 {
+
+/// Influence a player has round something that is neither a town nor a citadel, reaching so far across the land. The
+/// testbed gives its player influence this way, as it has no temple, so that the miracles cast only in influence may be
+/// cast there.
+struct InfluenceSource
+{
+	PlayerNames player {PlayerNames::PLAYER_ONE};
+	float radius {0.0f};
+};
 
 /// How far a town's influence reaches, worked out each turn from its own and its buildings', and how far it reached
 /// when its border was last drawn

@@ -9,16 +9,17 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// A villager that has died: the turns it lies dead before it goes, and whether its flesh has gone yet, leaving the
+/// skeleton
+struct VillagerDeath
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	uint32_t turnsLeft {0};
+	bool skeleton {false};
 };
 
 } // namespace openblack::ecs::components

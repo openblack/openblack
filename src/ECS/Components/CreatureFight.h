@@ -91,11 +91,15 @@ struct CreatureKnockedOut
 		FadingIn,
 		/// Lying at home a few seconds
 		Waiting,
+		/// Lying until the spells on it have worn off
+		WaitingForSpells,
 		Resting,
 		GettingUp,
 	};
 	Stage stage {Stage::Lying};
 	float seconds {0.0f};
+	/// Decided as it faints: whether it rests to get better before it gets up
+	bool rest {false};
 	/// Only a script kills a creature for good: it never gets up
 	bool permanent {false};
 	/// Where it is taken, if it is taken home

@@ -9,16 +9,15 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// A tree that belongs to one of the land's forests, by the forest's number in the land's script
+struct ForestMember
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	uint32_t forest {0};
 };
 
 } // namespace openblack::ecs::components

@@ -9,19 +9,18 @@
 
 #pragma once
 
-#include <entt/fwd.hpp>
+#include <entt/entity/entity.hpp>
 #include <glm/fwd.hpp>
 
 #include "Enums.h"
 
 namespace openblack::ecs::archetypes
 {
-class PotArchetype
+/// An animal of a kind of the tables: its model, standing or flying where it is put, facing a way across the land
+class AnimalArchetype
 {
 public:
-	static entt::entity Create(const glm::vec3& position, float yAngleRadians, PotInfo type, int32_t amount);
-	/// A pot or pile holding nothing yet, as a storage pit makes one for what it is given
-	static entt::entity CreateEmpty(const glm::vec3& position, float yAngleRadians, PotInfo type);
-	PotArchetype() = delete;
+	static entt::entity Create(AnimalInfo type, const glm::vec3& position, float heading, float scale, PlayerNames owner);
+	AnimalArchetype() = delete;
 };
 } // namespace openblack::ecs::archetypes

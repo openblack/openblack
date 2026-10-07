@@ -9,16 +9,17 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// A colour added to the light the hand is drawn in, after its texture: a recognised gesture's flash makes the hand glow
+/// in its player's colour
+struct HandGlow
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	/// 0xRRGGBB, black for none
+	uint32_t rgb {0};
 };
 
 } // namespace openblack::ecs::components

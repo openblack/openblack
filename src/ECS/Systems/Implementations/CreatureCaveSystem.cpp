@@ -150,6 +150,14 @@ std::optional<creature_cave::Snapshot> CreatureCaveSystem::Snapshot() const
 		return snapshot;
 	}
 	snapshot.attitudeToPlayer = mind->attitudeToPlayer;
+	// Whether it thinks it knows what its god wants most
+	// TODO(raffclar): the game forgets what it found each time it writes the scroll's text; this is looked at every frame,
+	// so it only looks
+	auto perceived = mind->perceivedDesires;
+	snapshot.knowsGodsDesire = creature_perceived_desires::TakeDominant(perceived, [mind](size_t desire) {
+		                           return mind->desires.has_value() && desire < mind->desires->desires.size() &&
+		                                  mind->desires->desires.at(desire).activated;
+	                           }).has_value();
 	snapshot.secondsAlone = mind->secondsAlone;
 	const auto* tables = Locator::creatureMindSystem::has_value() ? Locator::creatureMindSystem::value().GetTables() : nullptr;
 	if (mind->learnt.has_value())

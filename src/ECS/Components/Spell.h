@@ -42,6 +42,9 @@ struct SpellCaster
 	PlayerNames player {PlayerNames::NEUTRAL};
 	/// The creature or object, none for a player
 	entt::entity entity {entt::null};
+	/// A player's miracle cast from a seed made without an icon of their worship (a seed from a globe or a dispenser when
+	/// they have no icon for it): the player made that seed themself, and tops up its miracle with nothing
+	bool withoutIcon {false};
 };
 
 /// A running miracle. Positions are points of the world.
@@ -63,18 +66,26 @@ struct Spell
 	glm::vec3 originalCastPosition {0.0f};
 	/// The way it was cast, and the movement of its last event
 	glm::vec3 direction {0.0f};
-	glm::vec3 movement {0.0f};
+	glm::vec3 movement {1.0f, 0.0f, 0.0f};
 	/// What it hands its particle effect each turn
 	particles::ProcessInfo processInfo;
 	/// Its particle effect, 0 for none
 	uint32_t effect {0};
+	/// A further effect at the point it was cast that plays out by itself, such as a storm's swirl, 0 for none
+	uint32_t castEffect {0};
 	/// The seed in the hand that cast it, if any
 	entt::entity seed {entt::null};
 	/// The object it was cast on, if any: a creature spell goes once its creature has
 	entt::entity target {entt::null};
 	bool closedDown {false};
-	/// Cast from this computer's hand, which it follows while held
+	/// Its magic type starts a particle effect: it lives while that does
+	bool hasParticleType {false};
+	/// Cast by this computer's player's hand
+	bool fromLocalHand {false};
+	/// Held in this computer's hand: a locked miracle (lightning, water, food, wood) follows the hand
 	bool castFromHand {false};
+	/// The reaction the living near it are having to it, 0 for none yet
+	uint32_t reaction {0};
 	bool humanCasting {false};
 	/// How many objects it may still make, -1 for no limit
 	int maxObjectsToCreate {-1};
@@ -84,6 +95,9 @@ struct Spell
 	bool resourceFirstDone {false};
 	/// Water: its age when its last drop left a ring on the land
 	float lastRipple {0.0f};
+	/// The forest: it has planted its trees, and how many of them still stand
+	bool forestPlanted {false};
+	uint32_t objectCount {0};
 };
 
 } // namespace openblack::ecs::components

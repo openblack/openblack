@@ -9,16 +9,15 @@
 
 #pragma once
 
+#include "ECS/TownAggression.h"
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// On a town: what it keeps of the attacks on it (see TownAggression.h)
+struct TownAggression
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	town_aggression::Record record;
 };
 
 } // namespace openblack::ecs::components

@@ -9,16 +9,23 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace openblack::ecs::components
 {
 
-/// How good or evil a player is, from -1, evil, to 1, good (GAlignment +0x8)
-struct Alignment
+/// A living thing that has been poisoned, as by eating poisoned food; the heal miracle cures it
+struct Poisoned
 {
-	float value {0.0f};
-	/// A change still to come, as what the player's miracles did to the world moves them: it is let through a little
-	/// each turn
-	float pending {0.0f};
+	char dummy {0};
+};
+
+/// When a creature last changed its mind about another creature for that creature's miracle, in game turns: it does so
+/// no more often than every minute
+struct CreatureMiracleOpinion
+{
+	uint32_t lastTurn {0};
+	bool changed {false};
 };
 
 } // namespace openblack::ecs::components

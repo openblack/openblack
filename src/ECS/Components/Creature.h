@@ -31,9 +31,17 @@ struct Creature
 	/// What the creature has become, which its body shows: alignment from -1 (evil) to 1 (good), fatness and strength
 	/// from 0 to 1
 	float alignment {0.0f};
+	/// A change to its alignment still to come, as what its miracles did to the world moves it: it scales the change of a
+	/// turn and is then gone
+	float pendingAlignment {0.0f};
 	float fatness {0.5f};
 	float strength {0.5f};
 	/// How big the creature is: 1 is about 15 units tall, whatever its species' mesh
 	float size {1.0f};
+	/// How many objects its miracles have destroyed
+	float objectsDestroyed {0.0f};
+	/// Whether a miracle that takes the last of its life knocks it out; a script can make it unable to die, when such a
+	/// miracle gives it back all its life instead
+	bool canDie {true};
 };
 } // namespace openblack::ecs::components
