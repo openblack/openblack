@@ -105,7 +105,7 @@ public:
 	EffectId Start(std::string_view file, glm::vec3 origin, float magnitude, bool synced) override;
 	EffectId Start(ParticleType type, glm::vec3 origin, float magnitude, bool synced) override;
 	EffectId StartForSpell(ParticleType type, glm::vec3 origin, glm::vec3 direction, float magnitude,
-	                       particles::SpellSink& sink) override;
+	                       particles::SpellSink& sink, bool synced = true) override;
 	bool ProcessForSpell(EffectId id, const particles::ProcessInfo& info, float seconds) override;
 	EffectId StartSpotVisual(SpotVisualType type, glm::vec3 position, std::optional<int> turns, entt::entity owner,
 	                         float magnitude) override;

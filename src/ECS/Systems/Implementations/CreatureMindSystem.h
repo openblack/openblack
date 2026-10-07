@@ -39,7 +39,8 @@ public:
 	void ClearLearning(entt::entity creature) override;
 	void SeeSkill(const glm::vec3& point, size_t skill) override;
 	void SeeMiracle(const glm::vec3& point, size_t miracle) override;
-	void PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object) override;
+	void PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object,
+	               std::optional<PlayerNames> player) override;
 	[[nodiscard]] const creature_mind_tables::Tables* GetTables() override;
 
 	bool PlayAction(entt::entity creature, size_t animation) override;

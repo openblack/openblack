@@ -546,7 +546,7 @@ ParticleSystemInterface::EffectId ParticleSystem::Start(ParticleType type, glm::
 }
 
 ParticleSystemInterface::EffectId ParticleSystem::StartForSpell(ParticleType type, glm::vec3 origin, glm::vec3 direction,
-                                                                float magnitude, particles::SpellSink& sink)
+                                                                float magnitude, particles::SpellSink& sink, bool /*synced*/)
 {
 	// A miracle's own effect draws on the random numbers every machine shares
 	const auto id = Start(type, origin, magnitude, true);

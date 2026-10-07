@@ -73,8 +73,16 @@ public:
 	/// Whether a press the fight took is held
 	[[nodiscard]] virtual bool IsPressed() const = 0;
 
+	/// Whether a creature in a fight is blocking now
+	[[nodiscard]] virtual bool IsBlocking(entt::entity /*creature*/) const { return false; }
+	/// A creature in a fight reels from what a miracle did to it, unless it reels already: blocking, it recoils in its
+	/// block; standing, striking or casting, it staggers
+	virtual void Recoil(entt::entity /*creature*/) {}
 	/// Knocks a creature out, as a fight's loser is
 	virtual void KnockOut(entt::entity creature) = 0;
+	/// The creature faints where it stands whatever it is doing, as something overwhelming it does (caught by a tornado):
+	/// it is forced to lie helpless, then recovers as from a knock-out. A fight it is in is left, not lost.
+	virtual void ForceFaint(entt::entity /*creature*/) {}
 	/// Kills a creature for good: it faints and never gets up. Only scripts do this.
 	virtual void KillPermanently(entt::entity creature) = 0;
 	/// Brings a creature knocked out round at once, at 0.4 of its life

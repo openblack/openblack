@@ -28,6 +28,7 @@
 namespace openblack::particles
 {
 class Effect;
+struct GestureTrail;
 struct ShieldSphere;
 } // namespace openblack::particles
 
@@ -80,13 +81,17 @@ public:
 	virtual EffectId Start(std::string_view file, glm::vec3 origin, float magnitude, bool synced = false) = 0;
 	/// The effect of a particle type; k_NoEffect for a type without a file
 	virtual EffectId Start(ParticleType type, glm::vec3 origin, float magnitude, bool synced = false) = 0;
-	/// An effect a miracle owns and steps itself with ProcessForSpell; it is told the effect started
+	/// An effect a miracle owns and steps itself with ProcessForSpell; it is told the effect started. Its random numbers
+	/// are the shared ones unless it is only this computer's, such as the one shown in the hand
 	virtual EffectId StartForSpell(ParticleType type, glm::vec3 origin, glm::vec3 direction, float magnitude,
-	                               particles::SpellSink& sink) = 0;
+	                               particles::SpellSink& sink, bool synced = true) = 0;
 	/// One step of a miracle's effect; false once it has ended, and then it is gone
 	virtual bool ProcessForSpell(EffectId id, const particles::ProcessInfo& info, float seconds) = 0;
+	/// Steps an effect that is stepped as it is drawn, by the frame's game time, rather than each turn; false once it has
+	/// gone
+	virtual bool ProcessByFrame(EffectId /*id*/, float /*seconds*/) { return false; }
 	/// A spot visual: the info table's particle type at a point for some turns (its own life when not given, for ever
-	/// when negative), following an owner object and ending when the owner goes
+	/// when negative), staying where it was made, and ending when its owner object (if any) goes
 	virtual EffectId StartSpotVisual(SpotVisualType type, glm::vec3 position, std::optional<int> turns, entt::entity owner,
 	                                 float magnitude = 1.0f) = 0;
 
@@ -103,6 +108,28 @@ public:
 	[[nodiscard]] virtual size_t GetSoundCount() const = 0;
 	/// An object for the effect's rules to act on, such as a person for the heal miracle's chakra
 	virtual void AddTarget(EffectId id, entt::entity target) = 0;
+	/// A point of the world for the effect's rules to act on, such as where a spot visual's beam ends
+	virtual void AddTargetPosition(EffectId /*id*/, glm::vec3 /*position*/) {}
+	/// A symbol of belief rises from something that gained it, in the effect every symbol rises in, kept running once
+	/// wanted; no more than a few hundred wait
+	virtual void AddBeliefSprite(const particles::BeliefSprite& /*sprite*/) {}
+
+	/// This computer's hand in a frame, for the chain that follows it while it gestures
+	struct HandFrame
+	{
+		glm::vec3 position {0.0f};
+		/// How big the hand is drawn
+		float size {1.0f};
+		glm::vec3 cameraPosition {0.0f};
+		/// It is drawing a gesture that shows the chain: one that powers up the miracle in it, or the circle that sizes
+		/// it
+		bool gesturing {false};
+	};
+	/// A recognised gesture's trail to show on the land, in the effect every trail shows in, which runs all the time
+	virtual void AddGestureTrail(std::shared_ptr<particles::GestureTrail> /*trail*/) {}
+	/// Once a frame, by the frame's game time (none while the game is paused): the trails' sheets of light move on, and
+	/// the chain behind the hand steps
+	virtual void UpdateFrame(float /*gameSeconds*/, const HandFrame& /*hand*/) {}
 	/// The effect stops making particles and fades out as its file has it, or goes at once
 	virtual void CloseDown(EffectId id) = 0;
 	virtual void Delete(EffectId id) = 0;

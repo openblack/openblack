@@ -61,6 +61,9 @@ struct RenderContext
 		bool translucent {false};
 		/// The instances are added over what is behind them by this share, whatever their materials say
 		std::optional<float> additiveShare;
+		/// The instances are blended over what is behind them by their own alpha, as one minus the share in their look's
+		/// z, whatever their materials say: a blast's rubble in its last second
+		bool instanceAlpha {false};
 		/// The instances are drawn one by one, each posed and shaped as its entity is: the creatures
 		bool perEntity {false};
 		/// How far the instances' textures have slid across them
@@ -93,6 +96,9 @@ struct RenderContext
 	struct TreeInstanceData
 	{
 		glm::mat4 modelMatrix;
+		/// While it has a fire on it: x the grey of 256 its light is scaled by, no brighter than the trees' brightness,
+		/// and y the alpha below which its foliage is cut away, of 1; 0 for none
+		glm::vec4 burning {0.0f};
 	};
 
 	/// CPU-side buffer of tree instance data

@@ -1172,7 +1172,8 @@ void CreatureMindSystem::SeeMiracle(const glm::vec3& point, size_t miracle)
 	    });
 }
 
-void CreatureMindSystem::PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object)
+void CreatureMindSystem::PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object,
+                                   std::optional<PlayerNames> /*player*/)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto* tables = GetTables();
