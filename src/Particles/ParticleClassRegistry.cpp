@@ -98,6 +98,7 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterLightningRules(registry);
 	RegisterGlintRules(registry);
 	RegisterShieldRules(registry);
+	RegisterStormRules(registry);
 	RegisterSurfaceRules(registry);
 	RegisterObjectRules(registry);
 	RegisterForestRules(registry);
