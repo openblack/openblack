@@ -38,10 +38,13 @@ enum class Target : uint8_t
 	/// Anything it can knock down, or only trees
 	Destroyable,
 	Tree,
-	/// Villagers, other creatures, or either
+	/// Villagers, villagers hurt enough to be healed, other creatures, or either
 	Villager,
+	HurtVillager,
 	Creature,
 	Living,
+	/// What frightens creatures: other creatures, bats, vultures and lions, and miracles
+	Frightening,
 	/// Anything at all it can see
 	Anything,
 };
@@ -71,6 +74,10 @@ enum class Build : uint8_t
 	RunFromObject,
 	RunFromPlayer,
 	LookAbout,
+	/// Casting a miracle at what it is done to: a lightning bolt, a helpful miracle, a spell on another creature
+	CastLightning,
+	CastHelpful,
+	CastPlayful,
 };
 
 struct Executor
@@ -98,11 +105,24 @@ struct Situation
 	std::optional<glm::vec2> hurlTarget;
 	std::optional<size_t> showDesireAnimation;
 };
+/// What a casting action casts, from its row of the game's table and the creature
+struct CastInfo
+{
+	uint32_t magicType {0};
+	/// The gesture drawn before casting, 0 for none
+	uint32_t gesture {0};
+	/// The creature's height
+	float height {0.0f};
+};
+/// Whether an action casts a miracle
+[[nodiscard]] bool IsCast(const Executor& executor);
+
 /// Whether an action can be carried out now, in this situation, before any thing is chosen
 [[nodiscard]] bool Possible(const Executor& executor, const Situation& situation);
 /// The agenda for an action on a thing (by its entity number, and where it is), if it can be done
 [[nodiscard]] std::optional<std::vector<creature_mind::Step>> Agenda(const Executor& executor, std::optional<uint32_t> object,
                                                                      glm::vec2 objectPoint, const Situation& situation,
-                                                                     const creature_mind::Random& random);
+                                                                     const creature_mind::Random& random,
+                                                                     const std::optional<CastInfo>& cast = std::nullopt);
 
 } // namespace openblack::creature_plan_actions

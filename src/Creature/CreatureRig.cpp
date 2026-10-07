@@ -32,6 +32,33 @@ glm::mat4 creature::PlacementMatrix(const glm::vec3& position, const glm::mat3& 
 	return glm::scale(model, scale);
 }
 
+std::optional<std::vector<uint32_t>> creature::CreatureRig::MirrorBones(size_t boneCount) const
+{
+	if (boneCount == 0 || fileTail.size() < boneCount)
+	{
+		return std::nullopt;
+	}
+	std::vector<uint32_t> mirror(boneCount);
+	const auto first = fileTail.size() - boneCount;
+	for (size_t i = 0; i < boneCount; ++i)
+	{
+		const auto value = fileTail[first + i];
+		if (value < 0 || static_cast<size_t>(value) >= boneCount)
+		{
+			return std::nullopt;
+		}
+		mirror[i] = static_cast<uint32_t>(value);
+	}
+	// In a version 20 file the first bone's mirror, when it isn't itself, is the second's
+	constexpr uint32_t k_ShiftedVersion = 20;
+	if (creatureVersion == k_ShiftedVersion && boneCount > 1 && mirror[0] != 0)
+	{
+		mirror[1] = mirror[0];
+		mirror[0] = 0;
+	}
+	return mirror;
+}
+
 glm::mat4 creature::PosedBone(uint32_t bone, std::span<const glm::mat4> boneMatrices, const glm::mat4& placement)
 {
 	return bone < boneMatrices.size() ? placement * boneMatrices[bone] : placement;

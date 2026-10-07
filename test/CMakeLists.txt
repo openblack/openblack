@@ -243,8 +243,18 @@ openblack_setup_and_add_test(test_animal_animation test_animal_animation.cpp)
 openblack_setup_and_add_test(test_animal_move test_animal_move.cpp)
 openblack_setup_and_add_test(test_teleport_rules test_teleport_rules.cpp)
 openblack_setup_and_add_test(test_fire test_fire.cpp)
+openblack_setup_and_add_test(
+  test_creature_spell_mind test_creature_spell_mind.cpp
+)
+openblack_setup_and_add_test(
+  test_creature_spell_casting test_creature_spell_casting.cpp
+)
 openblack_setup_and_add_test(test_town_belief test_town_belief.cpp)
 openblack_setup_and_add_test(test_villager_speed test_villager_speed.cpp)
+openblack_setup_and_add_test(test_creature_casting test_creature_casting.cpp)
+openblack_setup_and_add_test(
+  test_creature_miracle_reactions test_creature_miracle_reactions.cpp
+)
 openblack_setup_and_add_test(test_gesture_file test_gesture_file.cpp)
 target_link_libraries(test_gesture_file PRIVATE gestures)
 openblack_setup_and_add_test(

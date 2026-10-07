@@ -88,7 +88,7 @@ struct Effect
 enum class Phase : uint8_t
 {
 	Off,
-	/// Cast, starting next turn
+	/// Cast, starting once its delay has passed
 	Waiting,
 	Starting,
 	Holding,
@@ -124,20 +124,35 @@ struct Waiting
 	entt::entity miracle;
 };
 
+/// A spell cast on a creature starts this long after it is cast
+inline constexpr float k_StartDelaySeconds = 2.0f;
+/// No spell may be cast on a creature with more than this many waiting
+inline constexpr size_t k_MostWaiting = 5;
+
 /// Every spell on a creature
 struct Spells
 {
 	std::array<Slot, k_SpellCount> slots {};
 	std::vector<Waiting> waiting;
+	/// Turns between a spell being cast and its start
+	int32_t startDelayTurns {0};
+	/// Whether a spell puts the creature back as it was when it ends; a script may turn this off, and then a spell that
+	/// has held its time simply stops, leaving the creature as it made it
+	bool reversion {true};
 
 	[[nodiscard]] Slot& operator[](Spell spell) { return slots.at(static_cast<size_t>(spell)); }
 	[[nodiscard]] const Slot& operator[](Spell spell) const { return slots.at(static_cast<size_t>(spell)); }
 	[[nodiscard]] bool IsActive(Spell spell) const { return (*this)[spell].phase != Phase::Off; }
 	[[nodiscard]] bool IsKindActive(Kind kind) const;
+	/// Too many spells wait for another to be cast on it
+	[[nodiscard]] bool QueueFull() const { return waiting.size() > k_MostWaiting; }
 };
 
 /// Seconds as whole turns
 [[nodiscard]] int32_t TurnsOf(float seconds, float turnsPerSecond);
+/// Every spell on a creature is brought to its end: none holds on once started, and one holding now finishes at its next
+/// turn. Whether none is on it any more.
+bool TryFinishAll(Spells& spells);
 
 /// What became of a spell cast on a creature
 enum class Received : uint8_t
@@ -155,7 +170,10 @@ struct ReceiveResult
 	/// A miracle the new one takes the place of, to close down
 	entt::entity replaced {entt::null};
 };
-/// A spell is cast on the creature for some turns, behind a miracle
+/// A spell whose miracle has gone holds no longer: it eases out next turn if it was holding
+void FinishEarly(Slot& slot);
+
+/// A spell is cast on the creature for some turns, behind a miracle; it starts after the spells' delay
 ReceiveResult Receive(Spells& spells, Spell spell, int32_t holdTurns, entt::entity miracle);
 
 /// What a turn of the spells has the creature go through, in order
@@ -209,17 +227,36 @@ inline constexpr float k_NastyAlignment = -1.0f;
 /// As a mood spell wears off its desire drops to the least dominant, below the others by this factor
 inline constexpr float k_LeastDominantFactor = 1.3f;
 
-/// A frozen creature's look: the land's light on it multiplied by white thawed, by this icy blue fully frozen
-inline constexpr uint32_t k_FrozenColour = 0x8CC8FFu;
+/// A frozen creature's look: its colour multiplied by white thawed, by this dark icy blue fully frozen, with an icy
+/// sheen added over it by how frozen it is
+inline constexpr uint32_t k_FrozenColour = 0x354F8Du;
 /// The colour, 0xRRGGBB, the land's light on a creature is multiplied by at a freeze from 0 to 1
 [[nodiscard]] uint32_t FrozenTint(float freeze);
 
-/// The size a size spell takes a creature to from its size before, within its smallest and largest
-[[nodiscard]] float SizeTarget(Spell spell, float before, float smallest, float largest);
+/// The size a size spell takes a creature to from its size before. Out of a fight small takes it down to its smallest
+/// and big up to its largest, neither ever the other way; in a fight they take its size now down to five ninths or up to
+/// 1.8 times, within the same limits.
+[[nodiscard]] float SizeTarget(Spell spell, float before, float smallest, float largest,
+                               std::optional<float> sizeInFight = std::nullopt);
+/// A creature's smallest and largest sizes unless a script changes them
+inline constexpr float k_SmallestSize = 0.2f;
+inline constexpr float k_LargestSize = 2.4f;
 /// The value a spell pulls the creature towards, for the spells that pull one: size (from SizeTarget), strength,
 /// fatness, fizz, alignment, or the freeze
 [[nodiscard]] std::optional<float> Target(Spell spell);
 /// A value the ratio of the way from before to the target
 [[nodiscard]] float Ease(float before, float target, float ratio);
+
+/// What a creature's size, strength and alignment are saved as
+struct SavedBody
+{
+	float size {1.0f};
+	float strength {0.5f};
+	float alignment {0.0f};
+};
+/// The values a creature is saved with while spells are on it: those it had before the spells, so that it is saved as
+/// itself. Size: before big, else small, while a size spell is on; strength: before strong, else weak; alignment:
+/// before nice, else nasty. Anything else, and a kind on with neither of its two spells, as it is now.
+[[nodiscard]] SavedBody ValuesToSave(const Spells& spells, const SavedBody& now);
 
 } // namespace openblack::creature_spells

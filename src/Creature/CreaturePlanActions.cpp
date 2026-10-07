@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 
+#include "Creature/CreatureCastAgenda.h"
 #include "Creature/CreatureLayers.h"
 
 using namespace openblack;
@@ -78,7 +79,7 @@ constexpr std::array k_Executors {
     Executor {.action = "PointAtCamera", .build = Build::FaceCameraEmote, .animation = k_LookAtMe},
     Executor {.action = "BePatheticToPlayer", .build = Build::FaceCameraEmote, .animation = k_PickMe},
     Executor {.action = "HowlAtPlayer", .build = Build::FaceCameraEmote, .animation = animations::k_Summon},
-    Executor {.action = "RunAwayFromObject", .target = Target::Living, .build = Build::RunFromObject},
+    Executor {.action = "RunAwayFromObject", .target = Target::Frightening, .build = Build::RunFromObject},
     Executor {.action = "BeFrightenedOnTheSpot", .build = Build::Emote, .animation = animations::k_Frightened},
     Executor {.action = "BeSad", .build = Build::Emote, .animation = animations::k_Sad},
     Executor {.action = "Scratch", .build = Build::Emote, .animation = animations::k_Scratch},
@@ -99,6 +100,26 @@ constexpr std::array k_Executors {
     Executor {.action = "LookOutToSea", .build = Build::LookAbout},
     Executor {.action = "LookAtSun", .build = Build::LookAbout},
     Executor {.action = "LookAtMoon", .build = Build::LookAbout},
+    // The miracles it casts at things: lightning at anything, a heal at a villager hurt enough, a spell at another
+    // creature
+    Executor {.action = "CastLightningBolt", .target = Target::Anything, .build = Build::CastLightning},
+    Executor {.action = "CastHealSpell", .target = Target::HurtVillager, .build = Build::CastHelpful},
+    Executor {.action = "CastMakeCreatureFreeze", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureSmall", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureBig", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureWeak", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureStrong", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureFat", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureThin", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureInvisible", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureNice", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureAngry", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureHungry", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureFrightened", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureTired", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureIll", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureThirsty", .target = Target::Creature, .build = Build::CastPlayful},
+    Executor {.action = "CastMakeCreatureItchy", .target = Target::Creature, .build = Build::CastPlayful},
 };
 } // namespace
 
@@ -111,6 +132,12 @@ const Executor* creature_plan_actions::For(std::string_view action)
 {
 	const auto found = std::ranges::find(k_Executors, action, &Executor::action);
 	return found != k_Executors.end() ? &*found : nullptr;
+}
+
+bool creature_plan_actions::IsCast(const Executor& executor)
+{
+	return executor.build == Build::CastLightning || executor.build == Build::CastHelpful ||
+	       executor.build == Build::CastPlayful;
 }
 
 bool creature_plan_actions::Possible(const Executor& executor, const Situation& situation)
@@ -134,9 +161,11 @@ bool creature_plan_actions::Possible(const Executor& executor, const Situation& 
 std::optional<std::vector<creature_mind::Step>> creature_plan_actions::Agenda(const Executor& executor,
                                                                               std::optional<uint32_t> object,
                                                                               glm::vec2 objectPoint, const Situation& situation,
-                                                                              const creature_mind::Random& random)
+                                                                              const creature_mind::Random& random,
+                                                                              const std::optional<CastInfo>& cast)
 {
-	if (!Possible(executor, situation) || (executor.target != Target::None && !object.has_value()))
+	if (!Possible(executor, situation) || (executor.target != Target::None && !object.has_value()) ||
+	    (IsCast(executor) && !cast.has_value()))
 	{
 		return std::nullopt;
 	}
@@ -184,6 +213,15 @@ std::optional<std::vector<creature_mind::Step>> creature_plan_actions::Agenda(co
 		return creature_mind::RunFrom(*situation.camera);
 	case Build::LookAbout:
 		return creature_mind::LookAbout(k_GazeSeconds);
+	case Build::CastLightning:
+		return creature_mind::CastAt(creature_mind::CastStyle::Lightning, cast->magicType, cast->gesture, *object, cast->height,
+		                             random);
+	case Build::CastHelpful:
+		return creature_mind::CastAt(creature_mind::CastStyle::Helpful, cast->magicType, cast->gesture, *object, cast->height,
+		                             random);
+	case Build::CastPlayful:
+		return creature_mind::CastAt(creature_mind::CastStyle::Playful, cast->magicType, cast->gesture, *object, cast->height,
+		                             random);
 	}
 	return std::nullopt;
 }

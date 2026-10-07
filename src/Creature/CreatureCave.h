@@ -53,6 +53,8 @@ struct Snapshot
 	/// What it thinks of its god, -1 to 1, and seconds since the god last paid it any attention
 	float attitudeToPlayer {0.0f};
 	float secondsAlone {0.0f};
+	/// It thinks it knows its god's dominant desire
+	bool knowsGodsDesire {false};
 	/// Other creatures it knows of
 	size_t creaturesKnown {0};
 	/// The opinion of each action, -1 to 1, by its name

@@ -190,12 +190,15 @@ TEST(CreatureSpells, ASpellWithoutATimeHoldsUntilCutShort)
 
 TEST(CreatureSpells, TheBodySpellsTargets)
 {
-	EXPECT_NEAR(SizeTarget(Spell::Big, 1.0f, 0.05f, 4.0f), 1.8f, k_Epsilon);
-	EXPECT_NEAR(SizeTarget(Spell::Small, 1.0f, 0.05f, 4.0f), 0.5555556f, k_Epsilon);
-	// No bigger than the largest, never smaller for big; no smaller than the smallest
-	EXPECT_NEAR(SizeTarget(Spell::Big, 3.0f, 0.05f, 4.0f), 4.0f, k_Epsilon);
-	EXPECT_NEAR(SizeTarget(Spell::Big, 5.0f, 0.05f, 4.0f), 5.0f, k_Epsilon);
-	EXPECT_NEAR(SizeTarget(Spell::Small, 0.06f, 0.05f, 4.0f), 0.05f, k_Epsilon);
+	// Out of a fight: all the way to the smallest or largest, never the other way
+	EXPECT_NEAR(SizeTarget(Spell::Big, 1.0f, k_SmallestSize, k_LargestSize), 2.4f, k_Epsilon);
+	EXPECT_NEAR(SizeTarget(Spell::Small, 1.0f, k_SmallestSize, k_LargestSize), 0.2f, k_Epsilon);
+	EXPECT_NEAR(SizeTarget(Spell::Big, 3.0f, k_SmallestSize, k_LargestSize), 3.0f, k_Epsilon);
+	EXPECT_NEAR(SizeTarget(Spell::Small, 0.1f, k_SmallestSize, k_LargestSize), 0.1f, k_Epsilon);
+	// In a fight: by a factor of its size now, within the same limits
+	EXPECT_NEAR(SizeTarget(Spell::Big, 1.0f, k_SmallestSize, k_LargestSize, 1.0f), 1.8f, k_Epsilon);
+	EXPECT_NEAR(SizeTarget(Spell::Big, 1.0f, k_SmallestSize, k_LargestSize, 2.0f), 2.4f, k_Epsilon);
+	EXPECT_NEAR(SizeTarget(Spell::Small, 1.0f, k_SmallestSize, k_LargestSize, 1.0f), 0.2f, k_Epsilon);
 	EXPECT_EQ(Target(Spell::Weak), k_WeakStrength);
 	EXPECT_EQ(Target(Spell::Strong), k_StrongStrength);
 	EXPECT_EQ(Target(Spell::Fat), k_FatFatness);
@@ -208,10 +211,10 @@ TEST(CreatureSpells, TheBodySpellsTargets)
 TEST(CreatureSpells, TheFrozenLookTintsTowardsIcyBlue)
 {
 	EXPECT_EQ(FrozenTint(0.0f), 0xFFFFFFu);
-	EXPECT_EQ(FrozenTint(1.0f), k_FrozenColour);
+	// All but a 256th of the way to the dark icy blue
+	EXPECT_EQ(FrozenTint(1.0f), 0x36508Eu);
 	const auto half = FrozenTint(0.5f);
-	EXPECT_EQ((half >> 16) & 0xFFu, (255u + 0x8Cu + 1u) / 2u);
-	EXPECT_EQ(half & 0xFFu, 0xFFu);
+	EXPECT_EQ((half >> 16) & 0xFFu, 255u - (202u * 127u) / 256u);
 }
 
 TEST(CreatureSpells, TimesAreWholeTurns)
@@ -222,4 +225,99 @@ TEST(CreatureSpells, TimesAreWholeTurns)
 	EXPECT_NEAR(Ratio(slot, {.startSeconds = 4.0f, .finishSeconds = 4.0f}, k_TurnsPerSecond), 0.5f, k_Epsilon);
 	slot.phase = Phase::Finishing;
 	EXPECT_NEAR(Ratio(slot, {.startSeconds = 4.0f, .finishSeconds = 4.0f}, k_TurnsPerSecond), 0.5f, k_Epsilon);
+}
+
+TEST(CreatureSpells, ASpellStartsTwoSecondsAfterItIsCast)
+{
+	Spells spells;
+	spells.startDelayTurns = TurnsOf(k_StartDelaySeconds, k_TurnsPerSecond);
+	Receive(spells, Spell::Freeze, 100, k_Miracle);
+	std::array<Timing, k_SpellCount> timings {};
+	int turns = 0;
+	while (spells[Spell::Freeze].phase == Phase::Waiting && turns < 100)
+	{
+		const auto turn = Step(spells, timings, k_TurnsPerSecond);
+		// Nothing happens to the creature while it waits
+		if (spells[Spell::Freeze].phase == Phase::Waiting)
+		{
+			EXPECT_TRUE(turn.events.empty());
+		}
+		++turns;
+	}
+	EXPECT_EQ(turns, 21);
+}
+
+TEST(CreatureSpells, WithoutReversionASpellStopsWhereItIs)
+{
+	Spells spells;
+	spells.reversion = false;
+	Receive(spells, Spell::Big, 5, k_Miracle);
+	std::array<Timing, k_SpellCount> timings {};
+	std::vector<Event> seen;
+	TurnResult last;
+	for (int turn = 0; turn < 100 && spells.IsActive(Spell::Big); ++turn)
+	{
+		last = Step(spells, timings, k_TurnsPerSecond);
+		for (const auto& event : last.events)
+		{
+			seen.push_back(event.event);
+		}
+	}
+	EXPECT_FALSE(spells.IsActive(Spell::Big));
+	EXPECT_EQ(std::ranges::count(seen, Event::Finish), 0);
+	EXPECT_EQ(std::ranges::count(seen, Event::BeginFinish), 0);
+	EXPECT_EQ(last.ended, (std::vector<entt::entity> {k_Miracle}));
+}
+
+TEST(CreatureSpells, NoMoreThanFiveWait)
+{
+	Spells spells;
+	Receive(spells, Spell::Small, 100, k_Miracle);
+	for (int i = 0; i < 6; ++i)
+	{
+		EXPECT_FALSE(spells.QueueFull());
+		Receive(spells, Spell::Big, 100, k_Other);
+	}
+	EXPECT_TRUE(spells.QueueFull());
+}
+
+TEST(CreatureSpells, ItIsSavedAsItWasBeforeItsSpells)
+{
+	creature_spells::Spells spells;
+	const creature_spells::SavedBody now {.size = 0.2f, .strength = 1.0f, .alignment = -1.0f};
+	// Nothing on it: as it is
+	auto saved = creature_spells::ValuesToSave(spells, now);
+	EXPECT_FLOAT_EQ(saved.size, 0.2f);
+	spells[creature_spells::Spell::Small].phase = creature_spells::Phase::Holding;
+	spells[creature_spells::Spell::Small].before = 1.3f;
+	spells[creature_spells::Spell::Strong].phase = creature_spells::Phase::Starting;
+	spells[creature_spells::Spell::Strong].before = 0.4f;
+	spells[creature_spells::Spell::Nasty].phase = creature_spells::Phase::Finishing;
+	spells[creature_spells::Spell::Nasty].before = 0.6f;
+	saved = creature_spells::ValuesToSave(spells, now);
+	EXPECT_FLOAT_EQ(saved.size, 1.3f);
+	EXPECT_FLOAT_EQ(saved.strength, 0.4f);
+	EXPECT_FLOAT_EQ(saved.alignment, 0.6f);
+	// Big before small
+	spells[creature_spells::Spell::Big].phase = creature_spells::Phase::Holding;
+	spells[creature_spells::Spell::Big].before = 0.9f;
+	EXPECT_FLOAT_EQ(creature_spells::ValuesToSave(spells, now).size, 0.9f);
+}
+
+TEST(CreatureSpells, AFaintBringsEverySpellToItsEnd)
+{
+	Spells spells;
+	auto& holding = spells.slots.at(0);
+	holding = {.phase = Phase::Holding, .turnsLeft = 40, .holdTurns = 40};
+	auto& starting = spells.slots.at(1);
+	starting = {.phase = Phase::Starting, .turnsLeft = 5, .holdTurns = 30};
+	EXPECT_FALSE(TryFinishAll(spells));
+	// The one holding finishes at its next turn, and the one starting holds for no time once started
+	EXPECT_EQ(holding.turnsLeft, 0);
+	EXPECT_EQ(holding.holdTurns, 0);
+	EXPECT_EQ(starting.turnsLeft, 5);
+	EXPECT_EQ(starting.holdTurns, 0);
+	holding.phase = Phase::Off;
+	starting.phase = Phase::Off;
+	EXPECT_TRUE(TryFinishAll(spells));
 }

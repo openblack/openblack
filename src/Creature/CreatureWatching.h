@@ -40,6 +40,7 @@ struct MiracleRule
 	/// Times it must be seen, before the species' multiplier
 	uint32_t timesToSee {10};
 	uint32_t minPhase {8};
+	/// Only a filter the computer players use choosing what to teach their creatures: it makes nothing known
 	bool knownAtStart {false};
 	/// The creature action it lets the creature take
 	uint32_t action {0};
@@ -59,11 +60,22 @@ struct Knowledge
 	std::vector<bool> skillsKnown;
 	std::vector<bool> miraclesKnown;
 };
-/// Nothing seen or known but the miracles known from the start
+/// Nothing seen or known
 [[nodiscard]] Knowledge StartKnowledge(std::span<const SkillRule> skills, std::span<const MiracleRule> miracles);
 
-/// A miracle counts at most once in this many turns
+/// A miracle counts again only once more than this many turns have gone since it was last seen
 constexpr uint32_t k_MiracleSightingTurns = 50;
+
+/// What a sighting of a miracle tells the creature, which it shows
+enum class LearningEvent : uint8_t
+{
+	/// Too young to learn the miracle yet
+	TooYoung,
+	/// Three quarters of the way to learning it or more
+	NearlyLearnt,
+	/// Seen often enough to learn it, which it is told again each time it sees it after
+	Learnt,
+};
 
 /// How a sighting went: whether it is now learnt, and how far towards learning it the creature is, 0 to 1
 struct Progress
@@ -72,13 +84,34 @@ struct Progress
 	float share {0.0f};
 	/// Too young to learn it, or already known
 	bool ignored {false};
+	/// What it shows of the sighting, if anything, and the learning meter's new reading, if it moves
+	std::optional<LearningEvent> event;
+	std::optional<float> meter;
 };
+
+/// What a creature must know before seeing a miracle teaches it anything: an ordinary skill or another miracle
+struct Prerequisite
+{
+	enum class Kind : uint8_t
+	{
+		Skill,
+		Miracle,
+	};
+	Kind kind;
+	size_t index;
+};
+/// A power-up teaches nothing until the miracle it powers up is known about (the second power-up of the explosion needs
+/// the first), the storm with lightning needs the storm and the tornado that; the thirst and itch spells need the skill
+/// of building. Every other miracle has none.
+[[nodiscard]] std::optional<Prerequisite> MiraclePrerequisite(size_t miracle);
 /// Watching a skill being practised
 [[nodiscard]] Progress SeeSkill(Knowledge& knowledge, size_t skill, std::span<const SkillRule> rules, uint32_t phase,
                                 uint32_t turn, float turnsPerSecond);
-/// The times a miracle must be seen by a species, by its multiplier
-[[nodiscard]] uint32_t TimesToLearn(uint32_t timesToSee, float speciesMultiplier);
-/// Seeing a miracle cast; each sighting counts the weight given (three times on the learning leash)
+/// The times a miracle must be seen by a species, by its multiplier, not rounded
+[[nodiscard]] float TimesNeeded(uint32_t timesToSee, float speciesMultiplier);
+/// Seeing a miracle cast; a sighting more than 50 turns after the last counts the weight given (three times on the
+/// learning leash), and every sighting is remembered as the last. Once it has its prerequisite and is old enough, the
+/// creature knows about the miracle from its first sighting, and it goes on counting sightings after it has learnt it.
 [[nodiscard]] Progress SeeMiracle(Knowledge& knowledge, size_t miracle, std::span<const MiracleRule> rules, uint32_t phase,
                                   uint32_t turn, uint32_t weight, float speciesMultiplier);
 

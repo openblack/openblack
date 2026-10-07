@@ -94,6 +94,7 @@ TempleScrolls::CreatureFacts FactsOf(const Snapshot& snapshot)
 	}
 	facts.opinionOfGod = std::clamp(snapshot.attitudeToPlayer, -1.0f, 1.0f);
 	facts.attention = std::clamp(1.0f - (snapshot.secondsAlone / k_AttentionFadeSeconds), 0.0f, 1.0f);
+	facts.knowsGodsDesire = snapshot.knowsGodsDesire;
 	facts.known = {static_cast<int32_t>(snapshot.creaturesKnown), 0, 0, 0};
 	// The miracles it knows or has started to learn, by the game's texts for them
 	for (size_t i = k_FirstScrollMiracle; i < snapshot.miracles.size(); ++i)

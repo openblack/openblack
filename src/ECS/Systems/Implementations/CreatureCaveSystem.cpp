@@ -198,8 +198,9 @@ std::optional<creature_cave::Snapshot> CreatureCaveSystem::Snapshot() const
 				}
 				else if (i < knowledge.miraclesSeen.size())
 				{
-					const auto needed = std::max(creature_watching::TimesToLearn(rule.timesToSee, multiplier), 1u);
-					percent = static_cast<int32_t>(std::min(100u, knowledge.miraclesSeen[i].count * 100 / needed));
+					const auto needed = creature_watching::TimesNeeded(rule.timesToSee, multiplier);
+					percent = static_cast<int32_t>(
+					    std::min(100.0f, static_cast<float>(knowledge.miraclesSeen[i].count) * 100.0f / needed));
 				}
 				snapshot.miracles.push_back({.name = rule.name, .percent = percent});
 			}

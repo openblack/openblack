@@ -20,6 +20,10 @@ namespace
 {
 /// Short of learning a skill, the meter shows it half learnt
 constexpr float k_SkillMeterShare = 0.5f;
+/// A miracle seen this many times or more beyond those it needed no longer fills the learning meter
+constexpr float k_LearntMeterSightings = 3.0f;
+/// Seen this share of the times it needs, a miracle is nearly learnt
+constexpr float k_NearlyLearntShare = 0.75f;
 
 uint32_t StageLength(const MimicRule& rule, const std::function<uint32_t(uint32_t)>& random)
 {
@@ -35,10 +39,6 @@ Knowledge creature_watching::StartKnowledge(std::span<const SkillRule> skills, s
 	    .skillsKnown = std::vector<bool>(skills.size(), false),
 	    .miraclesKnown = std::vector<bool>(miracles.size(), false),
 	};
-	for (size_t i = 0; i < miracles.size(); ++i)
-	{
-		knowledge.miraclesKnown[i] = miracles[i].knownAtStart;
-	}
 	return knowledge;
 }
 
@@ -72,9 +72,38 @@ Progress creature_watching::SeeSkill(Knowledge& knowledge, size_t skill, std::sp
 	return {.share = k_SkillMeterShare};
 }
 
-uint32_t creature_watching::TimesToLearn(uint32_t timesToSee, float speciesMultiplier)
+float creature_watching::TimesNeeded(uint32_t timesToSee, float speciesMultiplier)
 {
-	return static_cast<uint32_t>(std::lround(static_cast<float>(timesToSee) * speciesMultiplier));
+	return static_cast<float>(timesToSee) * speciesMultiplier;
+}
+
+std::optional<Prerequisite> creature_watching::MiraclePrerequisite(size_t miracle)
+{
+	using Kind = Prerequisite::Kind;
+	switch (miracle)
+	{
+	case 2: // the fireball's power-ups
+	case 3:
+		return Prerequisite {.kind = Kind::Miracle, .index = 1};
+	case 5: // the lightning bolt's
+	case 6:
+		return Prerequisite {.kind = Kind::Miracle, .index = 4};
+	case 8: // the explosion's first power-up, then its second
+		return Prerequisite {.kind = Kind::Miracle, .index = 7};
+	case 9:
+		return Prerequisite {.kind = Kind::Miracle, .index = 8};
+	case 11: // the heal's
+		return Prerequisite {.kind = Kind::Miracle, .index = 10};
+	case 17: // the storm with lightning, then the tornado
+		return Prerequisite {.kind = Kind::Miracle, .index = 16};
+	case 18:
+		return Prerequisite {.kind = Kind::Miracle, .index = 17};
+	case 40: // the thirst and itch spells need the skill of building
+	case 41:
+		return Prerequisite {.kind = Kind::Skill, .index = 0};
+	default:
+		return std::nullopt;
+	}
 }
 
 Progress creature_watching::SeeMiracle(Knowledge& knowledge, size_t miracle, std::span<const MiracleRule> rules, uint32_t phase,
@@ -84,30 +113,43 @@ Progress creature_watching::SeeMiracle(Knowledge& knowledge, size_t miracle, std
 	{
 		return {.ignored = true};
 	}
-	if (knowledge.miraclesKnown[miracle])
+	if (const auto needs = MiraclePrerequisite(miracle))
 	{
-		return {.learnt = true, .share = 1.0f, .ignored = true};
+		const auto& known = needs->kind == Prerequisite::Kind::Skill ? knowledge.skillsKnown : knowledge.miraclesKnown;
+		if (needs->index >= known.size() || !known[needs->index])
+		{
+			return {.ignored = true};
+		}
 	}
 	const auto& rule = rules[miracle];
 	if (phase < rule.minPhase)
 	{
-		return {.ignored = true};
+		return {.ignored = true, .event = LearningEvent::TooYoung};
 	}
 	auto& seen = knowledge.miraclesSeen[miracle];
-	const auto needed = std::max(TimesToLearn(rule.timesToSee, speciesMultiplier), 1u);
-	// A miracle seen again straight away doesn't count again
-	if (seen.turn.has_value() && turn - *seen.turn < k_MiracleSightingTurns)
+	// A sighting soon after the last doesn't count, but is remembered as the last
+	if (!seen.turn.has_value() || turn - *seen.turn > k_MiracleSightingTurns)
 	{
-		return {.share = std::min(1.0f, static_cast<float>(seen.count) / static_cast<float>(needed))};
+		seen.count += weight;
 	}
-	seen.count += weight;
 	seen.turn = turn;
-	if (seen.count >= needed)
+	knowledge.miraclesKnown[miracle] = true;
+	const auto needed = TimesNeeded(rule.timesToSee, speciesMultiplier);
+	const auto count = static_cast<float>(seen.count);
+	if (needed <= count)
 	{
-		knowledge.miraclesKnown[miracle] = true;
-		return {.learnt = true, .share = 1.0f};
+		// The meter shows it full for the first few sightings beyond those needed
+		Progress progress {.learnt = true, .share = 1.0f, .event = LearningEvent::Learnt};
+		if (count - needed < k_LearntMeterSightings)
+		{
+			progress.meter = 1.0f;
+		}
+		return progress;
 	}
-	return {.share = static_cast<float>(seen.count) / static_cast<float>(needed)};
+	const float share = count / needed;
+	return {.share = share,
+	        .event = share >= k_NearlyLearntShare ? std::optional(LearningEvent::NearlyLearnt) : std::nullopt,
+	        .meter = share};
 }
 
 const char* creature_watching::Name(MimicStage stage)

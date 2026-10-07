@@ -139,6 +139,8 @@ struct ObjectOrder
 		Throw,
 		ThrowNearby,
 		Destroy,
+		/// Pointing at a point
+		PointAt,
 	};
 	Kind kind {Kind::PickUp};
 	/// What it acts on, by its entity's number
@@ -161,6 +163,12 @@ struct Movement
 		/// Running away from a point
 		FleeFrom,
 		TurnToFace,
+		/// Going near an object, keeping the step's distance from it; getting away from it to that distance; turning
+		/// to face it and holding still a moment, the step's seconds. Each goes on until the creature's movement says
+		/// it is done or has failed.
+		GoNearObject,
+		GetAwayFromObject,
+		TurnToFaceObject,
 	};
 	Kind kind {Kind::ToPoint};
 	glm::vec2 point {0.0f};
@@ -170,6 +178,14 @@ struct Movement
 	/// Arriving anywhere from min to max from the point, or keeping within max of what it follows
 	float minDistance {0.0f};
 	float maxDistance {0.0f};
+};
+
+/// A miracle cast at a thing, by its magic type's number
+struct CastOrder
+{
+	uint32_t magicType {0};
+	/// What it is cast at, by its entity's number
+	std::optional<uint32_t> object;
 };
 
 /// What a step does to the creature's body
@@ -205,6 +221,13 @@ struct Step
 		Move,
 		/// Doing something with a thing until it is done; if it can't, the rest of the agenda is given up
 		Object,
+		/// Casting a miracle: the start of the casting pose, then the miracle as its loop begins, held for the step's
+		/// seconds counted in whole turns, then let go of as the end plays; if it can't be cast, the rest of the agenda
+		/// is given up
+		Cast,
+		/// Drawing a gesture in the air with its hand, by the gesture's number in the step's animation, until the
+		/// creature's movement says it is done or has failed
+		Gesture,
 	};
 	Kind kind {Kind::Wait};
 	float seconds {0.0f};
@@ -226,6 +249,8 @@ struct Step
 	std::optional<uint32_t> object;
 	/// What an object step does
 	ObjectOrder order {};
+	/// What a cast step casts
+	CastOrder cast {};
 	/// The face pulled as the step starts
 	creature_face::Cue face {creature_face::Cue::None};
 };
@@ -251,6 +276,9 @@ struct IdleMind
 	uint32_t serial {0};
 	/// The agenda was given up before its end, as a step it needed couldn't be done
 	bool gaveUp {false};
+	/// A cast step: whether its miracle has been cast, and the turns it is held for yet
+	bool castDone {false};
+	uint32_t castTurns {0};
 };
 
 /// The needs it might see to, and the means at hand
@@ -294,6 +322,14 @@ enum class HandsState : uint8_t
 	Failed,
 };
 
+/// How going near, getting away from or turning to face an object is going
+enum class SubMove : uint8_t
+{
+	Running,
+	Done,
+	Failed,
+};
+
 /// What the mind knows this turn
 struct Senses
 {
@@ -303,6 +339,9 @@ struct Senses
 	bool bodyLooping {false};
 	/// Whether it is on its way somewhere or turning, and where it stands
 	bool moving {false};
+	/// How going near, getting away from or turning to face an object, or drawing a gesture, is going, by the
+	/// creature's movement
+	SubMove subMove {SubMove::Running};
 	glm::vec2 position {0.0f};
 	std::optional<creature_desires::Desire> strongest;
 	/// Seconds since the player last stroked or slapped it, and which
@@ -349,6 +388,11 @@ struct Commands
 	std::optional<uint32_t> effectObject;
 	/// What to do with a thing
 	std::optional<ObjectOrder> object;
+	/// A gesture to draw, by its number
+	std::optional<uint32_t> gesture;
+	/// A miracle to cast, and whether to let go of the one it holds
+	std::optional<CastOrder> cast;
+	bool releaseCast {false};
 };
 
 /// random(n) is a whole number from 0 to n - 1

@@ -137,9 +137,18 @@ struct CreatureRig
 	int32_t soundObject {0};
 	/// The voice bank the file names, without its extension, empty when it names none
 	std::string soundBankName;
+	/// The last numbers of the species' file and its creature block's version, which give each bone's mirror bone
+	/// (MirrorBones)
+	std::vector<int32_t> fileTail;
+	uint32_t creatureVersion {0};
+	/// The bone of the right eye, when the file names one; the left is its mirror
+	std::optional<uint32_t> rightEye;
 	/// The bone at the creature's collar that a leash is tied to, when the file names one
 	std::optional<uint32_t> leashBone;
 
+	/// Each bone's mirror bone, the bone on the other side of the body, for the species' mesh of so many bones: the
+	/// table that ends its file. None when the file has none that fits.
+	[[nodiscard]] std::optional<std::vector<uint32_t>> MirrorBones(size_t boneCount) const;
 	/// An animated mesh's animation, falling back on the base's when the mesh has none of its own
 	[[nodiscard]] const skeletal_animation::Animation* GetAnimation(Mesh mesh, size_t index) const;
 };

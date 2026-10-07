@@ -45,9 +45,13 @@ void CutShort(Slot& slot)
 	}
 }
 
-void Begin(Slot& slot, int32_t holdTurns, entt::entity miracle)
+void Begin(Slot& slot, int32_t holdTurns, entt::entity miracle, int32_t delayTurns)
 {
-	slot = {.phase = Phase::Waiting, .turnsLeft = 0, .holdTurns = holdTurns, .miracle = miracle, .before = 0.0f};
+	slot = {.phase = Phase::Waiting,
+	        .turnsLeft = std::max(delayTurns, 0),
+	        .holdTurns = holdTurns,
+	        .miracle = miracle,
+	        .before = 0.0f};
 }
 } // namespace
 
@@ -120,6 +124,19 @@ bool Spells::IsKindActive(Kind kind) const
 	return false;
 }
 
+bool creature_spells::TryFinishAll(Spells& spells)
+{
+	for (auto& slot : spells.slots)
+	{
+		slot.holdTurns = 0;
+		if (slot.phase == Phase::Holding)
+		{
+			slot.turnsLeft = 0;
+		}
+	}
+	return std::ranges::none_of(spells.slots, [](const Slot& slot) { return slot.phase != Phase::Off; });
+}
+
 int32_t creature_spells::TurnsOf(float seconds, float turnsPerSecond)
 {
 	return seconds > 0.0f ? static_cast<int32_t>(seconds * turnsPerSecond) : -1;
@@ -164,7 +181,7 @@ ReceiveResult creature_spells::Receive(Spells& spells, Spell spell, int32_t hold
 		spells.waiting.push_back({spell, holdTurns, miracle});
 		return {Received::Queued, entt::null};
 	}
-	Begin(slot, holdTurns, miracle);
+	Begin(slot, holdTurns, miracle, spells.startDelayTurns);
 	return {Received::Started, entt::null};
 }
 
@@ -215,7 +232,11 @@ TurnResult creature_spells::Step(Spells& spells, std::span<const Timing, k_Spell
 			{
 				result.events.push_back({spell, Event::Ease, Ratio(slot, timing, turnsPerSecond)});
 			}
-			result.events.push_back({spell, Event::Hold, Ratio(slot, timing, turnsPerSecond)});
+			// What it does every turn it is on, while it eases in, holds and eases out, but not while it waits to start
+			if (slot.phase != Phase::Waiting)
+			{
+				result.events.push_back({spell, Event::Hold, Ratio(slot, timing, turnsPerSecond)});
+			}
 			continue;
 		}
 		switch (slot.phase)
@@ -230,6 +251,18 @@ TurnResult creature_spells::Step(Spells& spells, std::span<const Timing, k_Spell
 			slot.turnsLeft = slot.holdTurns;
 			break;
 		case Phase::Holding:
+			// Without reversion it stops where it is, leaving the creature as it made it
+			if (!spells.reversion)
+			{
+				slot.phase = Phase::Off;
+				if (slot.miracle != entt::null)
+				{
+					result.ended.push_back(slot.miracle);
+				}
+				slot.miracle = entt::null;
+				anyEnded = true;
+				break;
+			}
 			slot.phase = Phase::Finishing;
 			slot.turnsLeft = std::max(TurnsOf(timing.finishSeconds, turnsPerSecond), 0);
 			result.events.push_back({spell, Event::BeginFinish, 1.0f});
@@ -258,22 +291,26 @@ TurnResult creature_spells::Step(Spells& spells, std::span<const Timing, k_Spell
 				++it;
 				continue;
 			}
-			Begin(spells[it->spell], it->holdTurns, it->miracle);
+			Begin(spells[it->spell], it->holdTurns, it->miracle, spells.startDelayTurns);
 			it = spells.waiting.erase(it);
 		}
 	}
 	return result;
 }
 
-float creature_spells::SizeTarget(Spell spell, float before, float smallest, float largest)
+float creature_spells::SizeTarget(Spell spell, float before, float smallest, float largest, std::optional<float> sizeInFight)
 {
 	if (spell == Spell::Big)
 	{
-		return std::max(std::min(before * k_BigFactor, largest), before);
+		const float most =
+		    sizeInFight.has_value() ? std::min(largest, std::max(*sizeInFight * k_BigFactor, *sizeInFight)) : largest;
+		return std::max(most, before);
 	}
 	if (spell == Spell::Small)
 	{
-		return std::min(std::max(before * k_SmallFactor, smallest), before);
+		const float least =
+		    sizeInFight.has_value() ? std::min(smallest, std::min(*sizeInFight * k_SmallFactor, *sizeInFight)) : smallest;
+		return std::min(least, before);
 	}
 	return before;
 }
@@ -310,13 +347,41 @@ float creature_spells::Ease(float before, float target, float ratio)
 
 uint32_t creature_spells::FrozenTint(float freeze)
 {
-	freeze = std::clamp(freeze, 0.0f, 1.0f);
+	// From white towards the icy colour by the freeze, in 256ths, as the game blends it
+	const auto amount = static_cast<uint32_t>(std::clamp(freeze, 0.0f, 1.0f) * 255.0f);
 	uint32_t tint = 0;
 	for (const int shift : {16, 8, 0})
 	{
-		const auto icy = static_cast<float>((k_FrozenColour >> shift) & 0xFFu);
-		const auto channel = static_cast<uint32_t>(std::lround(255.0f + (icy - 255.0f) * freeze));
+		const uint32_t icy = (k_FrozenColour >> shift) & 0xFFu;
+		const uint32_t channel = 255u - ((255u - icy) * amount) / 256u;
 		tint |= channel << shift;
 	}
 	return tint;
+}
+
+void creature_spells::FinishEarly(Slot& slot)
+{
+	CutShort(slot);
+}
+
+SavedBody creature_spells::ValuesToSave(const Spells& spells, const SavedBody& now)
+{
+	SavedBody saved = now;
+	const auto before = [&](Spell first, Spell second, float current) {
+		if (spells.IsActive(first))
+		{
+			return spells[first].before;
+		}
+		return spells.IsActive(second) ? spells[second].before : current;
+	};
+	if (spells.IsKindActive(Kind::Size))
+	{
+		saved.size = before(Spell::Big, Spell::Small, now.size);
+	}
+	if (spells.IsKindActive(Kind::Strength))
+	{
+		saved.strength = before(Spell::Strong, Spell::Weak, now.strength);
+	}
+	saved.alignment = before(Spell::Nice, Spell::Nasty, now.alignment);
+	return saved;
 }

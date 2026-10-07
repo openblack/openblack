@@ -21,6 +21,7 @@
 #include "Creature/CreaturePlanActions.h"
 #include "Creature/CreaturePlanner.h"
 #include "Creature/CreatureWatching.h"
+#include "Creature/PerceivedDesires.h"
 
 using namespace openblack;
 using creature_desires::Desire;
@@ -398,19 +399,60 @@ TEST(CreatureWatching, LearnsAMiracleBySightingsAndSpecies)
 	const std::vector<creature_watching::MiracleRule> miracles {{.name = "Heal", .timesToSee = 10, .minPhase = 8},
 	                                                            {.name = "Food", .knownAtStart = true}};
 	auto knowledge = creature_watching::StartKnowledge({}, miracles);
-	EXPECT_TRUE(knowledge.miraclesKnown[1]);
-	EXPECT_EQ(creature_watching::TimesToLearn(10, 1.5f), 15u);
-	uint32_t turn = 0;
-	// Seen again straight away it doesn't count
+	// Nothing is known from the start
+	EXPECT_FALSE(knowledge.miraclesKnown[1]);
+	EXPECT_FLOAT_EQ(creature_watching::TimesNeeded(10, 1.5f), 15.0f);
+	// Not rounded: a cow needs 1.7 times as many sightings
+	EXPECT_FLOAT_EQ(creature_watching::TimesNeeded(9, 1.7f), 15.3f);
+	uint32_t turn = 100;
+	// Too young, it is told so and nothing counts
+	const auto young = creature_watching::SeeMiracle(knowledge, 0, miracles, 7, turn, 3, 1.5f);
+	EXPECT_TRUE(young.ignored);
+	EXPECT_EQ(young.event, creature_watching::LearningEvent::TooYoung);
+	EXPECT_FALSE(knowledge.miraclesKnown[0]);
+	// The first sighting counts, and it knows about the miracle from then on
 	EXPECT_NEAR(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).share, 0.2f, 1e-6f);
-	EXPECT_NEAR(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn + 10, 3, 1.5f).share, 0.2f, 1e-6f);
+	EXPECT_TRUE(knowledge.miraclesKnown[0]);
+	// Seen again within 50 turns it doesn't count, and the wait starts again from then
+	turn += 10;
+	EXPECT_NEAR(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).share, 0.2f, 1e-6f);
+	turn += creature_watching::k_MiracleSightingTurns;
+	EXPECT_NEAR(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).share, 0.2f, 1e-6f);
 	for (int i = 0; i < 3; ++i)
 	{
-		turn += creature_watching::k_MiracleSightingTurns;
+		turn += creature_watching::k_MiracleSightingTurns + 1;
 		EXPECT_FALSE(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).learnt);
 	}
-	turn += creature_watching::k_MiracleSightingTurns;
-	EXPECT_TRUE(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).learnt);
+	// Three quarters of the way, it is nearly learnt
+	EXPECT_EQ(creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f).event,
+	          creature_watching::LearningEvent::NearlyLearnt);
+	turn += creature_watching::k_MiracleSightingTurns + 1;
+	const auto learnt = creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f);
+	EXPECT_TRUE(learnt.learnt);
+	EXPECT_EQ(learnt.event, creature_watching::LearningEvent::Learnt);
+	EXPECT_EQ(learnt.meter, 1.0f);
+	// It goes on counting, and is told again
+	turn += creature_watching::k_MiracleSightingTurns + 1;
+	const auto again = creature_watching::SeeMiracle(knowledge, 0, miracles, 13, turn, 3, 1.5f);
+	EXPECT_EQ(again.event, creature_watching::LearningEvent::Learnt);
+	EXPECT_EQ(knowledge.miraclesSeen[0].count, 18u);
+	// 18 is three beyond the 15 needed: the meter no longer shows it
+	EXPECT_FALSE(again.meter.has_value());
+}
+
+TEST(CreatureWatching, APowerUpTeachesNothingBeforeItsMiracle)
+{
+	std::vector<creature_watching::MiracleRule> miracles(42, {.timesToSee = 10, .minPhase = 0});
+	auto knowledge = creature_watching::StartKnowledge({}, miracles);
+	// The fireball's first power-up before the fireball
+	EXPECT_TRUE(creature_watching::SeeMiracle(knowledge, 2, miracles, 13, 100, 1, 1.0f).ignored);
+	EXPECT_EQ(knowledge.miraclesSeen[2].count, 0u);
+	(void)creature_watching::SeeMiracle(knowledge, 1, miracles, 13, 100, 1, 1.0f);
+	EXPECT_FALSE(creature_watching::SeeMiracle(knowledge, 2, miracles, 13, 100, 1, 1.0f).ignored);
+	// The thirst spell needs the skill of building
+	EXPECT_TRUE(creature_watching::SeeMiracle(knowledge, 40, miracles, 13, 100, 1, 1.0f).ignored);
+	ASSERT_EQ(creature_watching::MiraclePrerequisite(40)->kind, creature_watching::Prerequisite::Kind::Skill);
+	EXPECT_FALSE(creature_watching::MiraclePrerequisite(19).has_value());
 }
 
 TEST(CreatureWatching, MimicryStages)
@@ -478,4 +520,47 @@ TEST(CreatureMindModel, LearningRebuildsTrees)
 		creature_mind_model::Think(learnt, "thought");
 	}
 	EXPECT_EQ(learnt.thoughts.size(), creature_mind_model::k_MaxThoughts);
+}
+
+TEST(CreaturePlanActions, ACreatureRunsFromWhatFrightensIt)
+{
+	// Other creatures, bats, vultures, lions and miracles, not villagers
+	const auto* run = creature_plan_actions::For("RunAwayFromObject");
+	ASSERT_NE(run, nullptr);
+	EXPECT_EQ(run->target, creature_plan_actions::Target::Frightening);
+}
+
+// What a creature thinks its player wants
+
+TEST(PerceivedDesires, SeenDesiresAddUpHeldToOneAndFade)
+{
+	using namespace openblack::creature_perceived_desires;
+	PerceivedDesires desires;
+	Increase(desires, 2, 1.0f);
+	Increase(desires, 2, 1.0f);
+	EXPECT_FLOAT_EQ(desires.player[2], 1.0f);
+	Increase(desires, 40, 1.0f);
+	IncreaseTown(desires, 16, 0.5f);
+	IncreaseTown(desires, 17, 0.5f);
+	EXPECT_FLOAT_EQ(desires.town[16], 0.5f);
+	Fade(desires);
+	EXPECT_FLOAT_EQ(desires.player[2], k_TurnFade);
+	// The last activated one wanted at all is the dominant, and those found are forgotten
+	Increase(desires, 1, 0.2f);
+	Increase(desires, 5, 0.2f);
+	const auto dominant = TakeDominant(desires, [](size_t desire) { return desire != 5; });
+	EXPECT_EQ(dominant, 2u);
+	EXPECT_FLOAT_EQ(desires.player[1], 0.0f);
+	EXPECT_FLOAT_EQ(desires.player[5], 0.2f);
+	EXPECT_FALSE(TakeDominant(desires, [](size_t desire) { return desire != 5; }).has_value());
+}
+
+TEST(PerceivedDesires, ACreatureSeesTwoThirdsOfAHalfTurnEitherWayOrInItsCell)
+{
+	using namespace openblack::creature_perceived_desires;
+	EXPECT_TRUE(CanSeePos(0, 0x2AA, false));
+	EXPECT_FALSE(CanSeePos(0, 0x2AB, false));
+	// Across the turn's end
+	EXPECT_TRUE(CanSeePos(0x7FF, 0x2A9, false));
+	EXPECT_TRUE(CanSeePos(0, 0x400, true));
 }

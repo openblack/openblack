@@ -33,6 +33,13 @@ float RandomFraction(const Random& random)
 	return static_cast<float>(random(k_FractionSteps)) / static_cast<float>(k_FractionSteps);
 }
 
+/// The movements that the creature's movement says are done or have failed
+bool IsSubMove(Movement::Kind kind)
+{
+	return kind == Movement::Kind::GoNearObject || kind == Movement::Kind::GetAwayFromObject ||
+	       kind == Movement::Kind::TurnToFaceObject;
+}
+
 void FinishStep(IdleMind& mind)
 {
 	++mind.step;
@@ -597,6 +604,14 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 				commands.move->point = senses.position + step.movement.point;
 			}
 			break;
+		case Step::Kind::Gesture:
+			commands.gesture = static_cast<uint32_t>(step.animation);
+			break;
+		case Step::Kind::Cast:
+			commands.startSequence = step.sequence;
+			mind.castDone = false;
+			mind.castTurns = 0;
+			break;
 		case Step::Kind::Object:
 			commands.object = step.order;
 			if (step.order.kind == ObjectOrder::Kind::ThrowNearby)
@@ -675,7 +690,60 @@ Commands creature_mind::Think(IdleMind& mind, const Senses& senses, const Random
 			mind.gaveUp = true;
 		}
 		break;
+	case Step::Kind::Cast:
+		if (!mind.castDone)
+		{
+			// The miracle is cast as the loop of the pose begins, and held for whole turns from the next
+			if (senses.bodyLooping)
+			{
+				commands.cast = step.cast;
+				mind.castDone = true;
+				const auto turnsPerSecond = static_cast<uint32_t>(std::lround(1.0f / senses.seconds));
+				mind.castTurns = static_cast<uint32_t>(step.seconds * static_cast<float>(turnsPerSecond));
+			}
+			else if (!senses.bodyBusy)
+			{
+				// The pose ended before it could cast
+				mind.step = mind.agenda.size();
+				mind.stepStarted = false;
+				mind.gaveUp = true;
+			}
+		}
+		else if (mind.castTurns > 0)
+		{
+			--mind.castTurns;
+		}
+		else
+		{
+			// Its time up, it lets the miracle go and ends the pose, done once the end has played
+			if (!mind.sitEnding)
+			{
+				commands.releaseCast = true;
+				commands.endSit = true;
+				mind.sitEnding = true;
+			}
+			if (!senses.bodyBusy)
+			{
+				FinishStep(mind);
+			}
+		}
+		break;
+	case Step::Kind::Gesture:
 	case Step::Kind::Move:
+		if (step.kind == Step::Kind::Gesture || IsSubMove(step.movement.kind))
+		{
+			if (senses.subMove == SubMove::Done)
+			{
+				FinishStep(mind);
+			}
+			else if (senses.subMove == SubMove::Failed)
+			{
+				mind.step = mind.agenda.size();
+				mind.stepStarted = false;
+				mind.gaveUp = true;
+			}
+			break;
+		}
 		// Done once it has arrived or given up, or its time is up
 		if (!senses.moving)
 		{

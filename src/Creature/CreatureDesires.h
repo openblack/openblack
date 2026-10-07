@@ -91,6 +91,8 @@ constexpr uint32_t k_HungerFromLowEnergy = 14;
 constexpr uint32_t k_PlayFromSadness = 16;
 constexpr uint32_t k_FearFromDark = 17;
 constexpr uint32_t k_FearFromDamage = 18;
+/// Fear from seeing a nasty miracle
+constexpr uint32_t k_FearFromScaryMagic = 19;
 constexpr uint32_t k_TirednessFromExhaustion = 22;
 constexpr uint32_t k_PooFromAmountOfPoo = 21;
 constexpr uint32_t k_TirednessFromNight = 24;

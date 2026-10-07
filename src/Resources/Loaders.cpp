@@ -512,6 +512,12 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 	rig->soundObject = static_cast<int32_t>(file.GetHairHeader().soundObject);
 	rig->soundBankName = file.GetSoundBankName();
 	rig->leashBone = file.GetLeashBone();
+	if (const auto& points = file.GetCreatureActionPoints(); points.has_value() && points->rightEye >= 0)
+	{
+		rig->rightEye = static_cast<uint32_t>(points->rightEye);
+	}
+	rig->fileTail = file.GetCreatureTail();
+	rig->creatureVersion = file.GetCreatureVersion();
 
 	if (const auto& sites = file.GetTattooSites(); sites.has_value())
 	{
