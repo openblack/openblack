@@ -127,6 +127,7 @@ target_link_libraries(
           glw
           morph
           psys
+          physconst
           gestures
           rawimage
           imgui::imgui
