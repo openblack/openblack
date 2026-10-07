@@ -170,6 +170,7 @@ openblack_setup_and_add_test(
 openblack_setup_and_add_test(
   test_creature_locomotion test_creature_locomotion.cpp
 )
+openblack_setup_and_add_test(test_script_cast test_script_cast.cpp)
 openblack_setup_and_add_test(test_creature_route test_creature_route.cpp)
 openblack_setup_and_add_test(test_creature_audio test_creature_audio.cpp)
 openblack_setup_and_add_test(

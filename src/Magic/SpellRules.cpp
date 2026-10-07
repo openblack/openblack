@@ -112,6 +112,16 @@ EffectDefence EffectDefence::From(const GObjectInfo& info)
 	};
 }
 
+EffectDefence magic::CreatureDefence(EffectDefence species, float size)
+{
+	const float divisor = (std::clamp(size, 0.001f, 2.0f) * 1.5f) + 1.0f;
+	for (const auto kind : {EffectKind::Burn, EffectKind::Crush, EffectKind::Hit, EffectKind::FlyAway})
+	{
+		species.multipliers.at(static_cast<size_t>(kind)) /= divisor;
+	}
+	return species;
+}
+
 float magic::DamageFrom(const EffectValues& values, const EffectDefence& defence)
 {
 	float damage = 0.0f;

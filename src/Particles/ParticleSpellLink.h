@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <entt/entity/entity.hpp>
 #include <glm/vec3.hpp>
 
@@ -50,6 +52,10 @@ struct SpellEventInfo
 		HitSpell = 4,
 		/// A particle reached its target object
 		Object = 5,
+		/// The effect asks to pick up the target object, which the miracle allows if it can destroy it
+		Capture = 7,
+		/// A miracle whose magic type has no particle effect has started without one, at its point
+		InitWithoutEffect = 11,
 	};
 	Type type {Type::Point};
 	glm::vec3 position {0.0f};
@@ -80,8 +86,27 @@ public:
 	[[nodiscard]] virtual bool IsMyInterfaceCasting() const { return false; }
 	/// Whether a human player, rather than a creature or a script, is casting it
 	[[nodiscard]] virtual bool IsHumanPlayerCasting() const { return false; }
+	/// Whether a creature casts it, or the neutral player by script
+	[[nodiscard]] virtual bool IsCreatureCasting() const { return false; }
+	[[nodiscard]] virtual bool IsScriptCasting() const { return false; }
+	/// What a creature spell does to the creature it is cast on, by the game's numbering (CreatureReceiveSpellType), -1
+	/// for a miracle that isn't a creature spell
+	[[nodiscard]] virtual int CreatureSpellKind() const { return -1; }
 	/// The miracle's own entity, for the shields it raises
 	[[nodiscard]] virtual entt::entity Spell() const { return entt::null; }
+	/// The tribal power of the miracle's caster for its magic type, 1 without one
+	[[nodiscard]] virtual float TribalPower() const { return 1.0f; }
+	/// How much a storm miracle rains, none for a miracle that isn't a storm
+	[[nodiscard]] virtual std::optional<float> RainAmount() const { return std::nullopt; }
+	/// The miracle now acts where its effect has moved to, as a storm drifts
+	virtual void MoveTo(glm::vec3 /*position*/) {}
+	/// A creature spell cast by a creature turns against it once the way from its hands to its target creature has
+	/// swung round from where it began by more than this (the game takes the number as radians); none for no limit
+	[[nodiscard]] virtual std::optional<float> MaxDirectionChange() const { return std::nullopt; }
+	/// The miracle closes down, as a creature's spell does once it swings too far
+	virtual void CloseDown() {}
+	/// The radius its effect reaches, from its tables
+	[[nodiscard]] virtual float EffectRadius() const { return 5.0f; }
 };
 
 } // namespace openblack::particles

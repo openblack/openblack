@@ -114,6 +114,10 @@ struct EffectDefence
 	[[nodiscard]] static EffectDefence From(const GObjectInfo& info);
 };
 
+/// A creature's defence: its species' row, with the burning, crushing, hitting and throwing it takes divided by one and a
+/// half times its size (held between a thousandth and 2) plus 1, so a big creature takes less of them. Healing isn't.
+[[nodiscard]] EffectDefence CreatureDefence(EffectDefence species, float size);
+
 /// The share of an object's life an effect takes: the crushing and hitting it suffers, each times its defence
 [[nodiscard]] float DamageFrom(const EffectValues& values, const EffectDefence& defence);
 /// The share of an object's life an effect gives back
