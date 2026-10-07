@@ -168,6 +168,8 @@ public:
 	[[nodiscard]] std::optional<ScenarioRequest> TakeScenarioRequest() { return std::exchange(_scenarioRequest, std::nullopt); }
 	[[nodiscard]] std::chrono::duration<float, std::milli> GetDeltaTime() const { return _turnDeltaTime; }
 	[[nodiscard]] const glm::ivec2& GetMousePosition() const { return _mousePosition; }
+	/// Puts the cursor the game works with somewhere in the window, until the mouse next moves
+	void SetMousePosition(glm::ivec2 position) { _mousePosition = position; }
 	[[nodiscard]] const audio::AtmosAudio* GetAtmosAudio() const { return _atmosAudio.get(); }
 	[[nodiscard]] audio::GameMusic* GetGameMusic() { return _gameMusic.get(); }
 	[[nodiscard]] const audio::GameMusic* GetGameMusic() const { return _gameMusic.get(); }

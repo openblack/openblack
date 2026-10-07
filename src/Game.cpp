@@ -43,10 +43,12 @@
 #include "3D/HandAnimation.h"
 #include "3D/HandNavigationPose.h"
 #include "3D/HandOrientation.h"
+#include "3D/HandMorph.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/LandLightFrame.h"
 #include "3D/LandLightTable.h"
+#include "3D/MapCoords.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "3D/SnowCover.h"
@@ -75,6 +77,7 @@
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/HandMorph.h"
 #include "ECS/Components/Mist.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
@@ -151,6 +154,65 @@ namespace
 // Where the camera starts on the testbed: above and behind the middle of the map
 constexpr float k_TestbedCameraHeight = 60.0f;
 constexpr float k_TestbedCameraBack = 120.0f;
+
+/// The meshes the hand is pulled towards as its player turns evil or good, the first two of its morph file's variants,
+/// and the files of the base and those two for their skins. Black & White would also blend the hand's bones and
+/// animations towards theirs, but its own meshes share the base's bones and the morph file has no animations for
+/// them, so that changes nothing; a warning says when other data would.
+void LoadHandLooks(const morph::MorphFile& morphFile)
+{
+	using ecs::components::HandMorph;
+	auto& fileSystem = Locator::filesystem::value();
+	auto& resources = Locator::resources::value();
+	auto& meshes = resources.GetMeshes();
+	auto& files = resources.GetL3DFiles();
+	const auto& header = morphFile.GetHeader();
+	const auto pathOf = [&fileSystem](const std::array<char, 0x20>& name) {
+		return fileSystem.GetPath<filesystem::Path::CreatureMesh>() / (std::string(name.data()) + ".l3d");
+	};
+	const auto load = [&files](entt::id_type id, const std::filesystem::path& path) {
+		try
+		{
+			files.Load(id, resources::L3DFileLoader::FromDiskTag {}, path);
+		}
+		catch (std::exception& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Can't read the hand's skins from {}: {}", path.string(), err.what());
+		}
+	};
+	load(HandMorph::k_SkinFileIds[0], pathOf(header.baseMeshName));
+	const auto base = meshes.Handle(ecs::components::Hand::k_MeshId);
+	for (size_t look = 0; look < HandMorph::k_LookMeshIds.size(); ++look)
+	{
+		const auto& name = header.variantMeshNames.at(look);
+		if (name[0] == '\0')
+		{
+			continue;
+		}
+		const auto path = pathOf(name);
+		try
+		{
+			meshes.Load(HandMorph::k_LookMeshIds.at(look), resources::L3DLoader::FromDiskTag {}, path);
+		}
+		catch (std::exception& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "Can't load the hand mesh {}: {}", path.string(), err.what());
+			continue;
+		}
+		load(HandMorph::k_SkinFileIds.at(look + 1), path);
+		const auto variant = meshes.Handle(HandMorph::k_LookMeshIds.at(look));
+		if (base && variant->GetBoneMatrices() != base->GetBoneMatrices())
+		{
+			SPDLOG_LOGGER_WARN(spdlog::get("game"), "The bones of {} differ from the hand's: they are not blended",
+			                   path.string());
+		}
+		if (!morphFile.GetVariantAnimationSet(static_cast<uint32_t>(look)).empty())
+		{
+			SPDLOG_LOGGER_WARN(spdlog::get("game"), "The animations of {} in the hand's morph file are not blended",
+			                   path.string());
+		}
+	}
+}
 } // namespace
 
 const std::string k_WindowTitle = "openblack";
@@ -998,6 +1060,8 @@ bool Game::Update() noexcept
 		// Update Hand and intersection point
 		ecs::components::Transform intersectionTransform {};
 		bool enterTemple = false;
+		// The point the interface picks under the cursor, which the hand's influence is tested at
+		std::optional<map_coords::MapCoords> handPick;
 		{
 			const auto screenSize =
 			    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
@@ -1056,6 +1120,11 @@ bool Game::Update() noexcept
 						                  handFree);
 					}
 					_cursorOnObject = false;
+					handPick =
+					    hand_morph::Pick(dynamicsSystem.RayCastLand(rayOrigin, rayDirection, 1e10f), rayOrigin, rayDirection,
+					                     [](const map_coords::MapCoords& coords) {
+						                     return Locator::terrainSystem::value().GetHeightAt(map_coords::ToMetres(coords));
+					                     });
 					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
 					{
 						intersectionTransform = hit->first;
@@ -1220,6 +1289,15 @@ bool Game::Update() noexcept
 					}
 				}
 			}
+		}
+
+		// The hand shows its player's alignment, catching up with it each frame once it has moved far enough. Its skin is
+		// blended again as it goes into or out of the player's influence, tested where the cursor picks the land. The
+		// point is held while the hand grips the land, and in the temple.
+		// TODO(raffclar): what the game picks in the temple, which needs it run under a debugger
+		{
+			const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
+			Locator::handSystem::value().UpdateAlignmentMorph(handPick, _handGripping || inTemple);
 		}
 
 		// The trees bend away from where the hand now is, and rustle
@@ -2234,6 +2312,8 @@ void Game::LoadHandAnimation()
 		                    morph::ResultToStr(morphResult));
 		return;
 	}
+
+	LoadHandLooks(morphFile);
 
 	const auto mesh = Locator::resources::value().GetMeshes().Handle(entt::hashed_string("hand"));
 	auto animation = std::make_unique<HandAnimation>();

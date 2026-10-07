@@ -25,6 +25,7 @@ public:
 	[[nodiscard]] std::array<entt::entity, static_cast<size_t>(Side::_Count)> GetPlayerHands() const noexcept override;
 	[[nodiscard]] std::array<std::optional<glm::vec3>, static_cast<size_t>(Side::_Count)>
 	GetPlayerHandPositions() const noexcept override;
+	void UpdateAlignmentMorph(std::optional<map_coords::MapCoords> picked, bool holdPoint) override;
 
 private:
 	std::array<entt::entity, 2> _hands;

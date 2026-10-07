@@ -61,6 +61,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CreatureCaveSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureHandSystemInterface.h"
@@ -417,6 +418,15 @@ void Runner::SetUpEnvironment(const Environment& environment)
 	if (Locator::creatureFightSystem::has_value())
 	{
 		Locator::creatureFightSystem::value().SetAngerStartsFights(environment.angerStartsFights);
+	}
+	if (environment.playerAlignment && Locator::alignmentSystem::has_value())
+	{
+		Locator::alignmentSystem::value().SetPlayerAlignment(PlayerNames::PLAYER_ONE, *environment.playerAlignment);
+	}
+	if (environment.cursor && Locator::windowing::has_value())
+	{
+		const auto size = glm::vec2(Locator::windowing::value().GetSize());
+		Game::Instance()->SetMousePosition(glm::ivec2(*environment.cursor * size));
 	}
 }
 
@@ -806,6 +816,15 @@ void Runner::Give(const Command& command)
 		Log(fmt::format("{:.1f}s: the hour is {:.1f}", _seconds, command.hour));
 		return;
 	}
+	if (command.kind == Kind::SetAlignment)
+	{
+		if (Locator::alignmentSystem::has_value())
+		{
+			Locator::alignmentSystem::value().SetPlayerAlignment(command.player, command.alignment);
+		}
+		Log(fmt::format("{:.1f}s: the alignment is {:.2f}", _seconds, command.alignment));
+		return;
+	}
 	const auto entity = CreatureAt(command.creature);
 	if (!entity.has_value() || !Locator::creatureLocomotionSystem::has_value() || !Locator::creatureMindSystem::has_value())
 	{
@@ -946,6 +965,7 @@ void Runner::Give(const Command& command)
 		result = GiveCreatureModeCommand(*entity, command);
 		break;
 	case Kind::SetHour:
+	case Kind::SetAlignment:
 		break;
 	case Kind::SetDesire:
 	case Kind::SetPhase:

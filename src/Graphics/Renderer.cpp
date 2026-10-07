@@ -32,6 +32,7 @@
 #include "3D/ChimneySmoke.h"
 #include "3D/Clouds.h"
 #include "3D/DayNightClock.h"
+#include "3D/HandMorph.h"
 #include "3D/InfluenceCircle.h"
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
@@ -66,6 +67,7 @@
 #include "ECS/Components/CreatureHair.h"
 #include "ECS/Components/CreatureSkin.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/HandMorph.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mist.h"
@@ -464,6 +466,8 @@ Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallb
 Renderer::~Renderer() noexcept
 {
 	_creatureSkins.clear();
+	_handSkins.clear();
+	_handSkinTextures.clear();
 	_particleLightMaps.clear();
 	_snowDepth.reset();
 	_plane.reset();
@@ -3215,6 +3219,76 @@ void Renderer::UploadCreatureSkins(const DrawSceneDesc& drawDesc) const
 	std::erase_if(_creatureSkins, [&seen](const auto& entry) { return !std::ranges::binary_search(seen, entry.first); });
 }
 
+namespace
+{
+/// The hand the player moves, which the others follow in how they look
+const ecs::components::HandMorph* PlayerHandMorph()
+{
+	if (!Locator::handSystem::has_value())
+	{
+		return nullptr;
+	}
+	const auto hand =
+	    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+	return Locator::entitiesRegistry::value().TryGet<const ecs::components::HandMorph>(hand);
+}
+} // namespace
+
+void Renderer::UploadHandSkins() const
+{
+	const auto* morph = PlayerHandMorph();
+	if (morph == nullptr || morph->skins.empty())
+	{
+		_handSkins.clear();
+		return;
+	}
+	if (_handSkinRevision == morph->revision && _handSkins.size() == morph->skins.size())
+	{
+		return;
+	}
+	_handSkinTextures.resize(morph->skins.size());
+	_handSkins.clear();
+	for (size_t i = 0; i < morph->skins.size(); ++i)
+	{
+		const auto& skin = morph->skins[i];
+		auto& texture = _handSkinTextures[i];
+		if (!texture)
+		{
+			texture = std::make_unique<Texture2D>("Hand Skin");
+			texture->CreateWithinFrame(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height, 1, TextureFormat::BGRA4,
+			                           Wrapping::Repeat, Filter::Linear, nullptr);
+		}
+		texture->Update(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
+		_handSkins.emplace_back(skin.id, texture.get());
+	}
+	_handSkinRevision = morph->revision;
+}
+
+std::optional<RendererInterface::L3DMeshSubmitDesc::MorphTargets> Renderer::HandMorphTargets() const
+{
+	const auto* morph = PlayerHandMorph();
+	if (morph == nullptr || morph->state.drawn == 0.0f)
+	{
+		return std::nullopt;
+	}
+	// The evil or good mesh, or the base where it isn't loaded
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto lookId =
+	    ecs::components::HandMorph::k_LookMeshIds.at(hand_morph::LookOf(morph->state.drawn) == hand_morph::Look::Evil ? 0 : 1);
+	const auto id = meshes.Contains(lookId) ? lookId : ecs::components::Hand::k_MeshId;
+	if (!meshes.Contains(id))
+	{
+		return std::nullopt;
+	}
+	return L3DMeshSubmitDesc::MorphTargets {
+	    .meshes = {&*meshes.Handle(id), nullptr, nullptr},
+	    .weights = {hand_morph::Weight(morph->state.drawn), 0.0f, 0.0f},
+	    .skins = _handSkins,
+	    // The hand has no seams to blend
+	    .blendSeams = false,
+	};
+}
+
 void Renderer::DrawSkyDomePass(const DrawSceneDesc& drawDesc) const
 {
 	if (!drawDesc.drawSky || !Locator::skySystem::has_value())
@@ -3565,6 +3639,13 @@ void Renderer::DrawHandShadowPass(const DrawSceneDesc& drawDesc) const
 	submitDesc.state = BGFX_STATE_WRITE_R;
 	submitDesc.modelMatrices = bones.data();
 	submitDesc.matrixCount = static_cast<uint8_t>(bones.size());
+	// The shadow takes the hand's shape as its player's alignment has it
+	const auto handMorph = HandMorphTargets();
+	if (handMorph)
+	{
+		submitDesc.program = _shaderManager->GetShader("ShadowCasterMorph");
+		submitDesc.morphTargets = &*handMorph;
+	}
 	DrawMesh(*handMesh, submitDesc, std::numeric_limits<uint8_t>::max());
 }
 
@@ -3764,6 +3845,7 @@ void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
 {
 	SelectDrawnCreatures(drawDesc);
 	UploadCreatureSkins(drawDesc);
+	UploadHandSkins();
 	{
 		const auto& textures = Locator::resources::value().GetTextures();
 		_snowTexture = textures.Find(snow_cover::k_TextureId.value());
@@ -4123,7 +4205,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			};
 			const auto drawInstances = [&](entt::id_type meshId, const RenderContext::InstancedDrawDesc& placers,
 			                               bool useMaterialBlending, uint32_t first, uint32_t count,
-			                               const EntityPose* pose = nullptr) {
+			                               const EntityPose* pose = nullptr,
+			                               const L3DMeshSubmitDesc::MorphTargets* handMorph = nullptr) {
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
@@ -4200,6 +4283,12 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 						submitDesc.program = objectShaderMorphInstanced;
 						submitDesc.morphTargets = pose->morphTargets;
 					}
+				}
+				// The hand pulled towards its evil or good mesh, keeping its own light
+				if (handMorph != nullptr)
+				{
+					submitDesc.program = objectShaderMorphInstanced;
+					submitDesc.morphTargets = handMorph;
 				}
 
 				// TODO(bwrsandman): choose the correct LOD
@@ -4323,12 +4412,14 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				const auto cullFront = facesTurned ? BGFX_STATE_CULL_CCW : BGFX_STATE_CULL_CW;
 				const auto cullBack = facesTurned ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW;
 				const auto opaqueState = submitDesc.state;
+				const auto handMorph = HandMorphTargets();
+				const auto* morph = handMorph ? &*handMorph : nullptr;
 
 				// The inside does not write depth so the outside is never hidden behind it
 				submitDesc.state = (opaqueState & ~(BGFX_STATE_CULL_MASK | BGFX_STATE_WRITE_Z)) | cullFront;
-				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count);
+				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count, nullptr, morph);
 				submitDesc.state = (opaqueState & ~BGFX_STATE_CULL_MASK) | cullBack;
-				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count);
+				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count, nullptr, morph);
 				submitDesc.state = opaqueState;
 				submitDesc.viewId = desc.viewId;
 				submitDesc.sortDepth = 0;

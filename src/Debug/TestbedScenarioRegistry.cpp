@@ -2015,6 +2015,7 @@ std::vector<Scenario> Build()
 	AddBenchmark(all);
 	AddCreatureModeScenarios(all);
 	AddHandNavigationScenarios(all);
+	AddHandLookScenarios(all);
 	return all;
 }
 
@@ -2130,7 +2131,7 @@ std::string_view testbed_scenarios::Name(Shot shot)
 
 std::string_view testbed_scenarios::Name(Command::Kind kind)
 {
-	constexpr std::array<std::string_view, 72> k_Names {
+	constexpr std::array<std::string_view, 73> k_Names {
 	    "walk to",
 	    "run to",
 	    "follow",
@@ -2203,6 +2204,7 @@ std::string_view testbed_scenarios::Name(Command::Kind kind)
 	    "let go of button",
 	    "move mouse",
 	    "turn wheel",
+	    "set alignment",
 	};
 	return k_Names.at(static_cast<size_t>(kind));
 }
@@ -2248,9 +2250,14 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 		problems.emplace_back("hour or body time out of range");
 	}
 	if (scenario.creatures.empty() && scenario.particles.empty() && scenario.miracles.empty() && scenario.dispensers.empty() &&
-	    !environment.dispenserGrid && !scenario.crowd.has_value())
+	    !environment.dispenserGrid && !scenario.crowd.has_value() && !environment.playerAlignment.has_value())
 	{
-		problems.emplace_back("no creatures, particles, miracles, dispensers or crowd");
+		problems.emplace_back("no creatures, particles, miracles, dispensers, crowd or alignment for the hand");
+	}
+	if ((environment.playerAlignment && !InRange(*environment.playerAlignment, -1.0f, 1.0f)) ||
+	    (environment.cursor && (!InRange(environment.cursor->x, 0.0f, 1.0f) || !InRange(environment.cursor->y, 0.0f, 1.0f))))
+	{
+		problems.emplace_back("alignment or cursor out of range");
 	}
 	if (scenario.crowd.has_value() && (scenario.crowd->count == 0 || scenario.crowd->perFrame == 0))
 	{
@@ -2382,9 +2389,14 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 	{
 		const auto& command = scenario.commands.at(i);
 		const auto what = fmt::format("command {} ({})", i, Name(command.kind));
-		if (command.kind != Kind::SetHour && !IsPointerCommand(command.kind) && command.creature >= creatures)
+		if (command.kind != Kind::SetHour && command.kind != Kind::SetAlignment && !IsPointerCommand(command.kind) &&
+		    command.creature >= creatures)
 		{
 			problems.push_back(fmt::format("{}: no such creature", what));
+		}
+		if (command.kind == Kind::SetAlignment && !InRange(command.alignment, -1.0f, 1.0f))
+		{
+			problems.push_back(fmt::format("{}: alignment out of range", what));
 		}
 		if ((command.kind == Kind::Follow || command.kind == Kind::StartFight || command.kind == Kind::TieLeashToCreature) &&
 		    (command.value >= creatures || command.value == command.creature))

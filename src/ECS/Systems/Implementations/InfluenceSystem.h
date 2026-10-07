@@ -30,7 +30,8 @@ public:
 	void ProcessTurn(uint32_t turn) override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 
-	[[nodiscard]] float PlayerInfluence(PlayerNames player, const glm::vec3& position) const override;
+	using InfluenceSystemInterface::PlayerInfluence;
+	[[nodiscard]] float PlayerInfluence(PlayerNames player, const map_coords::MapCoords& position) const override;
 
 	[[nodiscard]] std::span<const influence::Circle> GetCircles() const override { return _circles; }
 	[[nodiscard]] bool IsBorderShown(PlayerNames player) const override;

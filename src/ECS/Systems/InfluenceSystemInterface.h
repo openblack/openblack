@@ -16,6 +16,7 @@
 #include <glm/vec3.hpp>
 
 #include "3D/InfluenceCircle.h"
+#include "3D/MapCoords.h"
 #include "Enums.h"
 
 namespace openblack::ecs::systems
@@ -35,8 +36,14 @@ public:
 	/// sends out a ripple and a sound, and the ripples grow and fade
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
 
-	/// How much a place is in a player's influence, from -1 to 1
-	[[nodiscard]] virtual float PlayerInfluence(PlayerNames player, const glm::vec3& position) const = 0;
+	/// How much a place is in a player's influence, from -1 to 1: the reach of their citadel and of each of their towns
+	/// whose reach it is within, measured as the game measures between map positions
+	[[nodiscard]] virtual float PlayerInfluence(PlayerNames player, const map_coords::MapCoords& position) const = 0;
+	/// The same at a point, made a map position first
+	[[nodiscard]] float PlayerInfluence(PlayerNames player, const glm::vec3& position) const
+	{
+		return PlayerInfluence(player, map_coords::FromMetres({position.x, position.z}));
+	}
 
 	[[nodiscard]] virtual std::span<const influence::Circle> GetCircles() const = 0;
 	/// Whether a player's border shows yet: once their citadel stands

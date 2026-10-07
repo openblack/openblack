@@ -256,6 +256,10 @@ private:
 	/// Takes up the creatures' skins where they have been painted again, before their bodies are drawn with them; drops
 	/// those of creatures no longer on the land
 	void UploadCreatureSkins(const DrawSceneDesc& drawDesc) const;
+	/// The hand's skins as blended for its player's alignment (see components::HandMorph), taken up when they change
+	void UploadHandSkins() const;
+	/// What the hand's base mesh is pulled towards for its player's alignment, none while it shows the base
+	[[nodiscard]] std::optional<L3DMeshSubmitDesc::MorphTargets> HandMorphTargets() const;
 
 	std::unique_ptr<ShaderManager> _shaderManager;
 	std::unique_ptr<BgfxCallback> _bgfxCallback;
@@ -325,6 +329,10 @@ private:
 	mutable std::unordered_map<entt::entity, CreatureSkins> _creatureSkins;
 	/// Whether running out of textures for the creatures' skins has been logged
 	mutable bool _warnedOutOfSkins {false};
+	/// The hand's skins as blended for its player's alignment, one texture each, and the blending they hold
+	mutable std::vector<std::unique_ptr<Texture2D>> _handSkinTextures;
+	mutable std::vector<std::pair<uint32_t, const Texture2D*>> _handSkins;
+	mutable std::optional<uint32_t> _handSkinRevision;
 	/// The creatures drawn this frame: all of them, or the nearest the camera when there are more than the backend can
 	/// upload the bones of
 	struct DrawnCreature

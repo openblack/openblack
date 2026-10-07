@@ -115,6 +115,10 @@ struct Environment
 	std::optional<bool> aprilFools;
 	/// The grid of every miracle's dispenser the testbed lays out in front of the camera stays, or is cleared away
 	bool dispenserGrid {true};
+	/// The player's alignment, from -1 (evil) to 1 (good), as it was when not given
+	std::optional<float> playerAlignment;
+	/// Where the cursor, and so the hand, is put, as a share of the window from its top left, until the mouse moves
+	std::optional<glm::vec2> cursor;
 };
 
 /// Where the camera looks as the scenario starts
@@ -386,6 +390,8 @@ struct Command
 		PointerRelease,
 		PointerSweep,
 		WheelTurn,
+		/// The player's alignment jumps, which the hand shows
+		SetAlignment,
 	};
 	Kind kind {Kind::Stop};
 	/// Which creature, by its place in the scenario's creatures
@@ -421,6 +427,8 @@ struct Command
 	float amount {1.0f};
 	/// The camera's keys are held with Ctrl rather than Shift
 	bool ctrl {false};
+	/// The player's alignment jumped to, from -1 (evil) to 1 (good)
+	float alignment {0.0f};
 };
 [[nodiscard]] std::string_view Name(Command::Kind kind);
 /// Whether a command is the player's mouse, which needs no creature
@@ -456,6 +464,8 @@ void AddMiracleScenarios(std::vector<Scenario>& all);
 void AddCreatureModeScenarios(std::vector<Scenario>& all);
 /// The player's hand moving over the land, dragging it and turning and zooming the camera
 void AddHandNavigationScenarios(std::vector<Scenario>& all);
+/// The scenarios of how the hand looks for its player's alignment
+void AddHandLookScenarios(std::vector<Scenario>& all);
 
 /// Every scenario, in the order the window lists them
 [[nodiscard]] std::span<const Scenario> All();

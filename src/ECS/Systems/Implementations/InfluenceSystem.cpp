@@ -18,6 +18,7 @@
 
 #include "3D/LandIslandInterface.h"
 #include "Audio/Sound.h"
+#include "Common/GUtilsDistance.h"
 #include "Common/GameRandom.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Influence.h"
@@ -43,11 +44,6 @@ namespace
 /// The border is drawn again only on every tenth turn, and only once a reach has moved by more than this
 constexpr uint32_t k_RedrawTurns = 10;
 constexpr float k_RedrawReach = 0.01f;
-
-float DistanceAcross(const glm::vec3& a, const glm::vec3& b)
-{
-	return std::hypot(a.x - b.x, a.z - b.z);
-}
 
 /// What the story gives for a land of the story, from the five lands' values and the one after them
 float ForLand(const std::array<float, 5>& story, float after, int32_t land)
@@ -332,16 +328,20 @@ bool InfluenceSystem::CrossBorders(const glm::vec3& hand)
 	return crossed;
 }
 
-float InfluenceSystem::PlayerInfluence(PlayerNames player, const glm::vec3& position) const
+float InfluenceSystem::PlayerInfluence(PlayerNames player, const map_coords::MapCoords& position) const
 {
 	auto& registry = Locator::entitiesRegistry::value();
+	// Each is measured from its map position, in the game's map units
+	const auto distanceTo = [&position](const glm::vec3& point) {
+		return gutils::GetDistanceInMetres(map_coords::FromMetres({point.x, point.z}), position);
+	};
 	float sum = 0.0f;
 	// The citadel's reach, where it reaches
 	if (const auto citadel = Citadels().at(static_cast<size_t>(player)); citadel != entt::null)
 	{
 		const float reach = CitadelReach(citadel);
 		if (const auto* transform = registry.TryGet<const Transform>(citadel);
-		    transform != nullptr && reach > DistanceAcross(transform->position, position))
+		    transform != nullptr && distanceTo(transform->position) < reach)
 		{
 			sum = reach;
 		}
@@ -349,7 +349,7 @@ float InfluenceSystem::PlayerInfluence(PlayerNames player, const glm::vec3& posi
 	// And each of the player's towns', where it reaches
 	registry.Each<const Town, const TownInfluence, const Transform>(
 	    [&](const Town& town, const TownInfluence& influence, const Transform& transform) {
-		    if (town.owner == player && DistanceAcross(transform.position, position) < influence.radius)
+		    if (town.owner == player && distanceTo(transform.position) < influence.radius)
 		    {
 			    sum += influence.radius;
 		    }

@@ -13,6 +13,7 @@
 #include <glm/vec3.hpp>
 
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/HandMorph.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -32,12 +33,8 @@ entt::entity HandArchetype::Create(const glm::vec3& position, float xAngleRadian
 	registry.Assign<Hand>(entity, rightHanded);
 	registry.Assign<Transform>(entity, position, rotation, glm::vec3(scale));
 	registry.Assign<Mesh>(entity, Hand::k_MeshId, static_cast<int8_t>(0), static_cast<int8_t>(0));
-
-	// Data/CreatureMesh/Hand_Boned_Base2.l3d
-	// Data/CreatureMesh/Hand_Boned_Good2.l3d
-	// Data/CreatureMesh/Hand_Boned_Evil2.l3d
-
-	// load data\\hand.raw into a memory
+	// It shows its player's alignment, starting neutral
+	registry.Assign<HandMorph>(entity);
 
 	return entity;
 }
