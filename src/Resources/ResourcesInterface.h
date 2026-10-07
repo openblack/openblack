@@ -28,6 +28,7 @@ using SoundManager = ResourceManager<SoundLoader>;
 using GlowManager = ResourceManager<LightLoader>;
 using CameraPathManager = ResourceManager<CameraPathLoader>;
 using ParticleFileManager = ResourceManager<ParticleFileLoader>;
+using GestureTemplatesManager = ResourceManager<GestureTemplatesLoader>;
 using ParticleBitmapManager = ResourceManager<ParticleBitmapLoader>;
 
 class ResourcesInterface
@@ -53,6 +54,8 @@ public:
 	virtual ParticleFileManager& GetParticleFiles() = 0;
 	/// The light maps the particle effects stamp on the land, by their paths
 	virtual ParticleBitmapManager& GetParticleBitmaps() = 0;
+	/// The templates the hand's drawn gestures are matched against, by gesture::k_TemplatesId
+	virtual GestureTemplatesManager& GetGestureTemplates() = 0;
 };
 
 } // namespace openblack::resources

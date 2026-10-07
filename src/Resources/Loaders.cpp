@@ -18,6 +18,7 @@
 #include <utility>
 
 #include <GLWFile.h>
+#include <GestureFile.h>
 #include <L3DFile.h>
 #include <MorphFile.h>
 #include <PackFile.h>
@@ -676,6 +677,18 @@ CameraPathLoader::result_type CameraPathLoader::operator()(FromDiskTag, const st
 	}
 
 	return cameraPath;
+}
+
+GestureTemplatesLoader::result_type GestureTemplatesLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	auto file = std::make_shared<gestures::GestureFile>();
+	if (const auto result = file->Open(Locator::filesystem::value().ReadAll(path));
+	    result != gestures::GestureFileResult::Success)
+	{
+		throw std::runtime_error("Unable to load gesture templates " + path.string() + ": " +
+		                         std::string(gestures::ResultToStr(result)));
+	}
+	return file;
 }
 
 ParticleFileLoader::result_type ParticleFileLoader::operator()(FromDiskTag, const std::filesystem::path& directory,

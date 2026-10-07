@@ -35,6 +35,7 @@ public:
 	CameraPathManager& GetCameraPaths() override { return _cameraPaths; }
 	ParticleFileManager& GetParticleFiles() override { return _particleFiles; }
 	ParticleBitmapManager& GetParticleBitmaps() override { return _particleBitmaps; }
+	GestureTemplatesManager& GetGestureTemplates() override { return _gestureTemplates; }
 
 private:
 	MeshManager _meshes;
@@ -52,5 +53,6 @@ private:
 	CameraPathManager _cameraPaths;
 	ParticleFileManager _particleFiles;
 	ParticleBitmapManager _particleBitmaps;
+	GestureTemplatesManager _gestureTemplates;
 };
 } // namespace openblack::resources

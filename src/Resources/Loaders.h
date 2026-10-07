@@ -185,6 +185,12 @@ struct ParticleBitmapLoader final: BaseLoader<psys::StackedBitmap>
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path, const Layout& layout) const;
 };
 
+/// The templates the hand's drawn gestures are matched against
+struct GestureTemplatesLoader final: BaseLoader<gestures::GestureFile>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+};
+
 struct CameraPathLoader final: BaseLoader<CameraPath>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;

@@ -236,6 +236,10 @@ target_link_libraries(test_lhvm_decompiler PRIVATE lhvmdecompiler)
 openblack_setup_and_add_test(test_magic_spells test_magic_spells.cpp)
 openblack_setup_and_add_test(test_gesture_file test_gesture_file.cpp)
 target_link_libraries(test_gesture_file PRIVATE gestures)
+openblack_setup_and_add_test(
+  test_gesture_recognition test_gesture_recognition.cpp
+)
+target_link_libraries(test_gesture_recognition PRIVATE gestures)
 openblack_setup_and_add_test(test_creature_spells test_creature_spells.cpp)
 openblack_setup_and_add_test(test_particle_miracles test_particle_miracles.cpp)
 target_link_libraries(test_particle_miracles PRIVATE psys)
