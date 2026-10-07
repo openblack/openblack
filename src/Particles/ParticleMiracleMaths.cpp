@@ -23,8 +23,9 @@ namespace
 constexpr float k_HalfPi = std::numbers::pi_v<float> / 2.0f;
 /// A launch slower than this (squared) doesn't count as moving
 constexpr float k_StillLaunchSquared = 0.01f;
-/// A slide slower than this (squared) has no direction of its own
+/// A slide slower than this (squared) has no direction of its own, and is made one this long along x
 constexpr float k_StillSlideSquared = 1e-4f;
+constexpr float k_StillSlide = 1e-4f;
 /// A lob whose target is closer than this (squared) across the ground is nudged away
 constexpr float k_TooCloseSquared = 0.1f;
 constexpr float k_TooCloseNudge = 0.1f;
@@ -107,9 +108,13 @@ glm::vec3 maths::BounceOffSlope(glm::vec3 velocity, glm::vec3 normal, float grou
 	}
 	const glm::vec3 normalPart = normal * into;
 	glm::vec3 slide = velocity - normalPart;
+	// A slide too small to have a way is made a tiny one along x
+	if (glm::dot(slide, slide) < k_StillSlideSquared)
+	{
+		slide = glm::vec3(k_StillSlide, 0.0f, 0.0f);
+	}
 	const float slideSpeed = glm::length(slide);
-	const glm::vec3 slideDirection =
-	    glm::dot(slide, slide) < k_StillSlideSquared ? glm::vec3(1.0f, 0.0f, 0.0f) : slide / slideSpeed;
+	const glm::vec3 slideDirection = slide / slideSpeed;
 	slide -= slideDirection * std::clamp(dt * groundDrag, 0.0f, slideSpeed);
 	return slide * horizontalBounce - normalPart * verticalBounce;
 }
@@ -193,4 +198,15 @@ glm::vec3 maths::DeflectOffSphere(glm::vec3 point, glm::vec3 centre, glm::vec3 v
 {
 	const glm::vec3 n = NormaliseOrZero(point - centre);
 	return velocity - 2.0f * glm::dot(velocity, n) * n;
+}
+
+bool openblack::particles::maths::RushedPastCamera(glm::vec3 before, glm::vec3 now, glm::vec3 velocity, glm::vec3 camera)
+{
+	constexpr float k_PassingDistance = 40.0f;
+	constexpr float k_PassingSpeed = 20.0f;
+	const auto nowAway = now - camera;
+	const auto beforeAway = before - camera;
+	constexpr float k_Reach = k_PassingDistance * k_PassingDistance;
+	return glm::dot(nowAway, nowAway) < k_Reach && glm::dot(beforeAway, beforeAway) > k_Reach &&
+	       glm::dot(velocity, velocity) > k_PassingSpeed * k_PassingSpeed;
 }

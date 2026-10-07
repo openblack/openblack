@@ -24,14 +24,15 @@ namespace openblack::particles::maths
 
 // Throwing a fireball
 
-/// A throw from the hand goes this far above the hand's movement, in radians, unless its file says otherwise
+/// A throw from the hand goes this far above the hand's movement, in radians
 inline constexpr float k_ThrowLift = 0.3f;
 /// How a hand's speed becomes a throw's: three hand speeds and the throw speeds they give, eased between, the last held
-/// above. The files give their own; these are the usual.
+/// above. The hand's throw always uses these, whatever speeds the fireball's file lists: up to 50 the ball goes as fast
+/// as the hand, and a hand at 450 or faster throws it at 200.
 struct ThrowSpeeds
 {
 	std::array<float, 3> hand {0.0f, 50.0f, 450.0f};
-	std::array<float, 3> thrown {0.0f, 50.0f, 250.0f};
+	std::array<float, 3> thrown {0.0f, 50.0f, 200.0f};
 };
 /// A thrown fireball of another caster aims at this share of the way to its target
 inline constexpr float k_LobAimShare = 0.8f;
@@ -90,5 +91,9 @@ struct ForkSplit
 [[nodiscard]] glm::vec3 SphereEntry(glm::vec3 from, glm::vec3 to, glm::vec3 centre, float radius, float margin);
 /// A speed reflected off a sphere's surface at a point
 [[nodiscard]] glm::vec3 DeflectOffSphere(glm::vec3 point, glm::vec3 centre, glm::vec3 velocity);
+
+/// A fireball rushes past the camera when, moving faster than 20 a second, it comes into the 40 round the camera from
+/// outside it, between the last two steps' ends
+[[nodiscard]] bool RushedPastCamera(glm::vec3 before, glm::vec3 now, glm::vec3 velocity, glm::vec3 camera);
 
 } // namespace openblack::particles::maths

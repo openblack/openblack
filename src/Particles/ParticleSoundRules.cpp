@@ -14,6 +14,7 @@
 #include <ParticleFile.h>
 
 #include "ParticleClassRegistry.h"
+#include "ParticleObjectEffects.h"
 #include "ParticleSounds.h"
 
 using namespace openblack::particles;
@@ -66,6 +67,9 @@ public:
 	    , soundCondition(object.String("SoundCondition"))
 	    , stopOthers(object.Bool("StopOtherSoundsFirst", false))
 	    , delay(object.Float("Delay", 0.0f))
+	    , cameraShake(object.Bool("DoCameraShake", false))
+	    , shakeRadius(object.Float("CameraShakeRadius", 0.0f))
+	    , shakeSeconds(object.Float("CameraShakeDuration", 0.0f))
 	{
 	}
 
@@ -83,13 +87,27 @@ public:
 		}
 		StartAtomSound(effect, atom, sound);
 		data.started = true;
+		// The camera shakes as the sound goes off, as a blast's beam lands
+		if (cameraShake)
+		{
+			if (auto* objects = effect.Services().world.ObjectEffects())
+			{
+				objects->ShakeCamera(effect.GlobalPosition(atom), shakeRadius, k_ShakeStrength, shakeSeconds);
+			}
+		}
 		return true;
 	}
+
+	/// A shake starts at full strength
+	static constexpr float k_ShakeStrength = 1.0f;
 
 	ParticleSound sound;
 	std::string soundCondition;
 	bool stopOthers;
 	float delay;
+	bool cameraShake;
+	float shakeRadius;
+	float shakeSeconds;
 };
 
 /// Once the condition holds (or without one) the atom lets go of its sound, fading by the step

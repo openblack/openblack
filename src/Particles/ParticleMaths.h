@@ -27,6 +27,11 @@ namespace openblack::particles::maths
 /// alone.
 [[nodiscard]] std::optional<float> TimedValue(float age, float dt, float start, float stop, float from, float to);
 
+/// The scale a particle is drawn at for its distance from the camera: the near scale closer than the near distance, the
+/// far scale beyond the far distance, and a straight line between them
+[[nodiscard]] float ScaleAtCameraDistance(float distance, float nearDistance, float farDistance, float nearScale,
+                                          float farScale);
+
 /// An alpha or colour channel as the game stores it from a float: truncated, and only its low byte kept
 [[nodiscard]] uint8_t TruncateToByte(float value);
 
@@ -136,6 +141,12 @@ public:
 	/// Two independent values for a gust of wind across the ground: the noise at (x, y, z) and at (y, z, x)
 	[[nodiscard]] glm::vec2 Wind(const glm::vec3& point) const;
 	[[nodiscard]] float Lattice(int x, int y, int z) const;
+	/// About -1..1 along a line: a smooth curve through the lattice values at the whole numbers round x, each read
+	/// through the permutation once, as the tornado's foot wanders
+	[[nodiscard]] float Smooth(float x) const;
+	/// About -1..1 along a line: the lattice's values through its permutation alone, blended linearly between them, as
+	/// the fires' light flickers
+	[[nodiscard]] float Line(float x) const;
 
 private:
 	std::array<float, 256> _values {};

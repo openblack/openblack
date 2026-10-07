@@ -255,6 +255,25 @@ TEST_F(ParticleEffectTest, RulesFadeScaleAndMoveAtoms)
 	EXPECT_GT(between[0].position.y, atoms[0].position.y);
 }
 
+TEST_F(ParticleEffectTest, AnEffectToldSoStepsTwiceTheFirstTime)
+{
+	const auto file = Header() + Object("ParticleSpriteCreator", "Sprite0", k_Sprite) +
+	                  Object("CreateRuleAnAtom", "Create0",
+	                         "PROPERTY Group INTEGER 0\nPROPERTY PCreator PERSIS_PNTR Sprite0\nPROPERTY OffsetY FLOAT 10\n");
+	auto once = Make(file);
+	auto twice = Make(file);
+	twice->StepTwiceFirstTime();
+	once->Step(k_Step);
+	twice->Step(k_Step);
+	EXPECT_NEAR(once->GetAge(), k_Step, 1e-6f);
+	EXPECT_NEAR(twice->GetAge(), 2.0f * k_Step, 1e-6f);
+	// Then one step at a time, a step ahead
+	once->Step(k_Step);
+	twice->Step(k_Step);
+	EXPECT_NEAR(once->GetAge(), 2.0f * k_Step, 1e-6f);
+	EXPECT_NEAR(twice->GetAge(), 3.0f * k_Step, 1e-6f);
+}
+
 TEST_F(ParticleEffectTest, HierarchiesCarryTheirChildren)
 {
 	// Group 0's atom is a hierarchy: group 1's atoms live in its frame, two up and scaled by its scale of 3
@@ -414,6 +433,48 @@ TEST_F(ParticleEffectTest, ItIsWalkedNewestFirstWithRibbonsAfterTheirAtomsAndChi
 	}
 	// The children follow their parents' order: the newest parent's first
 	EXPECT_LT(walk.atoms[walk.steps[4].index].age, walk.atoms[walk.steps[6].index].age);
+}
+
+TEST_F(ParticleEffectTest, ABallThisComputersPlayerThrowsIsDrawnInTheHandAtFirst)
+{
+	class ThrowingSpell final: public SpellSink
+	{
+	public:
+		bool SpellEvent(const SpellEventInfo& /*event*/) override { return true; }
+		[[nodiscard]] int PowerUpLevel() const override { return 0; }
+		[[nodiscard]] bool IsMyInterfaceCasting() const override { return true; }
+		[[nodiscard]] bool IsHumanPlayerCasting() const override { return true; }
+	} spell;
+	auto effect = Make(Header() + Object("ParticleSpriteCreator", "Sprite0", k_Sprite) +
+	                   Object("CreateWithInitialDirection", "Throw0",
+	                          "PROPERTY Group INTEGER 0\nPROPERTY PCreator PERSIS_PNTR Sprite0\nPROPERTY NumAtoms INTEGER 1\n"
+	                          "PROPERTY PredictStartPos BOOL 1\nPROPERTY PredictFraction FLOAT 1\n"));
+	effect->SetSink(&spell);
+	const glm::vec3 hand(0.0f, 10.0f, 0.0f);
+	effect->SetProcessInfo({.handPosition = hand});
+	effect->SetDirection({20.0f, 0.0f, 0.0f});
+	// An atom is drawn from its second step
+	effect->Step(k_Step);
+	effect->Step(k_Step);
+	Effect::DrawWalk walk;
+	effect->Walk(1.0f, walk);
+	ASSERT_EQ(walk.atoms.size(), 1u);
+	// It starts a step's throw ahead of the hand, but is drawn back towards it, by all but the share of the step it has
+	// lived of two seconds
+	const float age = walk.atoms[0].age;
+	const glm::vec3 start = hand + glm::vec3(20.0f, 0.0f, 0.0f) * k_Step;
+	const glm::vec3 drawn = walk.atoms[0].position;
+	const glm::vec3 flown = drawn - (hand - start) * std::clamp(1.0f - age * 0.5f, 0.0f, 1.0f);
+	EXPECT_LT(drawn.x, flown.x);
+	// Two seconds on, it is drawn where it is
+	for (int i = 0; i < 21; ++i)
+	{
+		effect->Step(k_Step);
+	}
+	walk.Clear();
+	effect->Walk(1.0f, walk);
+	ASSERT_EQ(walk.atoms.size(), 1u);
+	EXPECT_GE(walk.atoms[0].age, 2.0f);
 }
 
 TEST_F(ParticleEffectTest, ABurstFliesOutOnceItsFuseHasBurnt)

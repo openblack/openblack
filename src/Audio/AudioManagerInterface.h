@@ -60,6 +60,25 @@ struct AnimEffectPlay
 	std::optional<int32_t> sample;
 };
 
+/// How a sound effect is played, beyond what its bank header says
+struct SoundEffectOptions
+{
+	/// A 3D sound anchored there, otherwise centred on the listener
+	std::optional<glm::vec3> position;
+	/// Its playback rate in percent instead of the bank header's, before the header's random deviation
+	std::optional<uint32_t> pitchPercent;
+	/// Its volume, 0 to 127, instead of the bank header's
+	std::optional<uint32_t> volume;
+	/// Repeat loops it until it is stopped or released; Once plays it the bank header's number of times
+	PlayType playType {PlayType::Once};
+	/// What it is played for: a loop tied to its owner is moved with SetEmitterPosition and stopped with
+	/// StopOwnedSounds
+	entt::entity owner {entt::null};
+	/// The distances it is heard at fully and no further, instead of the bank header's
+	std::optional<float> minDistance;
+	std::optional<float> maxDistance;
+};
+
 /// A music bank's group and its number of samples
 struct MusicBankInfo
 {
@@ -112,6 +131,19 @@ public:
 	virtual void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) = 0;
 	/// Stops the sound effects of a sound that PlaySoundEffect started, as one that loops forever goes on until then
 	virtual void StopSoundEffect(entt::id_type id) = 0;
+	/// A sound effect played with options: its emitter, null when nothing plays (not loaded, or too far away)
+	virtual entt::entity StartSoundEffect(entt::id_type id, const SoundEffectOptions& options) = 0;
+	/// Moves a 3D emitter, as a loop follows its owner
+	virtual void SetEmitterPosition(entt::entity emitter, const glm::vec3& position) = 0;
+	/// A looping emitter stops looping: the pass playing finishes and the emitter stops
+	virtual void ReleaseEmitterLoop(entt::entity emitter) = 0;
+	/// Whether an emitter loops until stopped
+	[[nodiscard]] virtual bool IsEmitterLooping(entt::entity emitter) = 0;
+	/// An emitter's volume, 0 to 127, as a fade sets it
+	virtual void SetEmitterVolume(entt::entity emitter, uint32_t volume) = 0;
+	[[nodiscard]] virtual uint32_t GetEmitterVolume(entt::entity emitter) = 0;
+	/// Stops every sound played for an owner
+	virtual void StopOwnedSounds(entt::entity owner) = 0;
 	/// The animation effects of a loaded sound bank, named as its sounds are ("<bank>/<sample id>")
 	virtual void AddAnimEffects(const std::string& bankName, AnimEffectTable table) = 0;
 	/// One of the samples a bank's animation effects pick for keys, chosen at random, as

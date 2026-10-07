@@ -46,6 +46,16 @@ TEST(ParticleMaths, TimedValueRunsInsideItsWindow)
 	EXPECT_FLOAT_EQ(*maths::TimedValue(1.0f, 0.1f, 1.0f, 1.0f, 0.0f, 10.0f), 10.0f);
 }
 
+TEST(ParticleMaths, AParticleIsScaledByItsDistanceFromTheCamera)
+{
+	// The failed cast's puff: a tenth of its size ten units away or closer, full size from a hundred
+	EXPECT_FLOAT_EQ(maths::ScaleAtCameraDistance(5.0f, 10.0f, 100.0f, 0.1f, 1.0f), 0.1f);
+	EXPECT_FLOAT_EQ(maths::ScaleAtCameraDistance(10.0f, 10.0f, 100.0f, 0.1f, 1.0f), 0.1f);
+	EXPECT_FLOAT_EQ(maths::ScaleAtCameraDistance(55.0f, 10.0f, 100.0f, 0.1f, 1.0f), 0.55f);
+	EXPECT_FLOAT_EQ(maths::ScaleAtCameraDistance(100.0f, 10.0f, 100.0f, 0.1f, 1.0f), 1.0f);
+	EXPECT_FLOAT_EQ(maths::ScaleAtCameraDistance(500.0f, 10.0f, 100.0f, 0.1f, 1.0f), 1.0f);
+}
+
 TEST(ParticleMaths, BytesKeepTheirLowBits)
 {
 	EXPECT_EQ(maths::TruncateToByte(200.9f), 200);

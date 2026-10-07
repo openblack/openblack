@@ -649,6 +649,9 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->maxDistance = header.maxDist;
 	sound->distanceScale = header.scale;
 	sound->loopType = header.loopType;
+	// The part the sample loops over while it loops, which it plays on past once let go
+	sound->loopStart = header.lStart;
+	sound->loopEnd = header.lEnd;
 	sound->group = static_cast<uint16_t>(header.group);
 	sound->buffer = buffer;
 	return sound;

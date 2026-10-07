@@ -255,6 +255,35 @@ public:
 	float start, stop, from, to;
 };
 
+/// Each atom of an effect a player owns is scaled by its distance from the camera, so that it looks smaller close up. An
+/// effect nobody owns, or a rule whose two distances are the same, leaves the scale alone and lets the rule go.
+class ScaleByCameraDistance final: public Modifier
+{
+public:
+	explicit ScaleByCameraDistance(const ParticleObject& object)
+	    : nearDistance(object.Float("CameraDistMin", 0.0f))
+	    , farDistance(object.Float("CameraDistMax", 0.0f))
+	    , nearScale(object.Float("ScaleAtCameraDistMin", 1.0f))
+	    , farScale(object.Float("ScaleAtCameraDistMax", 1.0f))
+	{
+	}
+	bool ModifyCollection(Effect& effect, Collection& collection, Collection::Slot& /*slot*/) const override
+	{
+		if (nearDistance == farDistance || effect.GetPlayer() < 0)
+		{
+			return false;
+		}
+		const auto camera = effect.Services().world.CameraPosition();
+		for (auto& atom : collection.atoms)
+		{
+			const float distance = glm::distance(camera, effect.GlobalPosition(*atom));
+			atom->ruleScale = maths::ScaleAtCameraDistance(distance, nearDistance, farDistance, nearScale, farScale);
+		}
+		return true;
+	}
+	float nearDistance, farDistance, nearScale, farScale;
+};
+
 /// An atom's scale from a float provider, every step
 class SetScale final: public Modifier
 {
@@ -515,6 +544,7 @@ void openblack::particles::RegisterUpdateRules(ParticleClassRegistry& registry)
 	registry.AddModifier("AR_FadeCollectionAlpha", ParticleClassRegistry::Make<FadeCollectionAlpha>);
 	registry.AddModifier("AR_FadeOutOnceConditionTrue", ParticleClassRegistry::Make<FadeOutOnceConditionTrue>);
 	registry.AddModifier("UR_ChangeScale", ParticleClassRegistry::Make<ChangeScale>);
+	registry.AddModifier("UR_ScaleByCameraDist", ParticleClassRegistry::Make<ScaleByCameraDistance>);
 	registry.AddModifier("SetScale", ParticleClassRegistry::Make<SetScale>);
 	registry.AddModifier("SetAtomAlpha", ParticleClassRegistry::Make<SetAtomAlpha>);
 	registry.AddModifier("UpdateRuleGravity", ParticleClassRegistry::Make<Gravity>);

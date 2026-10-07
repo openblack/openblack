@@ -34,6 +34,8 @@ struct AudioEmitter
 	glm::vec3 position {0.0f, 0.0f, 0.0f};
 	/// 0 to 1, before the global and the effect or music volume
 	float gain = 1.0f;
+	/// The volume the gain was set from, 0 to 127
+	uint32_t volume = 127;
 	/// Playback rate in percent, after the random deviation
 	uint32_t pitchPercent = 100;
 	/// QSound distance mapping: full volume up to minDistance, then attenuated by minDistance / distance up to

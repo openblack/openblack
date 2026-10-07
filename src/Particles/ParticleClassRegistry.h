@@ -91,13 +91,35 @@ void RegisterCurveRules(ParticleClassRegistry& registry);
 void RegisterHealRules(ParticleClassRegistry& registry);
 /// The rules that keep the miracle held in the hand on it, and the sprinkling miracles' source on it
 void RegisterHandRules(ParticleClassRegistry& registry);
+/// The rules of the hand's gestures: a recognised gesture's trail on the land, and the chain behind the gesturing hand
+void RegisterGestureRules(ParticleClassRegistry& registry);
 /// The rules that start and stop the sounds particles keep going
 void RegisterSoundRules(ParticleClassRegistry& registry);
 /// The fireball's rules: its throw, flight, bounce, trail and the event it sends every step
 void RegisterFireballRules(ParticleClassRegistry& registry);
 /// The lightning bolt's rules: its targets, its forks and its strikes
 void RegisterLightningRules(ParticleClassRegistry& registry);
+/// The electric arcs a lightning strike leaves crawling over what it struck
+void RegisterArcRules(ParticleClassRegistry& registry);
+/// The symbols of belief rising from the people miracles impress
+void RegisterBeliefRules(ParticleClassRegistry& registry);
+/// The spells cast on creatures: the wisps, hearts, flies and steam
+void RegisterCreatureSpellRules(ParticleClassRegistry& registry);
+/// Glints on the points of an object's model
+void RegisterGlintRules(ParticleClassRegistry& registry);
 /// The shield's rules: its sphere, its sparks and its dome, and what turns other effects' particles away from it
 void RegisterShieldRules(ParticleClassRegistry& registry);
+/// The storm's rules: its gathering clouds and their bolts, its drift with the wind, the swirl where it is cast, and the
+/// flashes about it in the hand
+void RegisterStormRules(ParticleClassRegistry& registry);
+/// The flock miracles' rule: an atom on each animal the miracle makes, carrying its trail
+void RegisterFlockRules(ParticleClassRegistry& registry);
+/// The tornado's rule: its funnel, what it picks up and flings, its dust and its pretend bushes and chickens
+void RegisterTornadoRules(ParticleClassRegistry& registry);
+/// The simple beam's rule: wiggling ribbons of light from the effect's origin to the objects and points it is given
+void RegisterBeamRules(ParticleClassRegistry& registry);
+/// The beam explosion's rules: the explosion, the beam's fall and the cones' spread, closing the effect down, and the
+/// pieces objects break into
+void RegisterBlastRules(ParticleClassRegistry& registry);
 
 } // namespace openblack::particles

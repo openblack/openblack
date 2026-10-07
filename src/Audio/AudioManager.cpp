@@ -16,6 +16,8 @@
 #include <fstream>
 #include <optional>
 #include <span>
+#include <string>
+#include <string_view>
 #include <utility>
 
 #include <PackFile.h>
@@ -72,6 +74,43 @@ AudioManager::~AudioManager()
 	}
 }
 
+namespace
+{
+/// The name of the sound an emitter plays, for the log
+std::string EmitterSoundName(const AudioEmitter& emitter)
+{
+	auto& sounds = Locator::resources::value().GetSounds();
+	return sounds.Contains(emitter.soundId) ? sounds.Handle(emitter.soundId)->name : fmt::format("#{}", emitter.soundId);
+}
+
+/// How an emitter is described in the log: its entity, its sound, 2D or where it is
+std::string DescribeEmitter(entt::entity entity, const AudioEmitter& emitter)
+{
+	return fmt::format("{} {} {}{}", static_cast<uint32_t>(entity), emitter.spatial ? "3D" : "2D", EmitterSoundName(emitter),
+	                   emitter.spatial
+	                       ? fmt::format(" at ({}, {}, {})", emitter.position.x, emitter.position.y, emitter.position.z)
+	                       : std::string());
+}
+
+void LogEmitterStart(entt::entity entity, const AudioEmitter& emitter)
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Emitter {} starts: volume {} pitch {}%{}", DescribeEmitter(entity, emitter),
+	                    emitter.volume, emitter.pitchPercent, emitter.loop == PlayType::Repeat ? ", looping" : "");
+}
+
+void LogNotStarted(const Sound& sound, const glm::vec3& position, std::string_view why)
+{
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Sound {} at ({}, {}, {}) not started: {}", sound.name, position.x, position.y,
+	                    position.z, why);
+}
+
+std::string TooFar(const Sound& sound, const glm::vec3& position)
+{
+	return fmt::format("{:.1f} m from the camera, beyond its {} m",
+	                   glm::distance(Locator::camera::value().GetOrigin(), position), sound.maxDistance);
+}
+} // namespace
+
 void AudioManager::Stop()
 {
 	_musicPlayer->Stop(false);
@@ -91,6 +130,7 @@ void AudioManager::Update()
 		emitter.state = _audioPlayer->GetStatus(emitter.sourceId);
 		if (emitter.state == AudioStatus::Stopped)
 		{
+			SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Emitter {} has finished", DescribeEmitter(entity, emitter));
 			DestroyEmitter(entity);
 			return;
 		}
@@ -142,6 +182,7 @@ void AudioManager::StopEmitter(entt::entity emitter)
 	auto& registry = Locator::entitiesRegistry::value();
 	assert(registry.AnyOf<AudioEmitter>(emitter));
 	auto& component = registry.Get<AudioEmitter>(emitter);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Emitter {} stopped", DescribeEmitter(emitter, component));
 	_audioPlayer->StopSource(component.sourceId);
 }
 
@@ -150,6 +191,10 @@ void AudioManager::DestroyEmitter(entt::entity emitter)
 	auto& registry = Locator::entitiesRegistry::value();
 	assert(registry.AnyOf<AudioEmitter>(emitter));
 	auto& component = registry.Get<AudioEmitter>(emitter);
+	if (component.state != AudioStatus::Stopped)
+	{
+		SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Emitter {} stopped and removed", DescribeEmitter(emitter, component));
+	}
 	_audioPlayer->StopSource(component.sourceId);
 	_audioPlayer->DeleteSource(component.sourceId);
 	registry.Destroy(emitter);
@@ -213,6 +258,7 @@ entt::entity AudioManager::CreateEmitter(entt::id_type id, std::optional<glm::ve
 	                                          .spatial = worldPosition.has_value(),
 	                                          .position = worldPosition.value_or(glm::zero<glm::vec3>()),
 	                                          .gain = _atmos->VolumeToGain(start.volume),
+	                                          .volume = start.volume,
 	                                          .pitchPercent = start.pitchPercent,
 	                                          .minDistance = start.minDistance,
 	                                          .maxDistance = start.maxDistance,
@@ -221,10 +267,7 @@ entt::entity AudioManager::CreateEmitter(entt::id_type id, std::optional<glm::ve
 	                                          .state = AudioStatus::Initial,
 	                                          .music = false,
 	                                      });
-	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "{} emitter for {}: volume {} pitch {}%{}", worldPosition ? "3D" : "2D",
-	                    sound->name, start.volume, start.pitchPercent,
-	                    worldPosition ? fmt::format(" at ({}, {}, {})", worldPosition->x, worldPosition->y, worldPosition->z)
-	                                  : std::string());
+	LogEmitterStart(entity, registry.Get<AudioEmitter>(entity));
 	return entity;
 }
 
@@ -259,6 +302,13 @@ void AudioManager::CreateBuffer(Sound& sound)
 		decodeBuffer.insert(decodeBuffer.end(), decoded.samples.begin(), decoded.samples.end());
 	}
 	sound.bufferId = CreateBuffer(sound.channelLayout, decodeBuffer, sampleRate);
+	// A loop over part of the sample, as the game's mixer plays it: from the start, round its loop while looping, and on
+	// to the end once let go
+	const auto frames = static_cast<int32_t>(decodeBuffer.size() / (sound.channelLayout == ChannelLayout::Stereo ? 2 : 1));
+	if (sound.loopStart >= 0 && sound.loopEnd > sound.loopStart && sound.loopStart < frames)
+	{
+		_audioPlayer->SetLoopPoints(sound.bufferId, sound.loopStart, std::min(sound.loopEnd + 1, frames));
+	}
 	sound.duration = _audioPlayer->GetDuration(sound.bufferId);
 	sound.sizeInBytes = decodeBuffer.size() * sizeof(decodeBuffer[0]);
 }
@@ -310,6 +360,7 @@ void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> wo
 		if (worldPosition.has_value() &&
 		    glm::distance(Locator::camera::value().GetOrigin(), *worldPosition) > sound->maxDistance)
 		{
+			LogNotStarted(*sound, *worldPosition, TooFar(*sound, *worldPosition));
 			return;
 		}
 		// Played with the play type of the bank header: a sound played once isn't played again while it plays,
@@ -319,6 +370,7 @@ void AudioManager::PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> wo
 			const auto playing = FindPlaying(entt::null, 0, id, 0);
 			if (sound->loopType == pack::AudioBankLoop::Once && playing != entt::null)
 			{
+				LogNotStarted(*sound, worldPosition.value_or(glm::vec3(0.0f)), "it plays once and is playing");
 				return;
 			}
 			if (sound->loopType == pack::AudioBankLoop::Restart && playing != entt::null)
@@ -339,6 +391,123 @@ void AudioManager::StopSoundEffect(entt::id_type id)
 	for (auto playing = FindPlaying(entt::null, 0, id, 0); playing != entt::null; playing = FindPlaying(entt::null, 0, id, 0))
 	{
 		DestroyEmitter(playing);
+	}
+}
+
+entt::entity AudioManager::StartSoundEffect(entt::id_type id, const SoundEffectOptions& options)
+{
+	auto& sounds = Locator::resources::value().GetSounds();
+	if (!sounds.Contains(id))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Sound {} is not loaded", id);
+		return entt::null;
+	}
+	auto sound = sounds.Handle(id);
+	if (options.position.has_value() &&
+	    glm::distance(Locator::camera::value().GetOrigin(), *options.position) > sound->maxDistance)
+	{
+		LogNotStarted(*sound, *options.position, TooFar(*sound, *options.position));
+		return entt::null;
+	}
+	auto start = MakeVoiceStart(*sound, options.position, options.playType);
+	if (options.pitchPercent.has_value())
+	{
+		start.pitchPercent = *options.pitchPercent;
+		start.pitch = static_cast<float>(start.pitchPercent) / 100.0f;
+	}
+	if (options.volume.has_value())
+	{
+		start.volume = std::min<uint32_t>(*options.volume, k_MaxVolume);
+	}
+	start.minDistance = options.minDistance.value_or(start.minDistance);
+	start.maxDistance = options.maxDistance.value_or(start.maxDistance);
+	const auto source = CreateSource(*sound, start);
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto entity = registry.Create();
+	registry.Assign<AudioEmitter>(entity, AudioEmitter {
+	                                          .sourceId = source,
+	                                          .soundId = id,
+	                                          .priority = sound->priority,
+	                                          .spatial = options.position.has_value(),
+	                                          .position = options.position.value_or(glm::zero<glm::vec3>()),
+	                                          .gain = _atmos->VolumeToGain(start.volume),
+	                                          .volume = start.volume,
+	                                          .pitchPercent = start.pitchPercent,
+	                                          .minDistance = start.minDistance,
+	                                          .maxDistance = start.maxDistance,
+	                                          .distanceScale = start.distanceScale,
+	                                          .loop = start.loopCount < 0 ? PlayType::Repeat : PlayType::Once,
+	                                          .state = AudioStatus::Initial,
+	                                          .music = false,
+	                                          .owner = options.owner,
+	                                      });
+	LogEmitterStart(entity, registry.Get<AudioEmitter>(entity));
+	PlayEmitter(entity);
+	return entity;
+}
+
+void AudioManager::SetEmitterPosition(entt::entity emitter, const glm::vec3& position)
+{
+	if (!EmitterExists(emitter))
+	{
+		return;
+	}
+	Locator::entitiesRegistry::value().Get<AudioEmitter>(emitter).position = position;
+}
+
+void AudioManager::ReleaseEmitterLoop(entt::entity emitter)
+{
+	if (!EmitterExists(emitter))
+	{
+		return;
+	}
+	auto& component = Locator::entitiesRegistry::value().Get<AudioEmitter>(emitter);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Emitter {} let go: plays to the end of its pass",
+	                    DescribeEmitter(emitter, component));
+	_audioPlayer->SetLooping(component.sourceId, false);
+	component.loop = PlayType::Once;
+}
+
+bool AudioManager::IsEmitterLooping(entt::entity emitter)
+{
+	return EmitterExists(emitter) && Locator::entitiesRegistry::value().Get<AudioEmitter>(emitter).loop == PlayType::Repeat;
+}
+
+void AudioManager::SetEmitterVolume(entt::entity emitter, uint32_t volume)
+{
+	if (!EmitterExists(emitter))
+	{
+		return;
+	}
+	auto& component = Locator::entitiesRegistry::value().Get<AudioEmitter>(emitter);
+	SPDLOG_LOGGER_TRACE(spdlog::get("audio"), "Emitter {} volume {} -> {}", DescribeEmitter(emitter, component),
+	                    component.volume, std::min<uint32_t>(volume, k_MaxVolume));
+	component.volume = std::min<uint32_t>(volume, k_MaxVolume);
+	component.gain = _atmos->VolumeToGain(component.volume);
+	_audioPlayer->SetVolume(component.sourceId, component.gain * _globalVolume * (component.music ? _musicVolume : _sfxVolume));
+}
+
+uint32_t AudioManager::GetEmitterVolume(entt::entity emitter)
+{
+	return EmitterExists(emitter) ? Locator::entitiesRegistry::value().Get<AudioEmitter>(emitter).volume : 0;
+}
+
+void AudioManager::StopOwnedSounds(entt::entity owner)
+{
+	if (owner == entt::null)
+	{
+		return;
+	}
+	std::vector<entt::entity> owned;
+	Locator::entitiesRegistry::value().Each<const AudioEmitter>([&](entt::entity entity, const AudioEmitter& emitter) {
+		if (emitter.owner == owner)
+		{
+			owned.push_back(entity);
+		}
+	});
+	for (const auto entity : owned)
+	{
+		DestroyEmitter(entity);
 	}
 }
 
@@ -374,6 +543,7 @@ AnimEffectPlay AudioManager::PlayAnimEffect(const std::string& bankName, std::sp
 	// The sample can't be heard from further than its maximum distance, overridden or not
 	if (glm::distance(Locator::camera::value().GetOrigin(), position) > sound->maxDistance)
 	{
+		LogNotStarted(*sound, position, TooFar(*sound, position));
 		return {.outcome = AnimEffectPlay::Outcome::TooFar, .emitter = entt::null, .sample = sample};
 	}
 
@@ -383,6 +553,7 @@ AnimEffectPlay AudioManager::PlayAnimEffect(const std::string& bankName, std::sp
 	{
 		if (sound->loopType == pack::AudioBankLoop::Once && FindPlaying(owner, bank, id, sound->group) != entt::null)
 		{
+			LogNotStarted(*sound, position, "it plays once and is playing");
 			return {.outcome = AnimEffectPlay::Outcome::AlreadyPlaying, .emitter = entt::null, .sample = sample};
 		}
 		if (sound->loopType == pack::AudioBankLoop::Restart)
@@ -706,6 +877,7 @@ void AudioManager::Stop(Handle handle)
 	{
 		return;
 	}
+	SPDLOG_LOGGER_DEBUG(spdlog::get("audio"), "Atmosphere voice {} stopped", handle);
 	_audioPlayer->StopSource(iter->second.source);
 	_audioPlayer->DeleteSource(iter->second.source);
 	_atmosVoices.erase(iter);

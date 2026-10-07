@@ -245,6 +245,10 @@ public:
 	pack::AudioBankLoop loopType;
 	/// Samples of a bank in the same voice group count as the same sample for loopType, 0 for none
 	uint16_t group;
+	/// The first and last sample frames of the part it loops over while it loops, both -1 (or not in order) to loop all
+	/// of it; let go of, it plays on from there to its end
+	int32_t loopStart {-1};
+	int32_t loopEnd {-1};
 	BufferId bufferId;
 	float duration;
 	std::vector<std::vector<uint8_t>> buffer;

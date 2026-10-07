@@ -30,8 +30,6 @@ namespace
 {
 /// The shortest step the rules divide a move by, so that a zero step doesn't make an endless speed
 constexpr float k_MinimumStep = 1e-4f;
-/// The sprinkling source keeps no higher than this above the land, however high the hand is
-constexpr float k_MaximumSprinkleHeight = 58.0f;
 
 /// A point of the world in an atom's collection's frame
 glm::vec3 ToCollection(const Effect& effect, const Atom& atom, const glm::vec3& global)
@@ -79,7 +77,7 @@ public:
 	{
 		auto target = effect.GetProcessInfo().handPosition;
 		const float land = effect.Services().world.LandHeight({target.x, target.z});
-		target.y = std::min(target.y, land + k_MaximumSprinkleHeight);
+		target.y = std::min(target.y, land + openblack::particles::k_MaximumSprinkleHeight);
 		if (slot.first)
 		{
 			slot.first = false;

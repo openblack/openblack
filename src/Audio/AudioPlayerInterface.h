@@ -35,6 +35,9 @@ public:
 	virtual void UpdateListener(glm::vec3 pos, glm::vec3 front, glm::vec3 up) const = 0;
 	[[nodiscard]] virtual BufferId CreateBuffer(ChannelLayout layout, const std::vector<int16_t>& buffer, int sampleRate) = 0;
 	virtual void QueueBuffer(SourceId sourceId, BufferId buffer) = 0;
+	/// The part of a buffer a looping source loops over, from its first frame up to its end frame; once the source stops
+	/// looping it plays on to the buffer's end
+	virtual void SetLoopPoints(BufferId /*buffer*/, int32_t /*first*/, int32_t /*end*/) {}
 	virtual void DeleteBuffer(BufferId id) = 0;
 	[[nodiscard]] virtual SourceId CreateSource(float pitch, bool relative) = 0;
 	virtual void DeleteSource(SourceId id) = 0;

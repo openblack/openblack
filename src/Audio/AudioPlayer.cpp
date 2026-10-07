@@ -134,6 +134,18 @@ BufferId AudioPlayer::CreateBuffer(ChannelLayout layout, const std::vector<int16
 	return id;
 }
 
+void AudioPlayer::SetLoopPoints(BufferId id, int32_t first, int32_t end)
+{
+	// An OpenAL Soft extension; without it the whole sample loops
+	if (alIsExtensionPresent("AL_SOFT_loop_points") == AL_FALSE)
+	{
+		return;
+	}
+	constexpr ALenum k_LoopPointsSoft = 0x2015;
+	const std::array<ALint, 2> points {first, end};
+	alCheckCall(alBufferiv(id, k_LoopPointsSoft, points.data()));
+}
+
 void AudioPlayer::QueueBuffer(SourceId sourceId, BufferId bufferId)
 {
 	alCheckCall(alSourceQueueBuffers(sourceId, 1, &bufferId));

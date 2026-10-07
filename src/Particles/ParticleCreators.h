@@ -74,6 +74,8 @@ struct MeshCreator final: Creator
 	bool doubleSided {true};
 	/// Drawn in the atom's alpha; without it only the parts the model's materials blend show it
 	bool useGlobalAlpha {false};
+	/// Not drawn below the level of its effect's origin, as the shield's surface is cut off at the land it stands on
+	bool drawCutByPlane {false};
 	/// Coloured by the land's light where it is
 	bool landscapeColour {false};
 
@@ -110,8 +112,10 @@ struct ChainCreator final: Creator
 
 	/// The texture coordinates of a segment's four corners: its first joint's two sides, then its next joint's, the
 	/// first side of each ahead. U runs across the ribbon, V along it.
-	/// A ribbon may repeat its frame a number of times of its own in place of the creator's (-1 for the creator's).
-	[[nodiscard]] std::array<glm::vec2, 4> SegmentUv(int segment, int segments, int repeatsOverride = -1) const;
+	/// A ribbon may repeat its frame a number of times of its own in place of the creator's (-1 for the creator's), and
+	/// its texture may have slid along it by a scroll in sheet heights, which wraps round at one repeat of the frame.
+	[[nodiscard]] std::array<glm::vec2, 4> SegmentUv(int segment, int segments, int repeatsOverride = -1,
+	                                                 float scroll = 0.0f) const;
 };
 
 /// A puff of mist for each atom, the mist mesh facing the camera and shrinking edge on
@@ -122,6 +126,9 @@ struct MistCreator final: Creator
 	/// Its shape comes from its atom's stretch
 	bool ratioFromMatrix {false};
 	float initialScaleMin {1.0f};
+	/// It darkens the land under it by its light map, as a cloud's shadow does
+	std::optional<entt::id_type> shadow;
+	int shadowPitch {1};
 
 	/// The atom's creator values: its shape and where its animation starts
 	void InitAtom(Effect& effect, Atom& atom) const override;

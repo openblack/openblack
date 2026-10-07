@@ -10,6 +10,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -20,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include "Common/GameRandom.h"
+#include "Magic/MapSpiral.h"
 #include "Particles/ParticleClassRegistry.h"
 #include "Particles/ParticleEffect.h"
 #include "Particles/ParticleMiracleMaths.h"
@@ -95,7 +97,9 @@ public:
 		return nullptr;
 	}
 
+	std::map<entt::entity, glm::vec3> objects;
 	std::vector<StrikeCandidate> candidates;
+	std::vector<entt::entity> arcsQueued;
 	std::vector<std::weak_ptr<ShieldSphere>> shields;
 	std::vector<std::shared_ptr<ParticleSoundLink>> sounds;
 };
@@ -189,9 +193,9 @@ TEST(ParticleMiracleMaths, TheHandsSpeedIsEasedIntoAThrow)
 	const maths::ThrowSpeeds speeds;
 	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(0.0f, speeds), 0.0f);
 	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(25.0f, speeds), 25.0f);
-	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(250.0f, speeds), 150.0f);
-	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(450.0f, speeds), 250.0f);
-	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(9999.0f, speeds), 250.0f);
+	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(250.0f, speeds), 125.0f);
+	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(450.0f, speeds), 200.0f);
+	EXPECT_FLOAT_EQ(maths::ThrowSpeedFromHand(9999.0f, speeds), 200.0f);
 }
 
 TEST(ParticleMiracleMaths, AThrowGoesALittleAboveTheHandsMovement)
@@ -299,6 +303,8 @@ TEST_F(ParticleMiracleTest, AFireballIsThrownFromTheHandFliesBouncesAndSaysWhere
 	         Object("EventAlways", "Event", "PROPERTY Group INTEGER 0\n"));
 	effect->SetDirection({0.0f, 0.0f, 30.0f});
 	effect->SetProcessInfo({.handPosition = {0.0f, 5.0f, 0.0f}});
+	// The game draws the ball from its second step
+	effect->Step(k_Step);
 	effect->Step(k_Step);
 	std::vector<Effect::DrawAtom> atoms;
 	effect->Collect(1.0f, atoms);
@@ -319,7 +325,7 @@ TEST_F(ParticleMiracleTest, AFireballIsThrownFromTheHandFliesBouncesAndSaysWhere
 		landed = landed || atoms[0].position.y < k_Epsilon;
 	}
 	EXPECT_TRUE(landed);
-	EXPECT_EQ(spell.Count(SpellEventInfo::Type::Point), 61u);
+	EXPECT_EQ(spell.Count(SpellEventInfo::Type::Point), 62u);
 }
 
 TEST_F(ParticleMiracleTest, AFireballBouncesOffAShieldItIsNotLetThrough)
@@ -340,14 +346,14 @@ TEST_F(ParticleMiracleTest, AFireballBouncesOffAShieldItIsNotLetThrough)
 	ASSERT_EQ(world.shields.size(), 1u);
 	EXPECT_FALSE(shield.Finished());
 
-	// Thrown flat, straight at it
-	auto ball = Make(Header() + Object("ParticleSpriteCreator", "Ball", k_Point) +
-	                 Object("CreateWithInitialDirection", "Throw",
-	                        "PROPERTY Group INTEGER 0\nPROPERTY PCreator PERSIS_PNTR Ball\nPROPERTY Elevation FLOAT 0\n") +
-	                 Object("UpdateRuleGravityWithFloor", "Flight",
-	                        "PROPERTY Group INTEGER 0\nPROPERTY Gravity FLOAT 0\nPROPERTY UseWind BOOL 0\n"
-	                        "PROPERTY CheckShieldDeflections BOOL 1\n"));
-	ball->SetDirection({0.0f, 0.0f, 40.0f});
+	// Thrown flat, straight at it: the hand moves down by the lift every hand's throw has, so the ball leaves level
+	auto ball =
+	    Make(Header() + Object("ParticleSpriteCreator", "Ball", k_Point) +
+	         Object("CreateWithInitialDirection", "Throw", "PROPERTY Group INTEGER 0\nPROPERTY PCreator PERSIS_PNTR Ball\n") +
+	         Object("UpdateRuleGravityWithFloor", "Flight",
+	                "PROPERTY Group INTEGER 0\nPROPERTY Gravity FLOAT 0\nPROPERTY UseWind BOOL 0\n"
+	                "PROPERTY CheckShieldDeflections BOOL 1\n"));
+	ball->SetDirection(glm::vec3(0.0f, -std::sin(maths::k_ThrowLift), std::cos(maths::k_ThrowLift)) * 40.0f);
 	ball->SetProcessInfo({.handPosition = {0.0f, 2.0f, 0.0f}});
 	float furthest = 0.0f;
 	for (int step = 0; step < 30; ++step)
@@ -355,7 +361,11 @@ TEST_F(ParticleMiracleTest, AFireballBouncesOffAShieldItIsNotLetThrough)
 		ball->Step(k_Step);
 		std::vector<Effect::DrawAtom> atoms;
 		ball->Collect(1.0f, atoms);
-		furthest = std::max(furthest, atoms.at(0).position.z);
+		// The game draws the ball from its second step
+		if (!atoms.empty())
+		{
+			furthest = std::max(furthest, atoms.at(0).position.z);
+		}
 	}
 	// It struck the shield, which sparked, and never got inside it
 	ASSERT_GE(spell.Count(SpellEventInfo::Type::HitSpell), 1u);

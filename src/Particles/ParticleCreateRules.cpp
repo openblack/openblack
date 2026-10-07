@@ -168,13 +168,21 @@ public:
 		{
 			return true;
 		}
-		while (Due(effect, collection, slot))
+		if (!AsksAgain())
 		{
-			Emit(effect, effect.NewAtom(collection, atomCreator, nextGroups), collection);
-			if (!EmitsSeveral())
+			if (Due(effect, collection, slot))
 			{
-				break;
+				Emit(effect, effect.NewAtom(collection, atomCreator, nextGroups), collection);
 			}
+			return true;
+		}
+		// It asks again after each atom whether another is due, which moves its schedule on, but makes another only
+		// when it may emit several in a step: otherwise an atom due a second time in the step is lost
+		bool another = true;
+		while (Due(effect, collection, slot) && another)
+		{
+			another = multiple;
+			Emit(effect, effect.NewAtom(collection, atomCreator, nextGroups), collection);
 		}
 		return true;
 	}
@@ -182,8 +190,9 @@ public:
 protected:
 	/// The emitter's shape: where its new atom goes and how fast
 	virtual void Emit(Effect& effect, Atom& atom, const Collection& collection) const = 0;
-	/// Whether it makes every atom due in one step, rather than one a step
-	[[nodiscard]] virtual bool EmitsSeveral() const { return false; }
+	/// Whether it asks after each atom whether another is due, emitting as many in a step as AllowMultipleEmits lets it;
+	/// otherwise it makes at most one atom a step
+	[[nodiscard]] virtual bool AsksAgain() const { return false; }
 
 	maths::EmitterLimits limits;
 	bool initiallyVisible;
@@ -266,7 +275,7 @@ protected:
 	float height;
 };
 
-/// Atoms placed on a ring between two radii, at a height, as many as are due each step
+/// Atoms placed on a ring between two radii, at a height: one a step, or as many as are due when it may emit several
 class SpreadingDiskEmitter final: public Emitter
 {
 public:
@@ -286,7 +295,7 @@ protected:
 		atom.position += glm::vec3(std::cos(angle) * r, height, std::sin(angle) * r);
 		atom.visible = initiallyVisible;
 	}
-	[[nodiscard]] bool EmitsSeveral() const override { return true; }
+	[[nodiscard]] bool AsksAgain() const override { return true; }
 
 	float startRadius;
 	float stopRadius;
@@ -325,7 +334,7 @@ protected:
 		atom.visible = initiallyVisible;
 		StartAtomSound(effect, atom, sound);
 	}
-	[[nodiscard]] bool EmitsSeveral() const override { return multiple; }
+	[[nodiscard]] bool AsksAgain() const override { return true; }
 
 	float speed;
 	float spread;
@@ -335,26 +344,29 @@ protected:
 
 /// Atoms let out along the path its parent atom (or the effect's origin) moved over the step, as many as its rate and,
 /// when asked, the distance moved call for; each starts aged by how far back along the path it was let out. MaxAtoms
-/// sets the rate over the atoms' life rather than capping them.
+/// sets the rate over the atoms' life rather than capping them. What a file leaves out takes the game's defaults: speed
+/// 1 up to 100, random speed 1, no rate at all, atoms deleted once older than their die age, drawn on their first step.
 class WillowWisp final: public CreateRule
 {
 public:
 	explicit WillowWisp(const ParticleObject& object)
 	    : CreateRule(object)
-	    , maxAtoms(object.Int("MaxAtoms", 10))
+	    , maxAtoms(object.Int("MaxAtoms", -1))
 	    , dieAge(object.Float("DieAge", 1.0f))
-	    , speed(object.Float("Speed", 0.0f))
-	    , maxSpeed(object.Float("MaxSpeed", 1e6f))
-	    , randomSpeed(object.Float("RandomSpeed", 0.0f))
+	    , speed(object.Float("Speed", 1.0f))
+	    , maxSpeed(object.Float("MaxSpeed", 100.0f))
+	    , randomSpeed(object.Float("RandomSpeed", 1.0f))
 	    , randomRadiusMin(object.Float("RandomRadiusMin", 0.0f))
 	    , randomRadiusMax(object.Float("RandomRadiusMax", 0.0f))
-	    , deleteAtDieAge(object.Bool("DeleteAtomsAtDieAge", false))
+	    , deleteAtDieAge(object.Bool("DeleteAtomsAtDieAge", true))
 	    , moving(object.Bool("EmitDueToMoving", false))
-	    , movingDistance(object.Float("EmitDueToMovingDist", 1.0f))
+	    , movingDistance(object.Float("EmitDueToMovingDist", 10.0f))
 	    , movingMaxRate(object.Float("EmitDueToMovingMaxRate", 0.0f))
 	    , randomiseOrientation(object.Bool("RandomiseInitOrientation", false))
 	    , useParentScale(object.Bool("UseParentScale", false))
 	    , addCastVelocity(object.Bool("AddCastVelToInitPos", false))
+	    , drawOnFirstUpdate(object.Bool("DrawOnFirstUpdate", true))
+	    , drawOffsets(object.Bool("DoDrawOffsets", false))
 	    , emitCondition(object.String("EmitConditionOfParent"))
 	    , adjustScale(object.String("AdjustInitialScale"))
 	    , adjustRandomVelocity(object.String("AdjustInitialRandomVel"))
@@ -442,6 +454,12 @@ private:
 		{
 			atom.position = position;
 		}
+		// This computer's player sees it come out of their hand, sliding to where it is over two seconds
+		if (drawOffsets && effect.IsMyInterfaceCasting())
+		{
+			atom.drawOffset = effect.GetProcessInfo().handPosition - position;
+			atom.drawOffsetFrom = effect.GetAge();
+		}
 		if (randomiseOrientation)
 		{
 			// Drawn z first, then y, then x
@@ -455,6 +473,7 @@ private:
 		{
 			atom.baseScale *= collection.parent->ruleScale * collection.parent->baseScale;
 		}
+		atom.drawOnFirstUpdate = drawOnFirstUpdate;
 		StartAtomSound(effect, atom, sound);
 	}
 
@@ -472,6 +491,8 @@ private:
 	bool randomiseOrientation;
 	bool useParentScale;
 	bool addCastVelocity;
+	bool drawOnFirstUpdate;
+	bool drawOffsets;
 	std::string emitCondition;
 	std::string adjustScale;
 	std::string adjustRandomVelocity;

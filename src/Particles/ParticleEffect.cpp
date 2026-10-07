@@ -30,6 +30,8 @@ constexpr float k_RandomScaleRange = 1.0f - k_RandomScaleMinimum;
 constexpr int32_t k_AtomRandomRange = 0x100;
 /// Above this of k_AtomRandomRange an atom plays its animation backwards, when its creator asks for half to
 constexpr int32_t k_BackwardsAbove = 0x80;
+/// An atom drawn shifted from where it is loses this share of the shift a second
+constexpr float k_DrawOffsetFade = 0.5f;
 /// An atom fainter than this is not drawn
 constexpr float k_MinimumDrawnAlpha = 1.0f;
 
@@ -39,6 +41,12 @@ class UnportedModifier final: public Modifier
 public:
 	[[nodiscard]] bool Unported() const override { return true; }
 };
+
+/// A channel of an atom's colour with the light added to it
+uint8_t Lit(const Atom& atom, size_t channel)
+{
+	return static_cast<uint8_t>(std::min(255, atom.rgba.at(channel) + atom.specular.at(channel)));
+}
 
 bool IsCreatorClass(std::string_view className)
 {
@@ -133,6 +141,15 @@ Atom::~Atom()
 	for (const auto& sound : sounds)
 	{
 		sound->atom = nullptr;
+	}
+	if (carried)
+	{
+		carried->atom = nullptr;
+		if (drawn)
+		{
+			carried->position = current.position;
+			carried->rotation = current.rotation;
+		}
 	}
 }
 
@@ -362,6 +379,32 @@ Atom* Effect::NewAtomInGroup(int group, const Creator* creator)
 	return &NewAtom(**found, creator, {});
 }
 
+void Effect::MoveToGroup(Atom& atom, int group)
+{
+	auto* from = atom.collection;
+	if (from == nullptr || group < 0 || group >= static_cast<int>(k_GroupCount))
+	{
+		return;
+	}
+	const auto found = std::ranges::find(from->atoms, &atom, [](const auto& a) { return a.get(); });
+	if (found == from->atoms.end())
+	{
+		return;
+	}
+	auto into = std::ranges::find(_roots, group, [](const auto& root) { return root->group; });
+	if (into == _roots.end())
+	{
+		CreateCollection(group, nullptr, _roots);
+		into = std::prev(_roots.end());
+	}
+	auto moved = std::move(*found);
+	from->atoms.erase(found);
+	moved->position = LocalToGlobal(*from, moved->position);
+	moved->collection = into->get();
+	moved->position = GlobalToLocal(*moved->collection, moved->position);
+	(*into)->atoms.push_back(std::move(moved));
+}
+
 void Effect::CreateCollection(int group, Atom* parent, std::vector<std::unique_ptr<Collection>>& into)
 {
 	auto collection = std::make_unique<Collection>();
@@ -434,9 +477,12 @@ void Effect::PostUpdate(Collection& collection, const glm::vec3& parentPosition,
 		draw.frame = atom->frame;
 		if (!atom->drawn)
 		{
+			// A new atom is drawn where it first is, but its animation runs on from its first frame through the step
 			atom->previous = draw;
+			atom->previous.frame = previousFrame;
 			atom->drawn = true;
 		}
+		atom->steps = static_cast<uint8_t>(std::min(atom->steps + 1, 2));
 		const glm::vec3 subScale =
 		    flagged ? FrameScale(*atom) * (collection.hierarchy ? parentScale : glm::vec3(1.0f)) : parentScale;
 		for (auto& sub : atom->subCollections)
@@ -475,10 +521,14 @@ void Effect::UpdateFloatProviders()
 			}
 			value = std::clamp(base * scaleBy, object.Float("Minimum", -1e6f), object.Float("Maximum", 1e6f));
 		}
-		else if (c == "RenderHandScaleFloatProvider" || c == "RenderHandScaleTimesStrengthFloatProvider")
+		else if (c == "RenderHandScaleFloatProvider")
 		{
 			// The hand's drawn scale reaches the effect as its magnitude
 			value = _magnitude * scaleBy;
+		}
+		else if (c == "RenderHandScaleTimesStrengthFloatProvider")
+		{
+			value = _magnitude * _info.power * scaleBy;
 		}
 		_floatValues.insert_or_assign(object.name, value);
 	}
@@ -486,13 +536,24 @@ void Effect::UpdateFloatProviders()
 
 void Effect::Step(float dt)
 {
+	if (_firstStepTwice)
+	{
+		_firstStepTwice = false;
+		StepOnce(dt);
+	}
+	StepOnce(dt);
+}
+
+void Effect::StepOnce(float dt)
+{
 	// Its random numbers come from its own stream during the step, and give 0 outside it
 	const ParticleRandomStep step(_services.random, _synced);
 	_dt = dt;
 	UpdateFloatProviders();
-	for (auto& root : _roots)
+	// By index: a rule may make a group's collection at the start while they are walked
+	for (size_t r = 0; r < _roots.size(); ++r)
 	{
-		UpdateCollection(*root);
+		UpdateCollection(*_roots[r]);
 	}
 	_atomCount = 0;
 	const auto count = [this](const auto& self, const Collection& c) -> void {
@@ -578,23 +639,33 @@ std::optional<Effect::DrawAtom> Effect::Interpolate(const Atom& atom, float t, b
 	const auto& a = atom.previous;
 	const auto& b = atom.current;
 	const float alpha = (a.alpha + (b.alpha - a.alpha) * k) * _globalAlpha / 255.0f;
-	if (!atom.visible || !atom.drawn || atom.creator == nullptr)
+	if (!atom.visible || !atom.drawn || atom.creator == nullptr || (atom.steps < 2 && !atom.drawOnFirstUpdate))
 	{
 		return std::nullopt;
 	}
 	// The drawn time lies between the last two steps; the effect's age is the current step's end
-	const float age = _age - (_dt * (1.0f - k)) - atom.birth;
+	const float drawnAt = _age - (_dt * (1.0f - k));
+	const float age = drawnAt - atom.birth;
+	glm::vec3 shift(0.0f);
+	if (atom.drawOffset.has_value())
+	{
+		shift = *atom.drawOffset * std::clamp(1.0f - (drawnAt - atom.drawOffsetFrom) * k_DrawOffsetFade, 0.0f, 1.0f);
+	}
 	return DrawAtom {
 	    .creator = atom.creator,
-	    .position = a.position + (b.position - a.position) * k,
+	    .position = a.position + (b.position - a.position) * k + shift,
 	    .rotation = a.rotation + (b.rotation - a.rotation) * k,
 	    .scale = a.scale + (b.scale - a.scale) * k,
 	    .stretch = a.stretch + (b.stretch - a.stretch) * k,
 	    .alpha = alpha,
 	    .frame = maths::LerpFrame(a.frame, b.frame, t, atom.creator->loopAnim),
-	    .rgb = {atom.rgba[0], atom.rgba[1], atom.rgba[2]},
+	    .rgb = {Lit(atom, 0), Lit(atom, 1), Lit(atom, 2)},
 	    .age = std::max(age, 0.0f),
 	    .creatorValue = atom.creatorValue,
+	    .fraction = k,
+	    .surface = atom.surface.get(),
+	    .offsetWeight = atom.drawWeight,
+	    .fragment = atom.fragment,
 	};
 }
 
@@ -638,10 +709,14 @@ void Effect::WalkCollection(const Collection& collection, float t, DrawWalk& out
 		if (count >= 2)
 		{
 			out.steps.push_back({.chain = true, .index = static_cast<uint32_t>(out.chains.size())});
+			// The texture slides on through the collection's life, at the drawn moment between the last two steps. The game
+			// moves it on by each drawn frame's time instead, which comes to the same while the game runs at its own pace.
+			const float drawnAge = std::max(0.0f, CollectionAge(collection) - (_dt * (1.0f - t)));
 			out.chains.push_back({.creator = chainCreator,
 			                      .firstJoint = first,
 			                      .jointCount = count,
-			                      .textureRepeats = collection.textureRepeats});
+			                      .textureRepeats = collection.textureRepeats,
+			                      .textureScroll = collection.textureSpeed * drawnAge});
 		}
 		else
 		{
@@ -660,6 +735,10 @@ void Effect::WalkCollection(const Collection& collection, float t, DrawWalk& out
 
 void Effect::Walk(float t, DrawWalk& out) const
 {
+	if (_hidden)
+	{
+		return;
+	}
 	for (const auto& root : std::ranges::reverse_view(_roots))
 	{
 		WalkCollection(*root, t, out);
@@ -688,4 +767,15 @@ std::optional<entt::entity> Effect::TakeTarget()
 	const auto target = _targets.back();
 	_targets.pop_back();
 	return target;
+}
+
+std::optional<glm::vec3> Effect::TakeTargetPosition()
+{
+	if (_targetPositions.empty())
+	{
+		return std::nullopt;
+	}
+	const auto position = _targetPositions.back();
+	_targetPositions.pop_back();
+	return position;
 }

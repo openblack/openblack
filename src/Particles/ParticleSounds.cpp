@@ -20,8 +20,20 @@ ParticleSoundLink* openblack::particles::StartAtomSound(Effect& effect, Atom& at
 	{
 		return nullptr;
 	}
+	const auto& world = effect.Services().world;
+	auto position = effect.GlobalPosition(atom);
+	if (sound.onLand)
+	{
+		position.y = world.LandHeight({position.x, position.z});
+	}
+	auto played = sound;
+	played.alignment = world.SoundAlignment(effect.GetPlayer());
+	if (sound.action.useSurface)
+	{
+		played.surface = world.SurfaceAt(position);
+	}
 	auto link = std::make_shared<ParticleSoundLink>(
-	    ParticleSoundLink {.sound = sound, .atom = &atom, .position = effect.GlobalPosition(atom), .fadeStep = 0});
+	    ParticleSoundLink {.sound = played, .atom = &atom, .position = position, .fadeStep = 0});
 	atom.sounds.insert(atom.sounds.begin(), link);
 	effect.Services().world.StartSound(effect, link);
 	return link.get();

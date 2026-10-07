@@ -71,6 +71,17 @@ public:
 	}
 	void PlaySoundEffect([[maybe_unused]] entt::id_type id, [[maybe_unused]] std::optional<glm::vec3> worldPosition) override {}
 	void StopSoundEffect([[maybe_unused]] entt::id_type id) override {}
+	entt::entity StartSoundEffect([[maybe_unused]] entt::id_type id,
+	                              [[maybe_unused]] const SoundEffectOptions& options) override
+	{
+		return entt::null;
+	}
+	void SetEmitterPosition([[maybe_unused]] entt::entity emitter, [[maybe_unused]] const glm::vec3& position) override {}
+	void ReleaseEmitterLoop([[maybe_unused]] entt::entity emitter) override {}
+	[[nodiscard]] bool IsEmitterLooping([[maybe_unused]] entt::entity emitter) override { return false; }
+	void SetEmitterVolume([[maybe_unused]] entt::entity emitter, [[maybe_unused]] uint32_t volume) override {}
+	[[nodiscard]] uint32_t GetEmitterVolume([[maybe_unused]] entt::entity emitter) override { return 0; }
+	void StopOwnedSounds([[maybe_unused]] entt::entity owner) override {}
 	void SetGlobalVolume([[maybe_unused]] float volume) override {}
 	void SetSfxVolume([[maybe_unused]] float volume) override {}
 	void SetMusicVolume([[maybe_unused]] float volume) override {}

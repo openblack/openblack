@@ -63,6 +63,19 @@ std::optional<float> maths::TimedValue(float age, float dt, float start, float s
 	return std::nullopt;
 }
 
+float maths::ScaleAtCameraDistance(float distance, float nearDistance, float farDistance, float nearScale, float farScale)
+{
+	if (distance < nearDistance)
+	{
+		return nearScale;
+	}
+	if (distance > farDistance)
+	{
+		return farScale;
+	}
+	return (distance - nearDistance) / (farDistance - nearDistance) * (farScale - nearScale) + nearScale;
+}
+
 uint8_t maths::TruncateToByte(float value)
 {
 	if (!std::isfinite(value))
@@ -225,6 +238,34 @@ float maths::ValueNoise::Lattice(int x, int y, int z) const
 	const auto py = k_Permutation.at(index(static_cast<int>(pz) + y));
 	const auto px = k_Permutation.at(index(static_cast<int>(py) + x));
 	return _values.at(px);
+}
+
+float maths::ValueNoise::Smooth(float x) const
+{
+	const auto ix = static_cast<int>(std::floor(x));
+	const float t = x - static_cast<float>(ix);
+	std::array<float, 4> k {};
+	for (int i = 0; i < 4; ++i)
+	{
+		const auto index = static_cast<size_t>(static_cast<uint32_t>(ix + i - 1) & 0xFFu);
+		k.at(static_cast<size_t>(i)) = _values.at(k_Permutation.at(index));
+	}
+	// A Catmull-Rom spline through the four values, between the middle two
+	const float c3 = -0.5f * k[0] + 1.5f * k[1] - 1.5f * k[2] + 0.5f * k[3];
+	const float c2 = k[0] - 2.5f * k[1] + 2.0f * k[2] - 0.5f * k[3];
+	const float c1 = -0.5f * k[0] + 0.5f * k[2];
+	const float c0 = k[1];
+	return ((c3 * t + c2) * t + c1) * t + c0;
+}
+
+float maths::ValueNoise::Line(float x) const
+{
+	const auto ix = static_cast<int>(std::floor(x));
+	const auto value = [this](int i) {
+		return _values.at(k_Permutation.at(static_cast<size_t>(static_cast<uint32_t>(i) & 0xFFu)));
+	};
+	const float a = value(ix);
+	return (x - static_cast<float>(ix)) * (value(ix + 1) - a) + a;
 }
 
 float maths::ValueNoise::At(const glm::vec3& point) const

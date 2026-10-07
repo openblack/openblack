@@ -13,10 +13,12 @@
 
 #include <any>
 #include <array>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -24,12 +26,14 @@
 #include <entt/entity/entity.hpp>
 #include <glm/gtc/type_precision.hpp>
 #include <glm/mat3x3.hpp>
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
 #include "ParticleMaths.h"
 #include "ParticleSpellLink.h"
+#include "StormMaths.h"
 
 namespace openblack
 {
@@ -48,16 +52,50 @@ namespace openblack::particles
 class Effect;
 struct Atom;
 struct Collection;
+struct SurfaceInstance;
 class Modifier;
 class ParticleClassRegistry;
+class ObjectEffectsInterface;
+class LightSheet;
+struct GestureTrail;
+namespace blast
+{
+struct MeshFragment;
+struct FragmentPiece;
+} // namespace blast
+
+/// The pieces each model breaks into, worked out once for a model and kept
+class FragmentSourceInterface
+{
+public:
+	FragmentSourceInterface() = default;
+	FragmentSourceInterface(const FragmentSourceInterface&) = delete;
+	FragmentSourceInterface& operator=(const FragmentSourceInterface&) = delete;
+	FragmentSourceInterface(FragmentSourceInterface&&) = delete;
+	FragmentSourceInterface& operator=(FragmentSourceInterface&&) = delete;
+	virtual ~FragmentSourceInterface() = default;
+	/// None for a model there is none of
+	[[nodiscard]] virtual std::shared_ptr<const std::vector<blast::FragmentPiece>> Fragments(entt::id_type mesh) = 0;
+};
 
 constexpr size_t k_GroupCount = 25;
+/// The sprinkling miracles' source keeps no higher than this above the land, however high the hand is
+constexpr float k_MaximumSprinkleHeight = 58.0f;
 
 /// A sound a particle asks for: the file's sound action and how big the sound is (1 large, 2 medium, 3 small)
 struct ParticleSound
 {
 	psys::SoundActionValue action;
 	int size {2};
+	/// Heard only once it has travelled from where it started to the listener, as thunder is
+	bool travelsAtSoundSpeed {false};
+	/// Heard from the land under its particle rather than from the particle, as thunder comes from the ground under its
+	/// cloud
+	bool onLand {false};
+	/// The ground under it (1 grass .. 8 loose foliage), for a sound that takes it, and its caster's alignment (1 evil, 2
+	/// middling, 3 good); the world fills them in as the sound starts
+	int surface {1};
+	int alignment {2};
 
 	[[nodiscard]] bool Silent() const { return action.sound.empty() || action.sound == "NO_SOUND"; }
 };
@@ -96,6 +134,93 @@ struct StrikeCandidate
 	/// Where it stands on the land, and how tall it is
 	glm::vec3 position {0.0f};
 	float height {0.0f};
+	/// A creature not faded away, which draws every fork of a bolt to itself
+	bool drawsBolt {false};
+	/// Its model doesn't move, so electric arcs can crawl over it once struck
+	bool arcs {false};
+};
+
+/// A symbol of belief to rise from something that gained it: where, how much (the belief by ten thousand) and in the
+/// believed player's colour, 0xRRGGBB
+struct BeliefSprite
+{
+	glm::vec3 position {0.0f};
+	int32_t amount {0};
+	uint32_t colour {0xFFFFFF};
+};
+
+/// A creature's body as the creature spells' particles see it: where it stands, how big it is, where each of its bones
+/// is in the world and which bone mirrors each, and the bones of its right foot and right eye
+struct CreatureSpellBody
+{
+	glm::vec3 origin {0.0f};
+	float size {1.0f};
+	std::vector<glm::vec3> bones;
+	std::vector<uint32_t> mirror;
+	std::optional<uint32_t> rightFoot;
+	std::optional<uint32_t> rightEye;
+	/// How far the invisible spell is over it, 0 to 1
+	float invisible {0.0f};
+
+	[[nodiscard]] uint32_t Mirror(uint32_t bone) const { return bone < mirror.size() ? mirror[bone] : bone; }
+};
+
+/// A point of an object's surface and the way it faces there
+struct SurfacePoint
+{
+	glm::vec3 position {0.0f};
+	glm::vec3 normal {0.0f};
+};
+
+/// A lightning bolt cast from a hand, as the others see it to clash with it. The bolt's effect owns it; the world keeps
+/// a weak hold.
+struct BoltShare
+{
+	const Effect* owner {nullptr};
+	/// Bolts made earlier have smaller numbers
+	uint64_t order {0};
+	glm::vec3 origin {0.0f};
+	glm::vec3 centroid {0.0f};
+	float heading {0.0f};
+	bool hasTargets {false};
+	/// The newer bolt this one meets, and the older one this one meets, if any
+	std::weak_ptr<BoltShare> linkedTo;
+	std::weak_ptr<BoltShare> linkedFrom;
+	/// Where this newer bolt meets its older one
+	std::optional<glm::vec3> meeting;
+};
+
+/// A game object a particle carries, such as something a tornado picked up: the object follows the particle, and is let
+/// go where the particle was once the particle has gone
+struct CarriedObject
+{
+	entt::entity object {entt::null};
+	/// The particle, while it carries the object
+	const Atom* atom {nullptr};
+	/// Where the particle was last drawn, kept once it has gone
+	glm::vec3 position {0.0f};
+	glm::mat3 rotation {1.0f};
+};
+
+/// Something near a tornado's foot that it may act on
+struct TornadoCandidate
+{
+	enum class Kind : uint8_t
+	{
+		/// Small enough to be picked up whole if it fits the funnel: the living, trees, things lying about, pots
+		Liftable,
+		/// Too big to be picked up: it is caught helpless instead
+		Creature,
+		/// A pile of food or wood, some of which is taken up as a pot
+		Pile,
+	};
+	entt::entity object {entt::null};
+	Kind kind {Kind::Liftable};
+	glm::vec3 position {0.0f};
+	/// Its radius across the ground
+	float radius {0.0f};
+	/// A liftable pile, as a pile the hand dropped: when it doesn't fit the funnel, some of it is taken up as a pot
+	bool pile {false};
 };
 
 /// What the effects need from the world. The game backs it with the land, the players and the camera; tests use a fake.
@@ -116,21 +241,66 @@ public:
 	/// The camera's right and up, for rules that line sprites up with what the camera sees
 	[[nodiscard]] virtual glm::vec3 CameraRight() const = 0;
 	[[nodiscard]] virtual glm::vec3 CameraUp() const = 0;
+	/// Where the camera is
+	[[nodiscard]] virtual glm::vec3 CameraPosition() const { return glm::vec3(0.0f); }
+	/// A sample of the game's in-game bank played to the listener rather than at a place, as a fireball rushing past the
+	/// camera is heard
+	virtual void PlayListenerSound(uint32_t /*inGameSample*/) {}
 	/// A particle starts a sound; the world keeps a weak hold on it to play it, keep a loop going and let it die away
 	virtual void StartSound(const Effect& /*effect*/, const std::shared_ptr<ParticleSoundLink>& /*sound*/) {}
 	/// Whether a point of the land is under water
 	[[nodiscard]] virtual bool IsWater(glm::vec3 /*point*/) const { return false; }
+	/// Whether the land at a point stands above the sea, by the altitude of its cell
+	[[nodiscard]] virtual bool IsDryLand(glm::vec3 /*point*/) const { return true; }
 	/// The land's normal at a point of the ground
 	[[nodiscard]] virtual glm::vec3 LandNormal(glm::vec2 /*xz*/) const { return {0.0f, 1.0f, 0.0f}; }
+	/// The ground's kind under a point for sounds and bounces: 1 grass .. 8 loose foliage, 6 deep and 7 shallow water
+	[[nodiscard]] virtual int SurfaceAt(glm::vec3 /*point*/) const { return 1; }
+	/// A player's alignment as a sound takes it: 1 evil, 2 middling, 3 good
+	[[nodiscard]] virtual int SoundAlignment(int /*player*/) const { return 2; }
 	/// Whether it is raining or snowing at a point
 	[[nodiscard]] virtual bool IsRainingAt(glm::vec3 /*point*/) const { return false; }
 	/// The wind at a point, in metres a second
 	[[nodiscard]] virtual glm::vec3 WindAt(glm::vec3 /*point*/) const { return glm::vec3(0.0f); }
-	/// The objects standing within a radius of a point on the land that a lightning bolt may strike, nearest first
+	/// The wind at a point blended between the weather's nearest cells, in metres a second
+	[[nodiscard]] virtual glm::vec3 SmoothWindAt(glm::vec3 point) const { return WindAt(point); }
+	/// A storm's weather is laid over the land, until it is moved or taken away; 0 for none
+	[[nodiscard]] virtual uint32_t AddRainStorm(const storm::RainStorm& /*storm*/) { return 0; }
+	/// Moves a storm's weather; false once it has ended, which a script can do
+	virtual bool MoveRainStorm(uint32_t /*storm*/, glm::vec3 /*centre*/) { return true; }
+	/// The storm's weather goes at once
+	virtual void RemoveRainStorm(uint32_t /*storm*/) {}
+	/// What a lightning bolt may strike round a point on the land, as the game finds it: everything standing in the first
+	/// cells of a spiral out from the point's cell, whatever its distance, in each cell what stays put and then what moves
+	/// in the map's order, a building only in the cell it stands in, but for the dead and the miracles' seeds
 	[[nodiscard]] virtual std::vector<StrikeCandidate> StrikeCandidates(glm::vec3 /*centre*/, float /*radius*/) const
 	{
 		return {};
 	}
+	/// A bolt struck an object whose model doesn't move: electric arcs crawl over it for a while, unless a hundred objects
+	/// already have arcs crawling over them
+	virtual void QueueArcs(entt::entity /*object*/) {}
+	/// Held by an arc as long as it crawls over its object, so that the world knows how many there are
+	[[nodiscard]] virtual std::shared_ptr<const void> HoldArc() const { return nullptr; }
+	/// The next symbol of belief waiting to rise, the last queued first
+	[[nodiscard]] virtual std::optional<BeliefSprite> TakeBeliefSprite() { return std::nullopt; }
+	/// A strike no miracle is behind, as a script calls one down, burns what is within reach of where it lands by the
+	/// weather's lightning
+	virtual void StrikeWithoutMiracle(glm::vec3 /*point*/) {}
+	/// The next object struck for arcs to crawl over, the last queued first
+	[[nodiscard]] virtual std::optional<entt::entity> TakeArcs() { return std::nullopt; }
+	/// Points of an object's model where it stands now, picked by the random function from a part of it: count of them,
+	/// none once it has gone
+	[[nodiscard]] virtual std::vector<SurfacePoint> SurfacePoints(entt::entity /*object*/, size_t /*count*/,
+	                                                              const std::function<int32_t(int32_t)>& /*random*/) const
+	{
+		return {};
+	}
+	/// A bolt from a hand shows itself to the others; the world finds it while its effect lives
+	virtual void AddBolt(const std::shared_ptr<BoltShare>& /*bolt*/) {}
+	/// The live bolts from hands, and the number the next one takes
+	[[nodiscard]] virtual std::vector<std::shared_ptr<BoltShare>> Bolts() const { return {}; }
+	[[nodiscard]] virtual uint64_t NextBoltOrder() { return 0; }
 	/// Whether the land rises across the straight way between two points
 	[[nodiscard]] virtual bool LandBlocks(glm::vec3 /*from*/, glm::vec3 /*to*/) const { return false; }
 	/// A shield is raised; the effect keeps the sphere, the world finds it while it lives
@@ -151,6 +321,8 @@ public:
 		/// Its radius across the ground and its height
 		float radius;
 		float height;
+		/// Its scale
+		float scale {1.0f};
 	};
 	/// An object a miracle gave its effect, none once it has gone
 	[[nodiscard]] virtual std::optional<TargetInfo> Target(entt::entity /*target*/, bool /*centre*/) const
@@ -165,6 +337,80 @@ public:
 	/// object while it acts on it
 	[[nodiscard]] virtual bool IsTargetClaimed(entt::entity /*target*/) const { return false; }
 	virtual void ClaimTarget(entt::entity /*target*/, bool /*claimed*/) {}
+
+	/// The game turn, for the rules that act only every few turns
+	[[nodiscard]] virtual uint32_t GameTurn() const { return 0; }
+	/// The colour of the land at a point of the ground, as its material shows it
+	[[nodiscard]] virtual glm::u8vec3 LandColour(glm::vec2 /*xz*/) const { return {255, 255, 255}; }
+	/// The things a tornado's foot reaches, out to the reach past each one's own radius, in the order it looks for them:
+	/// cell by cell outwards from the foot
+	[[nodiscard]] virtual std::vector<TornadoCandidate> TornadoCandidates(glm::vec3 /*foot*/, float /*reach*/) const
+	{
+		return {};
+	}
+	/// A creature caught by a tornado stops where it is, helpless, and is let off the leash
+	virtual void CatchCreature(entt::entity /*creature*/) {}
+	/// Takes up to an amount of a pile's resource into a new pot of it at the pile, its size times the share; the pot,
+	/// none when nothing could be taken
+	virtual entt::entity TakeFromPile(entt::entity /*pile*/, uint32_t /*amount*/, float /*sizeShare*/) { return entt::null; }
+	/// A particle starts carrying an object, which leaves the ground and follows it; the object's rotation for the
+	/// particle to start with, none when it can't be carried
+	virtual std::optional<glm::mat3> Carry(const std::shared_ptr<CarriedObject>& /*carried*/) { return std::nullopt; }
+	/// The extra points of an object's model, placed in the world as the object stands; none for a model without any
+	[[nodiscard]] virtual std::vector<glm::vec3> TargetExtraPoints(entt::entity /*target*/) const { return {}; }
+	/// Where an object a rule follows stands, none once it is no longer there
+	[[nodiscard]] virtual std::optional<glm::vec3> ObjectPosition(entt::entity /*object*/) const { return std::nullopt; }
+	/// A point picked on an object's model, placed in the world as the object stands: a submesh, one of its primitives
+	/// and one of its triangles, each by the effect's random numbers, then a point evenly within the triangle
+	struct SurfacePoint
+	{
+		enum class Kind : uint8_t
+		{
+			/// The object is no longer there
+			Gone,
+			/// It has no model to pick from: nothing is picked
+			NoModel,
+			Point,
+		};
+		Kind kind {Kind::Gone};
+		glm::vec3 position {0.0f};
+	};
+	[[nodiscard]] virtual SurfacePoint RandomSurfacePoint(entt::entity /*object*/, Effect& /*effect*/) const { return {}; }
+	/// A player's alignment, -1 (evil) to 1 (good)
+	[[nodiscard]] virtual float PlayerAlignment(int /*player*/) const { return 0.0f; }
+	/// How many points an object's model has for glints to sparkle on, 0 for none: a miracle's seed shown in a globe has
+	/// every point of every part of its model
+	[[nodiscard]] virtual uint32_t TargetPointCount(entt::entity /*object*/) const { return 0; }
+	/// One of them, placed in the world as the object was last drawn; none past the end or once it has gone
+	[[nodiscard]] virtual std::optional<glm::vec3> TargetPoint(entt::entity /*object*/, uint32_t /*index*/) const
+	{
+		return std::nullopt;
+	}
+	/// The scale the object is drawn at, which glints on it take
+	[[nodiscard]] virtual float TargetScale(entt::entity /*object*/) const { return 1.0f; }
+	/// A creature's body for its spells' particles, none once it has gone
+	[[nodiscard]] virtual std::optional<CreatureSpellBody> CreatureBody(entt::entity /*creature*/) const
+	{
+		return std::nullopt;
+	}
+	/// The camera follows a camera path file, its points placed by a matrix: it glides onto the path's start over the
+	/// pause and then follows it, its time sped up by a factor, for as long as the animation file it goes with lasts and
+	/// the miracle behind it is there
+	virtual void FollowCameraPath(std::string_view /*file*/, std::string_view /*animation*/, const glm::mat4& /*placement*/,
+	                              float /*pauseSeconds*/, float /*speedUp*/, entt::entity /*spell*/)
+	{
+	}
+	/// The next recognised gesture's trail waiting to be shown, the last given first
+	[[nodiscard]] virtual std::shared_ptr<GestureTrail> TakeGestureTrail() { return nullptr; }
+	/// A trail's sheet of light stands; the effect keeps it, and while it lives the world moves it on every frame and
+	/// draws it
+	virtual void AddLightSheet(const std::shared_ptr<LightSheet>& /*sheet*/) {}
+	/// The colour added to the light of this computer's hand, 0xRRGGBB, black for none
+	virtual void SetHandGlow(uint32_t /*rgb*/) {}
+	/// What the destructive miracles' rules do to the world's objects, none where there are none
+	[[nodiscard]] virtual ObjectEffectsInterface* ObjectEffects() { return nullptr; }
+	/// The pieces models break into
+	[[nodiscard]] virtual FragmentSourceInterface* FragmentSource() { return nullptr; }
 };
 
 /// What every effect works with: the particle classes, the world, the random numbers and the noise
@@ -195,6 +441,10 @@ struct Creator
 		LightMap,
 		/// The casting player's symbol between two glows
 		Symbol,
+		/// A surface turned round the vertical, such as the swirl under a dispenser (see SurfaceCreator)
+		Surface,
+		/// A piece of a model broken apart: its own triangles, turned and scaled with its atom
+		Fragment,
 		/// A class the game does not draw yet
 		Other,
 	};
@@ -246,6 +496,8 @@ struct Creator
 	bool ignoreRotation {false};
 	/// Where in the sprite the atom is, as fractions of the width and height
 	glm::vec2 origin {0.0f};
+	/// Tinted by the colour of the land under it, as dust kicked up from the ground is
+	bool useLandscapeColour {false};
 
 	/// What a creator class adds to a new atom
 	virtual void InitAtom(Effect& /*effect*/, Atom& /*atom*/) const {}
@@ -268,6 +520,8 @@ struct AtomRuleData
 	bool started {false};
 	/// An object the rule follows with the atom
 	entt::entity object {entt::null};
+	/// Something the rule keeps for as long as the atom lives
+	std::shared_ptr<const void> held;
 	glm::vec4 a {0.0f};
 	glm::vec4 b {0.0f};
 };
@@ -280,7 +534,7 @@ struct Atom
 	Atom(Atom&&) = delete;
 	Atom& operator=(const Atom&) = delete;
 	Atom& operator=(Atom&&) = delete;
-	/// Lets go of its sounds
+	/// Lets go of its sounds and of what it carries
 	~Atom();
 
 	Collection* collection {nullptr};
@@ -294,6 +548,8 @@ struct Atom
 	float ruleScale {1.0f};
 	float stretch {1.0f};
 	std::array<uint8_t, 4> rgba {255, 255, 255, 255};
+	/// Light added to its colour, as a flash of lightning lights a cloud
+	std::array<uint8_t, 3> specular {0, 0, 0};
 	/// When it was made, in seconds of its effect's age
 	float birth {0.0f};
 	bool visible {true};
@@ -308,12 +564,29 @@ struct Atom
 	uint32_t random {0};
 	/// Turned away by a shield, or cooled, so that it no longer acts on what it meets
 	bool deflected {false};
+	/// How much of its effect's draw offset it takes, as the start of a bolt from the hand keeps up with the hand between
+	/// steps while its forks stay where they were laid
+	float drawWeight {1.0f};
 	/// The sounds it keeps going, the newest first
 	std::vector<std::shared_ptr<ParticleSoundLink>> sounds;
+	/// A game object it carries, if any
+	std::shared_ptr<CarriedObject> carried;
+	/// The triangles of a piece of a broken model it is drawn as
+	std::shared_ptr<const blast::MeshFragment> fragment;
 	DrawState previous;
 	DrawState current;
 	/// It has been through a step's end, so it has somewhere to be drawn
 	bool drawn {false};
+	/// The steps it has been through, up to two. The game draws an atom from its second step on, or from its first when
+	/// the rule that made it asks.
+	uint8_t steps {0};
+	bool drawOnFirstUpdate {false};
+	/// Drawn this far from where it is, the shift running out evenly over two seconds from when it was made, at the
+	/// effect's age then: a wisp let out of this computer's hand starts at the hand
+	std::optional<glm::vec3> drawOffset;
+	float drawOffsetFrom {0.0f};
+	/// The surface it is drawn as, its own, when a rule draws it as a surface of revolution
+	std::shared_ptr<SurfaceInstance> surface;
 	std::vector<std::unique_ptr<Collection>> subCollections;
 	std::unordered_map<const Modifier*, AtomRuleData> data;
 };
@@ -347,6 +620,8 @@ struct Collection
 	bool hierarchy {false};
 	/// How many times its ribbon repeats its frame, -1 for as its creator has it
 	int textureRepeats {-1};
+	/// How fast its ribbon's texture slides along it, in sheet heights a second
+	float textureSpeed {0.0f};
 	std::vector<std::unique_ptr<Atom>> atoms;
 	std::vector<Slot> modifiers;
 };
@@ -394,8 +669,11 @@ public:
 	Effect(Effect&&) = delete;
 	Effect& operator=(Effect&&) = delete;
 
-	/// One step of dt seconds
+	/// One step of dt seconds, or two the first time when told to
 	void Step(float dt);
+	/// Its first Step steps twice, as every effect the game runs does: a new effect has run two steps by the end of the
+	/// turn it started in
+	void StepTwiceFirstTime() { _firstStepTwice = true; }
 	/// Closing down sets the close-down conditions, lets the rules marked for it go, and may end the effect at once
 	void CloseDown();
 	/// Nothing is left of it: no atoms and no rule that could make more, or it has outlived its file's age
@@ -430,9 +708,15 @@ public:
 	void AddTarget(entt::entity target) { _targets.push_back(target); }
 	[[nodiscard]] std::optional<entt::entity> TakeTarget();
 	[[nodiscard]] size_t TargetCount() const { return _targets.size(); }
+	/// Points of the world the effect is to act on, such as where a beam ends; the rules take them, the last given first
+	void AddTargetPosition(glm::vec3 position) { _targetPositions.push_back(position); }
+	[[nodiscard]] std::optional<glm::vec3> TakeTargetPosition();
+	[[nodiscard]] size_t TargetPositionCount() const { return _targetPositions.size(); }
 	/// An effect without a miracle counts as this computer's
 	[[nodiscard]] bool IsMyInterfaceCasting() const { return _sink == nullptr || _sink->IsMyInterfaceCasting(); }
 	[[nodiscard]] bool IsHumanPlayerCasting() const { return _sink != nullptr && _sink->IsHumanPlayerCasting(); }
+	/// An effect without a miracle isn't a script's
+	[[nodiscard]] bool IsScriptCasting() const { return _sink != nullptr && _sink->IsScriptCasting(); }
 	void SetDirection(glm::vec3 direction) { _direction = direction; }
 	[[nodiscard]] glm::vec3 GetDirection() const { return _direction; }
 	/// The casting player, for the creators that take its colour; -1 for none
@@ -441,6 +725,9 @@ public:
 	/// The whole effect's drawn alpha, 0..255
 	void SetGlobalAlpha(float alpha) { _globalAlpha = alpha; }
 	[[nodiscard]] float GetGlobalAlpha() const { return _globalAlpha; }
+	/// A hidden effect steps as usual but draws nothing, as the miracle in the hand does until its seed is ready
+	void SetHidden(bool hidden) { _hidden = hidden; }
+	[[nodiscard]] bool IsHidden() const { return _hidden; }
 
 	// For the rules
 	/// Random numbers on the effect's stream; 0 outside a step, as the game draws them
@@ -457,6 +744,10 @@ public:
 	/// A new atom in the collection where its parent is, coloured and scaled by its creator, with its next groups'
 	/// collections made under it
 	Atom& NewAtom(Collection& collection, const Creator* creator, std::span<const int> nextGroups);
+	/// Moves an atom out of its collection into the first collection of a group made at the start, which is made when
+	/// there is none, where it carries on from the point of the world it was at. Not while its collection's atoms are
+	/// being walked.
+	void MoveToGroup(Atom& atom, int group);
 	/// The groups' collections made under an atom that already exists
 	void AddSubCollections(Atom& atom, std::span<const int> groups);
 	/// A new atom in the first collection of a group made at the start, which is made when there is none; nullptr for no
@@ -491,6 +782,14 @@ public:
 		float age {0.0f};
 		/// Its creator's values (Atom::creatorValue)
 		glm::vec2 creatorValue {0.0f};
+		/// How far it is drawn from the last step to the current one, 0..1
+		float fraction {1.0f};
+		/// The surface it is drawn as (Atom::surface)
+		const SurfaceInstance* surface {nullptr};
+		/// How much of its effect's draw offset it takes (Atom::drawWeight)
+		float offsetWeight {1.0f};
+		/// The triangles of a piece of a broken model
+		std::shared_ptr<const blast::MeshFragment> fragment;
 	};
 	/// The ribbon through the joints of one collection
 	struct DrawChain
@@ -501,6 +800,8 @@ public:
 		uint32_t jointCount;
 		/// How many times it repeats its frame, -1 for as its creator has it
 		int textureRepeats {-1};
+		/// How far its texture has slid along it, in sheet heights
+		float textureScroll {0.0f};
 	};
 	/// Everything an effect draws, in the order the game draws it all at once: each collection's atoms, the newest first,
 	/// then its ribbon, then the collections under each of its atoms in turn, walked the same way. The newest collections
@@ -536,6 +837,7 @@ public:
 	[[nodiscard]] size_t CollectionCount() const;
 
 private:
+	void StepOnce(float dt);
 	void CreateCollection(int group, Atom* parent, std::vector<std::unique_ptr<Collection>>& into);
 	void UpdateCollection(Collection& collection);
 	void PostUpdate(Collection& collection, const glm::vec3& parentPosition, const glm::mat3& parentRotation,
@@ -559,6 +861,7 @@ private:
 	float _age {0.0f};
 	float _closeAge {0.0f};
 	float _dt {0.1f};
+	bool _firstStepTwice {false};
 	bool _closing {false};
 	bool _deleteOnCloseDown {true};
 	float _maxSpellAge {-1.0f};
@@ -568,8 +871,10 @@ private:
 	ProcessInfo _info {};
 	int _player {-1};
 	float _globalAlpha {255.0f};
+	bool _hidden {false};
 	glm::vec3 _direction {0.0f};
 	std::vector<entt::entity> _targets;
+	std::vector<glm::vec3> _targetPositions;
 };
 
 } // namespace openblack::particles

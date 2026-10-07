@@ -44,7 +44,7 @@ sprites::SpriteInstance sprites::InstanceOf(const Effect::DrawAtom& atom)
 	    .shape = {halfHeight, angle, creator.origin.x * halfWidth, creator.origin.y * halfHeight},
 	    .uv = {cell.corner, cell.size},
 	    .colour = glm::vec4(atom.rgb[0], atom.rgb[1], atom.rgb[2], std::trunc(alpha)) / 255.0f,
-	    .flags = {creator.horizontal ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f},
+	    .flags = {creator.horizontal ? 1.0f : 0.0f, creator.useLandscapeColour ? 1.0f : 0.0f, 0.0f, 0.0f},
 	};
 }
 

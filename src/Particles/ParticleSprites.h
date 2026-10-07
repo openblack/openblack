@@ -33,7 +33,7 @@ struct SpriteInstance
 	glm::vec4 uv;
 	/// Its colour and alpha, 0..1
 	glm::vec4 colour;
-	/// x: 1 lying flat on the ground, 0 facing the screen
+	/// x: 1 lying flat on the ground, 0 facing the screen. y: 1 tinted by the colour of the land under it
 	glm::vec4 flags;
 };
 static_assert(sizeof(SpriteInstance) == 5 * sizeof(glm::vec4));

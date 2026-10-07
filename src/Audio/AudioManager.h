@@ -68,6 +68,13 @@ public:
 	void PlaySound(entt::id_type id, PlayType type) override;
 	void PlaySoundEffect(entt::id_type id, std::optional<glm::vec3> worldPosition) override;
 	void StopSoundEffect(entt::id_type id) override;
+	entt::entity StartSoundEffect(entt::id_type id, const SoundEffectOptions& options) override;
+	void SetEmitterPosition(entt::entity emitter, const glm::vec3& position) override;
+	void ReleaseEmitterLoop(entt::entity emitter) override;
+	[[nodiscard]] bool IsEmitterLooping(entt::entity emitter) override;
+	void SetEmitterVolume(entt::entity emitter, uint32_t volume) override;
+	[[nodiscard]] uint32_t GetEmitterVolume(entt::entity emitter) override;
+	void StopOwnedSounds(entt::entity owner) override;
 	void AddAnimEffects(const std::string& bankName, AnimEffectTable table) override;
 	AnimEffectPlay PlayAnimEffect(const std::string& bankName, std::span<const int32_t> keys, entt::entity owner,
 	                              const glm::vec3& position) override;

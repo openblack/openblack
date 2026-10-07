@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include <array>
+#include <string>
 #include <vector>
 
 #include <EnumHeader.h>
@@ -124,6 +125,44 @@ TEST(ParticleDraw, EnumHeadersGiveTheirNames)
 	ASSERT_EQ(values.size(), 2u);
 	EXPECT_EQ(values.at("MSH_A_BAT_1"), 1);
 	EXPECT_EQ(values.at("MSH_S_BLAST_CENTRE"), 527);
+}
+
+TEST(ParticleDraw, EnumHeadersCountNamesWithoutValuesAsC)
+{
+	// The shape of Data/SoundAction.h: explicit values, then a run of bare names counting on from the last one
+	std::string text = "#ifndef INCL_SOUNDACTION_H\n#define INCL_SOUNDACTION_H\n\nenum\tLHSoundAction\n{\n"
+	                   "\tSOUND_SPELL_HAND_LIGHTNING_LEVEL_3\t= 113,\n";
+	for (int i = 114; i < 141; ++i)
+	{
+		text += "\tSOUND_FILLER_" + std::to_string(i) + ",\t\t\n";
+	}
+	text += "\tSOUND_SPELL_WATER,\n\tSOUND_SPELL_DOVES,\n    SOUND_SPELL_BATS,   \n\tSOUND_SPELL_WOLVES, // calls\n";
+	for (int i = 145; i < 157; ++i)
+	{
+		text += "\tSOUND_FILLER_" + std::to_string(i) + ",\n";
+	}
+	text += "\tSOUND_ACTION_SWIM\n};\n\n#endif //SOUNDACTION included\n"
+	        "enum SECOND { FIRST_OF_SECOND, SECOND_OF_SECOND = 7, THIRD_OF_SECOND };\n"
+	        "enum THIRD\n{\n  KNOWN = 4,\n  UNKNOWN = KNOWN + 1,\n  AFTER_UNKNOWN,\n  KNOWN_AGAIN = 9,\n  AFTER_KNOWN,\n};\n";
+	const auto values = psys::ParseEnumHeader(text);
+	EXPECT_EQ(values.at("SOUND_SPELL_HAND_LIGHTNING_LEVEL_3"), 113);
+	EXPECT_EQ(values.at("SOUND_FILLER_114"), 114);
+	EXPECT_EQ(values.at("SOUND_SPELL_WATER"), 141);
+	EXPECT_EQ(values.at("SOUND_SPELL_DOVES"), 142);
+	EXPECT_EQ(values.at("SOUND_SPELL_BATS"), 143);
+	EXPECT_EQ(values.at("SOUND_SPELL_WOLVES"), 144);
+	EXPECT_EQ(values.at("SOUND_ACTION_SWIM"), 157);
+	// Each enum counts from 0 again
+	EXPECT_EQ(values.at("FIRST_OF_SECOND"), 0);
+	EXPECT_EQ(values.at("SECOND_OF_SECOND"), 7);
+	EXPECT_EQ(values.at("THIRD_OF_SECOND"), 8);
+	// A value that isn't a whole number leaves it and the bare names after it out, until the next whole number
+	EXPECT_EQ(values.at("KNOWN"), 4);
+	EXPECT_FALSE(values.contains("UNKNOWN"));
+	EXPECT_FALSE(values.contains("AFTER_UNKNOWN"));
+	EXPECT_EQ(values.at("AFTER_KNOWN"), 10);
+	// Nothing outside an enum's braces is a name
+	EXPECT_FALSE(values.contains("INCL_SOUNDACTION_H"));
 }
 
 TEST(ParticleDraw, SortedThingsTakeTheirOwnPlacesAndSharedSheetsJoin)

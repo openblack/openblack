@@ -37,6 +37,8 @@ constexpr int32_t k_MistStartCounts = 16;
 constexpr float k_CrtRandRange = 32768.0f;
 /// A light map's texels are colours, three bytes each
 constexpr int k_LightMapChannels = 3;
+/// A shadow map's texels are one byte
+constexpr int k_ShadowMapChannels = 1;
 
 bool Named(std::string_view name)
 {
@@ -75,6 +77,7 @@ std::unique_ptr<Creator> MakeMesh(const psys::ParticleObject& object, CreatorRes
 	// The plain kind never draws in its atom's alpha, whatever its file says
 	creator->useGlobalAlpha = creator->type != MeshCreator::Type::Plain && object.Bool("UseGlobalAlpha", animated);
 	creator->landscapeColour = object.Bool("DrawWithLandscapeColor", false);
+	creator->drawCutByPlane = object.Bool("DrawCutByPlane", false);
 	creator->numFrames = 1;
 	if (creator->type == MeshCreator::Type::AnimTextured)
 	{
@@ -116,7 +119,7 @@ std::unique_ptr<Creator> MakeChain(const psys::ParticleObject& object)
 	return creator;
 }
 
-std::unique_ptr<Creator> MakeMist(const psys::ParticleObject& object)
+std::unique_ptr<Creator> MakeMist(const psys::ParticleObject& object, CreatorResourcesInterface* resources)
 {
 	auto creator = std::make_unique<MistCreator>();
 	ReadCreatorProperties(object, *creator);
@@ -125,6 +128,15 @@ std::unique_ptr<Creator> MakeMist(const psys::ParticleObject& object)
 	creator->ratioFromMatrix = object.Bool("TakeRatioFromMatrix", false);
 	creator->initialScaleMin = object.Float("InitialScaleMin", 1.0f);
 	creator->numFrames = 1;
+	// A shadow map is one byte a texel, how much light it lets through
+	if (const auto file = object.String("TextureFileName");
+	    resources != nullptr && object.Bool("LoadLightMap", false) && object.Bool("IsShadowMap", false) && Named(file))
+	{
+		creator->shadowPitch = std::max(1, object.Int("Pitch", 1));
+		const int framesInFile = std::max(1, object.Int("NumFramesInFile", 1));
+		const int framesInUse = std::clamp(object.Int("NumFramesInUse", 1), 1, framesInFile);
+		creator->shadow = resources->LightMap(file, creator->shadowPitch, k_ShadowMapChannels, framesInFile, framesInUse);
+	}
 	return creator;
 }
 
@@ -209,7 +221,7 @@ void MeshCreator::InitAtom(Effect& effect, Atom& atom) const
 	atom.stretch = stretchY;
 }
 
-std::array<glm::vec2, 4> ChainCreator::SegmentUv(int segment, int segments, int repeatsOverride) const
+std::array<glm::vec2, 4> ChainCreator::SegmentUv(int segment, int segments, int repeatsOverride, float scroll) const
 {
 	// The ribbon is cut into repeats of the frame; the segment falls in repeat k, which holds n segments from its first,
 	// b. The last repeat shows the head's frame and the first the tail's.
@@ -221,8 +233,16 @@ std::array<glm::vec2, 4> ChainCreator::SegmentUv(int segment, int segments, int 
 	const int n = std::max(1, ((k + 1) * s / repeats) - b);
 	const int j = segment - b;
 	const int frame = fileOffset + (k == repeats - 1 ? frameOfHead : (k == 0 ? frameOfTail : 0));
-	const float v0 = static_cast<float>(frameHeight) * (static_cast<float>(j) / static_cast<float>(n)) / k_SheetTexels;
-	const float v1 = static_cast<float>(frameHeight) * (static_cast<float>(j + 1) / static_cast<float>(n)) / k_SheetTexels;
+	// The slide wraps round at one repeat of the frame, never backwards
+	const float period = static_cast<float>(frameHeight) / k_SheetTexels;
+	float slid = scroll != 0.0f ? std::fmod(scroll, period) : 0.0f;
+	if (slid < 0.0f)
+	{
+		slid += period;
+	}
+	const float v0 = (static_cast<float>(frameHeight) * (static_cast<float>(j) / static_cast<float>(n)) / k_SheetTexels) + slid;
+	const float v1 =
+	    (static_cast<float>(frameHeight) * (static_cast<float>(j + 1) / static_cast<float>(n)) / k_SheetTexels) + slid;
 	const float u0 = static_cast<float>(frame * frameWidth) / k_SheetTexels;
 	const float u1 = u0 + (static_cast<float>(frameWidth) / k_SheetTexels);
 	return {glm::vec2(u0, v0), glm::vec2(u1, v0), glm::vec2(u0, v1), glm::vec2(u1, v1)};
@@ -261,7 +281,8 @@ void openblack::particles::RegisterDrawnCreators(ParticleClassRegistry& registry
 	registry.AddCreator("ParticleMeshCreatorAnimTextured", mesh);
 	registry.AddCreator("ParticleAnimCreator", mesh);
 	registry.AddCreator("ParticleChainCreator", MakeChain);
-	registry.AddCreator("ParticleMistCreator", MakeMist);
+	registry.AddCreator("ParticleMistCreator",
+	                    [resources](const psys::ParticleObject& object) { return MakeMist(object, resources); });
 	registry.AddCreator("ParticleLightMapCreator",
 	                    [resources](const psys::ParticleObject& object) { return MakeLightMap(object, resources); });
 	registry.AddCreator("ParticleSymbolSpriteCreator", [](const psys::ParticleObject& object) {

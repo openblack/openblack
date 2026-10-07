@@ -14,6 +14,7 @@
 #include <glm/geometric.hpp>
 
 #include "ParticleCreators.h"
+#include "ParticleObjectRules.h"
 
 using namespace openblack::particles;
 
@@ -92,7 +93,9 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterSoundRules(registry);
 	RegisterFireballRules(registry);
 	RegisterLightningRules(registry);
+	RegisterGlintRules(registry);
 	RegisterShieldRules(registry);
+	RegisterObjectRules(registry);
 	return registry;
 }
 
@@ -146,6 +149,7 @@ void openblack::particles::ReadCreatorProperties(const psys::ParticleObject& obj
 	creator.centreAtBase = object.Bool("CentreAtBase", false);
 	creator.ignoreRotation = object.Bool("IgnoreRotation", false);
 	creator.origin = {object.Float("SpriteOriginX", 0.0f), object.Float("SpriteOriginY", 0.0f)};
+	creator.useLandscapeColour = object.Bool("UseLandscapeColor", false);
 }
 
 void openblack::particles::RegisterCreators(ParticleClassRegistry& registry)
