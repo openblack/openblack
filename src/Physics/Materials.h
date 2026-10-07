@@ -15,6 +15,8 @@
 #include <array>
 #include <optional>
 
+#include <entt/core/hashed_string.hpp>
+
 namespace openblack::physconst
 {
 struct PhysicsConstantsFile;
@@ -54,6 +56,9 @@ enum class MaterialRow : uint8_t
 
 	_Count
 };
+
+/// The materials' id in the resources
+inline constexpr entt::hashed_string k_MaterialsId = entt::hashed_string("physics/materials");
 
 inline constexpr std::size_t k_MaterialRows = static_cast<std::size_t>(MaterialRow::_Count);
 

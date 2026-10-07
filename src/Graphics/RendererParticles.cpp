@@ -35,6 +35,7 @@
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mist.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
@@ -155,6 +156,11 @@ void Renderer::CollectParticles() const
 	if (Locator::explosionSystem::has_value())
 	{
 		Locator::explosionSystem::value().CollectDrawFrame(_particleFrame);
+	}
+	// The dust that thrown things throw up as they land
+	if (Locator::dynamicsSystem::has_value())
+	{
+		Locator::dynamicsSystem::value().CollectDrawFrame(_particleFrame);
 	}
 }
 

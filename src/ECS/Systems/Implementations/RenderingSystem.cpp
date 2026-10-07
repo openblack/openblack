@@ -30,6 +30,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/ObjectGlow.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/ResourcePile.h"
 #include "ECS/Components/StoragePit.h"
@@ -271,6 +272,11 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+		    // A body moving in the physics is drawn between its last two turns
+		    if (const auto* drawn = registry.TryGet<const PhysicsDrawPose>(entity))
+		    {
+			    modelMatrix = glm::translate(glm::mat4(1.0f), drawn->origin) * glm::mat4(drawn->axes);
+		    }
 		    // A home with someone in lights its windows at night
 		    const auto* abode = registry.TryGet<const Abode>(entity);
 		    glm::vec4 look {abode != nullptr && abode->presentAtHome > 0 ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
@@ -417,8 +423,9 @@ bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)
 	// Set the transforms of the trees, swaying or bent away from the hand
 	bool fits = true;
 	registry.Each<const Mesh, const Transform, const Tree, const Swayable>(
-	    [this, &fits, drawBoundingBox, &vegetation](entt::entity entity, const Mesh& mesh, const Transform& transform,
-	                                                const Tree& /*unused*/, const Swayable& swayable) {
+	    [this, &registry, &fits, drawBoundingBox, &vegetation](entt::entity entity, const Mesh& mesh,
+	                                                           const Transform& transform, const Tree& /*unused*/,
+	                                                           const Swayable& swayable) {
 		    const auto slots = _treeSlots.find(mesh.id);
 		    if (!fits || slots == _treeSlots.end() || slots->second.filled >= slots->second.count)
 		    {
@@ -430,6 +437,11 @@ bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+		    // A body moving in the physics is drawn between its last two turns
+		    if (const auto* drawn = registry.TryGet<const PhysicsDrawPose>(entity))
+		    {
+			    modelMatrix = glm::translate(glm::mat4(1.0f), drawn->origin) * glm::mat4(drawn->axes);
+		    }
 		    // A tree with a fire on it is drawn darker, its foliage thinning as it burns, and narrows away at the last,
 		    // keeping its height
 		    glm::vec4 burning(0.0f);

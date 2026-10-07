@@ -56,6 +56,11 @@ struct AudioBankSampleHeader;
 struct G3DTexture;
 } // namespace openblack::pack
 
+namespace openblack::physics
+{
+class MaterialTable;
+}
+
 namespace openblack::resources
 {
 
@@ -94,6 +99,17 @@ struct L3DFileLoader final: BaseLoader<l3d::L3DFile>
 struct Bitmap16BLoader final: BaseLoader<Bitmap16B>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+};
+
+/// The physics materials of Data/PhysicsConstants.txt; every row zero when there is no file
+struct PhysicsMaterialsLoader final: BaseLoader<physics::MaterialTable>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+	/// No file to read: every material is zero, as the game's are without one
+	struct EmptyTag
+	{
+	};
+	[[nodiscard]] result_type operator()(EmptyTag) const;
 };
 
 struct LandLightPaletteLoader final: BaseLoader<LandLightPalette>

@@ -24,6 +24,7 @@ public:
 	L3DFileManager& GetL3DFiles() override { return _l3dFiles; }
 	Bitmap16BManager& GetBitmaps() override { return _bitmaps; }
 	LandLightPaletteManager& GetLandLightPalettes() override { return _landLightPalettes; }
+	PhysicsMaterialsManager& GetPhysicsMaterials() override { return _physicsMaterials; }
 	TextureManager& GetTextures() override { return _textures; }
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
@@ -42,6 +43,7 @@ private:
 	L3DFileManager _l3dFiles;
 	Bitmap16BManager _bitmaps;
 	LandLightPaletteManager _landLightPalettes;
+	PhysicsMaterialsManager _physicsMaterials;
 	TextureManager _textures;
 	AnimationManager _animations;
 	LevelManager _levels;

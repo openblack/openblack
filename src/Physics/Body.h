@@ -179,6 +179,8 @@ public:
 
 	/// The start of a game turn: the pose the body is drawn from
 	void BeginTurn();
+	/// A resting body follows its object: its centre moves, its points stay where they were placed
+	void MoveCentre(glm::vec3 centre) { _centre = centre; }
 
 	/// The object's matrix from the body: its axes scaled by the object's scale, its origin back from the centre of mass
 	[[nodiscard]] Pose ObjectPose() const;
@@ -270,6 +272,11 @@ private:
 	std::vector<Face> _faces;
 	std::vector<Ellipsoid> _bones;
 };
+
+/// Axes turned a quarter about their up axis, as the models moved by bones are drawn from their bodies' axes
+[[nodiscard]] glm::mat3 QuarterTurned(const glm::mat3& axes);
+/// The body's axes of a model moved by bones, from the axes it is drawn with
+[[nodiscard]] glm::mat3 QuarterTurnedBack(const glm::mat3& axes);
 
 /// The skeleton part a line through a point meets first, by how far along the line (negative is behind the point)
 [[nodiscard]] std::optional<std::pair<RayHit, float>> EllipsoidHit(std::span<const Ellipsoid> bones, glm::vec3 point,

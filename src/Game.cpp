@@ -151,6 +151,7 @@
 #include "LHScriptX/Script.h"
 #include "Locator.h"
 #include "Parsers/InfoFile.h"
+#include "Physics/Materials.h"
 #include "Profiler.h"
 #include "Resources/Loaders.h"
 #include "Resources/ResourcesInterface.h"
@@ -831,6 +832,12 @@ bool Game::GameLogicLoop() noexcept
 	{
 		Locator::fireSystem::value().MarkBurnPoint();
 	}
+	// Then the physics: what was thrown, dropped, knocked or pushed flies, collides and comes to rest, before the
+	// scripts look at the world
+	if (Locator::dynamicsSystem::has_value())
+	{
+		Locator::dynamicsSystem::value().GameTurnUpdate();
+	}
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
@@ -1176,6 +1183,11 @@ bool Game::Update() noexcept
 		// The blasts' rubble lies and fades, their dust flies and the camera shakes
 		auto explosions = profiler.BeginScoped(Profiler::Stage::ExplosionUpdate);
 		Locator::explosionSystem::value().Update(std::chrono::duration<float, std::milli>(gameTime).count());
+	}
+	// The moving bodies are drawn between their last two turns, and the dust their landings threw up flies and fades
+	if (Locator::dynamicsSystem::has_value())
+	{
+		Locator::dynamicsSystem::value().UpdateFrame(clock.GetTurnFraction(), std::chrono::duration<float>(gameTime).count());
 	}
 	{
 		// The fight animations play, blows land and the fighters move as their animations carry them
@@ -1752,6 +1764,27 @@ bool Game::Initialize() noexcept
 			                   SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
 		                   }
 	                   });
+
+	// What things are made of, for the physics; without the file every material is zero, as in the game
+	if (const auto constants = fileSystem.GetPath<filesystem::Path::Data>() / "PhysicsConstants.txt";
+	    fileSystem.Exists(constants))
+	{
+		resources.GetPhysicsMaterials().Load(physics::k_MaterialsId.value(), resources::PhysicsMaterialsLoader::FromDiskTag {},
+		                                     constants);
+	}
+	else
+	{
+		resources.GetPhysicsMaterials().Load(physics::k_MaterialsId.value(), resources::PhysicsMaterialsLoader::EmptyTag {});
+	}
+	// The sheet the physics' dust puffs are drawn from
+	for (const auto* name : {"blobs", "blobsa"})
+	{
+		if (const auto sheet = fileSystem.GetPath<filesystem::Path::Data>() / fmt::format("{}.raw", name);
+		    fileSystem.Exists(sheet))
+		{
+			textureManager.Load(fmt::format("raw/{}", name), resources::Texture2DLoader::FromDiskTag {}, sheet);
+		}
+	}
 
 	// The land's light is built from this every frame
 	if (const auto palette = fileSystem.GetPath<filesystem::Path::WeatherSystem>() / "palette.raw"; fileSystem.Exists(palette))
@@ -2451,6 +2484,11 @@ void Game::PrepareNewLand()
 	Locator::teleportSystem::value().Reset();
 	Locator::gestureEvents::value().Reset();
 	Locator::particleSystem::value().Reset();
+	// Nor its bodies in the physics
+	if (Locator::dynamicsSystem::has_value())
+	{
+		Locator::dynamicsSystem::value().ResetSimulation();
+	}
 
 	// Reset everything. Deletes all entities and their components
 	Locator::entitiesRegistry::value().Reset();

@@ -23,6 +23,7 @@
 #include <MorphFile.h>
 #include <PackFile.h>
 #include <ParticleFile.h>
+#include <PhysicsConstantsFile.h>
 #include <RawImage.h>
 #include <StackedBitmap.h>
 #include <bgfx/bgfx.h>
@@ -38,6 +39,7 @@
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/Texture2D.h"
 #include "Locator.h"
+#include "Physics/Materials.h"
 
 using namespace openblack;
 using namespace openblack::filesystem;
@@ -119,6 +121,17 @@ Bitmap16BLoader::result_type Bitmap16BLoader::operator()(FromDiskTag, const std:
 {
 	const auto data = Locator::filesystem::value().ReadAll(path);
 	return std::make_shared<Bitmap16B>(data.data());
+}
+
+PhysicsMaterialsLoader::result_type PhysicsMaterialsLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	const auto data = Locator::filesystem::value().ReadAll(path);
+	return std::make_shared<physics::MaterialTable>(physconst::Parse(data, physics::k_MaterialRows));
+}
+
+PhysicsMaterialsLoader::result_type PhysicsMaterialsLoader::operator()(EmptyTag) const
+{
+	return std::make_shared<physics::MaterialTable>();
 }
 
 LandLightPaletteLoader::result_type LandLightPaletteLoader::operator()(FromDiskTag, const std::filesystem::path& path) const

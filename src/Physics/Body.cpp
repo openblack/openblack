@@ -730,11 +730,24 @@ Pose Body::DrawPose(float turnFraction, bool animated) const
 	const auto centre = _turnStartCentre + (_centre - _turnStartCentre) * turnFraction;
 	if (animated)
 	{
-		const auto right = axes[0];
-		const auto forward = axes[2];
-		axes[0] = k_QuarterTurnCos * right + k_QuarterTurnSin * forward;
-		axes[2] = k_QuarterTurnCos * forward - k_QuarterTurnSin * right;
+		axes = QuarterTurned(axes);
 	}
 	const auto scaled = axes * _scale;
 	return {.axes = scaled, .origin = centre - scaled * _centreOfMass};
+}
+
+glm::mat3 openblack::physics::QuarterTurned(const glm::mat3& axes)
+{
+	auto turned = axes;
+	turned[0] = k_QuarterTurnCos * axes[0] + k_QuarterTurnSin * axes[2];
+	turned[2] = k_QuarterTurnCos * axes[2] - k_QuarterTurnSin * axes[0];
+	return turned;
+}
+
+glm::mat3 openblack::physics::QuarterTurnedBack(const glm::mat3& axes)
+{
+	auto turned = axes;
+	turned[0] = k_QuarterTurnCos * axes[0] - k_QuarterTurnSin * axes[2];
+	turned[2] = k_QuarterTurnCos * axes[2] + k_QuarterTurnSin * axes[0];
+	return turned;
 }
