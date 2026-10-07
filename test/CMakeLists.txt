@@ -170,6 +170,7 @@ openblack_setup_and_add_test(
 openblack_setup_and_add_test(
   test_creature_locomotion test_creature_locomotion.cpp
 )
+openblack_setup_and_add_test(test_map_cells test_map_cells.cpp)
 openblack_setup_and_add_test(test_script_cast test_script_cast.cpp)
 openblack_setup_and_add_test(test_creature_route test_creature_route.cpp)
 openblack_setup_and_add_test(test_creature_audio test_creature_audio.cpp)
@@ -236,6 +237,8 @@ target_link_libraries(test_chl_language PRIVATE lhvmlang)
 openblack_setup_and_add_test(test_lhvm_decompiler lhvm/test_lhvm_decompiler.cpp)
 target_link_libraries(test_lhvm_decompiler PRIVATE lhvmdecompiler)
 openblack_setup_and_add_test(test_magic_spells test_magic_spells.cpp)
+openblack_setup_and_add_test(test_town_belief test_town_belief.cpp)
+openblack_setup_and_add_test(test_villager_speed test_villager_speed.cpp)
 openblack_setup_and_add_test(test_gesture_file test_gesture_file.cpp)
 target_link_libraries(test_gesture_file PRIVATE gestures)
 openblack_setup_and_add_test(

@@ -96,9 +96,36 @@ enum class CellKind : uint8_t
 };
 [[nodiscard]] CellKind KindOf(int x, int z);
 
-/// The cell (x, z) of the map: its altitude, and its water, ambient sound and open water flag by its kind
+/// Two patches of other ground west and east of the middle, beyond what the creature scenarios use, so that what depends
+/// on the ground (the forest miracle's trees) can be tried on it: sand to the west and snow to the east, 12 by 12 cells
+/// each, from the first cell to before the last
+struct Patch
+{
+	int minX;
+	int maxX;
+	int minZ;
+	int maxZ;
+	/// Its country, and its material's terrain type and colour
+	uint8_t country;
+	uint16_t materialType;
+	Colour colour;
+
+	[[nodiscard]] constexpr bool Contains(int x, int z) const { return x >= minX && x < maxX && z >= minZ && z < maxZ; }
+	/// Its middle in units of the map
+	[[nodiscard]] constexpr glm::vec2 Centre() const
+	{
+		return {static_cast<float>(minX + maxX) * k_CellSize * 0.5f, static_cast<float>(minZ + maxZ) * k_CellSize * 0.5f};
+	}
+};
+constexpr Patch k_SandPatch {
+    .minX = 220, .maxX = 232, .minZ = 254, .maxZ = 266, .country = 1, .materialType = 7, .colour = {27, 24, 15}};
+constexpr Patch k_SnowPatch {
+    .minX = 280, .maxX = 292, .minZ = 254, .maxZ = 266, .country = 2, .materialType = 27, .colour = {29, 30, 31}};
+
+/// The cell (x, z) of the map: its altitude, and its water, ambient sound and open water flag by its kind; its country
+/// the patch's it lies in, if any
 [[nodiscard]] lnd::LNDCell CellAt(int x, int z);
 
-/// The plane with its lake
+/// The plane with its lake and its patches of sand and snow
 [[nodiscard]] LandData Build();
 } // namespace openblack::flat_land

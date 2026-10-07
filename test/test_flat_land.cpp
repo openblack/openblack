@@ -70,7 +70,11 @@ TEST(FlatLand, AwayFromTheLakeEveryCellIsFlatDryLand)
 					continue;
 				}
 				const auto& cell = block.cells.at(static_cast<size_t>(x * 17 + z));
-				ASSERT_TRUE(cell.altitude == flat_land::k_Altitude && cell.properties.country == 0 &&
+				// Plain ground but in the patches of sand and snow
+				const auto country = flat_land::k_SandPatch.Contains(mapX, mapZ)   ? flat_land::k_SandPatch.country
+				                     : flat_land::k_SnowPatch.Contains(mapX, mapZ) ? flat_land::k_SnowPatch.country
+				                                                                   : 0;
+				ASSERT_TRUE(cell.altitude == flat_land::k_Altitude && cell.properties.country == country &&
 				            cell.properties.hasWater == 0 && cell.properties.fullWater == 0 && cell.properties.split == 0 &&
 				            cell.flags == flat_land::k_SoundFlags)
 				    << mapX << ", " << mapZ;
@@ -203,8 +207,9 @@ TEST(FlatLand, BlocksCarryTheLakeAcrossTheirEdges)
 TEST(FlatLand, PaintsOneMaterialAtEveryHeight)
 {
 	const auto land = flat_land::Build();
-	ASSERT_EQ(land.countries.size(), 1u);
-	ASSERT_EQ(land.materials.size(), 1u);
+	// The plane's, then the sand's and the snow's
+	ASSERT_EQ(land.countries.size(), 3u);
+	ASSERT_EQ(land.materials.size(), 3u);
 	EXPECT_TRUE(std::ranges::all_of(land.countries.front().materials, [](const lnd::LNDMapMaterial& material) {
 		return material.indices[0] == 0 && material.indices[1] == 0;
 	}));
@@ -245,4 +250,24 @@ TEST(LandData, CopiesALandscapeFilesBlocksAndMaps)
 	EXPECT_EQ(land.blocks.front().blockX, 3u);
 	EXPECT_EQ(land.noise.size(), 256u * 256u);
 	EXPECT_EQ(land.bump.size(), 256u * 256u);
+}
+
+TEST(FlatLand, LaysPatchesOfSandAndSnow)
+{
+	const auto land = flat_land::Build();
+	ASSERT_EQ(land.materials.size(), 3u);
+	EXPECT_EQ(land.materials.at(1).type, flat_land::k_SandPatch.materialType);
+	EXPECT_EQ(land.materials.at(2).type, flat_land::k_SnowPatch.materialType);
+	EXPECT_EQ(land.countries.at(1).materials.front().indices[1], 1u);
+	EXPECT_EQ(land.countries.at(2).materials.back().indices[1], 2u);
+	// Cells inside a patch are its country, those outside the plane's
+	EXPECT_EQ(flat_land::CellAt(flat_land::k_SandPatch.minX, flat_land::k_SandPatch.minZ).properties.country,
+	          flat_land::k_SandPatch.country);
+	EXPECT_EQ(flat_land::CellAt(flat_land::k_SnowPatch.maxX - 1, flat_land::k_SnowPatch.maxZ - 1).properties.country,
+	          flat_land::k_SnowPatch.country);
+	EXPECT_EQ(flat_land::CellAt(flat_land::k_SnowPatch.maxX, flat_land::k_SnowPatch.minZ).properties.country, 0);
+	EXPECT_EQ(flat_land::CellAt(256, 256).properties.country, 0);
+	// Away from the lake
+	EXPECT_EQ(flat_land::KindOf(flat_land::k_SandPatch.minX, flat_land::k_SandPatch.minZ), flat_land::CellKind::Land);
+	EXPECT_EQ(flat_land::KindOf(flat_land::k_SnowPatch.maxX - 1, flat_land::k_SnowPatch.maxZ - 1), flat_land::CellKind::Land);
 }

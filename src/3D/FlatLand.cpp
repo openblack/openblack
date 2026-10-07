@@ -84,6 +84,13 @@ lnd::LNDCell flat_land::CellAt(int x, int z)
 		cell.flags = k_SoundFlags;
 		break;
 	}
+	for (const auto& patch : {k_SandPatch, k_SnowPatch})
+	{
+		if (patch.Contains(x, z))
+		{
+			cell.properties.country = patch.country;
+		}
+	}
 	return cell;
 }
 
@@ -134,6 +141,23 @@ LandData flat_land::Build()
 			texel.b = colour.b;
 			texel.g = colour.g;
 			texel.r = colour.r;
+			texel.a = 1;
+		}
+	}
+
+	// The patches' countries, each its own material at every height, painted plain
+	for (const auto& patch : {k_SandPatch, k_SnowPatch})
+	{
+		auto& patchCountry = data.countries.emplace_back();
+		const auto index = static_cast<uint8_t>(data.materials.size());
+		std::ranges::fill(patchCountry.materials, lnd::LNDMapMaterial {.indices = {index, index}, .coefficient = 0});
+		auto& patchMaterial = data.materials.emplace_back();
+		patchMaterial.type = patch.materialType;
+		for (auto& texel : patchMaterial.texels)
+		{
+			texel.b = patch.colour.b;
+			texel.g = patch.colour.g;
+			texel.r = patch.colour.r;
 			texel.a = 1;
 		}
 	}
