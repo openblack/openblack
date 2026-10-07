@@ -90,6 +90,7 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterCurveRules(registry);
 	RegisterHealRules(registry);
 	RegisterHandRules(registry);
+	RegisterGestureRules(registry);
 	RegisterSoundRules(registry);
 	RegisterFireballRules(registry);
 	RegisterLightningRules(registry);
