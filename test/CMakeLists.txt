@@ -170,6 +170,9 @@ openblack_setup_and_add_test(
 openblack_setup_and_add_test(
   test_creature_locomotion test_creature_locomotion.cpp
 )
+openblack_setup_and_add_test(test_miracle_surfaces test_miracle_surfaces.cpp)
+target_link_libraries(test_miracle_surfaces PRIVATE psys)
+openblack_setup_and_add_test(test_miracle_visuals test_miracle_visuals.cpp)
 openblack_setup_and_add_test(test_resource_piles test_resource_piles.cpp)
 openblack_setup_and_add_test(test_map_cells test_map_cells.cpp)
 openblack_setup_and_add_test(test_script_cast test_script_cast.cpp)

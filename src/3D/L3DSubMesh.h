@@ -59,6 +59,8 @@ class L3DSubMesh
 		float alphaCutoutThreshold;
 		/// Drawn from both sides: the game culls the back faces of the rest, as the material's cull mode says
 		bool twoSided;
+		/// The material's render mode, as the file numbers it
+		uint32_t materialType {0};
 	};
 
 public:
@@ -100,12 +102,36 @@ public:
 	/// How far along a ray, in the mesh's space, it first meets the submesh, which the temple's rooms keep the triangles
 	/// of to find
 	[[nodiscard]] std::optional<float> Pick(glm::vec3 origin, glm::vec3 direction) const;
+	/// The submesh's corners and triangles, kept for the world to set flames on a model and to break it apart: each
+	/// primitive's indices (GetPrimitives) count into the corners. Empty for a model moved by bones.
+	struct Surface
+	{
+		std::vector<glm::vec3> positions;
+		std::vector<glm::vec2> uvs;
+		std::vector<glm::vec3> normals;
+		std::vector<uint16_t> indices;
+	};
+	[[nodiscard]] const Surface& GetSurface() const { return _surface; }
 	/// Whether some of the vertices are blended towards others where the body's parts meet (see vertex_blend). Each
 	/// vertex then names its partner in its bone indices' second and its weight, in 32767ths, in their third.
 	[[nodiscard]] bool HasBlends() const { return _hasBlends; }
 	/// For a boned submesh, every vertex's position and bone index, a texel each in a row, for the vertex shader to place
 	/// a blended vertex's partner by. The texels of a creature's variant mesh follow the same order.
 	[[nodiscard]] const Texture2D* GetBlendSource() const { return _blendSource.get(); }
+	/// The vertices of a submesh without bones, with their normals, for effects that crawl over its surface such as the
+	/// arcs a lightning strike leaves, and the run of them each of its primitives has, in order; none for a boned one
+	struct SurfacePoint
+	{
+		glm::vec3 position;
+		glm::vec3 normal;
+	};
+	struct SurfacePrimitive
+	{
+		uint32_t first;
+		uint32_t count;
+	};
+	[[nodiscard]] const std::vector<SurfacePoint>& GetSurfacePoints() const { return _surfacePoints; }
+	[[nodiscard]] const std::vector<SurfacePrimitive>& GetSurfacePrimitives() const { return _surfacePrimitives; }
 
 private:
 	/// The submesh's vertices as they are drawn, in bgfx memory
@@ -130,6 +156,9 @@ private:
 	Frame _frame {glm::mat4(1.0f), glm::vec3(0.0f), glm::vec3(0.0f)};
 	/// The corners of each triangle in turn, of the temple's rooms
 	std::vector<glm::vec3> _pickTriangles;
+	std::vector<SurfacePoint> _surfacePoints;
+	std::vector<SurfacePrimitive> _surfacePrimitives;
+	Surface _surface;
 
 	AxisAlignedBoundingBox _boundingBox;
 	bool _hasBlends {false};

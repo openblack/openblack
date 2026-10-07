@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <limits>
 #include <optional>
@@ -127,6 +128,23 @@ public:
 	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
 	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
 	[[nodiscard]] float GetMass() const { return _physicsMass; }
+	/// The triangles of its physics submeshes in the model's space, as the game's physics collides with them
+	[[nodiscard]] const std::vector<std::array<glm::vec3, 3>>& GetPhysicsTriangles() const { return _physicsTriangles; }
+	/// Every submesh's vertex positions in the model's space and its primitives' triangles, each primitive's indices
+	/// counting from its own first vertex, as the game picks a point on a model's surface
+	struct SurfacePrimitive
+	{
+		uint32_t vertexBase;
+		uint32_t indexBase;
+		uint32_t numTriangles;
+	};
+	struct Surface
+	{
+		std::vector<glm::vec3> positions;
+		std::vector<uint16_t> indices;
+		std::vector<SurfacePrimitive> primitives;
+	};
+	[[nodiscard]] const std::vector<Surface>& GetSurfaces() const { return _surfaces; }
 	[[nodiscard]] AxisAlignedBoundingBox GetBoundingBox() const { return _boundingBox; }
 	/// How far along a ray, in the mesh's space, it first meets a submesh drawn of the mesh (as the game picks the
 	/// triangle under the mouse while it draws), other than the submeshes left undrawn. Only the temple's rooms keep
@@ -156,6 +174,8 @@ private:
 	std::vector<glm::mat4> _extraMetrics;
 	/// Bounding box if no physics mesh was found
 	std::unique_ptr<btConvexShape> _physicsMesh;
+	std::vector<std::array<glm::vec3, 3>> _physicsTriangles;
+	std::vector<Surface> _surfaces;
 	float _physicsMass {1.0f}; // TODO(bwrsandman): Find somewhere in file a value
 	AxisAlignedBoundingBox _boundingBox {
 	    {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()},

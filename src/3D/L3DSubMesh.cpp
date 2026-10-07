@@ -160,6 +160,26 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		}
 	}
 
+	// A model that doesn't move keeps its vertices and how its primitives share them, for effects that crawl over its
+	// surface
+	_surfacePoints.clear();
+	_surfacePrimitives.clear();
+	if (!_flags.hasBones)
+	{
+		_surfacePoints.reserve(verticesSpan.size());
+		for (const auto& vertex : verticesSpan)
+		{
+			_surfacePoints.push_back(
+			    {.position = glm::make_vec3(&vertex.position.x), .normal = glm::make_vec3(&vertex.normal.x)});
+		}
+		uint32_t first = 0;
+		for (const auto& primitive : primitiveSpan)
+		{
+			_surfacePrimitives.push_back({.first = first, .count = primitive.numVertices});
+			first += primitive.numVertices;
+		}
+	}
+
 	// Get vertices
 	const bgfx::Memory* verticesMem = PackVertices(l3d, meshIndex);
 	if (_flags.hasBones)
@@ -215,6 +235,7 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		    mode.alphaTest,
 		    primitive.material.alphaCutoutThreshold / 255.0f,
 		    (primitive.material.cullMode & 1U) != 0,
+		    static_cast<uint32_t>(primitive.material.type),
 		});
 
 		// The temple's rooms, the meshes with lightmaps, keep their triangles for the hand to find where the cursor
@@ -233,6 +254,22 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		}
 		startVertex += static_cast<uint16_t>(primitive.numVertices);
 		startIndex += static_cast<uint16_t>(primitive.numTriangles * 3);
+	}
+
+	// A model that doesn't move by bones keeps its triangles for the flames set on it and the pieces it breaks into
+	if (!_flags.hasBones)
+	{
+		const auto count = std::min<size_t>(nVertices, verticesSpan.size());
+		_surface.positions.reserve(count);
+		_surface.uvs.reserve(count);
+		_surface.normals.reserve(count);
+		for (size_t i = 0; i < count; ++i)
+		{
+			_surface.positions.emplace_back(verticesSpan[i].position.x, verticesSpan[i].position.y, verticesSpan[i].position.z);
+			_surface.uvs.emplace_back(verticesSpan[i].texCoord.x, verticesSpan[i].texCoord.y);
+			_surface.normals.emplace_back(verticesSpan[i].normal.x, verticesSpan[i].normal.y, verticesSpan[i].normal.z);
+		}
+		_surface.indices.assign(indices, indices + nIndices);
 	}
 
 	VertexDecl decl;

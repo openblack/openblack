@@ -14,10 +14,13 @@
 #include <algorithm>
 #include <numbers>
 
+#include <entt/core/hashed_string.hpp>
 #include <glm/geometric.hpp>
+#include <glm/matrix.hpp>
 
 #include "Graphics/ZSort.h"
 #include "ParticleCreators.h"
+#include "ParticleSurfaces.h"
 
 using namespace openblack;
 using namespace openblack::particles;
@@ -156,7 +159,77 @@ private:
 	const Sources& _sources;
 };
 
-void AddAtom(Frame& frame, GroupBuilder& builder, const Effect::DrawAtom& atom, int player, const Sources& sources)
+/// A colour as the shader takes it, from the lowest byte: red, green, blue, alpha
+uint32_t AbgrOf(surface::Argb argb)
+{
+	return (argb & 0xFF00FF00u) | ((argb >> 16u) & 0xFFu) | ((argb & 0xFFu) << 16u);
+}
+
+/// A surface of revolution: the atom's own surface placed in the world by the atom's frame, laid over the land again
+/// when asked, its colours tinted by the atom's, its texture slid on
+void AddSurface(Frame& frame, const SurfaceCreator& creator, const Effect::DrawAtom& atom, const Sources& sources)
+{
+	const auto ids = sources.textures ? sources.textures(creator.texture) : std::nullopt;
+	if (!ids.has_value() || atom.surface == nullptr || atom.surface->mesh.vertices.empty())
+	{
+		return;
+	}
+	const auto& mesh = atom.surface->mesh;
+	glm::mat4 toWorld(atom.rotation);
+	toWorld[0] *= atom.scale;
+	toWorld[1] *= atom.scale * atom.stretch;
+	toWorld[2] *= atom.scale;
+	toWorld[3] = glm::vec4(atom.position, 1.0f);
+	const auto land = [&sources](glm::vec3 point) {
+		return sources.landHeight ? sources.landHeight({point.x, point.z}) : 0.0f;
+	};
+	const float landAtMiddle = creator.clampToLand ? land(atom.position) : 0.0f;
+	// The atom's colour and its drawn alpha tint every point, unless it is plain white
+	const auto alpha = static_cast<uint32_t>(std::clamp(atom.alpha, 0.0f, k_ByteMax));
+	const surface::Argb tint =
+	    (alpha << 24u) | (static_cast<uint32_t>(atom.rgb[0]) << 16u) | (static_cast<uint32_t>(atom.rgb[1]) << 8u) | atom.rgb[2];
+	const auto uvOffset = SurfaceUvOffset(*atom.surface, creator, atom.fraction);
+	const auto mode = creator.additive
+	                      ? (creator.writeDepth ? Mode::AlphaTexturedAlphaAdditive : Mode::AlphaTexturedAlphaAdditiveNz)
+	                      : (creator.writeDepth ? Mode::AlphaTexturedAlpha : Mode::AlphaTexturedAlphaNz);
+	const auto material = frame.MaterialIndex({.texture = ids->first, .alphaTexture = ids->second, .mode = mode});
+	const auto firstVertex = static_cast<uint32_t>(frame.surfaceVertices.size());
+	const bool lit = creator.lit && mesh.normals.size() == mesh.vertices.size();
+	for (size_t i = 0; i < mesh.vertices.size(); ++i)
+	{
+		const auto& vertex = mesh.vertices[i];
+		auto position = glm::vec3(toWorld * glm::vec4(vertex.position, 1.0f));
+		if (creator.clampToLand)
+		{
+			position.y += land(position) - landAtMiddle;
+		}
+		const auto colour = tint != 0xFFFFFFFFu ? surface::Modulate(vertex.colour, tint) : vertex.colour;
+		frame.surfaceVertices.push_back({
+		    .position = position,
+		    .uv = vertex.uv + uvOffset,
+		    .abgr = AbgrOf(colour),
+		    .specularAbgr = AbgrOf(vertex.specular),
+		});
+		frame.surfaceNormals.push_back(lit ? mesh.normals[i] : glm::vec3(0.0f));
+	}
+	const auto firstIndex = static_cast<uint32_t>(frame.surfaceIndices.size());
+	frame.surfaceIndices.insert(frame.surfaceIndices.end(), mesh.indices.begin(), mesh.indices.end());
+	frame.items.push_back(
+	    {.kind = ItemKind::Surface, .index = static_cast<uint32_t>(frame.surfaces.size()), .sortPoint = atom.position});
+	frame.surfaces.push_back({
+	    .material = material,
+	    .firstVertex = firstVertex,
+	    .vertexCount = static_cast<uint32_t>(mesh.vertices.size()),
+	    .firstIndex = firstIndex,
+	    .indexCount = static_cast<uint32_t>(mesh.indices.size()),
+	    .doubleSided = creator.doubleSided,
+	    .lit = lit,
+	    .worldToAtom = glm::inverse(toWorld),
+	});
+}
+
+void AddAtom(Frame& frame, GroupBuilder& builder, const Effect::DrawAtom& atom, int player, const Sources& sources,
+             const glm::vec3& origin)
 {
 	const auto& creator = *atom.creator;
 	switch (creator.kind)
@@ -199,6 +272,7 @@ void AddAtom(Frame& frame, GroupBuilder& builder, const Effect::DrawAtom& atom, 
 		    .colour = glm::vec4(glm::vec3(atom.rgb[0], atom.rgb[1], atom.rgb[2]) / k_ByteMax,
 		                        std::clamp(atom.alpha / k_ByteMax, 0.0f, 1.0f)),
 		    .uvOffset = uv,
+		    .cutBelow = mesh.drawCutByPlane ? std::optional<float>(origin.y) : std::nullopt,
 		});
 		break;
 	}
@@ -225,6 +299,18 @@ void AddAtom(Frame& frame, GroupBuilder& builder, const Effect::DrawAtom& atom, 
 		    .shape = shape,
 		    .counter = (static_cast<int>(atom.creatorValue.y) + counted) % k_MistCountWrap,
 		});
+		// A storm's cloud shades the land under it, as strongly as it is opaque
+		if (mist.shadow.has_value())
+		{
+			frame.lightStamps.push_back({
+			    .bitmap = *mist.shadow,
+			    .frame = 0,
+			    .pitch = mist.shadowPitch,
+			    .centre = atom.position,
+			    .strength = static_cast<float>(alpha) / k_ByteMax,
+			    .shadow = true,
+			});
+		}
 		break;
 	}
 	case Creator::Kind::LightMap:
@@ -252,6 +338,24 @@ void AddAtom(Frame& frame, GroupBuilder& builder, const Effect::DrawAtom& atom, 
 		});
 		break;
 	}
+	case Creator::Kind::Surface:
+		AddSurface(frame, static_cast<const SurfaceCreator&>(creator), atom, sources);
+		break;
+	case Creator::Kind::Fragment:
+		if (atom.fragment != nullptr)
+		{
+			frame.items.push_back({.kind = ItemKind::Fragment,
+			                       .index = static_cast<uint32_t>(frame.fragments.size()),
+			                       .sortPoint = atom.position});
+			frame.fragments.push_back({
+			    .shape = atom.fragment,
+			    .axes = atom.rotation * atom.scale,
+			    .position = atom.position,
+			    .rgb = atom.rgb,
+			    .alpha = std::clamp(atom.alpha / k_ByteMax, 0.0f, 1.0f),
+			});
+		}
+		break;
 	case Creator::Kind::Point:
 	case Creator::Kind::Chain:
 	case Creator::Kind::Other:
@@ -269,6 +373,11 @@ void Frame::Clear()
 	chains.clear();
 	meshes.clear();
 	mists.clear();
+	surfaceVertices.clear();
+	surfaceIndices.clear();
+	surfaceNormals.clear();
+	surfaces.clear();
+	fragments.clear();
 	lightStamps.clear();
 	items.clear();
 	groups.clear();
@@ -310,7 +419,7 @@ SymbolSprites draw::SymbolOf(const Effect::DrawAtom& atom, uint32_t playerRgb, i
 }
 
 void draw::AppendChain(std::vector<ChainVertex>& out, const Creator& creator, std::span<const Effect::DrawAtom> joints,
-                       int textureRepeats)
+                       int textureRepeats, float textureScroll)
 {
 	if (joints.size() < 2)
 	{
@@ -322,7 +431,7 @@ void draw::AppendChain(std::vector<ChainVertex>& out, const Creator& creator, st
 	{
 		const auto& head = joints[static_cast<size_t>(i)];
 		const auto& tail = joints[static_cast<size_t>(i) + 1];
-		const auto uv = chain.SegmentUv(i, segments, textureRepeats);
+		const auto uv = chain.SegmentUv(i, segments, textureRepeats, textureScroll);
 		const bool before = i > 0;
 		const bool after = i + 1 < segments;
 		const auto& previous = before ? joints[static_cast<size_t>(i) - 1].position : head.position;
@@ -370,7 +479,7 @@ void draw::AddEffect(Frame& frame, const Effect::DrawWalk& walk, DrawPath path, 
 	{
 		if (!step.chain)
 		{
-			AddAtom(frame, builder, walk.atoms.at(step.index), shown, sources);
+			AddAtom(frame, builder, walk.atoms.at(step.index), shown, sources, origin);
 			continue;
 		}
 		const auto& chain = walk.chains.at(step.index);
@@ -389,13 +498,51 @@ void draw::AddEffect(Frame& frame, const Effect::DrawWalk& walk, DrawPath path, 
 		frame.chains.push_back({.material = material,
 		                        .firstVertex = static_cast<uint32_t>(frame.chainVertices.size()),
 		                        .segments = chain.jointCount - 1});
-		AppendChain(frame.chainVertices, *chain.creator, joints, chain.textureRepeats);
+		AppendChain(frame.chainVertices, *chain.creator, joints, chain.textureRepeats, chain.textureScroll);
 	}
 	const auto count = static_cast<uint32_t>(frame.items.size()) - firstItem;
 	if (count > 0)
 	{
 		frame.groups.push_back({.path = path, .origin = origin, .firstItem = firstItem, .itemCount = count});
 	}
+}
+
+void draw::AddLightSheet(Frame& frame, std::span<const LightSheet::Vertex> vertices, std::span<const uint32_t> triangles,
+                         const glm::vec3& sortPoint)
+{
+	if (vertices.empty() || triangles.empty())
+	{
+		return;
+	}
+	static constexpr auto k_Stars = entt::hashed_string("raw/S_LightSheetStars");
+	static constexpr auto k_StarsAlpha = entt::hashed_string("raw/S_LightSheetStarsa");
+	const auto material = frame.MaterialIndex(
+	    {.texture = k_Stars.value(), .alphaTexture = k_StarsAlpha.value(), .mode = Mode::AlphaTexturedAlphaAdditiveNz});
+	const auto firstItem = static_cast<uint32_t>(frame.items.size());
+	const auto firstVertex = static_cast<uint32_t>(frame.surfaceVertices.size());
+	for (const auto& vertex : vertices)
+	{
+		frame.surfaceVertices.push_back({.position = vertex.position,
+		                                 .uv = vertex.uv,
+		                                 .abgr = AbgrOf(vertex.argb),
+		                                 .specularAbgr = AbgrOf(vertex.specularArgb)});
+		frame.surfaceNormals.emplace_back(0.0f);
+	}
+	const auto firstIndex = static_cast<uint32_t>(frame.surfaceIndices.size());
+	frame.surfaceIndices.insert(frame.surfaceIndices.end(), triangles.begin(), triangles.end());
+	frame.items.push_back(
+	    {.kind = ItemKind::Surface, .index = static_cast<uint32_t>(frame.surfaces.size()), .sortPoint = sortPoint});
+	frame.surfaces.push_back({
+	    .material = material,
+	    .firstVertex = firstVertex,
+	    .vertexCount = static_cast<uint32_t>(vertices.size()),
+	    .firstIndex = firstIndex,
+	    .indexCount = static_cast<uint32_t>(triangles.size()),
+	    .doubleSided = true,
+	    .lit = false,
+	    .worldToAtom = glm::mat4(1.0f),
+	});
+	frame.groups.push_back({.path = DrawPath::Sorted, .origin = sortPoint, .firstItem = firstItem, .itemCount = 1});
 }
 
 void draw::Order(const Frame& frame, const glm::vec3& camera, std::optional<glm::vec3> hand, std::vector<Command>& commands,
@@ -410,9 +557,10 @@ void draw::Order(const Frame& frame, const glm::vec3& camera, std::optional<glm:
 		for (const auto index : items)
 		{
 			const auto& item = frame.items[index];
-			const uint32_t material = item.kind == ItemKind::Sprite  ? frame.spriteMaterials[item.index]
-			                          : item.kind == ItemKind::Chain ? frame.chains[item.index].material
-			                                                         : 0;
+			const uint32_t material = item.kind == ItemKind::Sprite    ? frame.spriteMaterials[item.index]
+			                          : item.kind == ItemKind::Chain   ? frame.chains[item.index].material
+			                          : item.kind == ItemKind::Surface ? frame.surfaces[item.index].material
+			                                                           : 0;
 			if (item.kind == ItemKind::Sprite && commands.size() > firstCommand && commands.back().kind == ItemKind::Sprite &&
 			    commands.back().material == material)
 			{

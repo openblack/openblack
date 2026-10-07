@@ -15,6 +15,7 @@
 
 #include "ParticleCreators.h"
 #include "ParticleObjectRules.h"
+#include "ParticleSurfaces.h"
 
 using namespace openblack::particles;
 
@@ -96,6 +97,7 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterLightningRules(registry);
 	RegisterGlintRules(registry);
 	RegisterShieldRules(registry);
+	RegisterSurfaceRules(registry);
 	RegisterObjectRules(registry);
 	return registry;
 }

@@ -166,6 +166,27 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 			result = false;
 			continue;
 		}
+		{
+			// Its surface, as the game picks points on it
+			auto& surface = _surfaces.emplace_back();
+			const auto vertices = l3d.GetVertexSpan(i);
+			surface.positions.reserve(vertices.size());
+			for (const auto& vertex : vertices)
+			{
+				surface.positions.emplace_back(vertex.position.x, vertex.position.y, vertex.position.z);
+			}
+			const auto indices = l3d.GetIndexSpan(i);
+			surface.indices.assign(indices.begin(), indices.end());
+			uint32_t vertexBase = 0;
+			uint32_t indexBase = 0;
+			for (const auto& primitive : l3d.GetPrimitiveSpan(i))
+			{
+				surface.primitives.push_back(
+				    {.vertexBase = vertexBase, .indexBase = indexBase, .numTriangles = primitive.numTriangles});
+				vertexBase += primitive.numVertices;
+				indexBase += primitive.numTriangles * 3;
+			}
+		}
 		if (subMesh->GetFlags().isPhysics)
 		{
 			const auto& verticesSpan = l3d.GetVertexSpan(i);
@@ -174,6 +195,29 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 			                          static_cast<int>(verticesSpan.size()), static_cast<int>(sizeof(verticesSpan[0])));
 			physicsMesh->optimizeConvexHull();
 			_physicsMesh.reset(physicsMesh);
+			// Its triangles, each primitive's indices counting from its own first vertex
+			uint32_t vertexBase = 0;
+			uint32_t indexBase = 0;
+			const auto indices = l3d.GetIndexSpan(i);
+			for (const auto& primitive : l3d.GetPrimitiveSpan(i))
+			{
+				for (uint32_t t = 0; t < primitive.numTriangles && indexBase + (t * 3) + 2 < indices.size(); ++t)
+				{
+					std::array<glm::vec3, 3> triangle {};
+					for (uint32_t c = 0; c < 3; ++c)
+					{
+						const auto index = vertexBase + indices[indexBase + (t * 3) + c];
+						if (index < verticesSpan.size())
+						{
+							const auto& p = verticesSpan[index].position;
+							triangle.at(c) = glm::vec3(p.x, p.y, p.z);
+						}
+					}
+					_physicsTriangles.push_back(triangle);
+				}
+				vertexBase += primitive.numVertices;
+				indexBase += primitive.numTriangles * 3;
+			}
 			// FIXME(bwrsandman): Some meshes have multiple physics meshes
 		}
 		const auto& bb = subMesh->GetBoundingBox();
