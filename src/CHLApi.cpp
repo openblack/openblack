@@ -44,6 +44,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
@@ -1903,8 +1904,8 @@ void IsOfType() // 192 IS_OF_TYPE
 
 void ClearHitObject() // 193 CLEAR_HIT_OBJECT
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// The physics forgets the last thing hit and what hit it
+	Locator::dynamicsSystem::value().SetHitObject(entt::null, entt::null);
 }
 
 void GameThingHit() // 194 GAME_THING_HIT
@@ -2249,16 +2250,16 @@ void SetCreatureHome() // 223 SET_CREATURE_HOME
 
 void GetHitObject() // 224 GET_HIT_OBJECT
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	// The last thing a body in the physics hit, none once it has gone
+	const auto hit = Locator::dynamicsSystem::value().GetHitObject();
+	Pusho(hit == entt::null ? 0 : static_cast<uint32_t>(hit));
 }
 
 void GetObjectWhichHit() // 225 GET_OBJECT_WHICH_HIT
 {
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	// What hit it, none once it has gone
+	const auto hitter = Locator::dynamicsSystem::value().GetObjectWhichHit();
+	Pusho(hitter == entt::null ? 0 : static_cast<uint32_t>(hitter));
 }
 
 void GetNearestTownOfPlayer() // 226 GET_NEAREST_TOWN_OF_PLAYER

@@ -73,6 +73,7 @@
 #include "Magic/MagicTables.h"
 #include "MeshViewer.h"
 #include "PathFinding.h"
+#include "Physics.h"
 #include "Profiler.h"
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
@@ -134,6 +135,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Weather);
 	debugWindows.emplace_back(new Magic);
 	debugWindows.emplace_back(new Gestures);
+	debugWindows.emplace_back(new Physics);
 	debugWindows.emplace_back(new KeyBindingsWindow);
 	auto spawner = std::make_unique<CreatureSpawner>();
 	auto scenarios = std::make_unique<TestbedScenarios>(*spawner);
