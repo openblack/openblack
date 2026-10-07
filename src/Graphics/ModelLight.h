@@ -32,5 +32,14 @@ constexpr float k_Ambient = 90.0f;
 
 /// The uniform the object shaders read: the light's position, and the ambient
 [[nodiscard]] glm::vec4 Uniform(const glm::vec3& light, float ambient = k_Ambient);
+/// The light's direction in the space of a model whose axes and origin in the world are given: from the origin, not
+/// from the vertex, as the game takes it, and unit long; a mirrored space keeps the light on the right side. As
+/// model_light.sh's ModelLightLocal.
+[[nodiscard]] glm::vec3 LocalDirection(const glm::vec3& light, const glm::vec3& axisX, const glm::vec3& axisY,
+                                       const glm::vec3& axisZ, const glm::vec3& origin);
+/// The factor a vertex's colour is lit by, of 256, for its normal in the model's space and the light's local direction:
+/// I = round(255 n.l), halves to even; the ambient when I < 0, else ambient + ((255 - ambient) I >> 8). As
+/// model_light.sh's ModelLightFactor.
+[[nodiscard]] float Factor(const glm::vec3& normal, const glm::vec3& localLight, float ambient);
 
 } // namespace openblack::model_light

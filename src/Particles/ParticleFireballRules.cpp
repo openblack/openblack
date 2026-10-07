@@ -14,6 +14,8 @@
 #include <cmath>
 
 #include <algorithm>
+#include <array>
+#include <chrono>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -22,8 +24,11 @@
 #include <ParticleFile.h>
 #include <glm/geometric.hpp>
 
+#include "Common/GameRandom.h"
+#include "ParticleBlast.h"
 #include "ParticleClassRegistry.h"
 #include "ParticleMiracleMaths.h"
+#include "ParticleObjectEffects.h"
 #include "ParticleShields.h"
 #include "ParticleSounds.h"
 
@@ -38,6 +43,9 @@ constexpr float k_DefaultLobGravity = 30.0f;
 constexpr float k_FastestThrowForSound = 200.0f;
 /// The wind's pull is scaled down so
 constexpr float k_WindScale = 0.1f;
+/// A ring on the water is four times the size of what struck it, and a particle's rings this far apart at least
+constexpr float k_RippleScale = 4.0f;
+constexpr float k_RippleSpacing = 2.0f;
 
 /// A point of the world in an atom's collection's frame
 void SetGlobal(const Effect& effect, Atom& atom, const glm::vec3& global)
@@ -82,6 +90,7 @@ public:
 	    , impactLarge(object.Float("ImpactSpeedLarge", 40.0f))
 	    , minAlpha(object.Int("MinAlphaForImpactSoundOrRipple", 60))
 	    , checkShields(object.Bool("CheckShieldDeflections", false))
+	    , useSurfaceForBounce(object.Bool("UseSurfaceForBounce", false))
 	{
 	}
 
@@ -99,7 +108,7 @@ public:
 			const auto before = effect.GlobalPosition(atom);
 			if (windy)
 			{
-				v += (world.WindAt(before) * windMagnification * k_WindScale - v) * damping * dt;
+				v += (world.SmoothWindAt(before) * windMagnification * k_WindScale - v) * damping * dt;
 			}
 			else if (damped)
 			{
@@ -107,6 +116,8 @@ public:
 			}
 			atom.position += v * dt;
 			auto p = effect.GlobalPosition(atom);
+			// It meets the land at its centre: the game takes a sprite's or a broken piece's lowest point to be where it
+			// is
 			const float land = world.LandHeight({p.x, p.z});
 			if (p.y >= land)
 			{
@@ -121,8 +132,15 @@ public:
 				const float into = glm::dot(v, normal);
 				if (into < 0.0f)
 				{
-					ImpactSound(effect, atom, std::abs(into));
-					v = maths::BounceOffSlope(v, normal, groundDrag, dt, horizontalBounce, verticalBounce);
+					// A ripple comes only with an impact sound that plays
+					if (ImpactSound(effect, atom, std::abs(into)))
+					{
+						Ripple(effect, atom, p);
+					}
+					// Water and soft ground take the bounce out of it
+					const float bounce =
+					    useSurfaceForBounce ? horizontalBounce * SurfaceBounce(world.SurfaceAt(p)) : horizontalBounce;
+					v = maths::BounceOffSlope(v, normal, groundDrag, dt, bounce, verticalBounce);
 				}
 			}
 			atom.velocity = v;
@@ -134,20 +152,52 @@ public:
 		return true;
 	}
 
-	void ImpactSound(Effect& effect, Atom& atom, float speed) const
+	/// The impact sound, when the particle is bright enough, it strikes fast enough and the sound isn't playing yet;
+	/// whether it played
+	bool ImpactSound(Effect& effect, Atom& atom, float speed) const
 	{
 		if (static_cast<int>(atom.rgba[3]) < minAlpha || impactSound.Silent() || speed < impactSmall ||
 		    FindAtomSound(atom, impactSound.action.sound) != nullptr)
 		{
-			return;
+			return false;
 		}
 		if (!impactSoundCondition.empty() && !effect.ConditionForAtom(impactSoundCondition, atom))
 		{
-			return;
+			return false;
 		}
 		auto sound = impactSound;
 		sound.size = SoundSizeFromImpactSpeed(speed, impactMedium, impactLarge);
 		StartAtomSound(effect, atom, sound);
+		return true;
+	}
+
+	/// A particle striking the water leaves a ring as wide as four times its size, further than a distance across the
+	/// ground from its last; the game starts counting from the map's corner
+	void Ripple(Effect& effect, Atom& atom, const glm::vec3& point) const
+	{
+		auto* objects = effect.Services().world.ObjectEffects();
+		if (objects == nullptr || !effect.Services().world.IsWater(point))
+		{
+			return;
+		}
+		auto& data = atom.data[this];
+		const glm::vec2 here(point.x, point.z);
+		const glm::vec2 last(data.a.x, data.a.y);
+		if (!(glm::dot(here - last, here - last) > k_RippleSpacing * k_RippleSpacing))
+		{
+			return;
+		}
+		data.a.x = here.x;
+		data.a.y = here.y;
+		objects->AddWaterRing(point, atom.baseScale * atom.ruleScale * k_RippleScale);
+	}
+
+	/// How much of its bounce across a surface keeps: little on water, more on surface nine
+	[[nodiscard]] static float SurfaceBounce(int surface)
+	{
+		constexpr std::array<float, 10> k_Bounce {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.2f, 0.2f, 1.0f, 1.25f};
+		return surface >= 0 && static_cast<size_t>(surface) < k_Bounce.size() ? k_Bounce.at(static_cast<size_t>(surface))
+		                                                                      : 1.0f;
 	}
 
 	float gravity;
@@ -168,6 +218,7 @@ public:
 	float impactLarge;
 	int minAlpha;
 	bool checkShields;
+	bool useSurfaceForBounce;
 };
 
 /// The throw: once, the atoms leave the hand. A human player throws them with the hand's movement; any other caster lobs
@@ -190,9 +241,7 @@ public:
 	    , horizontalScatterMax(object.Float("HorozScatterAtMaxSpeed", 0.0f))
 	    , speedRandomFrac(object.Float("SpeedRandomFrac", 0.0f))
 	    , initScale(object.String("InitScaleFP"))
-	    , lift(object.Float("Elevation", maths::k_ThrowLift))
-	    , speeds({.hand = {object.Float("V_In_0", 0.0f), object.Float("V_In_1", 50.0f), object.Float("V_In_2", 450.0f)},
-	              .thrown = {object.Float("V_Out_0", 0.0f), object.Float("V_Out_1", 50.0f), object.Float("V_Out_2", 250.0f)}})
+
 	{
 	}
 
@@ -209,7 +258,8 @@ public:
 		maths::Launch launch;
 		if (effect.IsHumanPlayerCasting())
 		{
-			launch = maths::HandThrow(effect.GetDirection(), lift, speeds);
+			// The hand's throw has its own lift and speeds: the file's elevation and speed table go unread
+			launch = maths::HandThrow(effect.GetDirection());
 		}
 		else
 		{
@@ -246,6 +296,13 @@ public:
 			}
 			atom.position = start;
 			atom.velocity = direction * speed;
+			// A ball this computer's player throws is drawn in the hand at first, catching up with where it flies over two
+			// seconds
+			if (effect.GetSink() != nullptr && effect.GetSink()->IsMyInterfaceCasting())
+			{
+				atom.drawOffset = hand - effect.GlobalPosition(atom);
+				atom.drawOffsetFrom = effect.GetAge();
+			}
 			StartAtomSound(effect, atom, played);
 		}
 		return false;
@@ -277,8 +334,6 @@ public:
 	float horizontalScatterMax;
 	float speedRandomFrac;
 	std::string initScale;
-	float lift;
-	maths::ThrowSpeeds speeds;
 };
 
 /// Every step, the atom tells its miracle where it is and how it moved, so the miracle can act there
@@ -287,9 +342,10 @@ class EventAlways final: public Modifier
 public:
 	bool ModifyAtom(Effect& effect, Atom& atom, Collection::Slot& /*slot*/) const override
 	{
+		// How it moved over the step before, as last drawn: none until it has been through two steps
 		effect.SendSpellEvent({.type = SpellEventInfo::Type::Point,
 		                       .position = effect.GlobalPosition(atom),
-		                       .velocity = atom.velocity * effect.GetDt(),
+		                       .velocity = atom.steps >= 2 ? atom.current.position - atom.previous.position : glm::vec3(0.0f),
 		                       .strength = 1.0f,
 		                       .checkShields = false,
 		                       .target = entt::null});
@@ -308,10 +364,66 @@ public:
 	}
 };
 
-/// The ball carries the game object that burns what it passes. The miracle burns round each point the ball tells it
-/// of instead (see the fireball miracle), so this rule only marks where that object would be: nothing for it to do.
+/// The ball carries a burning object, made as it is thrown and as hot as its miracle is strong, whose fire heats what it
+/// passes. Once the object cools below what keeps a ball going the ball is turned aside, ending it; once its fire has
+/// gone the ball goes too. A ball rushing past the camera is heard: one of five samples, heard as the ball, moving
+/// fast, comes into the space close round the camera.
 class AttachFireBallToAtom final: public Modifier
 {
+public:
+	bool ModifyAtom(Effect& effect, Atom& atom, Collection::Slot& /*slot*/) const override
+	{
+		auto* objects = effect.Services().world.ObjectEffects();
+		if (objects == nullptr)
+		{
+			return true;
+		}
+		auto& data = atom.data[this];
+		const auto position = effect.GlobalPosition(atom);
+		const float radius = atom.baseScale * atom.ruleScale;
+		if (!data.started)
+		{
+			data.started = true;
+			const auto* sink = effect.GetSink();
+			const bool script = sink != nullptr && sink->IsScriptCasting();
+			const auto player =
+			    effect.GetPlayer() >= 0 ? std::optional(static_cast<openblack::PlayerNames>(effect.GetPlayer())) : std::nullopt;
+			data.object =
+			    objects->AttachFireBall(position, effect.GetProcessInfo().power, radius, !script, player).value_or(entt::null);
+		}
+		if (data.object != entt::null)
+		{
+			// The hand takes hold of it where its particle was last placed, while it shows brighter than 30
+			constexpr uint8_t k_FaintestToHold = 30;
+			const auto handTarget =
+			    atom.drawn && atom.rgba[3] > k_FaintestToHold ? std::optional(atom.current.position) : std::nullopt;
+			switch (objects->FollowFireBall(data.object, position, radius, effect.GetProcessInfo().power, handTarget))
+			{
+			case ObjectEffectsInterface::FireBallState::Gone:
+				data.object = entt::null;
+				return false;
+			case ObjectEffectsInterface::FireBallState::Cooled:
+				atom.deflected = true;
+				break;
+			case ObjectEffectsInterface::FireBallState::Burning:
+				break;
+			}
+		}
+		// While it carries its burning object, it is heard as the last step brought it into the space round the camera
+		// from outside, fast enough: one of five samples, picked by the computer's clock in milliseconds
+		constexpr uint32_t k_FirstPastSample = 64;
+		constexpr uint32_t k_PastSamples = 5;
+		if (data.object != entt::null && atom.drawn &&
+		    maths::RushedPastCamera(atom.previous.position, atom.current.position, atom.velocity,
+		                            effect.Services().world.CameraPosition()))
+		{
+			const auto milliseconds =
+			    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
+			        .count();
+			effect.Services().world.PlayListenerSound(k_FirstPastSample + static_cast<uint32_t>(milliseconds) % k_PastSamples);
+		}
+		return true;
+	}
 };
 
 /// The ball curves as it flies, turning about the vertical by the caster's spin, which fades over a time. Until the
@@ -411,8 +523,9 @@ public:
 };
 
 /// A trail of atoms behind the parent atom along where it was over the last turns, no longer than a length, spaced
-/// closer towards the head or evenly, fading and shrinking towards the tail. The first and last atoms are only points
-/// when the head or tail group is unset.
+/// closer towards the head or evenly, fading and shrinking towards the tail. Every atom is drawn, the head one sitting
+/// on the parent; the first and last take the tail and head groups (when set) in place of the next groups. When asked,
+/// the trail is drawn shifted as its parent is, as a fireball leaving this computer's hand.
 class Trail final: public Modifier
 {
 public:
@@ -433,6 +546,7 @@ public:
 	    , modifyScaling(object.Bool("ModifyScaling", true))
 	    , initUsingVelocity(object.Bool("InitTrailUsingVelocity", false))
 	    , scaleLengthWithParent(object.Bool("ScaleMaxTrailLengthWithParent", false))
+	    , useParentsDrawOffset(object.Bool("UseParentsDrawOffset", false))
 	    , fadeTailAlpha(object.Float("FadeTailAlpha", 1.0f))
 	    , fadeTailScale(object.Float("FadeTailScale", 1.0f))
 	{
@@ -477,11 +591,25 @@ public:
 			history.samples.assign(static_cast<size_t>(std::max(turns, 1)), Sample {});
 			slot.data = history;
 			const auto* atomCreator = effect.FindCreator(creator);
+			const std::array<int, 1> head {headGroup};
+			const std::array<int, 1> tail {trailGroup};
 			for (int i = 0; i < numAtoms; ++i)
 			{
-				const bool point = i == 0 ? headGroup < 0 : (i == numAtoms - 1 && trailGroup < 0);
-				effect.NewAtom(collection, point ? nullptr : atomCreator,
-				               point ? std::span<const int> {} : std::span<const int>(nextGroups));
+				std::span<const int> groups(nextGroups);
+				if (i == 0)
+				{
+					groups = headGroup >= 0 ? std::span<const int>(head) : std::span<const int> {};
+				}
+				else if (i == numAtoms - 1)
+				{
+					groups = trailGroup >= 0 ? std::span<const int>(tail) : std::span<const int> {};
+				}
+				auto& atom = effect.NewAtom(collection, atomCreator, groups);
+				if (useParentsDrawOffset && collection.parent != nullptr)
+				{
+					atom.drawOffset = collection.parent->drawOffset;
+					atom.drawOffsetFrom = collection.parent->drawOffsetFrom;
+				}
 			}
 			return true;
 		}
@@ -600,6 +728,7 @@ public:
 	bool modifyScaling;
 	bool initUsingVelocity;
 	bool scaleLengthWithParent;
+	bool useParentsDrawOffset;
 	float fadeTailAlpha;
 	float fadeTailScale;
 };

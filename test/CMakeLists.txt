@@ -246,6 +246,7 @@ openblack_setup_and_add_test(test_animal_animation test_animal_animation.cpp)
 openblack_setup_and_add_test(test_animal_move test_animal_move.cpp)
 openblack_setup_and_add_test(test_teleport_rules test_teleport_rules.cpp)
 openblack_setup_and_add_test(test_fire test_fire.cpp)
+openblack_setup_and_add_test(test_blast test_blast.cpp)
 openblack_setup_and_add_test(
   test_creature_spell_mind test_creature_spell_mind.cpp
 )

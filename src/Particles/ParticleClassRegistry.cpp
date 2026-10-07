@@ -14,6 +14,7 @@
 #include <glm/geometric.hpp>
 
 #include "ParticleCreators.h"
+#include "ParticleFlocking.h"
 #include "ParticleObjectRules.h"
 #include "ParticleSurfaces.h"
 
@@ -99,6 +100,8 @@ ParticleClassRegistry ParticleClassRegistry::WithAllClasses(CreatorResourcesInte
 	RegisterShieldRules(registry);
 	RegisterSurfaceRules(registry);
 	RegisterObjectRules(registry);
+	RegisterForestRules(registry);
+	RegisterBlastRules(registry);
 	return registry;
 }
 

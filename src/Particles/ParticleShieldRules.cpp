@@ -49,6 +49,10 @@ constexpr float k_SparkPulseSpeed = 6.0f;
 constexpr float k_SparkAlphaScale = 510.0f;
 /// The dome's surface fades in by this much a second
 constexpr float k_VapourFadeIn = 30.0f;
+/// A spark's arc wiggles across by this share of the shield's radius when its file doesn't say
+constexpr float k_SparkWiggle = 0.08f;
+/// The atoms put on an object without points of its own to put them at
+constexpr size_t k_AtomsWithoutPoints = 5;
 
 /// The rotation that turns the vertical towards a point from the centre
 glm::mat3 OrientAlong(const glm::vec3& p, const glm::mat3& start)
@@ -168,7 +172,7 @@ public:
 	    , radius(object.String("SphereRadius"))
 	    , maxAtoms(object.Int("MaxNumAtomsForCollection", -1))
 	    , sparkLife(object.Float("SparkLife", 1.0f))
-	    , wiggle(object.Float("WiggleAmpl", 0.0f))
+	    , wiggle(object.Float("WiggleAmpl", k_SparkWiggle))
 	    , sound({.action = object.Sound("SoundSpark")})
 	{
 	}
@@ -347,6 +351,60 @@ public:
 	std::string scaleFactor;
 };
 
+/// Atoms on the object the effect was given, one at each of its model's extra points, or a few at the object itself when
+/// it has none; they follow it while it stands and go with it. Its number of extra points is not read: the model's own
+/// count is used, as the game does.
+class AtomsAtTarget final: public Modifier
+{
+public:
+	explicit AtomsAtTarget(const ParticleObject& object)
+	    : creator(object.String("PCreator"))
+	    , nextGroups(object.IntArray("NextGroups"))
+	{
+	}
+
+	[[nodiscard]] bool Creates() const override { return true; }
+	[[nodiscard]] bool KeepsAlive() const override { return true; }
+
+	bool ModifyCollection(Effect& effect, Collection& collection, Collection::Slot& slot) const override
+	{
+		auto& world = effect.Services().world;
+		if (slot.first)
+		{
+			const auto target = effect.TakeTarget();
+			if (!target.has_value())
+			{
+				return true;
+			}
+			slot.first = false;
+			slot.data = *target;
+		}
+		const auto* target = std::any_cast<entt::entity>(&slot.data);
+		const auto info = target != nullptr ? world.Target(*target, false) : std::nullopt;
+		if (!info.has_value())
+		{
+			// The object has gone, and its atoms with it
+			collection.atoms.clear();
+			return false;
+		}
+		const auto points = world.TargetExtraPoints(*target);
+		const size_t count = points.empty() ? k_AtomsWithoutPoints : points.size();
+		const auto* atomCreator = effect.FindCreator(creator);
+		while (atomCreator != nullptr && collection.atoms.size() < count)
+		{
+			effect.NewAtom(collection, atomCreator, nextGroups);
+		}
+		for (size_t i = 0; i < collection.atoms.size(); ++i)
+		{
+			collection.atoms[i]->position = effect.GlobalToLocal(collection, i < points.size() ? points[i] : info->position);
+		}
+		return true;
+	}
+
+	std::string creator;
+	std::vector<int> nextGroups;
+};
+
 /// The collection's alpha is the provider's, between 0 and 255; without a provider the rule lets go
 class SetCollectionAlpha final: public Modifier
 {
@@ -387,12 +445,15 @@ bool openblack::particles::DeflectOffShields(Effect& effect, Atom& atom, const g
 	}
 	const auto hit = maths::SphereEntry(previousGlobal, global, shield->centre, shield->radius, margin);
 	StrikeShield(*shield, hit);
-	const bool through = effect.SendSpellEvent({.type = SpellEventInfo::Type::HitSpell,
-	                                            .position = hit,
-	                                            .velocity = global - previousGlobal,
-	                                            .strength = 1.0f,
-	                                            .checkShields = false,
-	                                            .target = shield->spell});
+	const bool through =
+	    effect.SendSpellEvent({.type = SpellEventInfo::Type::HitSpell,
+	                           .position = hit,
+	                           // How it moved over the step before, as last drawn: none until it
+	                           // has been through two steps
+	                           .velocity = atom.steps >= 2 ? atom.current.position - atom.previous.position : glm::vec3(0.0f),
+	                           .strength = 1.0f,
+	                           .checkShields = false,
+	                           .target = shield->spell});
 	if (through)
 	{
 		return false;
@@ -410,4 +471,5 @@ void openblack::particles::RegisterShieldRules(ParticleClassRegistry& registry)
 	registry.AddModifier("UR_InitialSpin", ParticleClassRegistry::Make<InitialSpin>);
 	registry.AddModifier("UR_VapourEndEffect", ParticleClassRegistry::Make<VapourEndEffect>);
 	registry.AddModifier("SetCollectionAlpha", ParticleClassRegistry::Make<SetCollectionAlpha>);
+	registry.AddModifier("UR_AtomsAtEPTarget", ParticleClassRegistry::Make<AtomsAtTarget>);
 }
