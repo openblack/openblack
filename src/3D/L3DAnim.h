@@ -49,12 +49,23 @@ public:
 	[[nodiscard]] uint32_t GetDuration() const noexcept { return _duration; }
 	[[nodiscard]] const std::vector<Frame>& GetFrames() const noexcept { return _frames; }
 	[[nodiscard]] std::vector<glm::mat4> GetBoneMatrices(uint32_t time) const noexcept;
+	/// How long one play of the clip lasts in milliseconds, over which its keyframes are evenly spread
+	[[nodiscard]] uint32_t GetPlayTime() const noexcept { return _unknown_0x20; }
+	/// Whether the clip plays round and round, rather than holding its last pose
+	[[nodiscard]] bool IsLooping() const noexcept { return (_unknown_0x50 & k_Looping) != 0; }
+	/// Whether the clip plays by the clock even while its animal moves, rather than by the ground it covers
+	[[nodiscard]] bool IsPlayedByTime() const noexcept { return (_unknown_0x50 & k_PlayedByTime) != 0; }
+	/// How far one play of a moving clip carries its animal, in the mesh's units: the stride a walk or run covers
+	[[nodiscard]] float GetStride() const noexcept { return _unknown_0x28; }
 
 private:
+	static constexpr uint32_t k_Looping = 0x100;
+	static constexpr uint32_t k_PlayedByTime = 0x200;
+
 	std::string _name;
-	uint32_t _unknown_0x20; // TODO(#471): Seems to be a uint16_t padded
+	uint32_t _unknown_0x20; // The play time in milliseconds
 	float _unknown_0x24;    // TODO(#471)
-	float _unknown_0x28;    // TODO(#471)
+	float _unknown_0x28;    // The stride of a moving clip
 	float _unknown_0x2C;    // TODO(#471)
 	float _unknown_0x30;    // TODO(#471)
 	float _unknown_0x34;    // TODO(#471)
@@ -62,7 +73,7 @@ private:
 	uint32_t _duration;
 	uint32_t _unknown_0x44; // TODO(#471): Always 1 in Body Block
 	uint32_t _unknown_0x48; // TODO(#471): Always 0 in Body Block
-	uint32_t _unknown_0x50; // TODO(#471): Seems to be a uint16_t padded
+	uint32_t _unknown_0x50; // Flags: 0x100 looping, 0x200 played by time
 
 	std::vector<Frame> _frames;
 
