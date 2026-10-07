@@ -323,7 +323,7 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 	if (version > 4)
 	{
 		read(points.leashBone);
-		read(points.unknownBone2);
+		read(points.rightEye);
 	}
 	read(points.pickUpTime);
 	if (version > 8)
@@ -397,6 +397,17 @@ void MorphFile::ReadCreatureBlock(std::istream& stream) noexcept
 		_creatureEyes = eyes;
 		ReadTattooSites(stream, version);
 	}
+	// The block ends with each bone's mirror bone. Its last numbers are kept, the table among them, for the bones are
+	// counted in the mesh rather than here.
+	constexpr size_t k_MostTail = 512;
+	_creatureVersion = version;
+	std::vector<int32_t> rest;
+	for (int32_t value = 0; stream.read(reinterpret_cast<char*>(&value), sizeof(value)).good();)
+	{
+		rest.push_back(value);
+	}
+	const auto keep = std::min(rest.size(), k_MostTail);
+	_creatureTail.assign(rest.end() - static_cast<std::ptrdiff_t>(keep), rest.end());
 }
 
 void MorphFile::ReadTattooSites(std::istream& stream, uint32_t version) noexcept

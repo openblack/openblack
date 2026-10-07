@@ -223,9 +223,10 @@ struct CreatureActionPoints
 	int32_t unknownBone {-1};
 	/// The bottom, between the back legs
 	int32_t groin {-1};
-	/// The bone a leash is tied to, at the collar, and one more whose use isn't known
+	/// The bone a leash is tied to, at the collar; and the right eye, the bone the game scales as the eyes (the left eye
+	/// is its mirror)
 	int32_t leashBone {-1};
-	int32_t unknownBone2 {-1};
+	int32_t rightEye {-1};
 	/// When the reaching hand takes hold of what it picks up
 	int32_t pickUpTime {-1};
 	/// Two moments thought to belong to catching, and one whose use isn't known
@@ -290,6 +291,8 @@ protected:
 	std::optional<TattooSites> _tattooSites;
 	/// The bones it acts with and the moments of its object animations, as many as the file's version has
 	std::optional<CreatureActionPoints> _creatureActionPoints;
+	std::vector<int32_t> _creatureTail;
+	uint32_t _creatureVersion {0};
 
 	/// Read file from the input source
 	MorphResult ReadFile(std::istream& stream, const std::filesystem::path& specsDirectory) noexcept;
@@ -349,6 +352,10 @@ public:
 	{
 		return _creatureActionPoints;
 	}
+	/// The last numbers of the creature block, which end with each bone's mirror bone (the bone on the other side of
+	/// the body), as many as the mesh has bones; and the block's version
+	[[nodiscard]] const std::vector<int32_t>& GetCreatureTail() const noexcept { return _creatureTail; }
+	[[nodiscard]] uint32_t GetCreatureVersion() const noexcept { return _creatureVersion; }
 	/// The bone a leash is tied to, when the file has it
 	[[nodiscard]] std::optional<uint32_t> GetLeashBone() const noexcept
 	{

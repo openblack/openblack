@@ -45,6 +45,11 @@ struct ParticleFile;
 struct StackedBitmap;
 } // namespace openblack::psys
 
+namespace openblack::gestures
+{
+class GestureFile;
+}
+
 namespace openblack::pack
 {
 struct AudioBankSampleHeader;

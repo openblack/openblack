@@ -12,6 +12,8 @@
 #include <cctype>
 #include <charconv>
 
+#include <optional>
+
 using namespace openblack::psys;
 
 namespace
@@ -49,6 +51,42 @@ bool IsName(std::string_view text)
 std::map<std::string, int32_t, std::less<>> openblack::psys::ParseEnumHeader(std::string_view text)
 {
 	std::map<std::string, int32_t, std::less<>> values;
+	// The value the next enumerator without an initialiser takes, as a C compiler counts: 0 at the start of each enum,
+	// then one more than the enumerator before. Unknown after an initialiser that isn't a whole number.
+	std::optional<int32_t> next = 0;
+	bool inside = false;
+	const auto enumerator = [&](std::string_view item) {
+		item = Trim(item);
+		if (item.empty())
+		{
+			return;
+		}
+		const auto equals = item.find('=');
+		const auto name = Trim(item.substr(0, equals));
+		if (!IsName(name))
+		{
+			next.reset();
+			return;
+		}
+		if (equals != std::string_view::npos)
+		{
+			const auto value = Trim(item.substr(equals + 1));
+			int32_t number = 0;
+			const auto* last = value.data() + value.size();
+			const auto [ptr, error] = std::from_chars(value.data(), last, number);
+			if (error != std::errc() || ptr != last)
+			{
+				next.reset();
+				return;
+			}
+			next = number;
+		}
+		if (next.has_value())
+		{
+			values.insert_or_assign(std::string(name), *next);
+			next = *next + 1;
+		}
+	};
 	while (!text.empty())
 	{
 		const auto end = text.find('\n');
@@ -58,23 +96,27 @@ std::map<std::string, int32_t, std::less<>> openblack::psys::ParseEnumHeader(std
 		{
 			line = line.substr(0, comment);
 		}
-		const auto equals = line.find('=');
-		if (equals == std::string_view::npos)
+		if (const auto open = line.find('{'); open != std::string_view::npos)
 		{
-			continue;
+			inside = true;
+			next = 0;
+			line = line.substr(open + 1);
 		}
-		const auto name = Trim(line.substr(0, equals));
-		auto value = Trim(line.substr(equals + 1));
-		if (!value.empty() && value.back() == ',')
+		const auto close = line.find('}');
+		if (inside)
 		{
-			value = Trim(value.substr(0, value.size() - 1));
+			// One or more enumerators, each ended by a comma (the last one may have none)
+			auto items = line.substr(0, close);
+			while (!items.empty())
+			{
+				const auto comma = items.find(',');
+				enumerator(items.substr(0, comma));
+				items = comma == std::string_view::npos ? std::string_view {} : items.substr(comma + 1);
+			}
 		}
-		int32_t number = 0;
-		const auto* last = value.data() + value.size();
-		const auto [ptr, error] = std::from_chars(value.data(), last, number);
-		if (IsName(name) && error == std::errc() && ptr == last)
+		if (close != std::string_view::npos)
 		{
-			values.insert_or_assign(std::string(name), number);
+			inside = false;
 		}
 	}
 	return values;

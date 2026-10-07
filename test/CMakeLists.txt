@@ -45,7 +45,9 @@ openblack_setup_and_add_test(test_fixed test_fixed.cpp)
 openblack_setup_and_add_test(test_alignment test_alignment.cpp)
 openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
 openblack_setup_and_add_test(test_set_camera_pos camera/test_set_camera_pos.cpp)
-openblack_setup_and_add_test(test_keyboard_move_speed camera/test_keyboard_move_speed.cpp)
+openblack_setup_and_add_test(
+  test_keyboard_move_speed camera/test_keyboard_move_speed.cpp
+)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
@@ -68,8 +70,12 @@ openblack_setup_and_add_test(test_hand_animation hand/test_hand_animation.cpp)
 target_link_libraries(test_hand_animation PRIVATE pack l3d morph)
 openblack_setup_and_add_test(test_hand_shadow hand/test_hand_shadow.cpp)
 openblack_setup_and_add_test(test_hand_cross_fade hand/test_hand_cross_fade.cpp)
-openblack_setup_and_add_test(test_hand_orientation hand/test_hand_orientation.cpp)
-openblack_setup_and_add_test(test_hand_navigation_pose hand/test_hand_navigation_pose.cpp)
+openblack_setup_and_add_test(
+  test_hand_orientation hand/test_hand_orientation.cpp
+)
+openblack_setup_and_add_test(
+  test_hand_navigation_pose hand/test_hand_navigation_pose.cpp
+)
 openblack_setup_and_add_test(test_hand_morph hand/test_hand_morph.cpp)
 openblack_setup_and_add_test(
   test_object_shadows graphics/test_object_shadows.cpp
@@ -228,6 +234,8 @@ target_link_libraries(test_chl_language PRIVATE lhvmlang)
 openblack_setup_and_add_test(test_lhvm_decompiler lhvm/test_lhvm_decompiler.cpp)
 target_link_libraries(test_lhvm_decompiler PRIVATE lhvmdecompiler)
 openblack_setup_and_add_test(test_magic_spells test_magic_spells.cpp)
+openblack_setup_and_add_test(test_gesture_file test_gesture_file.cpp)
+target_link_libraries(test_gesture_file PRIVATE gestures)
 openblack_setup_and_add_test(test_creature_spells test_creature_spells.cpp)
 openblack_setup_and_add_test(test_particle_miracles test_particle_miracles.cpp)
 target_link_libraries(test_particle_miracles PRIVATE psys)
