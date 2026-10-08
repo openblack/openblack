@@ -170,6 +170,8 @@ public:
 	virtual void StopScoopStream(uint32_t stream) = 0;
 	/// The stream flows to where the hand now is
 	virtual void MoveScoopStream(uint32_t stream, glm::vec3 hand) = 0;
+	/// The cursor is pinned where it is while the hand scoops, and let go when it stops
+	virtual void PinCursor(bool pinned) = 0;
 	/// The scooping sound of a game turn, rising as the scoop ramps up
 	virtual void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) = 0;
 	[[nodiscard]] virtual float LandHeightAt(glm::vec3 point) const = 0;

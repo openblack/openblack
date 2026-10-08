@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <cmath>
+
 #include <glm/geometric.hpp>
 #include <gtest/gtest.h>
 
@@ -328,4 +330,11 @@ TEST(HandGrab, AScoopRampsUpOverItsTimeAsASquare)
 	EXPECT_EQ(ScoopTaken(70, 10, 0, facts), 10u);
 	EXPECT_EQ(ScoopTaken(70, 1000, 19990, facts), 10u);
 	EXPECT_EQ(ScoopTaken(70, 1000, 30000, facts), 0u);
+}
+
+TEST(HandGrabRules, AScoopingHandTipsFurtherDownWhenLow)
+{
+	EXPECT_FLOAT_EQ(hand_grab::ScoopTip(3.0f, 3.2f), hand_grab::k_ScoopTip);
+	EXPECT_FLOAT_EQ(hand_grab::ScoopTip(2.5f, 3.2f), hand_grab::k_ScoopTip);
+	EXPECT_FLOAT_EQ(hand_grab::ScoopTip(-0.7f, 3.2f), hand_grab::k_ScoopTip + std::atan(1.0f));
 }

@@ -68,6 +68,7 @@
 #include "ECS/WorldObjects.h"
 #include "Hand/HandGrabRules.h"
 #include "InfoConstants.h"
+#include "Input/GameActionMapInterface.h"
 #include "Locator.h"
 #include "Magic/AreaEffect.h"
 #include "Magic/ResourcePiles.h"
@@ -628,6 +629,14 @@ void GameHandGrabWorld::StopScoopStream(uint32_t stream)
 	if (Locator::particleSystem::has_value())
 	{
 		Locator::particleSystem::value().CloseDown(stream);
+	}
+}
+
+void GameHandGrabWorld::PinCursor(bool pinned)
+{
+	if (Locator::gameActionSystem::has_value())
+	{
+		Locator::gameActionSystem::value().PinCursor(pinned);
 	}
 }
 

@@ -60,6 +60,7 @@ public:
 	[[nodiscard]] std::optional<glm::ivec2> GetCursorWarp() const final;
 	void SetBlockedActions(BindableActionMap actions) final { _blocked = actions; }
 	void AllowCursorFreeze(bool allowed) final;
+	void PinCursor(bool pinned) final;
 	[[nodiscard]] bool IsCursorFrozen() const final;
 
 	void Frame() final;
@@ -98,6 +99,9 @@ private:
 	/// Holds the cursor while the mouse turns the camera
 	CursorFreeze _cursorFreeze;
 	bool _cursorFreezeAllowed {false};
+	/// Where the cursor is pinned, while it is
+	std::optional<glm::ivec2> _cursorPinnedAt;
+	bool _cursorPinned {false};
 	std::optional<ScriptedPointer> _scriptedPointer;
 	std::optional<glm::ivec2> _cursorWarp;
 	BindableActionMap _blocked = BindableActionMap::NONE;

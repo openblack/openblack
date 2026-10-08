@@ -379,6 +379,8 @@ bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 	grab.scoopAnchor = hand;
 	// What is scooped streams from the source into the hand
 	grab.scoopStreamSeconds = 0.0f;
+	// The cursor is pinned while it scoops
+	_world->PinCursor(true);
 	grab.scoopStream = _world->StartScoopStream(facts->resource, sourcePosition, facts->poisoned);
 	return true;
 }
@@ -416,6 +418,8 @@ bool HandGrabSystem::StartFieldScoop(HandGrab& grab, entt::entity field, const F
 	grab.scoopTurns = 0;
 	grab.scoopAnchor = hand;
 	grab.scoopStreamSeconds = 0.0f;
+	// The cursor is pinned while it scoops
+	_world->PinCursor(true);
 	grab.scoopStream = _world->StartScoopStream(ResourceType::Food, _world->PoseOf(field).origin, false);
 	return true;
 }
@@ -501,6 +505,10 @@ void HandGrabSystem::EndScoop(HandGrab& grab)
 	{
 		_world->StopScoopStream(*grab.scoopStream);
 		grab.scoopStream.reset();
+	}
+	if (grab.scoopSource != entt::null)
+	{
+		_world->PinCursor(false);
 	}
 	grab.scoopSource = entt::null;
 	grab.scoopTurns = 0;
@@ -892,9 +900,9 @@ glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 	grab->spring.Count(frame.gameMs);
 	if (grab->scoopSource != entt::null && Exists(grab->scoopSource))
 	{
-		// Scooping, the hand stays where it began, over the land by the height of what it scoops from
+		// Scooping, the hand stays where it began, over the land by the height of what it scoops from and three more
 		target = grab->scoopAnchor;
-		target.y = _world->LandHeightAt(target) + _world->SizeOf(grab->scoopSource).height + grab->rise;
+		target.y = _world->LandHeightAt(target) + _world->SizeOf(grab->scoopSource).height + hand_grab::k_ScoopHoverAbove;
 		grab->lastTarget = target;
 		return target;
 	}
@@ -965,6 +973,11 @@ void HandGrabSystem::ForceDrop()
 	{
 		return;
 	}
+	// A scoop ends with it
+	if (grab->scoopSource != entt::null)
+	{
+		EndScoop(*grab);
+	}
 	// Put down from where it is held, with no speed, and never planted again
 	LetGo(*grab, glm::vec3(0.0f), true);
 }
@@ -973,6 +986,10 @@ void HandGrabSystem::Reset()
 {
 	if (auto* grab = Grab())
 	{
+		if (grab->scoopSource != entt::null)
+		{
+			_world->PinCursor(false);
+		}
 		*grab = HandGrab {};
 	}
 }

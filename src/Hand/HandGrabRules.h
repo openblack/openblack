@@ -25,6 +25,16 @@
 namespace openblack::hand_grab
 {
 
+/// Scooping, the hand hovers this far above the top of what it scoops from
+inline constexpr float k_ScoopHoverAbove = 3.0f;
+/// Scooping, the hand is tipped down this far towards what it scoops from, in radians (78.75 degrees)
+inline constexpr float k_ScoopTip = 1.3744469f;
+/// Below this height the hand tips further down while scooping
+inline constexpr float k_ScoopTipLowHeight = 2.5f;
+/// How far a hand scooping at a height is tipped down: further when it is low, by the angle of its drop below the
+/// low height over the hand's own length
+[[nodiscard]] float ScoopTip(float height, float handLength);
+
 /// A press shorter than this is a tap; untuggable things and things in flight are only taken once it is held this long
 inline constexpr uint32_t k_GrabWaitMs = 225;
 /// A game turn, in milliseconds, as the wait counts the turns gone by

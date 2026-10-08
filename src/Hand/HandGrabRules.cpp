@@ -367,3 +367,12 @@ uint32_t hand_grab::ScoopTaken(uint32_t wanted, uint32_t sourceHas, uint32_t hel
 	}
 	return taken;
 }
+
+float hand_grab::ScoopTip(float height, float handLength)
+{
+	if (height >= k_ScoopTipLowHeight)
+	{
+		return k_ScoopTip;
+	}
+	return std::atan((k_ScoopTipLowHeight - height) / handLength) + k_ScoopTip;
+}

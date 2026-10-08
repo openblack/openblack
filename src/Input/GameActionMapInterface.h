@@ -185,6 +185,9 @@ public:
 	virtual void AllowCursorFreeze([[maybe_unused]] bool allowed) {}
 	/// The cursor is held still while the mouse turns the camera, and the pointer's position isn't followed
 	[[nodiscard]] virtual bool IsCursorFrozen() const { return false; }
+	/// The cursor is pinned where it is, as the hand scoops, and is free again once let go: it then follows the pointer
+	/// from wherever that has gone
+	virtual void PinCursor([[maybe_unused]] bool pinned) {}
 
 	virtual void Frame() = 0;
 	virtual void ProcessEvent(const SDL_Event& event) = 0;

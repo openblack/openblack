@@ -73,6 +73,7 @@ public:
 	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned) override;
 	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source, bool poisoned) override;
 	void StopScoopStream(uint32_t stream) override;
+	void PinCursor(bool pinned) override;
 	void MoveScoopStream(uint32_t stream, glm::vec3 hand) override;
 	void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) override;
 	[[nodiscard]] float LandHeightAt(glm::vec3 point) const override;

@@ -54,6 +54,7 @@
 #include "Magic/Impressiveness.h"
 #include "Magic/ReactionRules.h"
 #include "Magic/VillagerReactionRules.h"
+#include "Physics/LivingRules.h"
 #include "VillagerFire.h"
 #include "VillagerPhysics.h"
 #include "VillagerReactions.h"
@@ -378,6 +379,22 @@ uint32_t ReactionSystem::PriorityTo(const Active& reaction, entt::entity living,
 	    !villager_physics::TakesFlyingObjectReaction(living))
 	{
 		return 0;
+	}
+	// A villager sheltering under a magic shield takes no notice of what flies outside the shield
+	if (reaction.source.type == Reaction::ReactToFlyingObject && registry.AllOf<Villager>(living))
+	{
+		if (const auto* shelter = registry.TryGet<const VillagerShieldReaction>(living);
+		    shelter != nullptr && shelter->type == Reaction::ReactToMagicShield)
+		{
+			const auto* shield =
+			    registry.Valid(shelter->shield) ? registry.TryGet<const MagicShield>(shelter->shield) : nullptr;
+			const auto* where = registry.Valid(shelter->shield) ? registry.TryGet<const Transform>(shelter->shield) : nullptr;
+			if (shield == nullptr || where == nullptr ||
+			    !(physics::living::MapDistance(where->position, reaction.source.position) < shield->radius))
+			{
+				return 0;
+			}
+		}
 	}
 	// A villager weighs a fire by its own rule: how far the fire reaches of its fiercest, and whether it fights it already
 	if (reaction.source.type == Reaction::ReactToFire && registry.AllOf<Villager>(living))

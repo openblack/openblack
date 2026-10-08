@@ -203,6 +203,7 @@ public:
 	}
 	void StopScoopStream(uint32_t stream) override { stopped.push_back(stream); }
 	void MoveScoopStream(uint32_t, glm::vec3 hand) override { streamPoints.push_back(hand); }
+	void PinCursor(bool pinned) override { cursorPinned = pinned; }
 	void PlayScoopSound(ResourceType, glm::vec3, float ramp) override { scoopSounds.push_back(ramp); }
 	[[nodiscard]] float LandHeightAt(glm::vec3) const override { return 0.0f; }
 	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType) const override { return stores.contains(store); }
@@ -271,6 +272,7 @@ public:
 	std::vector<glm::vec3> streamPoints;
 	std::vector<entt::entity> resized;
 	std::vector<float> scoopSounds;
+	bool cursorPinned {false};
 	std::set<entt::entity> stores;
 	std::map<entt::entity, uint32_t> stored;
 	std::vector<uint32_t> pouredAmounts;
@@ -557,19 +559,22 @@ TEST_F(HandGrabSystemWithWorld, APileIsScoopedIntoAHandfulThatGrowsWhileTheButto
 	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 25u);
 	EXPECT_EQ(world->registry.Get<const Pot>(pile).amount, 975u);
 	EXPECT_EQ(world->streams, 1u);
+	// The cursor is pinned while it scoops
+	EXPECT_TRUE(world->cursorPinned);
 	// Each game turn takes more, from 8 a turn
 	system->ProcessTurn();
 	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 25u + 8u);
 	system->ProcessTurn();
 	EXPECT_GT(world->registry.Get<const Pot>(*handful).amount, 33u);
 	EXPECT_EQ(world->scoopSounds.size(), 2u);
-	// The hand hovers over the pile, by the pile's height and how far the handful hangs
+	// The hand hovers over the pile, three above its height
 	const auto hovering = Frame(10, {30.0f, 0.0f, 0.0f});
 	EXPECT_FLOAT_EQ(hovering.x, 0.0f);
-	EXPECT_GE(hovering.y, 3.0f);
-	// Let go, the scoop ends and its stream stops
+	EXPECT_FLOAT_EQ(hovering.y, 3.0f + 3.0f);
+	// Let go, the scoop ends, its stream stops and the cursor is free
 	Release();
 	EXPECT_EQ(world->stopped, std::vector<uint32_t> {1u});
+	EXPECT_FALSE(world->cursorPinned);
 	system->ProcessTurn();
 	EXPECT_EQ(world->scoopSounds.size(), 2u);
 	EXPECT_TRUE(system->GetHeld().has_value());

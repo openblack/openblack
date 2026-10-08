@@ -14,6 +14,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <any>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "ParticleClassRegistry.h"
+#include "ParticleMaths.h"
 
 using namespace openblack::particles;
 using openblack::psys::ParticleObject;
@@ -132,6 +134,85 @@ public:
 	float maxTumbleSpeed;
 	bool restrict;
 };
+/// The stream of what the hand scoops: while the effect runs, atoms are let out at a rate a second, each starting on the
+/// land under the hand, and each rises in a straight line to wherever the hand now is over the rise time, its speed the
+/// move it made, and goes once that time has passed
+class MultiPickup final: public Modifier
+{
+public:
+	explicit MultiPickup(const ParticleObject& object)
+	    : _creator(object.String("PCreator"))
+	    , _nextGroups(object.IntArray("NextGroups"))
+	    , _emitRate(object.Float("EmitRate", 0.0f))
+	    , _raiseTime(object.Float("RaiseTime", 0.0f))
+	    , _randomOrientations(object.Bool("RandomiseOrientations", false))
+	    , _defaultOrientation(object.Float("DefaultOrientation", 0.0f))
+	{
+	}
+	[[nodiscard]] bool Creates() const override { return true; }
+
+	bool ModifyCollection(Effect& effect, Collection& collection, Collection::Slot& slot) const override
+	{
+		const auto* atomCreator = effect.FindCreator(_creator);
+		if (atomCreator == nullptr)
+		{
+			return false;
+		}
+		if (!slot.data.has_value())
+		{
+			slot.data = State {};
+		}
+		auto& state = std::any_cast<State&>(slot.data);
+		const auto hand = effect.GetProcessInfo().handPosition;
+		// Atoms are let out only while the effect runs, not as it closes down
+		if (!effect.Closing())
+		{
+			state.owed += effect.GetDt() * _emitRate;
+			while (static_cast<float>(state.emitted) < state.owed)
+			{
+				++state.emitted;
+				auto& atom = effect.NewAtom(collection, atomCreator, _nextGroups);
+				// TODO(hand): a random orientation, which none of the game's files asks for
+				atom.rotation = _randomOrientations ? atom.rotation : maths::AngleY(_defaultOrientation);
+				const glm::vec3 start(hand.x, effect.Services().world.LandHeight({hand.x, hand.z}), hand.z);
+				atom.data[this].a = glm::vec4(start, 0.0f);
+				atom.position = effect.GlobalToLocal(collection, start);
+			}
+		}
+		const float step = std::max(effect.GetDt(), k_MinimumStep);
+		for (size_t i = 0; i < collection.atoms.size();)
+		{
+			auto& atom = *collection.atoms[i];
+			const float age = effect.AtomAge(atom);
+			if (age > _raiseTime)
+			{
+				collection.atoms.erase(collection.atoms.begin() + static_cast<std::ptrdiff_t>(i));
+				continue;
+			}
+			const auto start = glm::vec3(atom.data[this].a);
+			const auto risen = start + (hand - start) * (age / _raiseTime);
+			const auto local = effect.GlobalToLocal(collection, risen);
+			atom.velocity = (local - atom.position) / step;
+			atom.position = local;
+			++i;
+		}
+		return true;
+	}
+
+private:
+	struct State
+	{
+		float owed {0.0f};
+		int emitted {0};
+	};
+
+	std::string _creator;
+	std::vector<int> _nextGroups;
+	float _emitRate;
+	float _raiseTime;
+	bool _randomOrientations;
+	float _defaultOrientation;
+};
 } // namespace
 
 void openblack::particles::RegisterHandRules(ParticleClassRegistry& registry)
@@ -140,4 +221,5 @@ void openblack::particles::RegisterHandRules(ParticleClassRegistry& registry)
 	registry.AddModifier("UR_FollowCastPosn", ParticleClassRegistry::Make<FollowCastPosition>);
 	registry.AddModifier("UR_HandSprinkle", ParticleClassRegistry::Make<HandSprinkle>);
 	registry.AddModifier("AppearanceRuleTumble", ParticleClassRegistry::Make<Tumble>);
+	registry.AddModifier("ER_MultiPickup", ParticleClassRegistry::Make<MultiPickup>);
 }
