@@ -25,6 +25,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/OneOffSpellSeed.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/Reward.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Tree.h"
@@ -257,6 +258,15 @@ physics_classes::ClassFacts ClassifyKind(const Registry& registry, entt::entity 
 {
 	using physics_classes::BodyKind;
 	using physics_classes::ClassFacts;
+	// A reward chest can be knocked about only once it is on the land; it weighs the same whatever its size
+	if (const auto* chest = registry.TryGet<const Reward>(entity))
+	{
+		return {.body = BodyKind::Model,
+		        .row = MaterialRow::DefaultMovable,
+		        .canBecomePhysicsObject = chest->state == Reward::State::Landed,
+		        .interacts = true,
+		        .fixedMass = reward::k_Weight};
+	}
 	if (registry.AllOf<Creature>(entity))
 	{
 		return {.body = BodyKind::Creature,

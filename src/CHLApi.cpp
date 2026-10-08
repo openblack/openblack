@@ -58,6 +58,7 @@
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
+#include "ECS/Systems/RewardSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
@@ -2457,25 +2458,51 @@ void UpdateSnapshot() // 238 UPDATE_SNAPSHOT
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
+/// The kinds of reward a script can give are numbered 1 to 60
+constexpr int32_t k_LastRewardType = 60;
+
+/// A reward chest of a kind for the player at this computer, given to a town or none: on the land, or from the sky
+uint32_t GiveReward(int32_t type, glm::vec3 position, entt::entity town, bool fromSky)
+{
+	if (type < 1 || type > k_LastRewardType)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CREATE_REWARD: invalid type {}", type);
+		return 0;
+	}
+	if (!Locator::rewardSystem::has_value())
+	{
+		return 0;
+	}
+	const auto player =
+	    Locator::playerSystem::has_value() ? std::optional(Locator::playerSystem::value().GetLocalPlayer()) : std::nullopt;
+	const auto chest =
+	    Locator::rewardSystem::value().Create(position, static_cast<RewardObjectInfo>(type), player, town, fromSky);
+	return static_cast<uint32_t>(chest);
+}
+
 void CreateReward() // 239 CREATE_REWARD
 {
-	// const auto fromSky = static_cast<bool>(Pop().intVal);
-	// const auto position = PopVec();
-	// const auto reward = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto fromSky = Pop().intVal != 0;
+	const auto position = PopVec();
+	const auto type = Pop().intVal;
+	Pusho(GiveReward(type, position, entt::null, fromSky));
 }
 
 void CreateRewardInTown() // 240 CREATE_REWARD_IN_TOWN
 {
-	// const auto fromSky = static_cast<bool>(Pop().intVal);
-	// const auto position = PopVec();
-	// const auto town = Pop().uintVal;
-	// const auto reward = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto fromSky = Pop().intVal != 0;
+	const auto position = PopVec();
+	const auto town = static_cast<entt::entity>(Pop().uintVal);
+	const auto type = Pop().intVal;
+	// The town must be one
+	if (!Locator::entitiesRegistry::value().Valid(town) ||
+	    !Locator::entitiesRegistry::value().AllOf<ecs::components::Town>(town))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CREATE_REWARD_IN_TOWN: not a town");
+		Pusho(0);
+		return;
+	}
+	Pusho(GiveReward(type, position, town, fromSky));
 }
 
 void SetFade() // 241 SET_FADE

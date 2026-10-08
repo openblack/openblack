@@ -53,11 +53,11 @@ glm::mat4 Camera::GetRotationMatrix() const
 glm::mat4 Camera::GetViewMatrix(Interpolation interpolation) const
 {
 	// Invert the camera's rotation (transposed) and position (negated) to get the view matrix.
-	return glm::lookAt(GetOrigin(interpolation) + glm::vec3(0.0f, _shakeEye, 0.0f),
-	                   GetFocus(interpolation) + glm::vec3(0.0f, _shakeFocus, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	return glm::lookAt(GetOrigin(interpolation) + _shakeEye, GetFocus(interpolation) + _shakeFocus,
+	                   glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
-Camera& Camera::SetShake(float eye, float focus)
+Camera& Camera::SetShake(const glm::vec3& eye, const glm::vec3& focus)
 {
 	_shakeEye = eye;
 	_shakeFocus = focus;

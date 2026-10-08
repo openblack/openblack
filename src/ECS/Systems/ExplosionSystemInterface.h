@@ -32,7 +32,7 @@ public:
 	/// A puff of smoke of a size and colour (0xRRGGBB) at a point, as a tree taking root again throws up
 	virtual void AddSmoke(const glm::vec3& centre, float size, uint32_t colour) = 0;
 	/// The camera shakes while within a radius of a point, from a strength down to none over the seconds
-	virtual void AddShake(const glm::vec3& position, float radius, float strength, float seconds) = 0;
+	virtual void AddShake(const glm::vec3& position, float radius, float strength, float seconds, bool verticalOnly) = 0;
 	/// Whether any shake is going on, near the camera or not
 	[[nodiscard]] virtual bool IsShaking() const = 0;
 	/// Once a frame of the game's time: the rubble lies and fades, the dust flies, and the camera shakes

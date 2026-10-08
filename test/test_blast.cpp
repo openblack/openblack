@@ -133,9 +133,15 @@ TEST(CameraShake, OnlyTheNearestCountsAtFullStrengthWithinItsRadiusFallingOverIt
 	EXPECT_NEAR(camera_shake::Amplitude(shakes, glm::vec3(0.0f)), 0.5f, k_Epsilon);
 	camera_shake::Advance(shakes, 400.0f);
 	EXPECT_TRUE(shakes.empty());
-	const auto offsets = camera_shake::Jitter(0.5f, [](float a, float b) { return b + 0.0f * a; });
-	EXPECT_FLOAT_EQ(offsets.eye, 0.5f);
-	EXPECT_FLOAT_EQ(offsets.focus, 0.5f);
+	const auto offsets = camera_shake::Jitter(0.5f, true, [](float a, float b) { return b + 0.0f * a; });
+	EXPECT_FLOAT_EQ(offsets.eye.y, 0.5f);
+	EXPECT_FLOAT_EQ(offsets.focus.y, 0.5f);
+	EXPECT_FLOAT_EQ(offsets.eye.x, 0.0f);
+	// A shake along every axis draws z, y, then x, for the eye and then what it looks at
+	float draw = 0.0f;
+	const auto all = camera_shake::Jitter(1.0f, false, [&draw](float, float) { return draw += 1.0f; });
+	EXPECT_EQ(all.eye, glm::vec3(3.0f, 2.0f, 1.0f));
+	EXPECT_EQ(all.focus, glm::vec3(6.0f, 5.0f, 4.0f));
 }
 
 TEST(DustPuff, FifteenSpritesFlyUpAndOutGrowingAndFadingOverASecondAndAHalf)

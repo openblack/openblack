@@ -9,11 +9,7 @@
 
 #pragma once
 
-#include <vector>
-
-#include "Blast/CameraShake.h"
-#include "Blast/DustPuff.h"
-#include "ECS/Systems/ExplosionSystemInterface.h"
+#include "ECS/Systems/RewardSystemInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "ECS System implementations should only be included in Locator.cpp"
@@ -22,20 +18,14 @@
 namespace openblack::ecs::systems
 {
 
-class ExplosionSystem final: public ExplosionSystemInterface
+class RewardSystem final: public RewardSystemInterface
 {
 public:
-	void AddRubble(const glm::vec3& centre, float yaw, float scale) override;
-	void AddSmoke(const glm::vec3& centre, float size, uint32_t colour) override;
-	void AddShake(const glm::vec3& position, float radius, float strength, float seconds, bool verticalOnly) override;
-	[[nodiscard]] bool IsShaking() const override { return !_shakes.empty(); }
+	entt::entity Create(glm::vec3 position, RewardObjectInfo type, std::optional<PlayerNames> player, entt::entity town,
+	                    bool fromSky) override;
 	void Update(float milliseconds) override;
+	void ProcessTurn() override;
 	void CollectDrawFrame(particles::draw::Frame& frame) const override;
-	void Reset() override;
-
-private:
-	std::vector<camera_shake::Shake> _shakes;
-	std::vector<dust_puff::Puff> _puffs;
 };
 
 } // namespace openblack::ecs::systems

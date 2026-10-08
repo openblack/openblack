@@ -158,14 +158,15 @@ void ExplosionSystem::AddSmoke(const glm::vec3& centre, float size, uint32_t col
 	_puffs.push_back(dust_puff::Make(centre, size, LocalRandom, colour));
 }
 
-void ExplosionSystem::AddShake(const glm::vec3& position, float radius, float strength, float seconds)
+void ExplosionSystem::AddShake(const glm::vec3& position, float radius, float strength, float seconds, bool verticalOnly)
 {
 	const float milliseconds = seconds * 1000.0f;
 	_shakes.push_back({.position = position,
 	                   .radius = radius,
 	                   .strength = strength,
 	                   .milliseconds = milliseconds,
-	                   .millisecondsLeft = milliseconds});
+	                   .millisecondsLeft = milliseconds,
+	                   .verticalOnly = verticalOnly});
 }
 
 void ExplosionSystem::Update(float milliseconds)
@@ -227,7 +228,9 @@ void ExplosionSystem::Update(float milliseconds)
 	if (Locator::camera::has_value())
 	{
 		auto& camera = Locator::camera::value();
-		const auto offsets = camera_shake::Jitter(camera_shake::Amplitude(_shakes, camera.GetOrigin()), LocalRandom);
+		const auto* nearest = camera_shake::Nearest(_shakes, camera.GetOrigin());
+		const auto offsets = camera_shake::Jitter(camera_shake::Amplitude(_shakes, camera.GetOrigin()),
+		                                          nearest == nullptr || nearest->verticalOnly, LocalRandom);
 		camera.SetShake(offsets.eye, offsets.focus);
 	}
 }
@@ -278,7 +281,7 @@ void ExplosionSystem::Reset()
 	_puffs.clear();
 	if (Locator::camera::has_value())
 	{
-		Locator::camera::value().SetShake(0.0f, 0.0f);
+		Locator::camera::value().SetShake(glm::vec3(0.0f), glm::vec3(0.0f));
 	}
 	if (Locator::entitiesRegistry::has_value())
 	{

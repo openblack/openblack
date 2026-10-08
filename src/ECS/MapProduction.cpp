@@ -34,6 +34,7 @@
 #include "ECS/Components/OneOffSpellSeed.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/Reward.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/TeleportStone.h"
 #include "ECS/Components/Transform.h"
@@ -74,6 +75,7 @@ void ForEachMapComponent(Func&& func)
 	func.template operator()<Creature>();
 	func.template operator()<Animal>();
 	func.template operator()<MobileObject>();
+	func.template operator()<RewardOnLand>();
 }
 
 /// A building's outline on the ground, from its model's box as it is placed
@@ -119,7 +121,7 @@ MapProduction::MapProduction()
 	_connections.push_back(_registry->OnDestroy<MapCellResident>().connect<&MapProduction::OnResidentGone>(*this));
 	// Anything already made is filed too
 	ForEachMapComponent([this]<typename Component>() {
-		_registry->Each<const Component>([this](entt::entity entity, const Component& /*unused*/) {
+		_registry->Each<const Component>([this](entt::entity entity, const auto&... /*unused*/) {
 			if (std::ranges::find(_made, entity) == _made.end())
 			{
 				_made.push_back(entity);
@@ -158,7 +160,7 @@ std::optional<MapProduction::Kind> MapProduction::KindOf(const Registry& registr
 	{
 		return Kind {.placement = Placement::FixedBack, .coversOutline = false, .moves = true};
 	}
-	if (registry.AnyOf<Villager, Creature, Animal, MobileObject>(entity))
+	if (registry.AnyOf<Villager, Creature, Animal, MobileObject, RewardOnLand>(entity))
 	{
 		return Kind {.placement = Placement::MobileFront, .coversOutline = false, .moves = true};
 	}

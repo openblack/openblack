@@ -75,6 +75,7 @@
 #include "ECS/Systems/Implementations/ReactionSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/ResourceStoreSystem.h"
+#include "ECS/Systems/Implementations/RewardSystem.h"
 #include "ECS/Systems/Implementations/SnowSystem.h"
 #include "ECS/Systems/Implementations/SnowfallSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
@@ -278,6 +279,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::miracleFxSystem::emplace<MiracleFxSystem>();
 	Locator::fireSystem::emplace<ecs::systems::FireSystem>();
 	Locator::explosionSystem::emplace<ecs::systems::ExplosionSystem>();
+	Locator::rewardSystem::emplace<ecs::systems::RewardSystem>();
 	return true;
 }
 
@@ -384,6 +386,7 @@ void openblack::ShutDownServices()
 	Locator::miracleFxSystem::reset();
 	Locator::fireSystem::reset();
 	Locator::explosionSystem::reset();
+	Locator::rewardSystem::reset();
 	Locator::magicSystem::reset();
 	Locator::gestureEvents::reset();
 	Locator::reactionSystem::reset();

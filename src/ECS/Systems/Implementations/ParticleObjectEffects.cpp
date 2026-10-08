@@ -267,7 +267,7 @@ void GameObjectEffects::ShakeCamera(glm::vec3 position, float radius, float stre
 {
 	if (Locator::explosionSystem::has_value())
 	{
-		Locator::explosionSystem::value().AddShake(position, radius, strength, seconds);
+		Locator::explosionSystem::value().AddShake(position, radius, strength, seconds, true);
 	}
 }
 

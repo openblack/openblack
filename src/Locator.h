@@ -151,6 +151,7 @@ class GestureSystemInterface;
 class MiracleFxSystemInterface;
 class FireSystemInterface;
 class ExplosionSystemInterface;
+class RewardSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
@@ -242,6 +243,7 @@ struct Locator
 	using miracleFxSystem = entt::locator<ecs::systems::MiracleFxSystemInterface>;
 	using fireSystem = entt::locator<ecs::systems::FireSystemInterface>;
 	using explosionSystem = entt::locator<ecs::systems::ExplosionSystemInterface>;
+	using rewardSystem = entt::locator<ecs::systems::RewardSystemInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
 };

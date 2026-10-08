@@ -142,6 +142,7 @@
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
+#include "ECS/Systems/RewardSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
@@ -959,6 +960,11 @@ bool Game::GameLogicLoop() noexcept
 		auto tornado = profiler.BeginScoped(Profiler::Stage::TornadoUpdate);
 		Locator::tornadoSystem::value().ProcessTurn();
 	}
+	// A reward chest that thumped down goes into the map's cells
+	if (Locator::rewardSystem::has_value())
+	{
+		Locator::rewardSystem::value().ProcessTurn();
+	}
 	// Then the physics, after the living, the fires, the reactions, the miracles and the particles have had their turn,
 	// so a body any of them sets moving this turn flies this turn: what was thrown, dropped, knocked or pushed flies,
 	// collides and comes to rest
@@ -1242,6 +1248,11 @@ bool Game::Update() noexcept
 		// The flames, steam and smoke of what burns move on
 		auto fire = profiler.BeginScoped(Profiler::Stage::FireUpdate);
 		Locator::fireSystem::value().Update(std::chrono::duration<float>(gameTime).count());
+	}
+	// The reward chests from the sky fall and thump down, and their dust fades
+	if (Locator::rewardSystem::has_value())
+	{
+		Locator::rewardSystem::value().Update(std::chrono::duration<float, std::milli>(gameTime).count());
 	}
 	{
 		// The blasts' rubble lies and fades, their dust flies and the camera shakes
@@ -2121,6 +2132,11 @@ bool Game::Initialize() noexcept
 		LoadHandAnimation();
 		LoadCreatureRigs();
 		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+		// The closed reward chest
+		if (const auto path = fileSystem.GetPath<Path::Misc>() / "chest0.l3d"; fileSystem.Exists(path))
+		{
+			meshManager.Load("misc/chest0", LFromDiskTag {}, path);
+		}
 		// The collar the citadel's leash posts are drawn with
 		if (const auto path = fileSystem.GetPath<Path::Misc>() / "leash.l3d"; fileSystem.Exists(path))
 		{
