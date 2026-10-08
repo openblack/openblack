@@ -14,11 +14,9 @@
 #include <algorithm>
 #include <ranges>
 
-#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
 #include <bgfx/bgfx.h>
 
-#include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/VertexBuffer.h"
 
 using namespace openblack;
@@ -28,9 +26,6 @@ void LandBlock::BuildMesh(LandIslandInterface& island, std::span<LandVertex> ver
 {
 	assert(vertices.size() == k_VertexCount);
 	BuildVertexList(vertices, island);
-
-	// The physics shape keeps every cell: it copies the positions before the open sea's are taken away
-	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
 
 	// The game draws no land in open sea cells, so only the sea shows there and nothing else is hidden behind them. Their
 	// six vertices collapse to a point, which draws nothing.
@@ -50,15 +45,6 @@ void LandBlock::BuildMesh(LandIslandInterface& island, std::span<LandVertex> ver
 			}
 		}
 	}
-
-	_physicsMesh = std::make_unique<btBvhTriangleMeshShape>(_dynamicsMeshInterface.get(), true);
-	_rigidBody = std::make_unique<btRigidBody>(0.0f, nullptr, _physicsMesh.get());
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btVector3(_block->mapX, 0, _block->mapZ));
-	_rigidBody->setWorldTransform(transform);
-	_rigidBody->setContactStiffnessAndDamping(300, 10);
-	_rigidBody->setUserIndex(-1);
 }
 
 void LandBlock::SetVertices(const VertexBuffer& buffer, uint32_t firstVertex)

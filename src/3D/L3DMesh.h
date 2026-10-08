@@ -26,8 +26,6 @@
 #include "Graphics/ShaderProgram.h"
 #include "ScreenPick.h"
 
-class btConvexShape;
-
 namespace openblack
 {
 namespace l3d
@@ -132,10 +130,6 @@ public:
 	/// The top of the chimney the smoke rises from, in the mesh
 	[[nodiscard]] const std::optional<glm::vec3>& GetChimneyPos() const { return _chimneyPos; }
 	[[nodiscard]] const std::vector<glm::mat4>& GetExtraMetrics() const { return _extraMetrics; }
-	[[nodiscard]] bool HasPhysicsMesh() const { return _physicsMesh != nullptr; }
-	[[nodiscard]] btConvexShape& GetPhysicsMesh() { return *_physicsMesh; }
-	[[nodiscard]] const btConvexShape& GetPhysicsMesh() const { return *_physicsMesh; }
-	[[nodiscard]] float GetMass() const { return _physicsMass; }
 	/// The triangles of its physics submeshes in the model's space, as the game's physics collides with them
 	[[nodiscard]] const std::vector<std::array<glm::vec3, 3>>& GetPhysicsTriangles() const { return _physicsTriangles; }
 	/// Every submesh's vertex positions in the model's space and its primitives' triangles, each primitive's indices
@@ -182,10 +176,8 @@ private:
 	std::optional<glm::vec3> _chimneyPos;
 	std::vector<glm::mat4> _extraMetrics;
 	/// Bounding box if no physics mesh was found
-	std::unique_ptr<btConvexShape> _physicsMesh;
 	std::vector<std::array<glm::vec3, 3>> _physicsTriangles;
 	std::vector<Surface> _surfaces;
-	float _physicsMass {1.0f}; // TODO(bwrsandman): Find somewhere in file a value
 	AxisAlignedBoundingBox _boundingBox {
 	    {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()},
 	    {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()},

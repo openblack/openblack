@@ -25,12 +25,6 @@
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
 #endif
 
-class btCollisionDispatcher;
-class btDefaultCollisionConfiguration;
-class btDiscreteDynamicsWorld;
-struct btDbvtBroadphase;
-class btSequentialImpulseConstraintSolver;
-
 namespace openblack
 {
 class LandIslandInterface;
@@ -52,18 +46,6 @@ class DynamicsSystem final: public DynamicsSystemInterface
 public:
 	DynamicsSystem();
 	~DynamicsSystem() override;
-
-	void Reset() override;
-	void Update(std::chrono::microseconds& dt) override;
-	void AddRigidBody(btRigidBody* object) override;
-	void RemoveRigidBody(btRigidBody* object) override;
-	void RegisterRigidBodies() override;
-	void RegisterIslandRigidBodies(LandIslandInterface& island) override;
-	void UpdatePhysicsTransforms() override;
-	[[nodiscard]] std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const override;
-	[[nodiscard]] std::optional<glm::vec3> RayCastLand(const glm::vec3& origin, const glm::vec3& direction,
-	                                                   float tMax) const override;
 
 	void ResetSimulation() override;
 	void SetClassHooks(std::unique_ptr<PhysicsClassHooks> hooks) override;
@@ -138,17 +120,6 @@ private:
 	void AddLandingDust(glm::vec3 centre, float radius, uint32_t argb);
 
 	[[nodiscard]] PhysicsClassHooks& Hooks();
-
-	/// collision configuration contains default setup for memory, collision setup
-	std::unique_ptr<btDefaultCollisionConfiguration> _configuration;
-	/// use the default collision dispatcher. For parallel processing you can use
-	/// a different dispatcher (see Extras/BulletMultiThreaded)
-	std::unique_ptr<btCollisionDispatcher> _dispatcher;
-	std::unique_ptr<btDbvtBroadphase> _broadphase;
-	/// the default constraint solver. For parallel processing you can use a
-	/// different solver (see Extras/BulletMultiThreaded)
-	std::unique_ptr<btSequentialImpulseConstraintSolver> _solver;
-	std::unique_ptr<btDiscreteDynamicsWorld> _world;
 
 	std::unique_ptr<PhysicsClassHooks> _hooks;
 	std::unique_ptr<PhysicsGround> _ground;

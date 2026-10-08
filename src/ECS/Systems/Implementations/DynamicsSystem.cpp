@@ -14,12 +14,6 @@
 #include <chrono>
 #include <vector>
 
-#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
-#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
-#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
-#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -53,7 +47,6 @@
 #include "ECS/Components/OneOffSpellSeed.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
-#include "ECS/Components/RigidBody.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
@@ -201,152 +194,12 @@ ModelParts PartsOf(const graphics::L3DMesh& mesh)
 } // namespace
 
 DynamicsSystem::DynamicsSystem()
-    : _configuration(std::make_unique<btDefaultCollisionConfiguration>())
-    , _dispatcher(std::make_unique<btCollisionDispatcher>(_configuration.get()))
-    , _broadphase(std::make_unique<btDbvtBroadphase>())
-    , _solver(std::make_unique<btSequentialImpulseConstraintSolver>())
-    , _world(
-          std::make_unique<btDiscreteDynamicsWorld>(_dispatcher.get(), _broadphase.get(), _solver.get(), _configuration.get()))
-    , _hooks(std::make_unique<PhysicsClassHooks>())
+    : _hooks(std::make_unique<PhysicsClassHooks>())
     , _dustCreator(MakeDustCreator())
 {
-	// The ray-cast world only answers rays: nothing in it falls
-	_world->setGravity(btVector3(0, 0, 0));
-}
-
-void DynamicsSystem::Reset()
-{
-	std::vector<btRigidBody*> toRemove;
-	for (int i = 0; i < _world->getNumCollisionObjects(); ++i)
-	{
-		auto* obj = _world->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
-		if (body != nullptr)
-		{
-			toRemove.push_back(body);
-		}
-	}
-	for (auto& obj : toRemove)
-	{
-		_world->removeRigidBody(obj);
-	}
 }
 
 DynamicsSystem::~DynamicsSystem() = default;
-
-void DynamicsSystem::Update(std::chrono::microseconds& dt)
-{
-	std::chrono::duration<float> seconds = dt;
-	_world->stepSimulation(seconds.count());
-}
-
-void DynamicsSystem::AddRigidBody(btRigidBody* object)
-{
-	_world->addRigidBody(object);
-}
-
-void DynamicsSystem::RemoveRigidBody(btRigidBody* object)
-{
-	_world->removeRigidBody(object);
-}
-
-void DynamicsSystem::RegisterRigidBodies()
-{
-	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<RigidBody>([this](RigidBody& body) {
-		body.handle.setUserIndex(static_cast<int>(RigidBodyType::Entity));
-		body.handle.setUserIndex2(0);
-		body.handle.setUserPointer(this);
-		AddRigidBody(&body.handle);
-	});
-}
-
-void DynamicsSystem::RegisterIslandRigidBodies(LandIslandInterface& island)
-{
-	auto& landBlocks = island.GetBlocks();
-	for (uint32_t i = 0; i < landBlocks.size(); ++i)
-	{
-		auto& rigidBody = landBlocks[i].GetRigidBody();
-		rigidBody->setUserIndex(static_cast<int>(RigidBodyType::Terrain));
-		rigidBody->setUserIndex2(i);
-		rigidBody->setUserPointer(reinterpret_cast<void*>(this));
-		AddRigidBody(rigidBody.get());
-	}
-}
-
-void DynamicsSystem::UpdatePhysicsTransforms()
-{
-	auto& registry = Locator::entitiesRegistry::value();
-	registry.Each<Transform, const RigidBody>([&registry](Transform& transform, const RigidBody& body) {
-		btTransform trans;
-		body.motionState->getWorldTransform(trans);
-
-		transform.position.x = trans.getOrigin().getX();
-		transform.position.y = trans.getOrigin().getY();
-		transform.position.z = trans.getOrigin().getZ();
-
-		glm::quat quaternion(trans.getRotation().getW(), trans.getRotation().getX(), trans.getRotation().getY(),
-		                     trans.getRotation().getZ());
-
-		transform.rotation = glm::mat3_cast(quaternion);
-
-		registry.SetDirty();
-	});
-}
-
-std::optional<glm::vec3> DynamicsSystem::RayCastLand(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
-{
-	// The closest hit among the land's bodies only
-	struct LandOnly final: btCollisionWorld::ClosestRayResultCallback
-	{
-		using ClosestRayResultCallback::ClosestRayResultCallback;
-		[[nodiscard]] bool needsCollision(btBroadphaseProxy* proxy) const override
-		{
-			const auto* object = static_cast<const btCollisionObject*>(proxy->m_clientObject);
-			return object != nullptr && static_cast<RigidBodyType>(object->getUserIndex()) == RigidBodyType::Terrain &&
-			       ClosestRayResultCallback::needsCollision(proxy);
-		}
-	};
-	const auto from = btVector3(origin.x, origin.y, origin.z);
-	const auto to = from + tMax * btVector3(direction.x, direction.y, direction.z);
-	LandOnly callback(from, to);
-	_world->rayTest(from, to, callback);
-	if (!callback.hasHit())
-	{
-		return std::nullopt;
-	}
-	return glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
-}
-
-std::optional<std::pair<Transform, RigidBodyDetails>>
-DynamicsSystem::RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const
-{
-	auto from = btVector3(origin.x, origin.y, origin.z);
-	auto to = from + tMax * btVector3(direction.x, direction.y, direction.z);
-
-	btCollisionWorld::ClosestRayResultCallback callback(from, to);
-
-	_world->rayTest(from, to, callback);
-
-	if (!callback.hasHit())
-	{
-		return std::nullopt;
-	}
-
-	auto translation = glm::vec3(callback.m_hitPointWorld.x(), callback.m_hitPointWorld.y(), callback.m_hitPointWorld.z());
-	auto normal = glm::vec3(callback.m_hitNormalWorld.x(), callback.m_hitNormalWorld.y(), callback.m_hitNormalWorld.z());
-	const auto up = glm::vec3(0, 1, 0);
-	auto rotation = glm::mat4(1.f);
-	if (abs(normal) != abs(up))
-	{
-		rotation = glm::orientation(normal, up);
-	}
-
-	return std::make_optional(std::make_pair(
-	    Transform {translation, rotation, glm::vec3(1.0f)},
-	    RigidBodyDetails {static_cast<RigidBodyType>(callback.m_collisionObject->getUserIndex()),
-	                      callback.m_collisionObject->getUserIndex2(), callback.m_collisionObject->getUserPointer()}));
-}
 
 // The objects' physics
 

@@ -2314,8 +2314,6 @@ bool Game::Run() noexcept
 		return false;
 	}
 
-	Locator::dynamicsSystem::value().RegisterRigidBodies();
-
 	auto& fileSystem = Locator::filesystem::value();
 
 	auto challengePath = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
@@ -2701,7 +2699,6 @@ void Game::SetUpLandscape()
 	ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
 
 	Locator::cameraBookmarkSystem::value().Initialize();
-	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
 	Locator::playerSystem::value().RegisterPlayers();
 	if (Locator::cameraPathSystem::value().IsPathing())
 	{

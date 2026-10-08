@@ -41,7 +41,6 @@
             "features": [ "multithreaded" ],
             "platform": "!emscripten"
         },
-        "bullet3",
         "minizip",
         "gtest"
     ]

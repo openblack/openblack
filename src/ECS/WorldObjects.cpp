@@ -36,7 +36,6 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/OneOffSpellSeed.h"
 #include "ECS/Components/Pot.h"
-#include "ECS/Components/RigidBody.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/TeleportStone.h"
 #include "ECS/Components/Temple.h"
@@ -391,10 +390,6 @@ void world_objects::Remove(entt::entity object)
 	if (!registry.Valid(object))
 	{
 		return;
-	}
-	if (auto* body = registry.TryGet<RigidBody>(object); body != nullptr && Locator::dynamicsSystem::has_value())
-	{
-		Locator::dynamicsSystem::value().RemoveRigidBody(&body->handle);
 	}
 	if (Locator::fireSystem::has_value())
 	{

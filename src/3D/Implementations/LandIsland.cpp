@@ -19,7 +19,6 @@
 #include <span>
 #include <stdexcept>
 
-#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
 #include <bgfx/bgfx.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,7 +31,6 @@
 #include "3D/LandData.h"
 #include "3D/LandNormal.h"
 #include "3D/MapCoords.h"
-#include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/Mesh.h"

@@ -9,14 +9,12 @@
 
 #include "FeatureArchetype.h"
 
-#include <BulletCollision/CollisionShapes/btConvexShape.h>
 #include <glm/gtx/euler_angles.hpp>
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Fixed.h"
 #include "ECS/Components/Mesh.h"
-#include "ECS/Components/RigidBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
@@ -41,22 +39,6 @@ entt::entity FeatureArchetype::Create(const glm::vec3& position, FeatureInfo typ
 	registry.Assign<Feature>(entity, type);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
-
-	auto l3dMesh = Locator::resources::value().GetMeshes().Handle(resourceId);
-	if (l3dMesh->HasPhysicsMesh())
-	{
-		auto& shape = l3dMesh->GetPhysicsMesh();
-		btVector3 bodyInertia(0, 0, 0);
-		shape.calculateLocalInertia(l3dMesh->GetMass(), bodyInertia);
-
-		btTransform startTransform;
-		startTransform.setIdentity();
-		startTransform.setOrigin(btVector3(transform.position.x, transform.position.y, transform.position.z));
-
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(l3dMesh->GetMass(), nullptr, &shape, bodyInertia);
-
-		registry.Assign<RigidBody>(entity, rbInfo, startTransform);
-	}
 
 	return entity;
 }

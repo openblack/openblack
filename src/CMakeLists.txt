@@ -105,17 +105,8 @@ target_include_directories(
   openblack_lib
   PUBLIC ${CMAKE_CURRENT_LIST_DIR}
          ${CMAKE_BINARY_DIR}/include # For shaders and other bin2c
-         ${BULLET_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${DRLIBS_INCLUDE_DIRS}
+         ${Stb_INCLUDE_DIR} ${DRLIBS_INCLUDE_DIRS}
 )
-if (NOT VCPKG_TARGET_ANDROID)
-  target_include_directories(
-    openblack_lib PUBLIC ${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIR}
-  )
-endif ()
-target_link_directories(
-  openblack_lib PRIVATE ${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS}
-)
-target_compile_definitions(openblack_lib PRIVATE ${BULLET_DEFINITIONS})
 target_link_libraries(
   openblack_lib
   PRIVATE "$<$<CXX_COMPILER_ID:MSVC>:-SAFESEH:NO>"
@@ -139,11 +130,6 @@ target_link_libraries(
           EnTT::EnTT
           bgfx::bgfx
           OpenAL::OpenAL
-          Bullet3Common
-          BulletDynamics
-          BulletCollision
-          BulletSoftBody
-          LinearMath
           minizip::minizip
   PUBLIC spdlog::spdlog
          # The mind file's types are part of the creature mind component

@@ -22,8 +22,6 @@
 
 #include "ECS/PhysicsEntry.h"
 
-class btRigidBody;
-
 namespace openblack
 {
 class LandIslandInterface;
@@ -39,19 +37,6 @@ namespace physics
 {
 class Ground;
 }
-
-enum class RigidBodyType
-{
-	Terrain,
-	Entity,
-};
-
-struct RigidBodyDetails
-{
-	RigidBodyType type;
-	int id;
-	const void* userData;
-};
 
 } // namespace openblack
 
@@ -148,29 +133,11 @@ public:
 };
 
 /// The game's physics: thrown, dropped, knocked and pushed objects, simulated as the game simulates them in fixed steps
-/// once a game turn (see physics::Body). The land and the static models are also kept in a ray-cast world for picking.
+/// once a game turn (see physics::Body)
 class DynamicsSystemInterface
 {
 public:
 	virtual ~DynamicsSystemInterface() = default;
-
-	virtual void Reset() = 0;
-	virtual void Update(std::chrono::microseconds& dt) = 0;
-	virtual void AddRigidBody(btRigidBody* object) = 0;
-	/// A body leaves the world, as its object is taken away
-	virtual void RemoveRigidBody(btRigidBody* object) = 0;
-	virtual void RegisterRigidBodies() = 0;
-	virtual void RegisterIslandRigidBodies(LandIslandInterface& island) = 0;
-	virtual void UpdatePhysicsTransforms() = 0;
-	[[nodiscard]] virtual std::optional<std::pair<ecs::components::Transform, RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, const glm::vec3& direction, float tMax) const = 0;
-	/// Where a line first meets the land itself, passing through everything on it; none without land to meet
-	[[nodiscard]] virtual std::optional<glm::vec3> RayCastLand([[maybe_unused]] const glm::vec3& origin,
-	                                                           [[maybe_unused]] const glm::vec3& direction,
-	                                                           [[maybe_unused]] float tMax) const
-	{
-		return std::nullopt;
-	}
 
 	// The objects' physics. Defaults leave a world without it, as the tests' stand-ins are.
 

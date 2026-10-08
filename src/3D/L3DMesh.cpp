@@ -15,7 +15,6 @@
 #include <filesystem>
 #include <stdexcept>
 
-#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
 #include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -194,11 +193,6 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 		if (subMesh->GetFlags().isPhysics)
 		{
 			const auto& verticesSpan = l3d.GetVertexSpan(i);
-			auto* physicsMesh =
-			    new btConvexHullShape(reinterpret_cast<const btScalar*>(verticesSpan.data()),
-			                          static_cast<int>(verticesSpan.size()), static_cast<int>(sizeof(verticesSpan[0])));
-			physicsMesh->optimizeConvexHull();
-			_physicsMesh.reset(physicsMesh);
 			// Its triangles, each primitive's indices counting from its own first vertex
 			uint32_t vertexBase = 0;
 			uint32_t indexBase = 0;

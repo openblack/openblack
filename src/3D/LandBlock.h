@@ -20,9 +20,6 @@
 
 #include "LandIslandInterface.h"
 
-class btBvhTriangleMeshShape;
-class btRigidBody;
-
 namespace openblack
 {
 
@@ -44,11 +41,6 @@ struct LandVertex
 
 class LandIslandInterface;
 
-namespace dynamics
-{
-class LandBlockBulletMeshInterface;
-}
-
 class LandBlock
 {
 public:
@@ -57,7 +49,7 @@ public:
 	static constexpr uint16_t k_VertexCount = k_Resolution.x * k_Resolution.y * 2 * 3;
 
 	LandBlock() = default;
-	/// Fills the block's k_VertexCount vertices, and builds its shape for the physics
+	/// Fills the block's k_VertexCount vertices
 	void BuildMesh(LandIslandInterface& island, std::span<LandVertex> vertices);
 	/// Where the block's vertices are on the GPU: a run of the vertex buffer the island's blocks share, so a land of a
 	/// thousand blocks takes one of bgfx's buffers rather than a thousand
@@ -67,7 +59,6 @@ public:
 	[[nodiscard]] const lnd::LNDCell* GetCells() const;
 	[[nodiscard]] glm::ivec2 GetBlockPosition() const;
 	[[nodiscard]] glm::vec2 GetMapPosition() const;
-	[[nodiscard]] std::unique_ptr<btRigidBody>& GetRigidBody() { return _rigidBody; };
 	[[nodiscard]] const std::unique_ptr<lnd::LNDBlock>& GetLndBlock() const { return _block; };
 	void SetLndBlock(const lnd::LNDBlock& block);
 
@@ -75,9 +66,6 @@ private:
 	std::unique_ptr<lnd::LNDBlock> _block;
 	const graphics::VertexBuffer* _vertices {nullptr};
 	uint32_t _firstVertex {0};
-	std::unique_ptr<dynamics::LandBlockBulletMeshInterface> _dynamicsMeshInterface;
-	std::unique_ptr<btBvhTriangleMeshShape> _physicsMesh;
-	std::unique_ptr<btRigidBody> _rigidBody;
 
 	void BuildVertexList(std::span<LandVertex> vertices, LandIslandInterface& island);
 };
