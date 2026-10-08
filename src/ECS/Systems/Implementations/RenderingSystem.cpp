@@ -54,6 +54,7 @@
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/ShaderManager.h"
 #include "Locator.h"
+#include "Physics/DamageMesh.h"
 #include "Profiler.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -426,7 +427,83 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
 		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
 	}
+	UploadPartialBuilds();
 	return fits;
+}
+
+void RenderingSystem::UploadPartialBuilds()
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	_renderContext.partialBuilds.clear();
+	_renderContext.partialBuildInstances.clear();
+	if (!Locator::buildingDamageSystem::has_value())
+	{
+		return;
+	}
+	const auto& buildings = Locator::buildingDamageSystem::value();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	registry.Each<const Mesh, const Transform>([&](entt::entity entity, const Mesh& mesh, const Transform& transform) {
+		const auto share = buildings.PartialShare(entity);
+		if (!share.has_value() || !meshes.Contains(mesh.id))
+		{
+			return;
+		}
+		const auto model = meshes.Handle(mesh.id);
+		const float halfHeight = 0.5f * model->GetBoundingBox().Size().y;
+		const auto build = physics::damage::PartialBuildOf(*share, transform.position.y, halfHeight, transform.scale.y);
+		// The scaffold is the submeshes of the highest status there is
+		std::optional<uint32_t> scaffold;
+		for (const auto& subMesh : model->GetSubMeshes())
+		{
+			const auto status = subMesh->GetFlags().status;
+			if (status >= 1 && (!scaffold.has_value() || status > *scaffold))
+			{
+				scaffold = status;
+			}
+		}
+		auto matrix = glm::translate(glm::mat4(1.0f), transform.position) * glm::mat4(transform.rotation) *
+		              glm::scale(glm::mat4(1.0f), transform.scale);
+		RenderContext::PartialBuildDraw draw {
+		    .meshId = mesh.id,
+		    .morphWithTerrain = registry.AllOf<MorphWithTerrain>(entity),
+		    .instance = static_cast<uint32_t>(_renderContext.partialBuildInstances.size()),
+		    .modelCut = build.modelCut,
+		    .scaffoldStatus = build.scaffoldShown ? scaffold : std::nullopt,
+		    .scaffoldCut = build.scaffoldCut,
+		};
+		_renderContext.partialBuildInstances.push_back({.model = matrix});
+		// The scaffold sinks along its up axis while the building rises out of the land
+		const glm::vec3 up = transform.rotation[1];
+		draw.scaffoldInstance = static_cast<uint32_t>(_renderContext.partialBuildInstances.size());
+		_renderContext.partialBuildInstances.push_back(
+		    {.model = glm::translate(glm::mat4(1.0f), -up * build.scaffoldSink) * matrix});
+		_renderContext.partialBuilds.push_back(draw);
+	});
+	const auto count = static_cast<uint32_t>(_renderContext.partialBuildInstances.size());
+	if (count == 0)
+	{
+		return;
+	}
+	if (_renderContext.partialBuildCapacity < count)
+	{
+		if (bgfx::isValid(toBgfx(_renderContext.partialBuildInstanceBuffer)))
+		{
+			bgfx::destroy(toBgfx(_renderContext.partialBuildInstanceBuffer));
+		}
+		bgfx::VertexLayout layout;
+		layout.begin()
+		    .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float)
+		    .end();
+		_renderContext.partialBuildInstanceBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(count, layout));
+		_renderContext.partialBuildCapacity = count;
+	}
+	bgfx::update(toBgfx(_renderContext.partialBuildInstanceBuffer), 0,
+	             bgfx::copy(_renderContext.partialBuildInstances.data(),
+	                        static_cast<uint32_t>(count * sizeof(RenderContext::ObjectInstance))));
 }
 
 bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)

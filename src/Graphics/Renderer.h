@@ -212,6 +212,8 @@ private:
 		CreatureShadow,
 		SkyAlphaThreshold,
 		ObjectLook,
+		KeepBelow,
+		Inset,
 
 		_count
 	};
@@ -247,6 +249,8 @@ private:
 	    "u_creatureShadow",       //
 	    "u_skyAlphaThreshold",    //
 	    "u_objectLook",           //
+	    "u_keepBelow",            //
+	    "u_inset",                //
 	};
 	using MeshUniforms = std::array<std::optional<UniformHandle>, static_cast<size_t>(MeshUniform::_count)>;
 	/// A program's handles of the mesh uniforms it has, looked up by name the first time it draws a mesh

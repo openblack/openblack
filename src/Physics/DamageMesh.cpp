@@ -460,3 +460,27 @@ float damage::DrawShare(float life, float built, std::optional<float> repairStar
 	}
 	return std::min(repaired, built);
 }
+
+damage::PartialBuild damage::PartialBuildOf(float share, float footHeight, float halfHeight, float scale)
+{
+	const float pct = std::clamp(share, 0.0f, 1.0f);
+	const float height = 2.0f * halfHeight * scale;
+	PartialBuild build;
+	const float cut = footHeight + height * pct;
+	if (cut - footHeight >= k_LeastPartialCut)
+	{
+		build.modelCut = cut;
+	}
+	// The scaffold rises out of the land over the first fifth, stands whole, and is taken down from its top over the last
+	if (pct < k_ScaffoldRisen)
+	{
+		build.scaffoldSink = height * (1.0f - pct / k_ScaffoldRisen);
+	}
+	else if (pct > k_ScaffoldCutFrom)
+	{
+		const float scaffoldCut = footHeight + (1.0f - (pct - k_ScaffoldCutFrom) / (1.0f - k_ScaffoldCutFrom)) * height;
+		build.scaffoldShown = scaffoldCut - footHeight >= k_LeastPartialCut;
+		build.scaffoldCut = scaffoldCut;
+	}
+	return build;
+}

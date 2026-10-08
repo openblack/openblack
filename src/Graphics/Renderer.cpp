@@ -705,6 +705,13 @@ const Renderer::MeshUniforms& Renderer::MeshUniformsOf(const ShaderProgram& prog
 	return found->second;
 }
 
+namespace
+{
+/// How far a building's inner walls stand in from its outer ones: less for a two-sided material
+constexpr float k_InnerWallTwoSided = 0.2f;
+constexpr float k_InnerWall = 0.35f;
+} // namespace
+
 void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
                            bool preserveState, const TextureHandle* subMeshTexture, glm::vec3 glow) const
 {
@@ -715,8 +722,8 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	// A lit window is a faint glow, blended by its texture's alpha as its material says, over the wall behind it
 	const bool materialBlending = desc.useMaterialBlending || window;
 	const auto viewId = window ? TranslucentView(desc.viewId) : desc.viewId;
-	if (!desc.drawAll &&
-	    (subMesh.IsPhysics() || subMesh.GetFlags().status != 0 || (!window && (subMesh.GetFlags().lodMask & 1) != 1)))
+	if (!desc.drawAll && (subMesh.IsPhysics() || subMesh.GetFlags().status != desc.onlyStatus.value_or(0) ||
+	                      (!window && (subMesh.GetFlags().lodMask & 1) != 1)))
 	{
 		return;
 	}
@@ -806,8 +813,10 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 
 		// Primitives drawn with their own material's blending can't share render state, nor can a submesh with a texture
 		// of its own
+		// nor inner walls, whose inset each primitive's material decides
 		const bool primitivePreserveState = !materialBlending && subMeshTexture == nullptr && desc.subMeshGlows.empty() &&
-		                                    texture != nullptr && texture == nextTexture && (preserveState || hasNext);
+		                                    !desc.innerWalls && texture != nullptr && texture == nextTexture &&
+		                                    (preserveState || hasNext);
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -850,6 +859,17 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			{
 				const glm::vec4 u_uvOffset {desc.uvOffset, desc.uvScale, 0.0f};
 				setUniform(MeshUniform::UvOffset, &u_uvOffset);
+			}
+			if (has(MeshUniform::KeepBelow))
+			{
+				const glm::vec4 u_keepBelow {desc.cutAbove.has_value() ? 1.0f : 0.0f, desc.cutAbove.value_or(0.0f), 0.0f, 0.0f};
+				setUniform(MeshUniform::KeepBelow, &u_keepBelow);
+			}
+			if (has(MeshUniform::Inset))
+			{
+				const glm::vec4 u_inset {desc.innerWalls ? (prim.twoSided ? k_InnerWallTwoSided : k_InnerWall) : 0.0f, 0.0f,
+				                         0.0f, 0.0f};
+				setUniform(MeshUniform::Inset, &u_inset);
 			}
 			if (has(MeshUniform::SeaClip))
 			{
@@ -1009,7 +1029,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if ((skip & Mesh::SkipState::SkipRenderState) == 0)
 			{
 				auto state = desc.state;
-				if (desc.useMaterialCulling)
+				if (desc.twoSided)
+				{
+					state &= ~BGFX_STATE_CULL_MASK;
+				}
+				else if (desc.useMaterialCulling)
 				{
 					// L3D meshes face clockwise
 					state &= ~BGFX_STATE_CULL_MASK;
@@ -4451,7 +4475,8 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto drawInstances = [&](entt::id_type meshId, const RenderContext::InstancedDrawDesc& placers,
 			                               bool useMaterialBlending, uint32_t first, uint32_t count,
 			                               const EntityPose* pose = nullptr,
-			                               const L3DMeshSubmitDesc::MorphTargets* handMorph = nullptr) {
+			                               const L3DMeshSubmitDesc::MorphTargets* handMorph = nullptr,
+			                               std::optional<graphics::DynamicVertexBufferHandle> instances = std::nullopt) {
 				auto mesh = meshManager.Handle(meshId);
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
@@ -4471,7 +4496,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.creatureShadows = meshId != ecs::components::Hand::k_MeshId;
 				submitDesc.unlit = placers.unlit;
 				submitDesc.instanceDesc =
-				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, first, count);
+				    std::make_unique<graphics::InstanceDesc>(instances.value_or(renderCtx.instanceUniformBuffer), first, count);
 				if (mesh->IsBoned())
 				{
 					const auto animated = renderCtx.animatedBoneMatrices.find(meshId);
@@ -4549,6 +4574,38 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				    !(desc.viewId == RenderPass::Reflection && placers.hiddenFromReflection))
 				{
 					drawInstances(meshId, placers, placers.materialBlending, placers.offset, placers.count);
+				}
+			}
+			// A broken or unfinished building's whole model, as far up as it stands, from both sides and with its inner
+			// walls, and its scaffold sunk into the land or cut down from the top
+			for (const auto& build : renderCtx.partialBuilds)
+			{
+				if (!meshManager.Contains(build.meshId))
+				{
+					continue;
+				}
+				const RenderContext::InstancedDrawDesc placers {0, 1, build.morphWithTerrain, false};
+				const auto drawPart = [&](uint32_t instance, std::optional<float> cut, std::optional<uint32_t> status,
+				                          bool innerWalls) {
+					submitDesc.cutAbove = cut;
+					submitDesc.twoSided = true;
+					submitDesc.innerWalls = innerWalls;
+					submitDesc.onlyStatus = status;
+					drawInstances(build.meshId, placers, false, instance, 1, nullptr, nullptr,
+					              renderCtx.partialBuildInstanceBuffer);
+					submitDesc.cutAbove.reset();
+					submitDesc.twoSided = false;
+					submitDesc.innerWalls = false;
+					submitDesc.onlyStatus.reset();
+				};
+				if (build.modelCut.has_value())
+				{
+					drawPart(build.instance, build.modelCut, std::nullopt, false);
+					drawPart(build.instance, build.modelCut, std::nullopt, true);
+				}
+				if (build.scaffoldStatus.has_value())
+				{
+					drawPart(build.scaffoldInstance, build.scaffoldCut, build.scaffoldStatus, false);
 				}
 			}
 			// The creatures, each posed and shaped as it is, then its eyes

@@ -165,6 +165,23 @@ inline constexpr float k_RebuildDrawShare = 0.2f;
 /// started at, else a little short of its life) and no more than is built; wholly drawn while it isn't built yet
 [[nodiscard]] float DrawShare(float life, float built, std::optional<float> repairStart);
 
+/// How a building drawn part built shows: its whole model kept below a cut as far up as the share, none when that is less
+/// than a fifth of a metre above its foot; its scaffold whole and sunk into the land below a fifth built, whole up to four
+/// fifths, then cut down from its top
+struct PartialBuild
+{
+	std::optional<float> modelCut;
+	/// How far the scaffold is sunk along its up axis
+	float scaffoldSink {0.0f};
+	std::optional<float> scaffoldCut;
+	bool scaffoldShown {true};
+};
+inline constexpr float k_LeastPartialCut = 0.2f;
+inline constexpr float k_ScaffoldRisen = 0.2f;
+inline constexpr float k_ScaffoldCutFrom = 0.8f;
+/// The share drawn (held between 0 and 1), the height of the building's foot, its model's half height and its scale
+[[nodiscard]] PartialBuild PartialBuildOf(float share, float footHeight, float halfHeight, float scale);
+
 /// How much of a building's life a breaking blow takes, before its defences: down to what is left of its model
 [[nodiscard]] float BreakageShare(float life, float remaining);
 

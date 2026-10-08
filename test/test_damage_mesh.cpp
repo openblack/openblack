@@ -216,3 +216,28 @@ TEST(DamageMesh, ABrokenBuildingIsDrawnAsFarAsItIsRepaired)
 	// Nothing regained since the repair started is drawn as nothing
 	EXPECT_FLOAT_EQ(DrawShare(0.45f, 1.0f, 0.45f), 0.0f);
 }
+
+TEST(DamageMesh, APartBuiltBuildingStandsAsFarUpAsItsShareWithItsScaffoldRisingThenTakenDown)
+{
+	using openblack::physics::damage::PartialBuildOf;
+	// A model 10 high (half height 5, scale 1) standing at 2
+	const auto low = PartialBuildOf(0.1f, 2.0f, 5.0f, 1.0f);
+	ASSERT_TRUE(low.modelCut.has_value());
+	EXPECT_FLOAT_EQ(*low.modelCut, 3.0f);
+	// The scaffold is half risen at a tenth built
+	EXPECT_FLOAT_EQ(low.scaffoldSink, 5.0f);
+	EXPECT_FALSE(low.scaffoldCut.has_value());
+	// Less than a fifth of a metre above its foot, nothing of the model is drawn
+	EXPECT_FALSE(PartialBuildOf(0.01f, 2.0f, 5.0f, 1.0f).modelCut.has_value());
+	// Halfway the scaffold stands whole
+	const auto half = PartialBuildOf(0.5f, 0.0f, 5.0f, 1.0f);
+	EXPECT_FLOAT_EQ(half.scaffoldSink, 0.0f);
+	EXPECT_FALSE(half.scaffoldCut.has_value());
+	// Nine tenths built it is half taken down from its top
+	const auto high = PartialBuildOf(0.9f, 0.0f, 5.0f, 1.0f);
+	ASSERT_TRUE(high.scaffoldCut.has_value());
+	EXPECT_NEAR(*high.scaffoldCut, 5.0f, 1e-5f);
+	EXPECT_TRUE(high.scaffoldShown);
+	// Almost done, what is left of it is too low to draw
+	EXPECT_FALSE(PartialBuildOf(0.999f, 0.0f, 5.0f, 1.0f).scaffoldShown);
+}

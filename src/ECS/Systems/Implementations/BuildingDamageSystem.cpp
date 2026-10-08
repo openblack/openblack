@@ -764,6 +764,22 @@ void BuildingDamageSystem::ProcessTurn()
 	}
 }
 
+std::optional<float> BuildingDamageSystem::PartialShare(entt::entity building) const
+{
+	const auto& registry = Entities();
+	if (!registry.Valid(building) || (!registry.AllOf<BuildingDamage>(building) && IsBuilt(building)))
+	{
+		return std::nullopt;
+	}
+	// Nothing is drawn at none, and the whole model at all of it
+	const float share = DrawShare(building);
+	if (!(share > 0.0f) || share >= 1.0f)
+	{
+		return std::nullopt;
+	}
+	return share;
+}
+
 entt::id_type BuildingDamageSystem::DrawnMesh(entt::entity object, entt::id_type own) const
 {
 	const auto* broken = Entities().TryGet<const BuildingDamage>(object);

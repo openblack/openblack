@@ -142,6 +142,16 @@ public:
 		bool unlit {false};
 		/// Nothing of the mesh is drawn below this height, when given, where its program takes it
 		std::optional<float> cutBelow;
+		/// Nothing of the mesh is drawn above this height, when given, where its program takes it: a building drawn as far
+		/// as it is built
+		std::optional<float> cutAbove;
+		/// Every primitive is drawn from both sides
+		bool twoSided {false};
+		/// The building's inner walls: each vertex moved in across the ground along its normal, by less for a two-sided
+		/// material than for another
+		bool innerWalls {false};
+		/// Only the submeshes of this status are drawn, in place of those of status 0: a building's scaffold
+		std::optional<uint32_t> onlyStatus;
 		/// An object's own colour and alpha, as the game gives some objects: the sun shades the colour (0 to 255) in place
 		/// of the land's light where it stands, and every primitive's alpha is its texture's times the alpha (0 to 1).
 		/// Less than whole, the primitives that would be drawn opaque blend by it.

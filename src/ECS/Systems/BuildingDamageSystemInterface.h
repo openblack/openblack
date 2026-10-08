@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <entt/entity/fwd.hpp>
 
 namespace openblack::ecs
@@ -43,6 +45,9 @@ public:
 	virtual void ProcessTurn() = 0;
 	/// The model an object is drawn with in place of its own: a broken building's broken model; its own otherwise
 	[[nodiscard]] virtual entt::id_type DrawnMesh(entt::entity object, entt::id_type own) const = 0;
+	/// How much of a broken or unfinished building is drawn standing over what is left of it, none for one drawn whole
+	/// or not at all
+	[[nodiscard]] virtual std::optional<float> PartialShare(entt::entity building) const = 0;
 	/// A new land: every building whole again
 	virtual void Reset() = 0;
 };

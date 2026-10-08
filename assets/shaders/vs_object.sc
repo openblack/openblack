@@ -32,6 +32,8 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
 uniform vec4 u_depthBias;
+// x: how far each vertex is moved in across the ground along its normal, for a building's inner walls; 0 for none
+uniform vec4 u_inset;
 // Slides the texture across the mesh, as the game does the creature's waterfall
 uniform vec4 u_uvOffset;
 // xyz: a colour of the object's own, 0 to 255, in place of the land's light; w: its alpha, 0 for no colour of its own
@@ -97,6 +99,8 @@ void main()
 	normal = normalize(normal);
 #endif // USE_MORPH
 
+	// A building's inner walls: every vertex moved in along its normal across the ground, its height kept
+	position.xz -= normal.xz * u_inset.x;
 	v_position = TO_WORLD(vec4(position, 1.0f));
 #ifdef USE_MORPH
 	// At the seams, the vertex moves part of the way to where its partner, blended between the meshes as the body is and

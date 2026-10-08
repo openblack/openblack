@@ -27,6 +27,7 @@ public:
 	void ForgetHitter(entt::entity rock) override;
 	void ProcessTurn() override;
 	[[nodiscard]] entt::id_type DrawnMesh(entt::entity object, entt::id_type own) const override;
+	[[nodiscard]] std::optional<float> PartialShare(entt::entity building) const override;
 	void Reset() override;
 };
 

@@ -33,11 +33,12 @@ using namespace openblack::ecs::components;
 RenderContext::RenderContext()
     : instanceUniformBuffer(BGFX_INVALID_HANDLE)
     , treeInstanceUniformBuffer(BGFX_INVALID_HANDLE)
+    , partialBuildInstanceBuffer(BGFX_INVALID_HANDLE)
 {
 }
 RenderContext::~RenderContext()
 {
-	for (const auto& handle : {instanceUniformBuffer, treeInstanceUniformBuffer})
+	for (const auto& handle : {instanceUniformBuffer, treeInstanceUniformBuffer, partialBuildInstanceBuffer})
 	{
 		if (bgfx::isValid(toBgfx(handle)))
 		{

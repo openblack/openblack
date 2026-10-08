@@ -21,6 +21,8 @@ uniform vec4 u_tint;
 uniform vec4 u_seaClip;
 // w: the whole object's alpha, which its texture's is multiplied by; 0 for an object drawn as its materials say
 uniform vec4 u_objectLook;
+// x: 1 to show only what stands below the height y: a building drawn as far as it is built
+uniform vec4 u_keepBelow;
 // The creature spells' looks: the ice a frozen creature is sheened with by how frozen it is (a positive v_haze.w), and
 // the static an invisible one dissolves through by how far it has fizzed (a negative v_haze.w), which xy scrolls across
 // its skin
@@ -40,7 +42,8 @@ void main()
 	bool tinted = u_tint.w > 0.0f;
 	diffuseTex.rgb = diffuseTex.rgb * (tinted ? vec3_splat(1.0f) : light) * u_tint.rgb;
 	diffuseTex.a = diffuseTex.a * (tinted ? u_tint.w : 1.0f) * (u_objectLook.w > 0.0f ? u_objectLook.w : 1.0f);
-	if (diffuseTex.a <= alphaThreshold || (u_seaClip.x > 0.5f && v_position.y < u_seaClip.y))
+	if (diffuseTex.a <= alphaThreshold || (u_seaClip.x > 0.5f && v_position.y < u_seaClip.y) ||
+	    (u_keepBelow.x > 0.5f && v_position.y > u_keepBelow.y))
 	{
 		discard;
 	}

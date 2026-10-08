@@ -38,6 +38,8 @@ private:
 	void PrepareTreeDrawDescs(bool drawBoundingBox);
 	/// Each returns false when an instance had no room left in its mesh's draw list, which must then be made again
 	bool UploadInstances(bool drawBoundingBox);
+	/// The broken and unfinished buildings drawn as far up as they stand
+	void UploadPartialBuilds();
 	bool UploadTreeInstances(bool drawBoundingBox);
 
 	/// Where the next instance of a mesh goes in the instance buffer
