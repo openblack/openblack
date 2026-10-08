@@ -37,6 +37,7 @@
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/ScriptControl.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
@@ -55,6 +56,7 @@
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
@@ -165,9 +167,13 @@ void HurtCreature(DynamicsSystemInterface& dynamics, const PhysicsEntry& entry, 
 	{
 		Locator::creatureAnimationSystem::value().KickSway(creature, entry.forceSum, hitter->body->Centre());
 	}
-	// TODO(physics): a creature a script controls isn't hurt by its own player's blows; openblack's scripts don't control
-	// creatures yet
 	const auto& body = registry.Get<const Creature>(creature);
+	// The creature of the player at this computer is not hurt at all while a script controls it
+	if (registry.AllOf<ScriptControlled>(creature) && Locator::playerSystem::has_value() &&
+	    body.owner == Locator::playerSystem::value().GetLocalPlayer())
+	{
+		return;
+	}
 	const auto* morph = registry.TryGet<const CreatureMorph>(creature);
 	const float mass = living::CreatureMass(body.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
 	                                        morph != nullptr ? morph->drawn.weakStrong : 0.0f);

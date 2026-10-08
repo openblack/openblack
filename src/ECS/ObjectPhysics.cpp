@@ -39,6 +39,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/ScriptControl.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
@@ -60,6 +61,7 @@
 #include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/ResourceStoreSystemInterface.h"
+#include "ECS/Systems/ScriptObjectsSystemInterface.h"
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -277,7 +279,16 @@ entt::entity BecomeDeadTree(const PhysicsEntry* entry, entt::entity tree)
 	}
 	// A dead tree made from a tree always has a player, the neutral one when no one threw it, and calls people as theirs
 	CallForWood(dead, entry != nullptr && entry->player.has_value() ? *entry->player : PlayerNames::NEUTRAL);
-	// TODO(scripts): a script's hold on the tree passes to the dead tree; openblack's scripts keep no object references yet
+	// A script holding the tree holds the dead tree in its place
+	if (registry.AllOf<InScript>(tree) && Locator::scriptObjects::has_value())
+	{
+		Locator::scriptObjects::value().Replace(tree, dead);
+		registry.AssignOrReplace<InScript>(dead);
+		if (registry.AllOf<ScriptControlled>(tree))
+		{
+			registry.AssignOrReplace<ScriptControlled>(dead);
+		}
+	}
 	world_objects::Remove(tree);
 	return dead;
 }
@@ -594,8 +605,8 @@ void object_physics::ConsiderArtefact(const PhysicsEntry* entry, entt::entity ob
 	}
 	const auto* info = world_objects::InfoOf(object);
 	const auto* transform = registry.TryGet<const Transform>(object);
-	// TODO(scripts): a thing a script holds can't become an artefact either; openblack's scripts hold no objects yet
-	if (info == nullptr || transform == nullptr || !(info->artifactMultiplier > 0.0f))
+	// Nor a thing a script holds
+	if (info == nullptr || transform == nullptr || !(info->artifactMultiplier > 0.0f) || registry.AllOf<InScript>(object))
 	{
 		return;
 	}

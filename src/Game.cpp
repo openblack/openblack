@@ -144,6 +144,7 @@
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/RewardSystemInterface.h"
+#include "ECS/Systems/ScriptObjectsSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
@@ -2462,13 +2463,18 @@ bool Game::Run() noexcept
 		auto& chlapi = Locator::chlapi::value();
 		auto& lhvm = Locator::vm::value();
 		// The virtual machine's errors go to the scripting log, where the editor's Scripts panel shows them
+		// The land's scripts start with every place of the scripts' object table free; each native tells the table
+		// whether it takes control of what it is given, and the scripts' variables keep their objects' references
+		Locator::scriptObjects::value().Reset();
 		lhvm.Initialise(
-		    &chlapi.GetFunctionsTable(), nullptr, nullptr, nullptr,
+		    &chlapi.GetFunctionsTable(), [](uint32_t func) { Locator::scriptObjects::value().EnterNative(func); }, nullptr,
+		    nullptr,
 		    [](lhvm::ErrorCode code, const std::string& text, uint32_t number) {
 			    SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Script error: {} ({} {})",
 			                        lhvm::k_ErrorMsg.at(static_cast<size_t>(code)), text, number);
 		    },
-		    nullptr, nullptr);
+		    [](uint32_t object) { Locator::scriptObjects::value().AddReference(static_cast<entt::entity>(object)); },
+		    [](uint32_t object) { Locator::scriptObjects::value().RemoveReference(static_cast<entt::entity>(object)); });
 		try
 		{
 			lhvm.LoadBinary(fileSystem.ReadAll(challengePath));

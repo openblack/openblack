@@ -21,6 +21,7 @@
 #include "ECS/Components/LivingPhysics.h"
 #include "ECS/Components/LivingReaction.h"
 #include "ECS/Components/Physics.h"
+#include "ECS/Components/ScriptControl.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/VillagerDeath.h"
@@ -263,9 +264,9 @@ void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
 	SetTopState(*action, VillagerStates::Landed);
 	registry.AssignOrReplace<VillagerClip>(
 	    villager, VillagerClip {.state = VillagerStates::Landed, .clip = living::VillagerLandedClip(pose, false)});
-	// Some states it was in it goes straight back to
-	// TODO(physics): a villager scripts control goes back too; openblack keeps no script control of villagers yet
-	if (const auto* row = StateRowOf(previous); row != nullptr && row->field0xf4 != 0)
+	// A villager a script controls goes straight back to what it was doing, and so does one in some states
+	if (const auto* row = StateRowOf(previous);
+	    registry.AllOf<ScriptControlled>(villager) || (row != nullptr && row->field0xf4 != 0))
 	{
 		SetTopState(*action, previous);
 	}

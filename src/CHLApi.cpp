@@ -54,14 +54,17 @@
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RewardSystemInterface.h"
+#include "ECS/Systems/ScriptObjectsSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
@@ -183,6 +186,53 @@ float Popf()
 {
 	auto& lhvm = Locator::vm::value();
 	return lhvm.Popf();
+}
+
+/// An object a script made takes a place in the scripts' table as made by a script, so the script controls it from
+/// its first reference
+void RegisterCreated(entt::entity object)
+{
+	if (object != entt::null && Locator::entitiesRegistry::value().Valid(object))
+	{
+		Locator::scriptObjects::value().Register(object, true);
+	}
+}
+
+/// An object given to a native: a native that takes control of what it is given takes control of it
+entt::entity PopObject()
+{
+	return Locator::scriptObjects::value().Fetch(static_cast<entt::entity>(Pop().uintVal));
+}
+
+/// A script effect's seconds as game turns: a whole number of turns a second, as the game's turn length gives it
+int SpecialEffectTurns(float seconds)
+{
+	constexpr auto k_TurnsPerSecond = 1000 / static_cast<int>(ecs::systems::TimeSystemInterface::k_TurnDuration.count());
+	return static_cast<int>(seconds * static_cast<float>(k_TurnsPerSecond));
+}
+
+/// One of the spot visuals started by a script, at a point or on an object that ends it when it goes, for the player at
+/// this computer; numbers past the table's last start nothing
+uint32_t StartScriptSpotVisual(int32_t effect, glm::vec3 position, int turns, entt::entity owner)
+{
+	constexpr int32_t k_LastSpotVisual = 49;
+	if (effect < 0 || effect > k_LastSpotVisual || !Locator::particleSystem::has_value())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Spell not created");
+		return 0;
+	}
+	auto& particles = Locator::particleSystem::value();
+	const auto id = particles.StartSpotVisual(static_cast<SpotVisualType>(effect), position, turns, owner, 1.0f);
+	if (id == ecs::systems::ParticleSystemInterface::k_NoEffect)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Spell not created");
+		return 0;
+	}
+	if (Locator::playerSystem::has_value())
+	{
+		particles.SetPlayer(id, static_cast<int>(Locator::playerSystem::value().GetLocalPlayer()));
+	}
+	return id;
 }
 
 void Push(VMValue value, DataType type)
@@ -362,33 +412,33 @@ void GameThingClicked() // 016 GAME_THING_CLICKED
 
 void SetScriptState() // 017 SET_SCRIPT_STATE
 {
-	// const auto state = Pop().intVal;
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto state = Pop().intVal;
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void SetScriptStatePos() // 018 SET_SCRIPT_STATE_POS
 {
-	// const auto position = PopVec();
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto position = PopVec();
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void SetScriptFloat() // 019 SET_SCRIPT_FLOAT
 {
-	// const auto value = Popf();
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto value = Popf();
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void SetScriptUlong() // 020 SET_SCRIPT_ULONG
 {
-	// const auto loop = Pop().intVal;
-	// const auto animation = Pop().intVal;
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto loop = Pop().intVal;
+	[[maybe_unused]] const auto animation = Pop().intVal;
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
@@ -513,6 +563,7 @@ void Create() // 027 CREATE
 	const auto type = static_cast<ObjectType>(Pop().intVal);
 
 	const auto object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	RegisterCreated(object);
 
 	Pusho(static_cast<uint32_t>(object));
 }
@@ -563,9 +614,9 @@ void SetWidescreen() // 032 SET_WIDESCREEN
 
 void MoveGameThing() // 033 MOVE_GAME_THING
 {
-	// const auto radius = Popf();
-	// const auto position = PopVec();
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto radius = Popf();
+	[[maybe_unused]] const auto position = PopVec();
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
@@ -595,9 +646,9 @@ void FlockCreate() // 036 FLOCK_CREATE
 
 void FlockAttach() // 037 FLOCK_ATTACH
 {
-	// const auto asLeader = static_cast<bool>(Pop().intVal);
-	// const auto flock = Pop().uintVal;
-	// const auto obj = Pop().uintVal;
+	[[maybe_unused]] const auto asLeader = static_cast<bool>(Pop().intVal);
+	[[maybe_unused]] const auto flock = PopObject();
+	[[maybe_unused]] const auto obj = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 	Pusho(0);
@@ -727,22 +778,27 @@ void CallNear() // 051 CALL_NEAR
 
 void SpecialEffectPosition() // 052 SPECIAL_EFFECT_POSITION
 {
-	// const auto duration = Popf();
-	// const auto position = PopVec();
-	// const auto effect = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto turns = SpecialEffectTurns(Popf());
+	const auto position = PopVec();
+	const auto effect = Pop().intVal;
+	Pusho(StartScriptSpotVisual(effect, position, turns, entt::null));
 }
 
 void SpecialEffectObject() // 053 SPECIAL_EFFECT_OBJECT
 {
-	// const auto duration = Popf();
-	// const auto target = Pop().uintVal;
-	// const auto effect = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto turns = SpecialEffectTurns(Popf());
+	const auto object = PopObject();
+	const auto effect = Pop().intVal;
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* transform = registry.Valid(object) ? registry.TryGet<Transform>(object) : nullptr;
+	if (transform == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "SPECIAL_EFFECT_OBJECT: thing invalid, spell not created");
+		Pusho(0);
+		return;
+	}
+	// The effect stands on the object and ends when it goes
+	Pusho(StartScriptSpotVisual(effect, transform->position, turns, object));
 }
 
 void DanceCreate() // 054 DANCE_CREATE
@@ -1239,28 +1295,23 @@ void GetMoonPercentage() // 108 GET_MOON_PERCENTAGE
 
 void PopulateContainer() // 109 POPULATE_CONTAINER
 {
-	// const auto subtype = Pop().intVal;
-	// const auto type = Pop().intVal;
-	// const auto quantity = Popf();
-	// const auto obj = Pop().uintVal;
+	[[maybe_unused]] const auto subtype = Pop().intVal;
+	[[maybe_unused]] const auto type = Pop().intVal;
+	[[maybe_unused]] const auto quantity = Popf();
+	[[maybe_unused]] const auto obj = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void AddReference() // 110 ADD_REFERENCE
 {
-	const auto objId = Pop().uintVal;
-	// TODO(Daniels118): implement this - HIGH PRIORITY
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(objId);
+	// A script takes hold of an object. The game's table says one value comes back, but the game's function pushes none
+	Locator::scriptObjects::value().AddReference(static_cast<entt::entity>(Pop().uintVal));
 }
 
 void RemoveReference() // 111 REMOVE_REFERENCE
 {
-	const auto objId = Pop().uintVal;
-	// TODO(Daniels118): implement this - HIGH PRIORITY
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(objId);
+	Locator::scriptObjects::value().RemoveReference(static_cast<entt::entity>(Pop().uintVal));
 }
 
 void SetGameTime() // 112 SET_GAME_TIME
@@ -1651,9 +1702,7 @@ void PositionClicked() // 158 POSITION_CLICKED
 
 void ReleaseFromScript() // 159 RELEASE_FROM_SCRIPT
 {
-	// const auto obj = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	Locator::scriptObjects::value().ReleaseFromScript(PopObject());
 }
 
 void GetObjectHandIsOver() // 160 GET_OBJECT_HAND_IS_OVER
@@ -1842,11 +1891,11 @@ void SetTarget() // 176 SET_TARGET
 
 void WalkPath() // 177 WALK_PATH
 {
-	// const auto valTo = Popf();
-	// const auto valFrom = Popf();
-	// const auto camera_enum = Pop().intVal;
-	// const auto forward = static_cast<bool>(Pop().intVal);
-	// const auto object = Pop().uintVal;
+	[[maybe_unused]] const auto valTo = Popf();
+	[[maybe_unused]] const auto valFrom = Popf();
+	[[maybe_unused]] const auto camera_enum = Pop().intVal;
+	[[maybe_unused]] const auto forward = static_cast<bool>(Pop().intVal);
+	[[maybe_unused]] const auto object = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
@@ -2110,12 +2159,13 @@ void HelpSystemOn() // 200 HELP_SYSTEM_ON
 
 void ShakeCamera() // 201 SHAKE_CAMERA
 {
-	// const auto duration = Popf();
-	// const auto amplitude = Popf();
-	// const auto radius = Popf();
-	// const auto position = PopVec();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto duration = Popf();
+	const auto amplitude = Popf();
+	const auto radius = Popf();
+	const auto position = PopVec();
+	// The shake lasts the seconds given rounded to whole milliseconds, and shakes every way, not only up and down
+	const auto milliseconds = std::round(duration * 1000.0f);
+	Locator::explosionSystem::value().AddShake(position, radius, amplitude, milliseconds / 1000.0f, false);
 }
 
 void SetAnimationModify() // 202 SET_ANIMATION_MODIFY
@@ -2226,8 +2276,8 @@ void SetFixedCamRotation() // 209 SET_FIXED_CAM_ROTATION
 
 void SwapCreature() // 210 SWAP_CREATURE
 {
-	// const auto toCreature = Pop().uintVal;
-	// const auto fromCreature = Pop().uintVal;
+	[[maybe_unused]] const auto toCreature = PopObject();
+	[[maybe_unused]] const auto fromCreature = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
@@ -2521,6 +2571,7 @@ uint32_t GiveReward(int32_t type, glm::vec3 position, entt::entity town, bool fr
 	    Locator::playerSystem::has_value() ? std::optional(Locator::playerSystem::value().GetLocalPlayer()) : std::nullopt;
 	const auto chest =
 	    Locator::rewardSystem::value().Create(position, static_cast<RewardObjectInfo>(type), player, town, fromSky);
+	RegisterCreated(chest);
 	return static_cast<uint32_t>(chest);
 }
 
@@ -2651,6 +2702,7 @@ void CreateWithAngleAndScale() // 252 CREATE_WITH_ANGLE_AND_SCALE
 	const auto angle = Popf();
 
 	const entt::entity object = CreateScriptObject(type, subtype, position, 0.0f, 0.0f, angle, 0.0f, scale);
+	RegisterCreated(object);
 
 	Pusho(static_cast<uint32_t>(object));
 }
