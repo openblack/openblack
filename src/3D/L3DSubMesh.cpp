@@ -352,31 +352,29 @@ void L3DSubMesh::BoundVertices(const l3d::L3DFile& l3d, uint32_t meshIndex)
 	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
 	if (_flags.hasBones)
 	{
-		for (auto& primitive : primitiveSpan)
+		// Each group of vertices is placed by its bone in the pose the model rests in. The groups run on over the
+		// vertices of every primitive in turn, as the game bounds each primitive by its own groups.
+		uint32_t vertexOffset = 0;
+		for (const auto& group : vertexGroupSpans)
 		{
-			uint32_t vertexOffset = 0;
-			for (uint32_t i = 0; i < primitive.numGroups; ++i)
+			auto matrix = glm::identity<glm::mat4>();
+			for (uint32_t parent = group.boneIndex; parent != std::numeric_limits<uint32_t>::max();
+			     parent = boneSpans[parent].parent)
 			{
-				auto matrix = glm::identity<glm::mat4>();
-				for (uint32_t parent = vertexGroupSpans[i].boneIndex; parent != std::numeric_limits<uint32_t>::max();
-				     parent = boneSpans[parent].parent)
-				{
-					const auto& bone = boneSpans[parent];
-					const auto orientation = glm::make_mat3(bone.orientation.data());
-					const auto translation = glm::make_vec3(&bone.position.x) * orientation;
-					const auto local = glm::translate(glm::mat4(orientation), translation);
-					matrix = local * matrix;
-				}
-
-				for (uint32_t j = 0; j < vertexGroupSpans[i].vertexCount; ++j)
-				{
-					const auto& vertex = verticesSpan[vertexOffset + j];
-					const auto position = glm::xyz(matrix * glm::vec4(glm::make_vec3(&vertex.position.x), 1.0f));
-					_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
-					_boundingBox.minima = glm::min(_boundingBox.minima, position);
-				}
-				vertexOffset += vertexGroupSpans[i].vertexCount;
+				const auto& bone = boneSpans[parent];
+				const auto orientation = glm::make_mat3(bone.orientation.data());
+				const auto translation = glm::make_vec3(&bone.position.x) * orientation;
+				const auto local = glm::translate(glm::mat4(orientation), translation);
+				matrix = local * matrix;
 			}
+			for (uint32_t j = 0; j < group.vertexCount && vertexOffset + j < verticesSpan.size(); ++j)
+			{
+				const auto& vertex = verticesSpan[vertexOffset + j];
+				const auto position = glm::xyz(matrix * glm::vec4(glm::make_vec3(&vertex.position.x), 1.0f));
+				_boundingBox.maxima = glm::max(_boundingBox.maxima, position);
+				_boundingBox.minima = glm::min(_boundingBox.minima, position);
+			}
+			vertexOffset += group.vertexCount;
 		}
 	}
 	else
