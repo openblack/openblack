@@ -87,6 +87,9 @@ constexpr uint8_t k_Burn = 6;
 [[nodiscard]] uint8_t BurnKind(uint32_t drawOfThree);
 /// A burn marks only when a draw of this many comes up 0: the more wounds the creature has already, the rarer
 [[nodiscard]] uint32_t BurnChance(size_t wounds);
+/// A creature catching fire is burnt in this many tries, each wound's column a draw of eight
+constexpr int32_t k_CatchingBurnTries = 3;
+[[nodiscard]] uint8_t CatchingBurnColumn(uint32_t drawOfEight);
 /// The texel of a skin 256 wide at a point on a triangle, s along its first side and t along its third, from its corners'
 /// texture coordinates
 [[nodiscard]] glm::u8vec2 TexelAt(const std::array<glm::vec2, 3>& uvs, float s, float t);

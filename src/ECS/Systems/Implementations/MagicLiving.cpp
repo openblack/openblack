@@ -19,6 +19,7 @@
 
 #include "3D/CreatureBody.h"
 #include "3D/L3DMesh.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/MapCoords.h"
 #include "Common/GameRandom.h"
 #include "Creature/CreatureDesires.h"
@@ -39,6 +40,7 @@
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/CreatureScars.h"
 #include "ECS/Map.h"
 #include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
@@ -285,32 +287,13 @@ void ChangeOpinion(entt::entity entity, const magic::EffectValues& values, const
 /// cut, deep for a hard blow, or a burn's scar, further along its row the harder it was
 void Scar(entt::entity entity, glm::vec3 from, glm::vec3 groin, uint8_t kind, float harm)
 {
-	auto& registry = EntityRegistry();
 	const auto direction = groin - from;
-	if (!(glm::dot(direction, direction) > creature_marks::scar::k_LeastReachSquared) || !Locator::gameRandom::has_value() ||
-	    !Locator::resources::has_value() || !Locator::creatureSkinSystem::has_value())
+	if (!(glm::dot(direction, direction) > creature_marks::scar::k_LeastReachSquared) || !Locator::gameRandom::has_value())
 	{
 		return;
 	}
 	const auto column = creature_marks::scar::Column(Locator::gameRandom::value().GameRand(5), harm);
-	const auto* mesh = registry.TryGet<const Mesh>(entity);
-	const auto* transform = registry.TryGet<const Transform>(entity);
-	auto& meshes = Locator::resources::value().GetMeshes();
-	if (mesh == nullptr || transform == nullptr || !meshes.Contains(mesh->id))
-	{
-		return;
-	}
-	const auto placement = creature::PlacementMatrix(transform->position, transform->rotation, transform->scale);
-	const auto hit = ecs::posed_model::NearestSkinHit(registry, entity, *meshes.Handle(mesh->id), placement, from,
-	                                                  glm::normalize(direction));
-	if (!hit.has_value() || !hit->skin.has_value())
-	{
-		return;
-	}
-	const auto texel = creature_marks::scar::TexelAt(hit->uvs, hit->hit.s, hit->hit.t);
-	Locator::creatureSkinSystem::value().AddWound(
-	    entity,
-	    {.u = texel.x, .v = texel.y, .skin = static_cast<uint8_t>(*hit->skin), .age = 0, .type = kind, .column = column});
+	ecs::creature_scars::MarkAlong(entity, from, groin, kind, column);
 }
 
 /// Hurt by an effect out of a fight, a creature is frightened and angered by it, unless its own player applied it, and
@@ -335,28 +318,26 @@ void CutAndScarred(entt::entity entity, float damage, const magic::EffectValues&
 	{
 		return;
 	}
-	const auto* animation = registry.TryGet<const CreatureAnimation>(entity);
-	const auto* transform = registry.TryGet<const Transform>(entity);
-	const auto& rigs = Locator::resources::value().GetCreatureRigs();
-	const auto rigId = creature::GetRigId(creature->species);
-	if (animation == nullptr || transform == nullptr || !rigs.Contains(rigId) || !rigs.Handle(rigId)->actionPoints.has_value())
+	const auto groinAt = ecs::creature_scars::GroinOf(entity);
+	if (!groinAt.has_value())
 	{
 		return;
 	}
-	const auto bone = rigs.Handle(rigId)->actionPoints->groin;
-	if (bone >= animation->boneMatrices.size())
-	{
-		return;
-	}
-	const auto placement = creature::PlacementMatrix(transform->position, transform->rotation, transform->scale);
-	const auto groin = glm::vec3(creature::PosedBone(bone, animation->boneMatrices, placement)[3]);
+	const auto groin = *groinAt;
 	const float reach = creature->size * creature_marks::scar::k_BurnReachPerSize;
 	auto& random = Locator::gameRandom::value();
 	if (values[magic::EffectKind::Burn] < values[magic::EffectKind::Crush])
 	{
-		// A crush comes from the thing that applied it, where it stands
-		// TODO(physics): a miracle's crush has no point recorded in openblack's effects, so only blows mark
-		if (!source.appliedBy.has_value() || !registry.Valid(*source.appliedBy))
+		// A crush comes from where the thing that struck stands. Only a blow gives the effect a place: a miracle's crush
+		// comes from the corner of the map, at the land's height there.
+		if (!source.appliedBy.has_value())
+		{
+			const float cornerHeight =
+			    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(0.0f)) : 0.0f;
+			Scar(entity, glm::vec3(0.0f, cornerHeight, 0.0f), groin, creature_marks::scar::BlowKind(harm), harm);
+			return;
+		}
+		if (!registry.Valid(*source.appliedBy))
 		{
 			return;
 		}

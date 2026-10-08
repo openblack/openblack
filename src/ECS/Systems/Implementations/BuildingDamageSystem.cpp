@@ -36,6 +36,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
+#include "ECS/SnowDust.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
@@ -412,8 +413,11 @@ void ShedDustAndCheck(entt::entity piece)
 		const auto velocity = SpreadVector(k_PieceDustSpeed);
 		if (Locator::dynamicsSystem::has_value())
 		{
-			Locator::dynamicsSystem::value().AddPuff(transform.position + transform.rotation * corners[i], velocity,
-			                                         k_PieceDustSize, k_PieceDustArgb);
+			// Where snow lies a puff grows by the snow's depth and takes on the land's colour
+			const auto at = transform.position + transform.rotation * corners[i];
+			const auto snow = snow_dust::SnowAt(at);
+			Locator::dynamicsSystem::value().AddPuff(at, velocity, k_PieceDustSize * (1.0f + static_cast<float>(snow) / 255.0f),
+			                                         snow_dust::Tint(k_PieceDustArgb, snow));
 		}
 	}
 	if (physics::shapes::Fragment(triangles).tooThin)

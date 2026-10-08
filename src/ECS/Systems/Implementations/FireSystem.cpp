@@ -58,6 +58,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/VillagerDeath.h"
+#include "ECS/CreatureScars.h"
 #include "ECS/Map.h"
 #include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
@@ -1027,9 +1028,11 @@ void FireSystem::Process(entt::entity object)
 	{
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Fire: object {} went out", entt::to_integral(object));
 	}
-	// TODO(blastfire): a creature that catches is burnt on its skin in three tries, each a ray from a random point
-	// round its centre bone at the body posed by its bones: type 0 two times in three, else 6, size GameRand(8). The ray
-	// onto the posed skin exists (posed_model::NearestSkinHit); this catching burn's own rules aren't ported yet.
+	// A creature is burnt on its skin the turn it catches
+	if ((fire.state.flags & fire::k_JustIgnited) != 0 && world_objects::IsCreature(object))
+	{
+		ecs::creature_scars::BurnOnCatching(object);
+	}
 	if (outcome.rainedOn && Locator::magicSystem::has_value())
 	{
 		// The people come to watch a storm miracle's rain put the fire out

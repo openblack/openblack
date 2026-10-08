@@ -56,6 +56,7 @@
 #include "ECS/Map.h"
 #include "ECS/PhysicsGround.h"
 #include "ECS/Registry.h"
+#include "ECS/SnowDust.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
@@ -1391,8 +1392,9 @@ void DynamicsSystem::AttemptCollisionSound(PhysicsEntry& entry)
 				Locator::waterRingSystem::value().Add(turn::ImpactRing(centre, entry.body->Radius()));
 			}
 		}
-		AddLandingDust(glm::vec3(centre.x, land != nullptr ? land->HeightAt(xz) : centre.y, centre.z), entry.body->Radius(),
-		               colour);
+		// Where snow lies, the dust takes on the land's colour by how deep the snow is
+		const glm::vec3 at(centre.x, land != nullptr ? land->HeightAt(xz) : centre.y, centre.z);
+		AddLandingDust(at, entry.body->Radius(), snow_dust::Tint(colour, snow_dust::SnowAt(at)));
 	}
 	// How loud it is goes by its kind's weight, unscaled; a thing of no kind makes no sound
 	const auto infoWeight = InfoWeight(hitter);

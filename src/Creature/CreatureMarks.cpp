@@ -159,6 +159,11 @@ uint8_t creature_marks::scar::BurnKind(uint32_t drawOfThree)
 	return drawOfThree != 0 ? k_Cut : k_Burn;
 }
 
+uint8_t creature_marks::scar::CatchingBurnColumn(uint32_t drawOfEight)
+{
+	return static_cast<uint8_t>(std::min(drawOfEight, 7u));
+}
+
 uint32_t creature_marks::scar::BurnChance(size_t wounds)
 {
 	return static_cast<uint32_t>(static_cast<float>(wounds) * (1.0f / 1024.0f) * 140.0f + 10.0f);

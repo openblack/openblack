@@ -193,6 +193,15 @@ TEST(CreatureScars, ABurnScarsOneTimeInThreeAndMoreRarelyOnAMarkedBody)
 	EXPECT_EQ(BurnChance(512), 80u);
 }
 
+TEST(CreatureScars, CatchingFireBurnsInThreeTriesAnywhereAlongTheRow)
+{
+	using namespace openblack::creature_marks::scar;
+	EXPECT_EQ(k_CatchingBurnTries, 3);
+	EXPECT_EQ(CatchingBurnColumn(0), 0u);
+	EXPECT_EQ(CatchingBurnColumn(7), 7u);
+	EXPECT_EQ(CatchingBurnColumn(9), 7u);
+}
+
 TEST(CreatureScars, TheTexelIsTheTrianglesTextureAtThePoint)
 {
 	using namespace openblack::creature_marks::scar;
