@@ -41,6 +41,7 @@
 #include "ECS/Components/CreatureLocomotion.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
+#include "ECS/Components/CreatureSpells.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Transform.h"
@@ -54,6 +55,7 @@
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "Locator.h"
+#include "Magic/MagicTables.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -578,6 +580,42 @@ void CreatureFightSystem::Release()
 	ReleaseCharge(pressed.creature, pressed.heldMs);
 }
 
+bool CreatureFightSystem::IsBlocking(entt::entity creature) const
+{
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto* fighting = registry.Valid(creature) ? registry.TryGet<const CreatureFighting>(creature) : nullptr;
+	return fighting != nullptr && fight::IsBlocking(fighting->fighter.state, fighting->fighter.timeMs,
+	                                                DurationOf(creature, fight::animations::k_StartBlock));
+}
+
+void CreatureFightSystem::Recoil(entt::entity creature)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* fighting = registry.Valid(creature) ? registry.TryGet<CreatureFighting>(creature) : nullptr;
+	if (fighting == nullptr)
+	{
+		return;
+	}
+	auto& fighter = fighting->fighter;
+	// Reeling already from a blow, recoiling in its block or fainting, it takes no more notice
+	using namespace fight::animations;
+	const bool reeling = fighter.animation >= k_RecoilHigh && fighter.animation < k_WobbleHighSide;
+	if (reeling || fighter.state == fight::State::BlockRecoil || fighter.state == fight::State::Faint)
+	{
+		return;
+	}
+	if (IsBlocking(creature))
+	{
+		fight::Enter(fighter, fight::State::BlockRecoil);
+	}
+	else if (fighter.state == fight::State::Stance || fighter.state == fight::State::Action ||
+	         fighter.state == fight::State::CastStart || fighter.state == fight::State::Cast ||
+	         fighter.state == fight::State::CastEnd)
+	{
+		fight::Enter(fighter, fight::State::Action, k_RecoilMid);
+	}
+}
+
 void CreatureFightSystem::KnockOut(entt::entity creature)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -595,6 +633,23 @@ void CreatureFightSystem::KnockOut(entt::entity creature)
 			Win(fighting->opponent, creature);
 			return;
 		}
+		start = fighting->startPosition;
+		Leave(creature);
+	}
+	Faint(creature, start);
+}
+
+void CreatureFightSystem::ForceFaint(entt::entity creature)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(creature) || !registry.AllOf<Creature, CreatureAnimation>(creature) ||
+	    registry.AllOf<CreatureKnockedOut>(creature))
+	{
+		return;
+	}
+	std::optional<glm::vec3> start;
+	if (const auto* fighting = registry.TryGet<const CreatureFighting>(creature))
+	{
 		start = fighting->startPosition;
 		Leave(creature);
 	}
@@ -628,16 +683,24 @@ void CreatureFightSystem::Faint(entt::entity creature, std::optional<glm::vec3> 
 	};
 	animation.face = creature_layers::RelaxFace(animation.face);
 	SetEyes(registry, creature, creature_eyes::Mode::Closed);
+	// Whether it will rest to get better once it has lain long enough is decided now, by how it is as it faints
+	bool rest = false;
 	if (auto* needs = registry.TryGet<CreatureNeeds>(creature))
 	{
 		needs->rest = CreatureNeeds::Rest::Unconscious;
+		rest = fight::NeedsRest(needs->needs.life, needs->needs.exhaustion);
+	}
+	// The spells on it are brought to their end
+	if (auto* spells = registry.TryGet<CreatureSpells>(creature))
+	{
+		creature_spells::TryFinishAll(spells->spells);
 	}
 	// It is taken to its pen, or else back to where it stood as its fight started; passing out outside a fight with no
 	// temple for a pen, to the middle of the land
 	const auto here = registry.Get<const Transform>(creature).position;
 	const auto fallback = start.has_value() ? start : NoPen();
 	registry.AssignOrReplace<CreatureKnockedOut>(
-	    creature, CreatureKnockedOut {.home = HomeOf(registry, creature, fallback.value_or(here))});
+	    creature, CreatureKnockedOut {.rest = rest, .home = HomeOf(registry, creature, fallback.value_or(here))});
 }
 
 void CreatureFightSystem::KillPermanently(entt::entity creature)
@@ -1179,7 +1242,7 @@ void CreatureFightSystem::CheckQueue(entt::entity creature)
 		}
 		break;
 	case fight::Order::Kind::Cast:
-		// The spell is cast as the cast's start ends; creatures' miracles come later
+		// The spell is cast as the cast's start ends
 		fight::Enter(fighter, fight::State::CastStart);
 		fighter.spell = order->value;
 		break;
@@ -1192,6 +1255,26 @@ void CreatureFightSystem::CheckQueue(entt::entity creature)
 	case fight::Order::Kind::Blow:
 		AttemptBlow(creature, order->band, order->speed);
 		break;
+	}
+}
+
+void CreatureFightSystem::CastFightSpell(entt::entity creature, MagicType type, entt::entity opponent)
+{
+	if (!Locator::creatureMindSystem::has_value() || static_cast<size_t>(type) >= magic::k_MagicTypeCount)
+	{
+		return;
+	}
+	const auto& effect = magic::GetMagicEffectInfo(Locator::infoConstants::value(), type);
+	if (effect.isAggressiveSpellWhichIsUsedInCreatureFightArena != 0)
+	{
+		if (opponent != entt::null)
+		{
+			Locator::creatureMindSystem::value().TryMiracle(creature, type, opponent);
+		}
+	}
+	else if (effect.isDefensiveSpellWhichIsUsedInCreatureFightArena != 0)
+	{
+		Locator::creatureMindSystem::value().TryMiracle(creature, type, creature);
 	}
 }
 
@@ -1307,6 +1390,17 @@ void CreatureFightSystem::Update(std::chrono::duration<float, std::milli> gameTi
 		}
 		if (duration <= 0.0f || current.timeMs >= duration)
 		{
+			// As the start of a cast ends, the spell is cast: an attacking one at the opponent, a defending one on itself
+			if (current.state == fight::State::CastStart && current.spell.has_value())
+			{
+				CastFightSpell(entity, static_cast<MagicType>(*current.spell), hasOpponent ? fighting->opponent : entt::null);
+				current.spell.reset();
+				fighting = registry.TryGet<CreatureFighting>(entity);
+				if (fighting == nullptr)
+				{
+					continue;
+				}
+			}
 			const auto next = fight::AfterAnimation(current.state, hasOpponent);
 			if (next == current.state && fight::Loops(current.state))
 			{
@@ -1622,8 +1716,16 @@ void CreatureFightSystem::ProcessKnockedOut()
 		case CreatureKnockedOut::Stage::Waiting:
 			if (knockedOut.seconds >= fight::k_WaitAfterHomeSeconds)
 			{
-				const bool rest = needs != nullptr && fight::NeedsRest(needs->needs.life, needs->needs.exhaustion);
-				if (rest)
+				next(CreatureKnockedOut::Stage::WaitingForSpells);
+			}
+			break;
+		case CreatureKnockedOut::Stage::WaitingForSpells:
+		{
+			// The spells on it are brought to their end each turn until none is left
+			auto* spells = registry.TryGet<CreatureSpells>(entity);
+			if (spells == nullptr || creature_spells::TryFinishAll(spells->spells))
+			{
+				if (knockedOut.rest)
 				{
 					next(CreatureKnockedOut::Stage::Resting);
 				}
@@ -1633,6 +1735,7 @@ void CreatureFightSystem::ProcessKnockedOut()
 				}
 			}
 			break;
+		}
 		case CreatureKnockedOut::Stage::Resting:
 			if (needs == nullptr || !fight::NeedsRest(needs->needs.life, needs->needs.exhaustion))
 			{

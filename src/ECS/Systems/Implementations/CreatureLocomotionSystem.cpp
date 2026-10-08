@@ -42,6 +42,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -469,6 +470,17 @@ std::vector<route::Circle> GatherObstacles(ecs::Registry& registry, entt::entity
 			circles.push_back({.centre = fixed.boundingCenter, .radius = fixed.boundingRadius + radius});
 		}
 	});
+	// Another player's shield is walked round; a creature already under one walks out of it
+	if (const auto* owner = registry.TryGet<const Creature>(self); owner != nullptr && Locator::magicShieldSystem::has_value())
+	{
+		for (const auto& shield : Locator::magicShieldSystem::value().CreatureAvoids(owner->owner, false))
+		{
+			if (near(shield.centre, shield.radius))
+			{
+				circles.push_back({.centre = shield.centre, .radius = shield.radius + radius});
+			}
+		}
+	}
 	registry.Each<const CreatureLocomotion, const Transform>(
 	    [&](entt::entity entity, const CreatureLocomotion& other, const Transform& transform) {
 		    const auto centre = glm::xz(transform.position);

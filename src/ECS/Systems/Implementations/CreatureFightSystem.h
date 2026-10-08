@@ -40,7 +40,10 @@ public:
 	void Release() override;
 	[[nodiscard]] bool IsPressed() const override { return _pressed.has_value(); }
 
+	[[nodiscard]] bool IsBlocking(entt::entity creature) const override;
+	void Recoil(entt::entity creature) override;
 	void KnockOut(entt::entity creature) override;
+	void ForceFaint(entt::entity creature) override;
 	void KillPermanently(entt::entity creature) override;
 	void Resurrect(entt::entity creature) override;
 	[[nodiscard]] bool IsKnockedOut(entt::entity creature) const override;
@@ -63,6 +66,8 @@ private:
 	/// Makes the move at the front of a fighter's queue, if it can
 	void CheckQueue(entt::entity creature);
 	/// A blow at a band: struck, or a step taken towards where it would land
+	/// The spell a fighter casts as its cast's start ends: an attacking one at the opponent, a defending one on itself
+	void CastFightSpell(entt::entity creature, MagicType type, entt::entity opponent);
 	void AttemptBlow(entt::entity creature, creature_fight::Band band, float speed);
 	/// A fighter's action landing on its opponent this frame, if it does
 	void TestHit(entt::entity creature);

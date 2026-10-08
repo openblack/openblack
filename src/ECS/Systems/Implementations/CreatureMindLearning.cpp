@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include <LHVM.h>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
@@ -36,24 +37,30 @@
 #include "CreatureMindSystem.h"
 #include "CreatureMindSystemDetail.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureObjectAction.h"
+#include "ECS/Components/CreatureSpells.h"
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/Spell.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
+#include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "MagicLiving.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -90,6 +97,18 @@ constexpr uint32_t k_MimicStepTurns = 10;
 /// Things nobody owns, and things of no player
 constexpr uint32_t k_Neutral = 1;
 constexpr uint32_t k_NoPlayer = 7;
+
+/// The land's script that curses the player's creature, and how tall a creature of size 1 is
+constexpr std::string_view k_CurseScript = "CreatureCurse";
+constexpr float k_HeightOfSizeOne = 15.0f;
+/// A villager hurt to this share of its life or less can be healed by a creature
+constexpr float k_HurtEnoughToHeal = 0.7f;
+
+/// The actions that cast a power-up of a miracle, which only a creature grown up enough tries
+bool IsPowerUpCast(std::string_view action)
+{
+	return action.ends_with("PU1") || action.ends_with("PU2");
+}
 
 /// While doing these, which it chose with nothing better to do, the creature changes to any plan good enough
 bool Interruptible(creature_mind::Activity activity)
@@ -181,10 +200,20 @@ bool Accepts(const ecs::Registry& registry, Target target, entt::entity entity, 
 		return registry.AllOf<Tree>(entity) && hands != nullptr && hands->CanDestroy(entity);
 	case Target::Villager:
 		return registry.AllOf<Villager>(entity);
+	case Target::HurtVillager:
+	{
+		// Hurt to seven tenths of its life or less
+		const auto life = registry.AllOf<Villager>(entity) ? magic_living::LifeOf(entity) : std::nullopt;
+		return life.has_value() && *life <= k_HurtEnoughToHeal;
+	}
 	case Target::Creature:
 		return registry.AllOf<Creature>(entity);
 	case Target::Living:
 		return registry.AllOf<Villager>(entity) || registry.AllOf<Creature>(entity);
+	case Target::Frightening:
+		return registry.AllOf<Creature>(entity) || registry.AllOf<ecs::components::Spell>(entity) ||
+		       (registry.AllOf<Animal>(entity) && Locator::animalSystem::has_value() &&
+		        Locator::animalSystem::value().IsFrighteningToCreature(entity));
 	case Target::Anything:
 		return true;
 	}
@@ -220,6 +249,15 @@ std::vector<Found> Gather(ecs::Registry& registry, Target target, entt::entity s
 	    [&](entt::entity entity, const Creature&, const Transform& at) { consider(entity, at); });
 	registry.Each<const MobileObject, const Transform>(
 	    [&](entt::entity entity, const MobileObject&, const Transform& at) { consider(entity, at); });
+	// The animals and miracles that frighten it are only ever run from
+	if (target == Target::Frightening)
+	{
+		registry.Each<const Animal, const Transform>(
+		    [&](entt::entity entity, const Animal&, const Transform& at) { consider(entity, at); });
+		registry.Each<const ecs::components::Spell>([&](entt::entity entity, const ecs::components::Spell& spell) {
+			consider(entity, Transform {.position = spell.position, .rotation = glm::mat3(1.0f), .scale = glm::vec3(1.0f)});
+		});
+	}
 	// Pots and piles of food are only ever eaten
 	if (target == Target::Food)
 	{
@@ -284,7 +322,8 @@ std::optional<creature_tree::Belief> mind_detail::BeliefOf(const ecs::Registry& 
 		belief.Set(Attribute::Sex, static_cast<uint32_t>(villager->sex));
 		belief.Set(Attribute::VillagerJob, static_cast<uint32_t>(villager->number));
 		belief.Set(Attribute::Life, villager->health > 0 ? 1 : 0);
-		belief.Set(Attribute::OnFire, 0);
+		belief.Set(Attribute::OnFire,
+		           Locator::fireSystem::has_value() && Locator::fireSystem::value().IsOnFire(entity) ? 1 : 0);
 		belief.Set(Attribute::Tribe, static_cast<uint32_t>(villager->tribe));
 		return belief;
 	}
@@ -320,7 +359,8 @@ std::optional<creature_tree::Belief> mind_detail::BeliefOf(const ecs::Registry& 
 		common(types::k_Abode, k_Neutral, 1, 0, k_NoPlayer);
 		belief.Set(Attribute::AbodeType, static_cast<uint32_t>(abode->type));
 		belief.Set(Attribute::Life, 1);
-		belief.Set(Attribute::OnFire, 0);
+		belief.Set(Attribute::OnFire,
+		           Locator::fireSystem::has_value() && Locator::fireSystem::value().IsOnFire(entity) ? 1 : 0);
 		belief.Set(Attribute::AbodeBeingBuilt, 0);
 		return belief;
 	}
@@ -563,8 +603,9 @@ bool CreatureMindSystem::Adopt(entt::entity creature, CreatureMindState& mind, c
 		}
 		point = *at;
 	}
-	auto agenda = creature_plan_actions::Agenda(*executor, plan.object, point, situation,
-	                                            [this](uint32_t range) { return Random(range); });
+	const auto cast = creature_plan_actions::IsCast(*executor) ? CastInfoFor(creature, plan.action) : std::nullopt;
+	auto agenda = creature_plan_actions::Agenda(
+	    *executor, plan.object, point, situation, [this](uint32_t range) { return Random(range); }, cast);
 	if (!agenda.has_value())
 	{
 		return false;
@@ -714,7 +755,9 @@ void CreatureMindSystem::PlanCreature(entt::entity creature, CreatureMindState& 
 			        .opinion = learnt.opinions.at(action),
 			        .turnsSinceDone = learnt.turnsSinceDone.at(action),
 			        .servesFirstDesire = tables->actions.at(action).desire == 0,
-			        .disabled = !creature_plan_actions::Possible(*executor, situation),
+			        .disabled = !creature_plan_actions::Possible(*executor, situation) ||
+			                    (creature_plan_actions::IsCast(*executor) &&
+			                     !MayCast(creature, mind, action, IsPowerUpCast(tables->actions.at(action).name))),
 			    });
 		}
 		for (size_t g = 0; g < groups.size(); ++g)
@@ -1098,8 +1141,34 @@ std::optional<creaturemind::MindFileData> CreatureMindSystem::SaveMind(entt::ent
 	{
 		return std::nullopt;
 	}
-	return creature_mind_model::ToFile(*mind->desires, *mind->learnt, mind->developmentPhase, mind->attitudeToPlayer,
-	                                   static_cast<uint32_t>(creature::InfoRow(body->species)));
+	auto file = creature_mind_model::ToFile(*mind->desires, *mind->learnt, mind->developmentPhase, mind->attitudeToPlayer,
+	                                        static_cast<uint32_t>(creature::InfoRow(body->species)));
+	// It is saved as itself: as it was before any spell on it changed it
+	const creature_spells::SavedBody now {.size = body->size, .strength = body->strength, .alignment = body->alignment};
+	const auto* spells = registry.TryGet<const CreatureSpells>(creature);
+	auto saved = spells != nullptr ? creature_spells::ValuesToSave(spells->spells, now) : now;
+	// While the land's curse on the player's creature runs, it is saved as the curse found it
+	if (body->owner == PlayerNames::PLAYER_ONE && Locator::vm::has_value())
+	{
+		const auto& vm = Locator::vm::value();
+		const bool cursed =
+		    std::ranges::any_of(vm.GetTasks(), [](const auto& entry) { return entry.second.name == k_CurseScript; });
+		if (cursed)
+		{
+			const auto global = [&vm](std::string_view name) {
+				const auto& variables = vm.GetVariables();
+				const auto found = std::ranges::find(variables, name, &lhvm::VMVar::name);
+				return found != variables.end() ? found->value.floatVal : 0.0f;
+			};
+			saved.size = global("OriginalSizeOfMyCreature") / k_HeightOfSizeOne;
+			saved.strength = global("OriginalStrengthOfMyCreature");
+			saved.alignment = global("OriginalAlignmentOfMyCreature");
+		}
+	}
+	file.physique.size = saved.size;
+	file.physique.strength = saved.strength;
+	file.alignment = saved.alignment;
+	return file;
 }
 
 void CreatureMindSystem::ClearLearning(entt::entity creature)
@@ -1157,7 +1226,8 @@ void CreatureMindSystem::SeeMiracle(const glm::vec3& point, size_t miracle)
 	}
 	registry.Each<const Creature, CreatureMindState, const Transform>(
 	    [&](entt::entity, const Creature& creature, CreatureMindState& mind, const Transform& at) {
-		    if (!mind.learnt.has_value() || glm::distance(at.position, point) > k_ViewDistance)
+		    // A mind stilled, as by the freeze spell, learns nothing
+		    if (!mind.learnt.has_value() || mind.paused || glm::distance(at.position, point) > k_ViewDistance)
 		    {
 			    return;
 		    }
@@ -1173,7 +1243,7 @@ void CreatureMindSystem::SeeMiracle(const glm::vec3& point, size_t miracle)
 }
 
 void CreatureMindSystem::PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object,
-                                   std::optional<PlayerNames> /*player*/)
+                                   std::optional<PlayerNames> player)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto* tables = GetTables();
@@ -1183,8 +1253,8 @@ void CreatureMindSystem::PlayerDid(size_t deed, const glm::vec3& point, std::opt
 	}
 	std::vector<entt::entity> noticed;
 	registry.Each<const Creature, CreatureMindState, const Transform>(
-	    [&](entt::entity entity, const Creature&, CreatureMindState& mind, const Transform& at) {
-		    if (!mind.learnt.has_value())
+	    [&](entt::entity entity, const Creature& creature, CreatureMindState& mind, const Transform& at) {
+		    if (!mind.learnt.has_value() || (player.has_value() && (creature.owner != *player || !creature.leashable)))
 		    {
 			    return;
 		    }

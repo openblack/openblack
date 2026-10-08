@@ -378,7 +378,9 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 			    animation.animations.clear();
 			    animation.builtRevision = morph.revision;
 			    animation.boneMatrices = rest;
-			    animation.mirror = skeletal_animation::MirrorJoints(rest);
+			    // Each bone's mirror as the species' file has it
+			    auto mirror = rig != nullptr ? rig->MirrorBones(rest.size()) : std::nullopt;
+			    animation.mirror = mirror.has_value() ? std::move(*mirror) : skeletal_animation::MirrorJoints(rest);
 		    }
 
 		    // Standing, the creature breathes in and out over its stand animation, from its first frame at its resting

@@ -17,6 +17,7 @@
 #include "Creature/CreatureMindTables.h"
 #include "Creature/CreaturePlanActions.h"
 #include "Creature/CreaturePlanner.h"
+#include "ECS/Components/CreatureCasting.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 
@@ -60,8 +61,12 @@ public:
 	bool Faint(entt::entity creature) override;
 	void Wake(entt::entity creature) override;
 	void FoughtFight(entt::entity creature, bool won) override;
+	void AbandonAction(entt::entity creature) override;
 	void ReactToNastyMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
 	void ReactToNiceMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
+	bool TryMiracle(entt::entity creature, MagicType type, entt::entity target) override;
+	void KnowMiracle(entt::entity creature, size_t miracle) override;
+	bool TellCast(entt::entity creature, MagicType type, entt::entity target) override;
 
 private:
 	/// Sets up what a creature has learnt the first time its mind thinks, from its mind file when it has one
@@ -88,6 +93,22 @@ private:
 	bool Replan(entt::entity creature, creature_mind::Activity activity, std::vector<creature_mind::Step> agenda);
 	/// The creature sees a miracle it reacted to, and learns from it
 	void WatchMiracle(entt::entity creature, size_t miracle);
+
+	// Casting miracles (CreatureMindCasting.cpp)
+	/// The miracle an action of the game's table casts, if any
+	static std::optional<uint32_t> CastMagicOf(uint32_t action);
+	/// Whether the creature may try the miracle an action casts: seen often enough, able to pay for it, and for a
+	/// power-up grown up enough
+	bool MayCast(entt::entity creature, const components::CreatureMindState& mind, uint32_t action, bool powerUp);
+	/// What the creature casts for an action, the gesture it draws first and its height
+	std::optional<creature_plan_actions::CastInfo> CastInfoFor(entt::entity creature, uint32_t action);
+	/// A fizzled try, shown as it next chooses what to do
+	void ShowFizzle(entt::entity creature, components::CreatureMindState& mind);
+	/// Going near, getting away from or turning to face an object begins, and each turn it goes on
+	void StartSubMove(entt::entity creature, const creature_mind::Movement& movement, float seconds);
+	void StepSubMove(entt::entity creature, bool animating);
+	bool GoNear(entt::entity creature, components::CreatureCasting& casting, bool reissue);
+	creature_mind::SubMove SubMoveOf(entt::entity creature);
 	/// The minds choose at random, apart from the game's own random numbers
 	std::mt19937 _random {std::random_device {}()};
 	/// The game's tables for the minds, taken once the game's data is loaded

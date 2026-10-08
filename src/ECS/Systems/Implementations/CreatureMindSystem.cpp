@@ -41,6 +41,7 @@
 #include "Creature/CreatureRoute.h"
 #include "CreatureMindSystemDetail.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureFight.h"
@@ -60,6 +61,7 @@
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
+#include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -253,6 +255,11 @@ std::vector<creature_look::Candidate> GatherCandidates(ecs::Registry& registry)
 	registry.Each<const Temple, const Transform>([&](entt::entity entity, const Temple&, const Transform& at) {
 		add(entity, creature_look::Interest::Citadel, at.position + glm::vec3(0.0f, k_CitadelLookHeight, 0.0f));
 	});
+	// A miracle's doves catch a creature's eye as much as anything; other animals less so
+	registry.Each<const Animal, const Transform>([&](entt::entity entity, const Animal& animal, const Transform& at) {
+		add(entity, animal.type == AnimalInfo::SpellDove ? creature_look::Interest::Dove : creature_look::Interest::Animal,
+		    at.position);
+	});
 	return candidates;
 }
 
@@ -313,6 +320,26 @@ void Move(entt::entity creature, const creature_mind::Commands& commands)
 	case Kind::TurnToFace:
 		locomotion.TurnToFace(creature, move.point);
 		break;
+	case Kind::GoNearObject:
+	case Kind::GetAwayFromObject:
+	case Kind::TurnToFaceObject:
+		// Overseen turn by turn by the mind as it casts (StartSubMove)
+		break;
+	}
+}
+
+bool IsSubMove(creature_mind::Movement::Kind kind)
+{
+	using Kind = creature_mind::Movement::Kind;
+	return kind == Kind::GoNearObject || kind == Kind::GetAwayFromObject || kind == Kind::TurnToFaceObject;
+}
+
+/// Lets go of the miracle the creature holds, as it stops what it was doing
+void ReleaseCast(entt::entity creature)
+{
+	if (Locator::magicSystem::has_value())
+	{
+		Locator::magicSystem::value().ReleaseCreatureCast(creature);
 	}
 }
 
@@ -668,6 +695,9 @@ void Order(ecs::Registry& registry, entt::entity creature, const creature_mind::
 			hands.Cancel(creature);
 		}
 		break;
+	case Kind::PointAt:
+		hands.PointAt(creature, point);
+		break;
 	}
 }
 
@@ -725,6 +755,8 @@ void CreatureMindSystem::ProcessTurn()
 			    TakeUpFile(entity, mind);
 		    }
 		    ++mind.turn;
+		    // What it thinks its player wants fades
+		    creature_perceived_desires::Fade(mind.perceivedDesires);
 		    if (mind.learnt.has_value())
 		    {
 			    creature_learning::Age(mind.learnt->contexts, k_TurnSeconds);
@@ -785,15 +817,26 @@ void CreatureMindSystem::ProcessTurn()
 		    if (!mind.planActive && mind.idle.step >= mind.idle.agenda.size() &&
 		        !(needs != nullptr && needs->faint.has_value()))
 		    {
-			    PlanCreature(entity, mind, true);
+			    // A try at a miracle that fizzled is what it shows first
+			    ShowFizzle(entity, mind);
+			    if (mind.idle.step >= mind.idle.agenda.size())
+			    {
+				    PlanCreature(entity, mind, true);
+			    }
 		    }
 		    const bool moving =
 		        Locator::creatureLocomotionSystem::has_value() && Locator::creatureLocomotionSystem::value().IsMoving(entity);
+		    if (mind.idle.step < mind.idle.agenda.size())
+		    {
+			    ++mind.stepTurns;
+		    }
+		    StepSubMove(entity, creature_layers::IsPlaying(animation.body));
 		    const creature_mind::Senses senses {
 		        .seconds = k_TurnSeconds,
 		        .bodyBusy = creature_layers::IsPlaying(animation.body) || moving,
 		        .bodyLooping = creature_layers::IsLooping(animation.body),
 		        .moving = moving,
+		        .subMove = SubMoveOf(entity),
 		        .position = glm::vec2(transform.position.x, transform.position.z),
 		        .strongest = creature_desires::StrongestShowable(*mind.desires, creature_mind::k_MinDesireShown),
 		        .feedbackSeconds = mind.feedbackSeconds,
@@ -812,6 +855,23 @@ void CreatureMindSystem::ProcessTurn()
 		    const auto commands = creature_mind::Think(mind.idle, senses, random);
 		    Apply(commands, animation, eyes);
 		    Move(entity, commands);
+		    if (commands.move.has_value() && IsSubMove(commands.move->kind) && mind.idle.step < mind.idle.agenda.size())
+		    {
+			    StartSubMove(entity, *commands.move, mind.idle.agenda[mind.idle.step].seconds);
+		    }
+		    if (commands.releaseCast)
+		    {
+			    ReleaseCast(entity);
+		    }
+		    // The miracle is tried as the casting pose's loop begins; the rest of the agenda is no use without it
+		    if (commands.cast.has_value() && commands.cast->object.has_value() &&
+		        !TryMiracle(entity, static_cast<MagicType>(commands.cast->magicType),
+		                    static_cast<entt::entity>(*commands.cast->object)))
+		    {
+			    mind.idle.step = mind.idle.agenda.size();
+			    mind.idle.stepStarted = false;
+			    mind.idle.gaveUp = true;
+		    }
 		    Order(registry, entity, commands);
 		    TakeEffect(entity, commands, *mind.desires);
 		    if (commands.effect != creature_mind::Effect::None)
@@ -967,6 +1027,9 @@ void CreatureMindSystem::ReceiveFeedback(entt::entity creature, float feedback)
 		}
 		return;
 	}
+	// A stroke shows it its player wants compassion, a slap anger
+	creature_perceived_desires::Increase(
+	    mind->perceivedDesires, static_cast<size_t>(feedback > 0.0f ? Desire::Compassion : Desire::Anger), std::abs(feedback));
 	mind->attitudeToPlayer = creature_feedback::AttitudeAfter(mind->attitudeToPlayer, feedback);
 	mind->averageFeedback = creature_feedback::AverageAfter(mind->averageFeedback, feedback);
 	mind->feedbackSeconds = 0.0f;
@@ -1063,8 +1126,10 @@ bool CreatureMindSystem::Replan(entt::entity creature, creature_mind::Activity a
 	{
 		Locator::creatureLocomotionSystem::value().Stop(creature);
 	}
-	// Whatever it plays ends at once, as the game ends a creature's animations when it changes what it does
+	// Whatever it plays ends at once, as the game ends a creature's animations when it changes what it does, and it lets
+	// go of any miracle it holds
 	body->body = {};
+	ReleaseCast(creature);
 	if (auto* eyes = registry.TryGet<CreatureEyes>(creature))
 	{
 		ApplyEyes(eyes, creature_mind::Eyes::Normal);
@@ -1152,4 +1217,14 @@ void CreatureMindSystem::FoughtFight(entt::entity creature, [[maybe_unused]] boo
 	{
 		Satisfied(creature, *mind->desires, k_FightAction);
 	}
+}
+
+void CreatureMindSystem::AbandonAction(entt::entity creature)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	if (auto* mind = registry.Valid(creature) ? registry.TryGet<CreatureMindState>(creature) : nullptr)
+	{
+		Abandon(*mind);
+	}
+	ReleaseCast(creature);
 }
