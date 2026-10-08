@@ -29,6 +29,10 @@ inline constexpr float k_LeastShown = 0.05f;
 /// at first and slows; wood rises evenly. Neither rises beyond full, however much more it holds.
 [[nodiscard]] float ProportionRaised(ResourceType type, uint32_t amount, uint32_t fullAmount);
 
+/// The size a pot (a handful in the hand among them) is drawn at for what it holds: a quarter, and one more for every
+/// so much as its kind says, up to five times
+[[nodiscard]] float PotScale(uint32_t amount, uint32_t scaleEvery);
+
 /// How far under the ground a pile sits for the share of its height it shows
 [[nodiscard]] float SunkOffset(float proportion, float height);
 

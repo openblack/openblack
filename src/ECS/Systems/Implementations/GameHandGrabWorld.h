@@ -67,6 +67,7 @@ public:
 	uint32_t TakeFromPile(entt::entity pile, uint32_t amount) override;
 	[[nodiscard]] std::optional<FieldFacts> FieldFactsOf(entt::entity field) const override;
 	void TakeFromField(entt::entity field, uint32_t amount) override;
+	void ResizePot(entt::entity pot) override;
 	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) override;
 	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) override;
 	void StopScoopStream(uint32_t stream) override;

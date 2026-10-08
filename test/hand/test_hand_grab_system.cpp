@@ -147,6 +147,7 @@ public:
 		const auto found = fields.find(field);
 		return found != fields.end() ? std::optional(found->second) : std::nullopt;
 	}
+	void ResizePot(entt::entity pot) override { resized.push_back(pot); }
 	void TakeFromField(entt::entity field, uint32_t amount) override
 	{
 		auto& facts = fields.at(field);
@@ -256,6 +257,7 @@ public:
 	uint32_t streams {0};
 	std::vector<uint32_t> stopped;
 	std::vector<glm::vec3> streamPoints;
+	std::vector<entt::entity> resized;
 	std::vector<float> scoopSounds;
 	std::set<entt::entity> stores;
 	std::map<entt::entity, uint32_t> stored;

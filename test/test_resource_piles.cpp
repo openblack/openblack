@@ -116,3 +116,11 @@ TEST(ResourcePiles, OnlyPilesLeadingOnHoldNoMoreThanFull)
 	EXPECT_EQ(AmountTaken(900, 300, 1000, false), 300u);
 	EXPECT_EQ(AmountTaken(1000, 300, 1000, true), 0u);
 }
+
+TEST(ResourcePiles, APotIsDrawnAtTheSizeOfWhatItHolds)
+{
+	// A quarter, and one more for every so much its kind says, up to five times
+	EXPECT_FLOAT_EQ(PotScale(0, 20), 0.25f);
+	EXPECT_FLOAT_EQ(PotScale(30, 20), 1.75f);
+	EXPECT_FLOAT_EQ(PotScale(1000, 20), 5.0f);
+}

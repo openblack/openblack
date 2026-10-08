@@ -66,6 +66,7 @@
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Magic/AreaEffect.h"
+#include "Magic/ResourcePiles.h"
 #include "Physics/Body.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
@@ -560,7 +561,28 @@ void GameHandGrabWorld::TakeFromField(entt::entity field, uint32_t amount)
 
 entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount)
 {
-	return archetypes::PotArchetype::Create(position, 0.0f, type, static_cast<int32_t>(amount));
+	const auto handful = archetypes::PotArchetype::Create(position, 0.0f, type, static_cast<int32_t>(amount));
+	ResizePot(handful);
+	return handful;
+}
+
+void GameHandGrabWorld::ResizePot(entt::entity pot)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* data = registry.TryGet<const Pot>(pot);
+	auto* transform = registry.TryGet<Transform>(pot);
+	const auto* info = Info();
+	if (data == nullptr || transform == nullptr || info == nullptr)
+	{
+		return;
+	}
+	const auto& kind = info->pot.at(static_cast<size_t>(data->type));
+	// A pile is raised out of the ground by what it holds instead
+	if (kind.potType != PotType::Pot)
+	{
+		return;
+	}
+	transform->scale = glm::vec3(magic::piles::PotScale(data->amount, kind.scaleEvery));
 }
 
 std::optional<uint32_t> GameHandGrabWorld::StartScoopStream(ResourceType resource, glm::vec3 source)

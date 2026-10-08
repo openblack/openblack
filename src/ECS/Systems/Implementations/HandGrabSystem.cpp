@@ -432,6 +432,7 @@ bool HandGrabSystem::ScoopField(HandGrab& grab, const FieldFacts& facts)
 	}
 	_world->TakeFromField(grab.scoopSource, taken);
 	handful->amount += taken;
+	_world->ResizePot(grab.object);
 	return true;
 }
 
@@ -465,6 +466,7 @@ bool HandGrabSystem::Scoop(HandGrab& grab)
 	}
 	const auto took = _world->TakeFromPile(grab.scoopSource, taken);
 	registry.Get<Pot>(grab.object).amount += took;
+	_world->ResizePot(grab.object);
 	// A pile scooped empty stops streaming; the scoop ends with the next turn
 	if (!Exists(grab.scoopSource) && grab.scoopStream.has_value())
 	{

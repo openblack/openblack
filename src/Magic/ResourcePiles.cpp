@@ -143,3 +143,14 @@ uint32_t piles::AmountTaken(uint32_t holds, uint32_t given, uint32_t maximum, bo
 	}
 	return given;
 }
+
+float magic::piles::PotScale(uint32_t amount, uint32_t scaleEvery)
+{
+	constexpr float k_Least = 0.25f;
+	constexpr float k_Most = 5.0f;
+	if (scaleEvery == 0)
+	{
+		return k_Most;
+	}
+	return std::min(static_cast<float>(amount) / static_cast<float>(scaleEvery) + k_Least, k_Most);
+}

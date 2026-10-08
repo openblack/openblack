@@ -151,6 +151,8 @@ public:
 	[[nodiscard]] virtual std::optional<FieldFacts> FieldFactsOf(entt::entity field) const = 0;
 	/// Food is taken out of a field by the hand
 	virtual void TakeFromField(entt::entity field, uint32_t amount) = 0;
+	/// A pot, a handful among them, is drawn at the size of what it holds
+	virtual void ResizePot(entt::entity pot) = 0;
 	[[nodiscard]] virtual ScoopFacts ScoopFactsOf(PotInfo handful) const = 0;
 	/// Some of what a pile holds is taken out of it: no more than it has. The pile goes once it has nothing left, unless
 	/// it is a store's. What was taken.
