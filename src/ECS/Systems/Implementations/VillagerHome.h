@@ -29,6 +29,8 @@ namespace openblack::ecs::villager_home
 
 /// Walks the villager to a point, then on into a state
 void SetupMoveTo(components::LivingAction& action, glm::vec2 goal, VillagerStates final);
+/// The villager's walk to a goal starts afresh, ending in a final state, whatever state it is in meanwhile
+void SetupMobileMoveTo(components::LivingAction& action, glm::vec2 goal, VillagerStates final);
 
 /// The villager goes into its abode, and isn't drawn while there
 void ArriveHome(entt::entity villager);

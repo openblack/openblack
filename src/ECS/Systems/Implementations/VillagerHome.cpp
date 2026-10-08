@@ -211,6 +211,12 @@ bool DoSleeping(entt::entity villager)
 
 void villager_home::SetupMoveTo(LivingAction& action, glm::vec2 goal, VillagerStates final)
 {
+	SetupMobileMoveTo(action, goal, final);
+	SetTopState(action, VillagerStates::MoveToPos);
+}
+
+void villager_home::SetupMobileMoveTo(LivingAction& action, glm::vec2 goal, VillagerStates final)
+{
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto villager = EntityOf(action);
 	auto& wallHug = registry.Get<WallHug>(villager);
@@ -222,7 +228,6 @@ void villager_home::SetupMoveTo(LivingAction& action, glm::vec2 goal, VillagerSt
 	registry.Remove<WallHugObjectReference>(villager);
 	registry.Assign<MoveStateLinearTag>(villager);
 	Locator::livingActionSystem::value().VillagerSetState(action, LivingAction::Index::Final, final, true);
-	SetTopState(action, VillagerStates::MoveToPos);
 }
 
 void villager_home::ArriveHome(entt::entity villager)
