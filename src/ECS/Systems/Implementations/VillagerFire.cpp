@@ -32,6 +32,7 @@
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingReaction.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -1007,7 +1008,8 @@ void villager_fire::DieByEffect(entt::entity villager)
 {
 	auto& registry = Entities();
 	auto* action = registry.TryGet<LivingAction>(villager);
-	if (action == nullptr || registry.AllOf<VillagerDeath>(villager))
+	// One killed in the air dies only once it has landed
+	if (action == nullptr || registry.AnyOf<VillagerDeath, InPhysics>(villager))
 	{
 		return;
 	}

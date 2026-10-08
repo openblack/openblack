@@ -68,6 +68,7 @@
 #include "Magic/AreaEffect.h"
 #include "Magic/ResourcePiles.h"
 #include "Physics/Body.h"
+#include "Physics/LivingRules.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -319,6 +320,12 @@ void GameHandGrabWorld::AnimalIntoOwnFlock(entt::entity animal)
 	if (data == nullptr || !Locator::animalSystem::has_value())
 	{
 		return;
+	}
+	// In the hand it plays its kind's clip for being held, if its kind has one
+	if (const auto clip = physics::living::ClipsOf(data->type).inHand)
+	{
+		data->animation = *clip;
+		data->clipPlace = 0;
 	}
 	auto* flock = registry.TryGet<Flock>(data->flock);
 	if (flock == nullptr)

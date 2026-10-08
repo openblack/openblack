@@ -84,7 +84,7 @@ private:
 	/// Whether something in a physical shield's dome is cut off from a reaction outside it
 	[[nodiscard]] bool Blocked(glm::vec3 living, glm::vec3 source) const;
 	/// A thrown thing struck a dome
-	void Impact(entt::entity object, entt::entity thrown, float speed);
+	void Impact(entt::entity object, entt::entity hitter, float momentum, std::optional<PlayerNames> player) override;
 
 	/// Each shield miracle's object
 	std::unordered_map<entt::entity, entt::entity> _objects;

@@ -41,6 +41,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
@@ -60,6 +61,8 @@ namespace
 constexpr float k_TurnSeconds = std::chrono::duration<float>(TimeSystemInterface::k_TurnDuration).count();
 constexpr auto k_TurnMilliseconds =
     static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(TimeSystemInterface::k_TurnDuration).count());
+/// Game turns a second
+constexpr float k_TurnsPerSecond = 1000.0f / static_cast<float>(k_TurnMilliseconds);
 constexpr float k_TwoPi = 2.0f * std::numbers::pi_v<float>;
 /// The miracles' doves and bats tilt half a radian into a turn, easing into it over half a second
 constexpr float k_SpellBirdBankAngle = 0.5f;
@@ -1150,10 +1153,21 @@ void AnimalSystem::KillByEffect(entt::entity entity, glm::vec3 position)
 		StartFading(entity);
 		return;
 	}
+	SetDying(entity);
+}
+
+void AnimalSystem::SetDying(entt::entity entity)
+{
+	auto& registry = EntityRegistry();
+	auto* animal = registry.TryGet<Animal>(entity);
+	// One killed in the air starts dying only once it has come down
+	if (animal == nullptr || registry.AllOf<InPhysics>(entity))
+	{
+		return;
+	}
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Animals: #{} killed", static_cast<uint32_t>(entity));
-	// It has no life left and falls dying; its body lies its time once dead. (A bird falls out of the sky as a thing
-	// thrown; openblack has no physics for it yet, so a bird lies where it was put down.)
-	// Killed again, its body only lies its full time afresh
+	// It has no life left and falls dying; its body lies its time once dead. A bird falls out of the sky through the
+	// physics while it dies. Killed again, its body only lies its full time afresh
 	animal->deadTurns = animals::k_TurnsToDieOver;
 	if (animal->state == AnimalState::Dying || animal->state == AnimalState::Dead)
 	{
@@ -1169,12 +1183,32 @@ void AnimalSystem::KillByEffect(entt::entity entity, glm::vec3 position)
 	}
 }
 
+void AnimalSystem::FallDying(entt::entity entity, const Animal& animal)
+{
+	if (!Locator::dynamicsSystem::has_value())
+	{
+		return;
+	}
+	// Forward at its speed across the land, tumbling about its side axis
+	constexpr glm::vec3 k_DyingTumble {5.0f, 0.0f, 0.0f};
+	const auto step = Metres(animal.move.step);
+	const float speed = glm::length(step) * k_TurnsPerSecond;
+	const glm::vec3 forward(std::cos(animal.heading), 0.0f, std::sin(animal.heading));
+	Locator::dynamicsSystem::value().InitialisePhysics(entity, {.velocity = forward * speed, .spin = k_DyingTumble});
+}
+
 void AnimalSystem::ProcessDeath(entt::entity entity, Animal& animal)
 {
 	if (animal.state == AnimalState::Dying)
 	{
+		// A dying bird falls out of the sky with the speed it flew at, tumbling, until it comes down
+		if (IsBird(animal.type))
+		{
+			FallDying(entity, animal);
+			return;
+		}
 		// Its fall played out once, it lies dead, out of its flock
-		if (IsBird(animal.type) || animal.turnsInState * k_TurnMilliseconds < PlayTimeOf(animal.animation))
+		if (animal.turnsInState * k_TurnMilliseconds < PlayTimeOf(animal.animation))
 		{
 			return;
 		}

@@ -51,6 +51,7 @@
 #include "Magic/ReactionRules.h"
 #include "Magic/VillagerReactionRules.h"
 #include "VillagerFire.h"
+#include "VillagerPhysics.h"
 #include "VillagerReactions.h"
 
 using namespace openblack;
@@ -334,6 +335,12 @@ uint32_t ReactionSystem::PriorityTo(const Active& reaction, entt::entity living,
 	if (reaction.source.type == Reaction::ReactToTeleport &&
 	    (!Locator::teleportSystem::has_value() ||
 	     !Locator::teleportSystem::value().ShouldReact(reaction.source.initiator, living)))
+	{
+		return 0;
+	}
+	// A villager flying or coming down takes no notice of what else flies
+	if (reaction.source.type == Reaction::ReactToFlyingObject && registry.AllOf<Villager>(living) &&
+	    !villager_physics::TakesFlyingObjectReaction(living))
 	{
 		return 0;
 	}

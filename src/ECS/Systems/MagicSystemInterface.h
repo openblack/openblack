@@ -152,6 +152,12 @@ public:
 	/// An effect at a point that no miracle is behind, such as a lightning strike a script calls down: everything it
 	/// reaches takes it, as from the player
 	virtual void ApplyEffectAt(glm::vec3 /*point*/, const magic::EffectValues& /*values*/, PlayerNames /*player*/) {}
+	/// An effect on one object that no miracle is behind, such as the crush of a blow, from a player: what its defence
+	/// lets through, as any effect does. Whether the object has life to take it.
+	virtual bool ApplyEffectToObject(entt::entity /*object*/, const magic::EffectValues& /*values*/, PlayerNames /*player*/)
+	{
+		return false;
+	}
 	/// Whether a player may cast a magic type at a point
 	[[nodiscard]] virtual bool CanCastAt(MagicType type, PlayerNames player, glm::vec3 point) = 0;
 	/// Something the miracle made acts for it, as its particles would: whether the miracle acted

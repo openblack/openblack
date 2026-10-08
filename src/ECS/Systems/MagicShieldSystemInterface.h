@@ -42,6 +42,12 @@ public:
 
 	/// A shield miracle was struck by another and stood, or was destroyed by it
 	virtual void ShieldStruck(entt::entity spell, bool destroyed) = 0;
+	/// A thing that breaks buildings struck a physical shield's dome with a momentum (its speed times its weight): the
+	/// shield pays for the blow and the town it guards counts the thrower's player as an attacker
+	virtual void Impact(entt::entity /*shield*/, entt::entity /*hitter*/, float /*momentum*/,
+	                    std::optional<PlayerNames> /*player*/)
+	{
+	}
 	/// Whether a shield miracle's object still stands
 	[[nodiscard]] virtual bool HasObject(entt::entity spell) const = 0;
 

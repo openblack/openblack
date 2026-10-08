@@ -32,6 +32,7 @@
 #include "VillagerEaten.h"
 #include "VillagerFire.h"
 #include "VillagerHome.h"
+#include "VillagerPhysics.h"
 #include "VillagerReactions.h"
 #include "VillagerShieldShelter.h"
 #include "VillagerTeleport.h"
@@ -44,6 +45,7 @@ namespace villager_eaten = openblack::ecs::villager_eaten;
 namespace villager_teleport = openblack::ecs::villager_teleport;
 namespace villager_shield = openblack::ecs::villager_shield;
 namespace villager_fire = openblack::ecs::villager_fire;
+namespace villager_physics = openblack::ecs::villager_physics;
 
 /// A villager with no state does nothing
 uint32_t VillagerInvalidState(LivingAction& /*action*/)
@@ -167,8 +169,14 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     },
     /* FOLLOWING_OBJECT_REACTION */ k_TodoEntry,
     /* INSPECT_OBJECT_REACTION */ k_TodoEntry,
-    /* FLYING */ k_MovedByOthersEntry,
-    /* LANDED */ k_TodoEntry,
+    /* FLYING */
+    VillagerStateTableEntry {
+        .state = &villager_physics::Flying,
+    },
+    /* LANDED */
+    VillagerStateTableEntry {
+        .state = &villager_physics::Landed,
+    },
     /* LOOK_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* SET_DYING */ k_TodoEntry,
     /* DYING */
@@ -179,7 +187,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     VillagerStateTableEntry {
         .state = &villager_fire::Dead,
     },
-    /* DROWNING */ k_TodoEntry,
+    /* DROWNING */
+    VillagerStateTableEntry {
+        .state = &villager_physics::Drowning,
+    },
     /* DOWNED */
     VillagerStateTableEntry {
         .state = &villager_eaten::LiesStill,
@@ -365,7 +376,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* FLEEING_FROM_CREATURE_REACTION */ k_TodoEntry,
     /* TURN_TO_FACE_CREATURE_REACTION */ k_TodoEntry,
     /* WATCH_FLYING_OBJECT_REACTION */ k_TodoEntry,
-    /* POINT_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
+    /* POINT_AT_FLYING_OBJECT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_physics::PointAtFlyingObject,
+    },
     /* DECIDE_WHAT_TO_DO */
     VillagerStateTableEntry {
         .state = &villager_home::DecideWhatToDo,

@@ -36,6 +36,7 @@ public:
 	[[nodiscard]] glm::vec3 MovementOf(entt::entity animal) const override;
 	void SetFlockCentre(entt::entity flock, glm::vec2 centre) override;
 	void KillByEffect(entt::entity animal, glm::vec3 position) override;
+	void SetDying(entt::entity animal) override;
 	[[nodiscard]] entt::entity LeaderOf(entt::entity flock) const override;
 	[[nodiscard]] std::vector<entt::entity> MembersOf(entt::entity flock) const override;
 	[[nodiscard]] glm::vec2 GoalOf(entt::entity animal) const override;
@@ -96,6 +97,8 @@ private:
 	void Remove(entt::entity animal);
 	/// A turn of a killed animal: falling dead, then lying dead its time before it goes
 	void ProcessDeath(entt::entity entity, components::Animal& animal);
+	/// A dying bird falls out of the sky through the physics
+	void FallDying(entt::entity entity, const components::Animal& animal);
 	/// An animal leaves its flock, which goes once empty
 	void LeaveFlock(entt::entity entity, components::Animal& animal);
 

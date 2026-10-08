@@ -52,6 +52,7 @@
 #include "Resources/ResourcesInterface.h"
 #include "VillagerFire.h"
 #include "VillagerHome.h"
+#include "VillagerPhysics.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -337,6 +338,16 @@ void villager_reactions::Start(entt::entity villager, Reaction type, LivingReact
 			if (const auto reaction = Locator::reactionSystem::value().Find(state.reaction))
 			{
 				Locator::teleportSystem::value().SetupReact(reaction->source.initiator, villager);
+			}
+		}
+		break;
+	case Reaction::ReactToFlyingObject:
+		// It points at what flies by, or runs from it coming too near
+		if (Locator::reactionSystem::has_value())
+		{
+			if (const auto reaction = Locator::reactionSystem::value().Find(state.reaction))
+			{
+				villager_physics::SetupReactToFlyingObject(villager, reaction->source.initiator);
 			}
 		}
 		break;

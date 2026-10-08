@@ -45,6 +45,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
@@ -367,6 +368,19 @@ void world_objects::DestroyedByEffect(entt::entity object)
 	if (registry.AllOf<Villager>(object))
 	{
 		villager_fire::DieByEffect(object);
+		return;
+	}
+	// An animal falls dead rather than vanishing; a miracle's fades out
+	if (registry.AllOf<Animal>(object) && Locator::animalSystem::has_value())
+	{
+		if (registry.AllOf<SpellAnimal>(object))
+		{
+			Locator::animalSystem::value().StartFading(object);
+		}
+		else
+		{
+			Locator::animalSystem::value().SetDying(object);
+		}
 		return;
 	}
 	if (auto* field = registry.TryGet<Field>(object))

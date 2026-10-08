@@ -92,31 +92,6 @@ uint32_t GameTurn()
 }
 
 /// What a thrown thing weighs, by its kind's table and its size; whether it is a rock, which the game's physics counts as
-/// striking hard enough to cost a dome: the stones and gate totems among the mobile statics
-std::pair<float, bool> WeightOf(const ecs::Registry& registry, entt::entity entity)
-{
-	const auto& info = Info();
-	const float scale = registry.AllOf<Transform>(entity) ? registry.Get<const Transform>(entity).scale.x : 1.0f;
-	if (const auto* feature = registry.TryGet<const Feature>(entity))
-	{
-		return {shield::ThrownMass(info.feature.at(static_cast<size_t>(feature->type)).weight, scale), false};
-	}
-	if (const auto* mobile = registry.TryGet<const MobileStatic>(entity))
-	{
-		const auto type = mobile->type;
-		const bool rock = type == MobileStaticInfo::SingingStone_1 || type == MobileStaticInfo::WeepingStone ||
-		                  type == MobileStaticInfo::WeepingStoneReward || type == MobileStaticInfo::GateTotemApe ||
-		                  type == MobileStaticInfo::GateTotemBlank || type == MobileStaticInfo::GateTotemCow ||
-		                  type == MobileStaticInfo::GateTotemTiger;
-		return {shield::ThrownMass(info.mobileStatic.at(static_cast<size_t>(type)).weight, scale), rock};
-	}
-	if (const auto* mobile = registry.TryGet<const MobileObject>(entity))
-	{
-		return {shield::ThrownMass(info.mobileObject.at(static_cast<size_t>(mobile->type)).weight, scale), false};
-	}
-	return {shield::ThrownMass(0.0f, scale), false};
-}
-
 /// The town nearest to a point, within the reach a shield protects
 entt::entity NearestTown(glm::vec3 point)
 {
@@ -355,45 +330,12 @@ void MagicShieldSystem::ProcessTurn()
 	registry.SetDirty();
 }
 
-void MagicShieldSystem::Update(float seconds)
+void MagicShieldSystem::Update([[maybe_unused]] float seconds)
 {
-	if (!Locator::entitiesRegistry::has_value() || !Locator::infoConstants::has_value() || seconds <= 0.0f)
-	{
-		return;
-	}
-	auto& registry = EntityRegistry();
-	// What flies against a dome's solid shape, from its raising until it is gone, bounces off it; the blow may cost it.
-	// The game's physics pushes a thing out by springs over the steps of each turn, and that physics isn't here yet: until
-	// it is, a move into the face is turned back out of it.
-	std::vector<std::tuple<entt::entity, entt::entity, float>> blows;
-	registry.Each<const ShieldDome, const MagicShield>([&](entt::entity object, const ShieldDome& dome, const MagicShield&) {
-		if (dome.hull.empty())
-		{
-			return;
-		}
-		registry.Each<Thrown, Transform>([&](entt::entity thrown, Thrown& flight, Transform& at) {
-			const auto from = at.position - (flight.velocity * seconds);
-			const auto hit = shield::CrossHull(dome.hull, from, at.position);
-			if (!hit.has_value())
-			{
-				return;
-			}
-			flight.velocity -= hit->normal * (2.0f * glm::dot(flight.velocity, hit->normal));
-			at.position = hit->point + (hit->normal * 0.01f);
-			blows.emplace_back(object, thrown, glm::length(flight.velocity));
-		});
-	});
-	for (const auto& [object, thrown, speed] : blows)
-	{
-		Impact(object, thrown, speed);
-	}
-	if (!blows.empty())
-	{
-		registry.SetDirty();
-	}
+	// What flies against a dome bounces off its body in the physics, which tells the dome of each blow
 }
 
-void MagicShieldSystem::Impact(entt::entity object, entt::entity thrown, float speed)
+void MagicShieldSystem::Impact(entt::entity object, entt::entity hitter, float momentum, std::optional<PlayerNames> player)
 {
 	auto& registry = EntityRegistry();
 	auto& shieldObject = registry.Get<MagicShield>(object);
@@ -406,14 +348,7 @@ void MagicShieldSystem::Impact(entt::entity object, entt::entity thrown, float s
 	{
 		return;
 	}
-	// Only a rock strikes hard enough to count; anything else just bounces off
-	const auto [mass, rock] = WeightOf(registry, thrown);
-	if (!rock)
-	{
-		return;
-	}
-	const auto& at = registry.Get<const Transform>(thrown);
-	const auto* flight = registry.TryGet<const Thrown>(thrown);
+	const auto& at = registry.Get<const Transform>(hitter);
 	// The blow moves the alignment of the one who threw it, the shield's effect taken at the rock's place on the map
 	// rather than by the rock, and costs the shield by its momentum
 	magic.SendSpellEvent(shieldObject.spell,
@@ -425,21 +360,15 @@ void MagicShieldSystem::Impact(entt::entity object, entt::entity thrown, float s
 	                      .target = entt::null});
 	const auto* info = magic::GetMagicInfoAs<GMagicShieldInfo>(Info(), MagicType::PhysicalShield);
 	const float perMomentum = info != nullptr ? info->chantCostPerImpactMomentum : 0.0f;
-	const float cost = shield::ImpactCost(perMomentum, speed, mass);
+	const float cost = shield::ImpactCost(perMomentum, momentum, 1.0f);
 	const float strength = magic.ForcePayForSpell(shieldObject.spell, cost);
-	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Magic: a dome was struck at speed {:.1f}, costing it {:.1f}, strength {:.2f}",
-	                    speed, cost, strength);
+	SPDLOG_LOGGER_DEBUG(spdlog::get("game"),
+	                    "Magic: a dome was struck with momentum {:.1f}, costing it {:.1f}, strength {:.2f}", momentum, cost,
+	                    strength);
 	// The town it protects counts the thrower's player as having attacked it, with no harm done
 	if (shieldObject.town != entt::null && registry.Valid(shieldObject.town))
 	{
-		auto aggressor = PlayerNames::NEUTRAL;
-		if (flight != nullptr && flight->thrower != entt::null && registry.Valid(flight->thrower))
-		{
-			if (const auto* creature = registry.TryGet<const Creature>(flight->thrower))
-			{
-				aggressor = creature->owner;
-			}
-		}
+		const auto aggressor = player.value_or(PlayerNames::NEUTRAL);
 		auto* aggression = registry.TryGet<TownAggression>(shieldObject.town);
 		if (aggression == nullptr)
 		{

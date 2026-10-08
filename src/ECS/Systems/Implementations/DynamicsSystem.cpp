@@ -509,6 +509,11 @@ PhysicsEntry* DynamicsSystem::Find(entt::entity object)
 	return index.has_value() ? _entries[*index].get() : nullptr;
 }
 
+bool DynamicsSystem::PhysicallyDestroysAbodes(entt::entity object) const
+{
+	return Entities().Valid(object) && FactsOf(object).physicallyDestroysAbodes;
+}
+
 bool DynamicsSystem::IsFlying(entt::entity object) const
 {
 	const auto index = IndexOf(object);

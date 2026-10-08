@@ -71,6 +71,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/CreatureSight.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
@@ -115,8 +116,6 @@ namespace
 {
 constexpr float k_TurnSeconds = std::chrono::duration<float>(TimeSystemInterface::k_TurnDuration).count();
 constexpr float k_TurnsPerSecond = 1.0f / k_TurnSeconds;
-/// A creature with nothing to look at looks ahead, along its heading
-constexpr float k_LookAheadMetres = 10.0f;
 constexpr float k_TwoPi = 2.0f * std::numbers::pi_v<float>;
 
 /// The hand's speed is smoothed over about this many seconds
@@ -2445,32 +2444,8 @@ MagicSystemInterface::HandCastState MagicSystem::GetHandCastState() const
 
 void MagicSystem::Empathise(MagicType type, PlayerNames player, glm::vec3 point)
 {
-	auto& registry = EntityRegistry();
-	const auto creature =
-	    Locator::leashSystem::has_value() ? Locator::leashSystem::value().PlayersCreature(player) : std::nullopt;
-	auto* mind = creature.has_value() && registry.Valid(*creature) ? registry.TryGet<CreatureMindState>(*creature) : nullptr;
-	const auto* at = mind != nullptr ? registry.TryGet<const Transform>(*creature) : nullptr;
-	if (at == nullptr)
-	{
-		return;
-	}
-	// It sees what lies within two thirds of a half turn of where it looks, its head's look if it looks at something
-	const auto* animation = registry.TryGet<const CreatureAnimation>(*creature);
-	const auto* moving = registry.TryGet<const CreatureLocomotion>(*creature);
-	const glm::vec2 here(at->position.x, at->position.z);
-	uint16_t look = 0;
-	if (animation != nullptr && animation->lookAt.has_value())
-	{
-		look = gutils::GetAngleFromXZ(here, glm::vec2(animation->lookAt->x, animation->lookAt->z));
-	}
-	else if (moving != nullptr)
-	{
-		const auto ahead = creature_locomotion::DirectionOf(moving->heading);
-		look = gutils::GetAngleFromXZ(here, here + ahead * k_LookAheadMetres);
-	}
-	const bool sameCell =
-	    map_coords::Cell(map_coords::FromMetres(here)) == map_coords::Cell(map_coords::FromMetres(glm::vec2(point.x, point.z)));
-	if (!creature_perceived_desires::CanSeePos(look, gutils::GetAngleFromXZ(here, glm::vec2(point.x, point.z)), sameCell))
+	auto* mind = ecs::creature_sight::MindSeeing(player, point);
+	if (mind == nullptr)
 	{
 		return;
 	}

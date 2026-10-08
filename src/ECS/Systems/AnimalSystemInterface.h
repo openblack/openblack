@@ -69,6 +69,9 @@ public:
 	virtual void StartFading(entt::entity animal) = 0;
 	/// An effect kills an animal where it has been put down: a miracle's animal fades out, any other is left with no life
 	virtual void KillByEffect(entt::entity animal, glm::vec3 position) = 0;
+	/// An animal with no life left starts dying where it is: it falls dead (a bird out of the sky), then lies dead its
+	/// time. One in the physics starts dying only once it has come down.
+	virtual void SetDying(entt::entity animal) = 0;
 
 	/// Whether a creature is frightened of an animal: bats frighten creatures, doves don't
 	[[nodiscard]] virtual bool IsFrighteningToCreature(entt::entity animal) const = 0;

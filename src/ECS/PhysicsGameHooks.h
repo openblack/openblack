@@ -15,7 +15,8 @@ namespace openblack::ecs
 {
 
 /// What the game's own kinds of thing do in the physics, beyond what any object does: people and animals fly when
-/// thrown or knocked and stand again where they come down.
+/// thrown or knocked, are hurt by hard knocks, and stand, drown or die where they come down; creatures are hurt by what
+/// strikes them; physical shields pay for the blows they take; and things that are resources go into the stores they meet.
 class PhysicsGameHooks: public systems::PhysicsClassHooks
 {
 public:
@@ -25,6 +26,8 @@ public:
 	                        bool insert) override;
 	void StartFlyingFromHand(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry) override;
 	void ReactToImpact(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry, const ImpactInfo& impact) override;
+	void ImpactFeedback(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry, bool hit) override;
+	bool HasSunk(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry) override;
 };
 
 } // namespace openblack::ecs
