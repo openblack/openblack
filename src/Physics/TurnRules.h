@@ -61,6 +61,13 @@ inline constexpr std::array<int32_t, 33> k_HitCodes = {11, 14, 10, 10, 10, 10, 1
 inline constexpr int32_t k_CollisionAction = 75;
 /// The keys of a collision sound: its level, what hit and what it hit (their collision sound types)
 [[nodiscard]] std::array<int32_t, 5> CollisionKeys(SoundLevel level, int32_t hitterType, int32_t hitType);
+/// Whether a collision sound follows the thing that made it as it moves: all do but those whose hitter's code is the one
+/// the bank keeps for sounds that stay where they were made
+inline constexpr int32_t k_StayingHitterCode = 0x16;
+[[nodiscard]] constexpr bool CollisionSoundFollows(const std::array<int32_t, 5>& keys)
+{
+	return keys[2] != k_StayingHitterCode;
+}
 
 /// The pairs of things that have just sounded against each other: the same pair stays quiet for two turns, and no
 /// more than 128 pairs are kept

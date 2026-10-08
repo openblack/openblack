@@ -15,6 +15,7 @@
 
 #include <PhysicsConstantsFile.h>
 #include <glm/geometric.hpp>
+#include <glm/matrix.hpp>
 #include <gtest/gtest.h>
 
 #include "Physics/Body.h"
@@ -308,7 +309,7 @@ TEST(PhysicsBody, FloatingThingsSoakUpWaterAndSinkInTheEnd)
 		Step(body, sea);
 	}
 	// About 0.013 a second while in the sea
-	EXPECT_NEAR(body.density, 0.9f + 200 * 6.66667e-5f, 1e-3f);
+	EXPECT_NEAR(body.density, 0.9f + 200 * (1.0f / 15000.0f), 1e-3f);
 	EXPECT_GT(StepUntil(body, sea, StepResult::Delete, 40000), 0);
 }
 
@@ -386,12 +387,12 @@ TEST(PhysicsBody, AdjustingToTheGroundOnlyRaisesWhenAsked)
 {
 	const FakeLand land(0.0f);
 	auto high = MakeCube(0.5f, {0.0f, 3.0f, 0.0f});
-	high.AdjustToGroundLevel(land, true, false);
+	high.SettleOnLand(land, true, false);
 	EXPECT_FLOAT_EQ(high.Centre().y, 3.0f);
-	high.AdjustToGroundLevel(land, false, false);
+	high.SettleOnLand(land, false, false);
 	EXPECT_NEAR(high.Centre().y, 0.5f, 1e-5f);
 	auto sunk = MakeCube(0.5f, {0.0f, 0.0f, 0.0f});
-	sunk.AdjustToGroundLevel(land, true, false);
+	sunk.SettleOnLand(land, true, false);
 	EXPECT_NEAR(sunk.Centre().y, 0.5f, 1e-5f);
 }
 
@@ -399,7 +400,7 @@ TEST(PhysicsBody, AlignsToTheSlope)
 {
 	const FakeLand slope(0.0f, 0.5f);
 	auto body = MakeCube(0.5f, {0.0f, 3.0f, 0.0f});
-	body.AdjustToGroundLevel(slope, false, true);
+	body.SettleOnLand(slope, false, true);
 	EXPECT_NEAR(glm::dot(body.Axes()[1], slope.NormalAt({0.0f, 0.0f})), 1.0f, 1e-5f);
 }
 
@@ -509,8 +510,11 @@ TEST(PhysicsShapes, TheCreatureIsHitOnItsSkeleton)
 	const FakeLand land(-1000.0f);
 	const std::array origins {glm::vec3(0.0f)};
 	Body creature({.mass = shapes::k_CreatureMass, .material = k_Stone, .dynamic = false},
-	              shapes::Creature(glm::vec3(0.0f), 3.0f, origins));
-	creature.SetPoseDirect(glm::mat3(1.0f), glm::vec3(0.0f));
+	              shapes::Creature(3.0f, origins.size()));
+	creature.PlacePoints(glm::vec3(0.0f), origins);
+	// Its points sit on the centre in its own frame and stand at the parts' origins in the world
+	EXPECT_EQ(creature.Points()[0].local, glm::vec3(0.0f));
+	EXPECT_EQ(creature.Points()[0].world, origins[0]);
 	creature.SetSkeleton({part});
 	creature.resting = true;
 	auto stone = MakeCube(0.25f, {-1.6f, 0.0f, 0.0f});
@@ -551,4 +555,193 @@ TEST(PhysicsPairs, WhoTestsAgainstWhom)
 	const PairMember load {.radius = 1.0f, .noObjectCollision = true, .object = 7};
 	EXPECT_FALSE(TestsPoints(load, stone));
 	EXPECT_TRUE(TestsPoints(PairMember {.radius = 1.0f, .object = 8}, load));
+}
+
+TEST(PhysicsConstantsFile, KeepsThePartOfARowReadBeforeABadNumber)
+{
+	std::istringstream text("3 2\n1 2 3 x 5 6\n");
+	const auto file = physconst::Parse(text, 24);
+	ASSERT_TRUE(file.has_value());
+	ASSERT_EQ(file->rows.size(), 1u);
+	EXPECT_FLOAT_EQ(file->rows[0].density, 1.0f);
+	EXPECT_FLOAT_EQ(file->rows[0].springK, 2.0f);
+	EXPECT_FLOAT_EQ(file->rows[0].dampK, 3.0f);
+	EXPECT_FLOAT_EQ(file->rows[0].friction, 0.0f);
+	EXPECT_FLOAT_EQ(file->rows[0].drag, 0.0f);
+}
+
+TEST(PhysicsBody, PointsInALineStillGetAnInverseInertia)
+{
+	// Points in a line can't be turned about it: the inverse comes from a determinant kept at its least, never the
+	// identity
+	Shape shape;
+	shape.points = {{-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}};
+	shape.radius = 1.0f;
+	Body body({.mass = 2.0f, .material = k_Stone}, shape);
+	body.SetUpPose({});
+	body.SetAngularVelocityInBodyAxes({0.0f, 1.0f, 0.0f});
+	// The identity would turn its spin of 2 about y into 2; the game's inverse of the flat tensor gives none
+	const auto spin = body.AngularVelocity();
+	EXPECT_TRUE(std::isfinite(spin.y));
+	EXPECT_NEAR(spin.y, 0.0f, 1e-3f);
+}
+
+TEST(PhysicsBody, ABodyWithNoPointsGetsNoInertiaButItsDragIsScaled)
+{
+	const Shape empty {.radius = 2.0f};
+	auto material = k_Stone;
+	material.drag = 1.0f;
+	const Body body({.mass = 1.0f, .material = material}, empty);
+	EXPECT_FLOAT_EQ(body.Inertia()[0][0], 0.0f);
+	EXPECT_FLOAT_EQ(body.Drag(), 1.0f * 2.0f * 2.0f * 0.3f);
+}
+
+TEST(PhysicsBody, ASlidingCubeTumblesForwards)
+{
+	// Friction under a cube sliding along x turns it forwards, about the negative z axis, the right-hand way
+	const FakeLand land(0.0f);
+	auto body = MakeCube(0.5f, {0.0f, 0.49f, 0.0f});
+	body.velocity = {5.0f, 0.0f, 0.0f};
+	for (int i = 0; i < 20; ++i)
+	{
+		Step(body, land);
+	}
+	EXPECT_LT(body.AngularVelocity().z, 0.0f);
+}
+
+TEST(PhysicsBody, TheSeaIsFeltUnderTheFirstPointOverLandAtTheSeasLevel)
+{
+	// Sea under the first point but land above the sea's level at the centre is no water to the body
+	class RaisedLake final: public Ground
+	{
+	public:
+		[[nodiscard]] float HeightAt(glm::vec2) const override { return 0.5f; }
+		[[nodiscard]] glm::vec3 NormalAt(glm::vec2) const override { return {0.0f, 1.0f, 0.0f}; }
+		[[nodiscard]] bool IsSeaCell(glm::vec2) const override { return true; }
+	};
+	const RaisedLake lake;
+	auto body = MakeCube(0.5f, {0.0f, -0.2f, 0.0f});
+	Step(body, lake);
+	EXPECT_FALSE(body.inWater);
+	const FakeSea sea;
+	auto floating = MakeCube(0.5f, {0.0f, -0.2f, 0.0f});
+	Step(floating, sea);
+	EXPECT_TRUE(floating.inWater);
+}
+
+TEST(PhysicsBody, ARestingSkeletonPutsEveryPointOnItsFirstPart)
+{
+	const FakeLand land(-1000.0f);
+	const std::array origins {glm::vec3(1.0f, 2.0f, 3.0f), glm::vec3(4.0f, 5.0f, 6.0f)};
+	Body creature({.mass = shapes::k_CreatureMass, .material = k_Stone, .dynamic = false},
+	              shapes::Creature(3.0f, origins.size()));
+	creature.PlacePoints(glm::vec3(2.0f), origins);
+	Ellipsoid first {.boxMin = glm::vec3(-1.0f), .boxMax = glm::vec3(1.0f)};
+	first.localToWorld[3] = glm::vec4(7.0f, 8.0f, 9.0f, 1.0f);
+	first.worldToLocal = glm::inverse(first.localToWorld);
+	creature.SetSkeleton({first, Ellipsoid {}});
+	creature.resting = true;
+	creature.ClearForces();
+	creature.TouchGround(land);
+	for (const auto& point : creature.Points())
+	{
+		EXPECT_EQ(point.world, glm::vec3(7.0f, 8.0f, 9.0f));
+		EXPECT_FLOAT_EQ(point.length, 1.0f);
+		EXPECT_FLOAT_EQ(point.aheadLength, 1.0f);
+		EXPECT_FLOAT_EQ(point.depth, 0.0f);
+	}
+}
+
+TEST(PhysicsBody, TheRestTestLoosensAfterLongInThePhysics)
+{
+	// A body barely moving rests only once its counter passes the long wait, when the threshold grows past its speed
+	const FakeLand land(0.0f);
+	auto body = MakeCube(0.5f, {0.0f, 0.5f, 0.0f});
+	int steps = 0;
+	bool rested = false;
+	while (steps < 40000 && !rested)
+	{
+		body.velocity = {1.2f, 0.0f, 0.0f};
+		rested = Step(body, land) == StepResult::Stopped;
+		++steps;
+	}
+	ASSERT_TRUE(rested);
+	// The threshold is the counter over 15000, so a speed of 1.2 rests once the counter passes 18000
+	EXPECT_GT(body.RestCounter(), 15000);
+}
+
+TEST(PhysicsBody, SettlingOnTheLandLeavesThePointsWhereTheyWere)
+{
+	const FakeLand land(0.0f);
+	auto body = MakeCube(0.5f, {0.0f, 3.0f, 0.0f});
+	const auto before = body.Points()[0].world;
+	body.SettleOnLand(land, false, false);
+	EXPECT_NEAR(body.Centre().y, 0.5f, 1e-5f);
+	EXPECT_EQ(body.Points()[0].world, before);
+}
+
+TEST(PhysicsBody, TheDrawnPoseLiesBetweenTheTurnsPoses)
+{
+	auto body = MakeCube(0.5f, {0.0f, 0.0f, 0.0f});
+	body.BeginTurn();
+	body.MoveCentre({2.0f, 0.0f, 0.0f});
+	const auto drawn = body.DrawPose(0.5f, false);
+	EXPECT_NEAR(drawn.origin.x, 1.0f, 1e-5f);
+	// The quarter turn and its undoing
+	const glm::mat3 axes(glm::vec3(0.6f, 0.0f, 0.8f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(-0.8f, 0.0f, 0.6f));
+	const auto back = QuarterTurnedBack(QuarterTurned(axes));
+	for (int i = 0; i < 3; ++i)
+	{
+		EXPECT_NEAR(glm::distance(back[i], axes[i]), 0.0f, 1e-5f);
+	}
+}
+
+TEST(PhysicsBody, FacesTakeTheirNormalsFromTheirCorners)
+{
+	Shape shape;
+	shape.points = {{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+	shape.faces = {{0, 1, 2}};
+	shape.radius = 1.0f;
+	Body body({.mass = 1.0f, .material = k_Stone}, shape);
+	body.SetUpPose({});
+	EXPECT_NEAR(body.Faces()[0].localNormal.y, 1.0f, 1e-6f);
+}
+
+TEST(PhysicsBody, SpinKeptEachStepIsTheShareKeptEachSecondSpreadOverTheSteps)
+{
+	// Half the spin kept each second: after two hundred steps of a second half of it is left
+	auto material = k_Stone;
+	material.spinKeptPerSecond = 0.5f;
+	const FakeLand land(-1000.0f);
+	auto body = MakeCube(0.5f, {0.0f, 100.0f, 0.0f}, material);
+	body.SetAngularVelocity({0.0f, 2.0f, 0.0f});
+	for (int i = 0; i < 200; ++i)
+	{
+		Step(body, land);
+	}
+	EXPECT_NEAR(body.AngularVelocity().y, 1.0f, 1e-3f);
+}
+
+TEST(PhysicsShapes, APieceExactlyAtTheThinLimitIsKept)
+{
+	// Too thin is an area under 0.4 of the square of its reach
+	const std::array<std::array<glm::vec3, 3>, 1> wide {{
+	    {glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
+	}};
+	const auto piece = shapes::Fragment(wide);
+	EXPECT_EQ(piece.tooThin, piece.area < 0.4f * piece.shape.radius * piece.shape.radius);
+}
+
+TEST(PhysicsShapes, EachBoneBoxHoldsItsVerticesAndItsOrigin)
+{
+	const std::array<glm::vec3, 3> positions {glm::vec3(1.0f, 2.0f, 3.0f), glm::vec3(-1.0f, 0.5f, 0.5f),
+	                                          glm::vec3(5.0f, 5.0f, 5.0f)};
+	const std::array<uint16_t, 3> bones {0, 0, shapes::k_NoBone};
+	const auto boxes = shapes::BoneBoxes(positions, bones, 2);
+	ASSERT_EQ(boxes.size(), 2u);
+	EXPECT_EQ(boxes[0].min, glm::vec3(-1.0f, 0.0f, 0.0f));
+	EXPECT_EQ(boxes[0].max, glm::vec3(1.0f, 2.0f, 3.0f));
+	// A bone with no vertices keeps a box at its origin
+	EXPECT_EQ(boxes[1].min, glm::vec3(0.0f));
+	EXPECT_EQ(boxes[1].max, glm::vec3(0.0f));
 }

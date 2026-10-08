@@ -24,12 +24,17 @@ std::optional<PhysicsConstantsFile> openblack::physconst::Parse(std::istream& st
 		return std::nullopt;
 	}
 	const auto wanted = file.declaredRows > 0 ? std::min(static_cast<std::size_t>(file.declaredRows), maxRows) : 0;
-	for (std::size_t i = 0; i < wanted; ++i)
+	for (std::size_t i = 0; i < wanted && stream; ++i)
 	{
+		// The numbers read before one that can't be are kept; the rest of the row stays zero
 		Row row {};
-		if (!(stream >> row.density >> row.springK >> row.dampK >> row.friction >> row.spinKept >> row.drag))
+		for (float* value : {&row.density, &row.springK, &row.dampK, &row.friction, &row.spinKept, &row.drag})
 		{
-			break;
+			if (!(stream >> *value))
+			{
+				*value = 0.0f;
+				break;
+			}
 		}
 		file.rows.push_back(row);
 	}

@@ -858,12 +858,6 @@ bool Game::GameLogicLoop() noexcept
 	{
 		Locator::fireSystem::value().MarkBurnPoint();
 	}
-	// Then the physics: what was thrown, dropped, knocked or pushed flies, collides and comes to rest, before the
-	// scripts look at the world
-	if (Locator::dynamicsSystem::has_value())
-	{
-		Locator::dynamicsSystem::value().GameTurnUpdate();
-	}
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
@@ -891,11 +885,6 @@ bool Game::GameLogicLoop() noexcept
 		// The dispensers, then each miracle's upkeep, its own particle effect and what that effect tells it
 		auto magic = profiler.BeginScoped(Profiler::Stage::MagicUpdate);
 		Locator::magicSystem::value().ProcessTurn();
-	}
-	// What the hand holds stays where the hand is for the game, and is let go once it is gone
-	if (Locator::handGrabSystem::has_value())
-	{
-		Locator::handGrabSystem::value().ProcessTurn();
 	}
 	{
 		// The flocks fly and the wolves run and hunt
@@ -937,6 +926,18 @@ bool Game::GameLogicLoop() noexcept
 		// What a tornado carried and flung is let go once its particle has gone
 		auto tornado = profiler.BeginScoped(Profiler::Stage::TornadoUpdate);
 		Locator::tornadoSystem::value().ProcessTurn();
+	}
+	// Then the physics, after the living, the fires, the reactions, the miracles and the particles have had their turn,
+	// so a body any of them sets moving this turn flies this turn: what was thrown, dropped, knocked or pushed flies,
+	// collides and comes to rest
+	if (Locator::dynamicsSystem::has_value())
+	{
+		Locator::dynamicsSystem::value().ProcessTurn();
+	}
+	// What the hand holds stays where the hand is for the game, and is let go once it is gone
+	if (Locator::handGrabSystem::has_value())
+	{
+		Locator::handGrabSystem::value().ProcessTurn();
 	}
 
 	// Each turn ends with the camera taking the alignment of the player of most influence where it is

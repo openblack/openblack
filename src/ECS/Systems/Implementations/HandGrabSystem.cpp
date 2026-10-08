@@ -636,11 +636,11 @@ void HandGrabSystem::LetGo(HandGrab& grab, glm::vec3 velocity, bool forced)
 	}
 	// TODO(hand): a pot let go slowly is poured out where it is (scooping), and the held thing applied to what is under
 	// the hand (a store, a building site, an altar) before it is thrown
-	const auto result = dynamics.InitialisePhysicsFromHand(object, {
-	                                                                   .velocity = velocity,
-	                                                                   .player = PlayerNames::PLAYER_ONE,
-	                                                                   .dontReplant = forced,
-	                                                               });
+	const auto result = dynamics.LetGoFromHand(object, {
+	                                                       .velocity = velocity,
+	                                                       .player = PlayerNames::PLAYER_ONE,
+	                                                       .dontReplant = forced,
+	                                                   });
 	grab.lastDropped = object;
 	if (result.entry != nullptr && !result.landed)
 	{

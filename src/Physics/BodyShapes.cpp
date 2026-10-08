@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <ranges>
 
+#include <glm/common.hpp>
 #include <glm/geometric.hpp>
 
 using namespace openblack::physics;
@@ -27,7 +28,6 @@ constexpr float k_FragmentDragFactor = 2.0f;
 /// A piece whose area over its width is under this share of its radius is too thin to keep
 constexpr float k_ThinPieceShare = 0.1f;
 /// The cosine of a quarter turn as the game stores it, which is not quite zero
-constexpr float k_QuarterTurnCos = -4.371139e-8f;
 
 float FarthestPoint(std::span<const glm::vec3> points)
 {
@@ -207,13 +207,29 @@ FragmentShape shapes::Fragment(std::span<const std::array<glm::vec3, 3>> triangl
 	return result;
 }
 
-Shape shapes::Creature(glm::vec3 sphereCentre, float sphereRadius, std::span<const glm::vec3> partOrigins)
+std::vector<shapes::BoneBox> shapes::BoneBoxes(std::span<const glm::vec3> positions, std::span<const uint16_t> bones,
+                                               size_t boneCount)
 {
-	Shape shape;
-	for (const auto& origin : partOrigins)
+	std::vector<BoneBox> boxes(std::max<size_t>(boneCount, 1));
+	for (size_t i = 0; i < positions.size(); ++i)
 	{
-		shape.points.push_back(origin - sphereCentre);
+		const size_t bone = bones.empty() ? 0 : (i < bones.size() ? bones[i] : k_NoBone);
+		if (bone >= boxes.size())
+		{
+			continue;
+		}
+		boxes[bone].min = glm::min(boxes[bone].min, positions[i]);
+		boxes[bone].max = glm::max(boxes[bone].max, positions[i]);
 	}
+	return boxes;
+}
+
+Shape shapes::Creature(float sphereRadius, size_t parts)
+{
+	// Every point sits on the centre in the body's own frame; only where they stand in the world, at the parts' origins,
+	// is set when the body is placed
+	Shape shape;
+	shape.points.assign(parts, glm::vec3(0.0f));
 	shape.radius = sphereRadius;
 	return shape;
 }

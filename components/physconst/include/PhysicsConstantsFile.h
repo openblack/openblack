@@ -45,8 +45,8 @@ struct PhysicsConstantsFile
 	std::vector<Row> rows;
 };
 
-/// Reads the text from a stream. Reading stops at the first row that isn't six numbers; none when the header can't be
-/// read.
+/// Reads the text from a stream. Reading stops at the first number that can't be read, keeping the part of its row
+/// read before it; none when the header can't be read.
 [[nodiscard]] std::optional<PhysicsConstantsFile> Parse(std::istream& stream, std::size_t maxRows);
 /// Reads the text held in a buffer
 [[nodiscard]] std::optional<PhysicsConstantsFile> Parse(std::span<const uint8_t> buffer, std::size_t maxRows);

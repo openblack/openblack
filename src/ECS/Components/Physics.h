@@ -21,6 +21,19 @@ struct InPhysics
 {
 };
 
+/// A script holds the object where it is: it is never thrown, dropped or knocked into flight, and the body of a model
+/// never moves
+struct Immovable
+{
+};
+
+/// How much of a building stands built, 0 to 1: flying things hit a building only once more than a tenth of it is built.
+/// openblack doesn't build buildings up yet, so a building without one counts as built.
+struct BuildProgress
+{
+	float built {1.0f};
+};
+
 /// Where a moving body is drawn this frame, between where it was at the start of the last game turn and where it is now,
 /// so that its motion looks smooth whatever the frame rate. The game itself sees the object's Transform, where the body
 /// is at the end of the turn.

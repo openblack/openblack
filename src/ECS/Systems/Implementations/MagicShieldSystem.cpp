@@ -180,6 +180,8 @@ void MagicShieldSystem::Raise(entt::entity spell, const Spell& miracle)
 			const auto mesh = meshes.Handle(dome.mesh);
 			dome.halfExtent = mesh->GetBoundingBox().Size() * 0.5f;
 			dome.hull = shield::DomeHull(mesh->GetPhysicsTriangles(), position, dome.shape);
+			dome.hullOrigin = shield::DomeHullOrigin(position, dome.shape);
+			dome.hullScale = dome.shape.finalScale;
 		}
 	}
 	// It takes its first two turns at once, so it starts as it would have been made

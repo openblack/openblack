@@ -68,9 +68,10 @@ std::optional<uint8_t> PhysicsGround::CellAltitudeDown(glm::vec2 xz) const
 
 std::optional<uint8_t> PhysicsGround::CellAltitudeNearest(glm::vec2 xz) const
 {
-	// Rounded to the nearest, halves to even, as the game's rounding does
-	return Altitude(glm::ivec2(static_cast<int32_t>(std::nearbyint(xz.x / k_CellSize)),
-	                           static_cast<int32_t>(std::nearbyint(xz.y / k_CellSize))));
+	// Scaled to cells by a tenth and rounded to the nearest, halves to even, as the game's rounding does
+	constexpr float k_CellsPerMetre = 0.1f;
+	return Altitude(glm::ivec2(static_cast<int32_t>(std::nearbyint(xz.x * k_CellsPerMetre)),
+	                           static_cast<int32_t>(std::nearbyint(xz.y * k_CellsPerMetre))));
 }
 
 bool PhysicsGround::IsSeaCell(glm::vec2 xz) const

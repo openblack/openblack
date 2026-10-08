@@ -70,6 +70,9 @@ struct ShieldDome
 	/// Its solid shape's triangles in the world, set once as it is raised at its full size, sunk as it starts and
 	/// unturned: the game never moves its solid shape with the dome it draws
 	std::vector<std::array<glm::vec3, 3>> hull;
+	/// Where that solid shape's model stands and the scale it is at: the physics' body of the dome is built from them
+	glm::vec3 hullOrigin {0.0f};
+	float hullScale {0.0f};
 };
 
 /// Where no player but the owner has any influence: under a shield, an enemy's hand can't cast

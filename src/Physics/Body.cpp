@@ -28,7 +28,7 @@ namespace
 /// Points this close to the sea's level or the land's are in it
 constexpr float k_SeaLevelTolerance = 0.0001f;
 /// A floating body soaks up this much density each step it is in the sea
-constexpr float k_SoakPerStep = 6.66667e-5f;
+constexpr float k_SoakPerStep = 1.0f / 15000.0f;
 /// The sea slows a body this many times more than the air
 constexpr float k_WaterDragFactor = 100.0f;
 /// The share of the sea's push each point under the surface turns the body by
@@ -44,7 +44,7 @@ constexpr float k_DeleteDepthRadii = -4.0f;
 constexpr float k_RestThreshold = 1.0f;
 constexpr float k_RestingThreshold = 4.0f;
 constexpr int k_RestCounterLoosens = 15000;
-constexpr float k_RestLoosening = 6.66667e-5f;
+constexpr float k_RestLoosening = 1.0f / 15000.0f;
 constexpr int k_RestCounterPerStep = 5;
 constexpr float k_MinRotationStep = 1e-5f;
 constexpr float k_FacingThreshold = -0.0001f;
@@ -53,8 +53,6 @@ constexpr float k_MinAheadLength = 0.001f;
 /// The spin kept each step is the share kept each second raised to the step's length
 constexpr double k_StepExponent = 0.005000000074505806;
 /// The cosine of a quarter turn as the game stores it, which is not quite zero
-constexpr float k_QuarterTurnCos = -4.371139e-8f;
-constexpr float k_QuarterTurnSin = 1.0f;
 
 glm::vec3 NormaliseOrKeep(glm::vec3 v)
 {
@@ -72,6 +70,30 @@ glm::mat3 NormaliseAxes(glm::mat3 axes)
 		axes[i] = NormaliseOrKeep(axes[i]);
 	}
 	return axes;
+}
+
+/// The inverse of a matrix, its determinant kept at least a tiny size so that a body whose points lie in a line, or a
+/// body with none, still gets an inverse (a huge or zero one) as the game gives it
+glm::mat3 ClampedInverse(const glm::mat3& matrix)
+{
+	constexpr float k_SmallestDeterminant = 1e-10f;
+	float determinant = glm::determinant(matrix);
+	if (std::abs(determinant) < k_SmallestDeterminant)
+	{
+		determinant = determinant < 0.0f ? -k_SmallestDeterminant : k_SmallestDeterminant;
+	}
+	const auto& m = matrix;
+	glm::mat3 adjugate;
+	adjugate[0][0] = m[1][1] * m[2][2] - m[2][1] * m[1][2];
+	adjugate[1][0] = -(m[1][0] * m[2][2] - m[2][0] * m[1][2]);
+	adjugate[2][0] = m[1][0] * m[2][1] - m[2][0] * m[1][1];
+	adjugate[0][1] = -(m[0][1] * m[2][2] - m[2][1] * m[0][2]);
+	adjugate[1][1] = m[0][0] * m[2][2] - m[2][0] * m[0][2];
+	adjugate[2][1] = -(m[0][0] * m[2][1] - m[2][0] * m[0][1]);
+	adjugate[0][2] = m[0][1] * m[1][2] - m[1][1] * m[0][2];
+	adjugate[1][2] = -(m[0][0] * m[1][2] - m[1][0] * m[0][2]);
+	adjugate[2][2] = m[0][0] * m[1][1] - m[1][0] * m[0][1];
+	return adjugate / determinant;
 }
 
 glm::vec2 Xz(glm::vec3 v)
@@ -123,13 +145,13 @@ void Body::SetUpInertia()
 		point.length = glm::length(point.local);
 		point.aheadLength = point.length;
 	}
-	if (_dynamic && !_points.empty())
+	if (_dynamic)
 	{
 		auto& inertia = _inertia;
 		inertia = {};
-		const float pointMass = _mass / static_cast<float>(_points.size());
 		for (const auto& point : _points)
 		{
+			const float pointMass = _mass / static_cast<float>(_points.size());
 			const auto [x, y, z] = std::array {point.local.x, point.local.y, point.local.z};
 			inertia[0][0] += (y * y + z * z) * pointMass;
 			inertia[1][1] += (x * x + z * z) * pointMass;
@@ -150,8 +172,7 @@ void Body::SetUpInertia()
 				matrix[column][row] = inertia[row][column];
 			}
 		}
-		// A body whose points are all in a line can't be turned; it keeps the identity rather than dividing by nothing
-		const auto inverse = glm::determinant(matrix) != 0.0f ? glm::inverse(matrix) : glm::mat3(1.0f);
+		const auto inverse = ClampedInverse(matrix);
 		for (int row = 0; row < 3; ++row)
 		{
 			for (int column = 0; column < 3; ++column)
@@ -219,12 +240,27 @@ void Body::SetPoseDirect(const glm::mat3& axes, glm::vec3 centre)
 	}
 }
 
+void Body::PlacePoints(glm::vec3 centre, std::span<const glm::vec3> worldPoints)
+{
+	_centre = centre;
+	_turnStartAxes = _axes;
+	_turnStartCentre = _centre;
+	for (size_t i = 0; i < _points.size() && i < worldPoints.size(); ++i)
+	{
+		auto& point = _points[i];
+		point.world = worldPoints[i];
+		point.contact = worldPoints[i];
+		point.firstDepth = 0.0f;
+		point.depth = 0.0f;
+	}
+}
+
 void Body::SetSkeleton(std::vector<Ellipsoid> bones)
 {
 	_bones = std::move(bones);
 }
 
-void Body::AdjustToGroundLevel(const Ground& ground, bool noPullDown, bool alignToSlope)
+void Body::SettleOnLand(const Ground& ground, bool noPullDown, bool alignToSlope)
 {
 	if (alignToSlope)
 	{

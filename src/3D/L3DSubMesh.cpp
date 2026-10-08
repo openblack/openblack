@@ -256,6 +256,44 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		startIndex += static_cast<uint16_t>(primitive.numTriangles * 3);
 	}
 
+	// Every model keeps its vertices as the file holds them for the physics, boned or not, with each vertex's bone
+	{
+		const auto count = std::min<size_t>(nVertices, verticesSpan.size());
+		_bodyGeometry.positions.clear();
+		_bodyGeometry.positions.reserve(count);
+		for (size_t i = 0; i < count; ++i)
+		{
+			_bodyGeometry.positions.emplace_back(verticesSpan[i].position.x, verticesSpan[i].position.y,
+			                                     verticesSpan[i].position.z);
+		}
+		_bodyGeometry.indices.assign(indices, indices + nIndices);
+		_bodyGeometry.bones.clear();
+		if (_flags.hasBones)
+		{
+			// Each primitive's vertices are moved by its groups' bones in turn, a run of vertices each
+			const auto& groups = l3d.GetVertexGroupSpan(meshIndex);
+			size_t group = 0;
+			for (const auto& primitive : primitiveSpan)
+			{
+				size_t inPrimitive = 0;
+				for (uint32_t g = 0; g < primitive.numGroups && group < groups.size(); ++g, ++group)
+				{
+					for (uint32_t v = 0; v < groups[group].vertexCount && inPrimitive < primitive.numVertices; ++v)
+					{
+						_bodyGeometry.bones.push_back(groups[group].boneIndex);
+						++inPrimitive;
+					}
+				}
+				// Vertices no group names belong to no bone
+				for (; inPrimitive < primitive.numVertices; ++inPrimitive)
+				{
+					_bodyGeometry.bones.push_back(k_NoBone);
+				}
+			}
+			_bodyGeometry.bones.resize(count, k_NoBone);
+		}
+	}
+
 	// A model that doesn't move by bones keeps its triangles for the flames set on it and the pieces it breaks into
 	if (!_flags.hasBones)
 	{

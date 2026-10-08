@@ -79,9 +79,10 @@ std::optional<MaterialRow> ToyRow(MeshId mesh)
 	}
 }
 
-bool IsToy(MobileStaticInfo type)
+/// The toys are the statics whose model is one of the hand's toys
+bool IsToy(MeshId mesh)
 {
-	return type >= MobileStaticInfo::ToyBall && type <= MobileStaticInfo::ToyBowlingBall;
+	return mesh >= MeshId::ObjectToyBall && mesh <= MeshId::ObjectToySkittle;
 }
 
 bool IsFence(MeshId mesh)
@@ -101,14 +102,31 @@ bool HeavyStatic(MobileStaticInfo type)
 physics_classes::ClassFacts MobileStaticFacts(MobileStaticInfo type, const InfoConstants& info,
                                               const physics_classes::ClassInputs& inputs)
 {
+	// The lanterns and the singing stone's base aren't statics to the physics but plain objects: they never fly and are
+	// made of the unmovable material; the lanterns are never hit
+	if (type == MobileStaticInfo::StreetLantern || type == MobileStaticInfo::CountryLantern)
+	{
+		return {.body = physics_classes::BodyKind::Model, .row = MaterialRow::DefaultUnmovable};
+	}
+	if (type == MobileStaticInfo::SingingStoneBase)
+	{
+		return {.body = physics_classes::BodyKind::Model, .row = MaterialRow::DefaultUnmovable, .interacts = true};
+	}
+	// A bonfire neither flies nor is hit
+	if (type == MobileStaticInfo::Bonfire)
+	{
+		return {.body = physics_classes::BodyKind::Model, .row = MaterialRow::DefaultUnmovable};
+	}
 	physics_classes::ClassFacts facts {
 	    .body = physics_classes::BodyKind::Model, .row = MaterialRow::DefaultMovable, .canBecomePhysicsObject = true};
 	const auto* row = Row<GMobileStaticInfo>(info.mobileStatic, type);
 	const auto mobileType = row != nullptr ? row->mobileType : MobileStaticInfo::None;
 	const auto mesh = row != nullptr ? row->meshId : MeshId::Dummy;
-	const bool toy = IsToy(type);
-	const bool fence = !toy && IsFence(mesh);
+	const bool toy = IsToy(mesh);
+	const bool fence = IsFence(mesh);
 	const bool rockLike = HeavyStatic(type) || mobileType == MobileStaticInfo::Rock;
+	// The heavy statics and rocks first, then fences, then toys each of their own material (an unknown toy is as heavy
+	// as a rock)
 	if (rockLike)
 	{
 		facts.row = MaterialRow::Rock;
@@ -121,21 +139,8 @@ physics_classes::ClassFacts MobileStaticFacts(MobileStaticInfo type, const InfoC
 	{
 		facts.row = ToyRow(mesh).value_or(MaterialRow::Rock);
 	}
-	// Street lanterns and bonfires are never hit; toys, rocks and their like, fences and idols always; anything else as
-	// a building is
-	if (type == MobileStaticInfo::StreetLantern || type == MobileStaticInfo::CountryLantern)
-	{
-		facts.interacts = false;
-	}
-	else if (type == MobileStaticInfo::Bonfire)
-	{
-		facts.interacts = false;
-		facts.canBecomePhysicsObject = false;
-	}
-	else
-	{
-		facts.interacts = toy || rockLike || fence || mobileType == MobileStaticInfo::Idol || StandingBuilding(inputs);
-	}
+	// Toys, rocks and their like, fences and idols are always hit; anything else as a building is
+	facts.interacts = toy || rockLike || fence || mobileType == MobileStaticInfo::Idol || StandingBuilding(inputs);
 	facts.physicallyDestroysAbodes = facts.row == MaterialRow::Rock || facts.row == MaterialRow::BowlingBall;
 	return facts;
 }
@@ -174,6 +179,61 @@ physics_classes::ClassFacts MobileObjectFacts(MobileObjectInfo type)
 		facts.canBecomePhysicsObject = false;
 		facts.interacts = false;
 		break;
+	case MobileObjectInfo::HanoiPuzzleBase:
+		// The puzzle's base never moves
+		facts.canBecomePhysicsObject = false;
+		break;
+	case MobileObjectInfo::HanoiPuzzlePart1:
+	case MobileObjectInfo::HanoiPuzzlePart2:
+	case MobileObjectInfo::HanoiPuzzlePart3:
+	case MobileObjectInfo::HanoiPuzzlePart4:
+		// The puzzle's blocks move only while they aren't set in place; the puzzle isn't ported, so none is set
+		break;
+	default:
+		break;
+	}
+	// Anything that can't fly is made of the unmovable material
+	if (!facts.canBecomePhysicsObject && facts.row == MaterialRow::DefaultMovable)
+	{
+		facts.row = MaterialRow::DefaultUnmovable;
+	}
+	return facts;
+}
+
+/// A gate, the piper's cave or the phone box: hit by what is thrown, with a collision model of its own picked by its
+/// state; chess pieces and the others are never hit
+physics_classes::ClassFacts AnimatedStaticFacts(const AnimatedStatic& still)
+{
+	physics_classes::ClassFacts facts {.body = physics_classes::BodyKind::CollisionModel,
+	                                   .row = MaterialRow::DefaultUnmovable,
+	                                   .checksPoints = false,
+	                                   .fixedMass = physics::shapes::k_TempleHeartMass};
+	switch (still.type)
+	{
+	case AnimatedStaticInfo::NorseGate:
+		facts.interacts = true;
+		facts.collisionMesh = static_cast<uint32_t>(still.openState == 1 ? MeshId::NorseGatePhys2 : MeshId::NorseGatePhys1);
+		break;
+	case AnimatedStaticInfo::GateStonePlinth:
+		facts.interacts = true;
+		if (still.openState != 1 && still.plinthState != 0)
+		{
+			facts.collisionMesh =
+			    static_cast<uint32_t>(still.plinthFull != 0 ? MeshId::GateTotemPlinthePhys3 : MeshId::GateTotemPlinthePhys2);
+		}
+		else
+		{
+			facts.collisionMesh = static_cast<uint32_t>(MeshId::GateTotemPlinthePhys1);
+		}
+		break;
+	case AnimatedStaticInfo::PhoneBox:
+		facts.interacts = true;
+		facts.collisionMesh = static_cast<uint32_t>(MeshId::GateTotemPlinthePhys1);
+		break;
+	case AnimatedStaticInfo::PiperCaveEntrance:
+		facts.interacts = true;
+		facts.collisionMesh = static_cast<uint32_t>(MeshId::PiperEntrancePhys1);
+		break;
 	default:
 		break;
 	}
@@ -191,9 +251,13 @@ float physics_classes::BodyMass(float weight)
 	return std::max(weight, physics::shapes::k_MinMass);
 }
 
-physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, entt::entity entity, const InfoConstants& info,
-                                                      const ClassInputs& inputs)
+namespace
 {
+physics_classes::ClassFacts ClassifyKind(const Registry& registry, entt::entity entity, const InfoConstants& info,
+                                         const physics_classes::ClassInputs& inputs)
+{
+	using physics_classes::BodyKind;
+	using physics_classes::ClassFacts;
 	if (registry.AllOf<Creature>(entity))
 	{
 		return {.body = BodyKind::Creature,
@@ -208,7 +272,8 @@ physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, 
 		        .canBecomePhysicsObject = inputs.villagerReachable,
 		        .interacts = true,
 		        .animated = true,
-		        .upright = true};
+		        .upright = true,
+		        .dynamic = true};
 	}
 	if (registry.AllOf<Animal>(entity))
 	{
@@ -217,23 +282,36 @@ physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, 
 		        .canBecomePhysicsObject = true,
 		        .interacts = true,
 		        .animated = true,
-		        .upright = true};
+		        .upright = true,
+		        .dynamic = true};
 	}
 	if (registry.AllOf<Tree>(entity))
 	{
 		// Standing trees are never hit: thrown things pass through them
-		return {
-		    .body = BodyKind::Tree, .row = MaterialRow::Tree, .canBecomePhysicsObject = true, .rooted = true, .upright = true};
+		return {.body = BodyKind::Tree,
+		        .row = MaterialRow::Tree,
+		        .canBecomePhysicsObject = true,
+		        .rooted = true,
+		        .upright = true,
+		        .dynamic = true,
+		        .unclampedMass = true};
 	}
 	if (registry.AllOf<DeadTree>(entity))
 	{
 		// The wood the hand carries is a dead tree drawn as a log, a movable thing of its own model
 		const auto* mesh = registry.TryGet<const Mesh>(entity);
 		const bool log = mesh != nullptr && mesh->id == resources::HashIdentifier(MeshId::ObjectWoodInHand);
-		return {.body = log ? BodyKind::Model : BodyKind::Tree,
-		        .row = log ? MaterialRow::DefaultMovable : MaterialRow::Tree,
+		if (log)
+		{
+			return {
+			    .body = BodyKind::Model, .row = MaterialRow::DefaultMovable, .canBecomePhysicsObject = true, .interacts = true};
+		}
+		return {.body = BodyKind::Tree,
+		        .row = MaterialRow::Tree,
 		        .canBecomePhysicsObject = true,
-		        .interacts = true};
+		        .interacts = true,
+		        .dynamic = true,
+		        .unclampedMass = true};
 	}
 	if (const auto* pot = registry.TryGet<const Pot>(entity))
 	{
@@ -267,9 +345,12 @@ physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, 
 	}
 	if (registry.AllOf<Temple>(entity))
 	{
+		// The temple's heart is hit while more than a tenth of it is built, the tenth taken at the double precision its
+		// test is made in
+		constexpr double k_LeastHeartBuilt = 0.1;
 		return {.body = BodyKind::Model,
 		        .row = MaterialRow::DefaultUnmovable,
-		        .interacts = inputs.percentBuilt > k_LeastBuiltToHit,
+		        .interacts = static_cast<double>(inputs.percentBuilt) > k_LeastHeartBuilt,
 		        .checksPoints = false,
 		        .fixedMass = physics::shapes::k_TempleHeartMass};
 	}
@@ -284,24 +365,41 @@ physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, 
 		case AbodeNumber::TownCentre:
 			facts.interacts = true;
 			break;
-		case AbodeNumber::Totem:
 		case AbodeNumber::Graveyard:
 		case AbodeNumber::FootballPitch:
-		case AbodeNumber::SpellDispenser:
 		case AbodeNumber::Field:
 			facts.interacts = false;
 			break;
 		default:
+			// The town's totem and the spell dispensers too stand as buildings do
 			facts.interacts = StandingBuilding(inputs);
 			break;
 		}
 		return facts;
 	}
-	if (registry.AnyOf<Feature, AnimatedStatic, Flowers>(entity))
+	if (const auto* animated = registry.TryGet<const AnimatedStatic>(entity))
+	{
+		return AnimatedStaticFacts(*animated);
+	}
+	if (registry.AnyOf<Feature, Flowers>(entity))
 	{
 		// Features stand as buildings do, and never move
 		return {.body = BodyKind::Model, .row = MaterialRow::DefaultUnmovable, .interacts = StandingBuilding(inputs)};
 	}
-	// Fields, forests, the spell dispensers, teleport stones and anything else the physics doesn't know
+	// Fields, forests, teleport stones and anything else the physics doesn't know
 	return {};
+}
+} // namespace
+
+physics_classes::ClassFacts physics_classes::Classify(const Registry& registry, entt::entity entity, const InfoConstants& info,
+                                                      const ClassInputs& inputs)
+{
+	auto facts = ClassifyKind(registry, entity, info, inputs);
+	facts.immovable = inputs.immovable;
+	// A model's body moves only when its object can fly and isn't held immovable; the hand-built bodies always move
+	if (facts.body == BodyKind::Model)
+	{
+		facts.dynamic = facts.canBecomePhysicsObject && !inputs.immovable;
+	}
+	return facts;
 }

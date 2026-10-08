@@ -130,13 +130,11 @@ public:
 	/// A felled tree, taller than the sound needs, has toppled
 	virtual void FelledTreeToppled(entt::entity tree);
 	/// A thrown thing starts to fly: creatures that can try to catch it
-	virtual void CheckAllCreaturesForCatching(entt::entity object, PhysicsEntry& entry);
+	virtual void OfferToCatchingCreatures(entt::entity object, PhysicsEntry& entry);
 	/// An object that breaks buildings stops being in the physics: buildings forget it hit them
 	virtual void ForgetBuildingHitter(entt::entity object);
 	/// Whether a dropped object is raised up over this one (not over a vortex or a map shield)
 	[[nodiscard]] virtual bool RaisesObjects(entt::entity object) const;
-	/// The creature's body, its skeleton's parts as ellipsoids; none until the creature's shape is known
-	[[nodiscard]] virtual std::unique_ptr<physics::Body> CreatureBody(entt::entity creature);
 	/// The kind's part of a thing let go by a hand that didn't land: a person or an animal starts to fly
 	virtual void StartFlyingFromHand(DynamicsSystemInterface& dynamics, PhysicsEntry& entry);
 	/// A villager let go by a hand that didn't land drops what it carried, which flies on with it
@@ -177,7 +175,7 @@ public:
 	/// The kinds' own parts of the physics
 	virtual void SetClassHooks([[maybe_unused]] std::unique_ptr<PhysicsClassHooks> hooks) {}
 	/// Once a game turn while the game runs: the turn's start, its twenty steps and its end
-	virtual void GameTurnUpdate() {}
+	virtual void ProcessTurn() {}
 	/// Every frame: where the moving bodies are drawn between turns, and the dust ageing with the game's time
 	virtual void UpdateFrame([[maybe_unused]] float turnFraction, [[maybe_unused]] float gameSeconds) {}
 	/// The dust the landings throw up, drawn with the particles
@@ -190,8 +188,8 @@ public:
 	}
 	/// What any object does starting to move: refused when it is already in the physics; it leaves the map's cells,
 	/// gets a body when asked, and a burning one leaves its fire's group
-	virtual PhysicsStarted ObjectInitialisePhysics([[maybe_unused]] entt::entity object,
-	                                               [[maybe_unused]] const PhysicsStart& start)
+	virtual PhysicsStarted StartPhysicsAsObject([[maybe_unused]] entt::entity object,
+	                                            [[maybe_unused]] const PhysicsStart& start)
 	{
 		return {};
 	}
@@ -210,20 +208,23 @@ public:
 		return object;
 	}
 	/// What any object does at the end of its physics: out of the physics and, when asked, back into the map's cells
-	/// inside the map or deleted outside it
-	virtual entt::entity ObjectEndPhysics(entt::entity object, [[maybe_unused]] bool insert) { return object; }
+	/// inside the map or deleted outside it; then what it set others reacting to as it flew is over. With a body, nothing
+	/// for an object no longer in the physics.
+	virtual entt::entity EndPhysicsAsObject(entt::entity object, [[maybe_unused]] bool insert, [[maybe_unused]] bool hasBody)
+	{
+		return object;
+	}
 	/// A body released over things is raised until nothing under it pushes it up
-	virtual void RaiseUntilNotIntersecting([[maybe_unused]] PhysicsEntry& entry) {}
-	/// Lays a body onto the land under it (see physics::Body::AdjustToGroundLevel)
-	virtual void AdjustToGroundLevel([[maybe_unused]] PhysicsEntry& entry, [[maybe_unused]] bool noPullDown,
-	                                 [[maybe_unused]] bool alignToSlope)
+	virtual void RaiseClearOfWhatIsUnder([[maybe_unused]] PhysicsEntry& entry) {}
+	/// Lays a body onto the land under it (see physics::Body::SettleOnLand)
+	virtual void SettleOnLand([[maybe_unused]] PhysicsEntry& entry, [[maybe_unused]] bool noPullDown,
+	                          [[maybe_unused]] bool alignToSlope)
 	{
 	}
 	/// A hand, or a creature's hand, lets go of what it held, which starts from where it is drawn: put down where it is
 	/// (lowered onto the land and lifted clear of what is under it) when let go slowly, else thrown or dropped to fly.
 	/// Refused for a thing already in the physics.
-	virtual FromHandResult InitialisePhysicsFromHand([[maybe_unused]] entt::entity object,
-	                                                 [[maybe_unused]] const FromHand& release)
+	virtual FromHandResult LetGoFromHand([[maybe_unused]] entt::entity object, [[maybe_unused]] const FromHand& release)
 	{
 		return {};
 	}
@@ -240,7 +241,7 @@ public:
 	[[nodiscard]] virtual const physics::Ground* GetGround() const { return nullptr; }
 
 	/// The scripts' last thing hit and what hit it, each only while it still exists
-	virtual void SetHitObject([[maybe_unused]] entt::entity hit, [[maybe_unused]] entt::entity hitter) {}
+	virtual void RecordHit([[maybe_unused]] entt::entity hit, [[maybe_unused]] entt::entity hitter) {}
 	[[nodiscard]] virtual entt::entity GetHitObject() const { return entt::null; }
 	[[nodiscard]] virtual entt::entity GetObjectWhichHit() const { return entt::null; }
 

@@ -78,7 +78,21 @@ struct FragmentShape
 };
 [[nodiscard]] FragmentShape Fragment(std::span<const std::array<glm::vec3, 3>> triangles);
 
-/// The creature as an obstacle: a point at each part of its skeleton, about the centre of its bounding sphere, no faces
-[[nodiscard]] Shape Creature(glm::vec3 sphereCentre, float sphereRadius, std::span<const glm::vec3> partOrigins);
+/// A part of a skeleton's box in the part's own space
+struct BoneBox
+{
+	glm::vec3 min {0.0f};
+	glm::vec3 max {0.0f};
+};
+/// Each bone's box about the vertices it moves, in its own space; every box also holds the bone's origin, as both its
+/// corners start there. Vertices without a bone (k_NoBone) are left out; a model without bones puts every vertex in the
+/// first box.
+inline constexpr uint16_t k_NoBone = 0xFFFF;
+[[nodiscard]] std::vector<BoneBox> BoneBoxes(std::span<const glm::vec3> positions, std::span<const uint16_t> bones,
+                                             size_t boneCount);
+
+/// The creature as an obstacle: a point for each part of its skeleton, all on the centre of the body's own frame, as
+/// wide as its bounding sphere, no faces. The points are placed at the parts' origins with Body::PlacePoints.
+[[nodiscard]] Shape Creature(float sphereRadius, size_t parts);
 
 } // namespace openblack::physics::shapes

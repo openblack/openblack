@@ -151,13 +151,16 @@ public:
 	void SetUpPose(const Pose& objectMatrix);
 	/// Places the body with its axes and centre as they are (a building piece's matrix, the creature's sphere)
 	void SetPoseDirect(const glm::mat3& axes, glm::vec3 centre);
+	/// The creature's body: its centre at its bounding sphere's, its points standing at its parts' origins in the world
+	/// though they sit on the centre in its own frame. The axes are left as they are.
+	void PlacePoints(glm::vec3 centre, std::span<const glm::vec3> worldPoints);
 	/// The creature's posed skeleton, whose parts are what other bodies hit
 	void SetSkeleton(std::vector<Ellipsoid> bones);
 	[[nodiscard]] bool HasSkeleton() const { return !_bones.empty(); }
 
 	/// Optionally lays the body along the slope under its centre, then moves it up or down until its lowest point is on
 	/// the land; with noPullDown it is only ever raised. The points aren't moved with it until the next step.
-	void AdjustToGroundLevel(const Ground& ground, bool noPullDown, bool alignToSlope);
+	void SettleOnLand(const Ground& ground, bool noPullDown, bool alignToSlope);
 
 	// One step, in this order for every body: ClearForces and TouchGround for all, then TouchFaces for every pair, then
 	// ApplyContacts for all, then Integrate for all.
@@ -222,7 +225,9 @@ public:
 
 	glm::vec3 velocity {0.0f};
 	glm::vec3 angularMomentum {0.0f};
-	/// Pushes that last the game turn: a villager pushing it, the hand's twist after a throw
+	/// Pushes that last the game turn: a villager pushing it, the hand's twist after a throw. Torques, spins and angular
+	/// momenta here follow the right-hand rule (torque = r x F), the opposite sign to how the game writes them, so any
+	/// spin or twist worked out the game's way must be negated before it is handed in
 	glm::vec3 externalForce {0.0f};
 	glm::vec3 externalTorque {0.0f};
 	/// Rises as the body soaks up water
@@ -272,6 +277,10 @@ private:
 	std::vector<Face> _faces;
 	std::vector<Ellipsoid> _bones;
 };
+
+/// The cosine and sine of a quarter turn as the game rounds them to floats: the cosine is not quite zero
+inline constexpr float k_QuarterTurnCos = -4.371139e-8f;
+inline constexpr float k_QuarterTurnSin = 1.0f;
 
 /// Axes turned a quarter about their up axis, as the models moved by bones are drawn from their bodies' axes
 [[nodiscard]] glm::mat3 QuarterTurned(const glm::mat3& axes);

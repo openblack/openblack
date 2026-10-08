@@ -9,11 +9,16 @@
 
 #pragma once
 
+#include <chrono>
+#include <functional>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "ECS/PhysicsClasses.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
+#include "Particles/ParticleEffect.h"
+#include "Physics/BodyShapes.h"
 #include "Physics/TurnRules.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -62,25 +67,25 @@ public:
 
 	void ResetSimulation() override;
 	void SetClassHooks(std::unique_ptr<PhysicsClassHooks> hooks) override;
-	void GameTurnUpdate() override;
+	void ProcessTurn() override;
 	void UpdateFrame(float turnFraction, float gameSeconds) override;
 	void CollectDrawFrame(particles::draw::Frame& frame) const override;
 
 	PhysicsStarted InitialisePhysics(entt::entity object, const PhysicsStart& start) override;
-	PhysicsStarted ObjectInitialisePhysics(entt::entity object, const PhysicsStart& start) override;
+	PhysicsStarted StartPhysicsAsObject(entt::entity object, const PhysicsStart& start) override;
 	PhysicsEntry* AddObject(entt::entity object, const PhysicsStart& start) override;
 	[[nodiscard]] PhysicsEntry* Find(entt::entity object) override;
 	[[nodiscard]] bool IsFlying(entt::entity object) const override;
 	entt::entity RemoveObject(entt::entity object, bool insert, bool endPhysics) override;
-	entt::entity ObjectEndPhysics(entt::entity object, bool insert) override;
-	void RaiseUntilNotIntersecting(PhysicsEntry& entry) override;
-	void AdjustToGroundLevel(PhysicsEntry& entry, bool noPullDown, bool alignToSlope) override;
-	FromHandResult InitialisePhysicsFromHand(entt::entity object, const FromHand& release) override;
+	entt::entity EndPhysicsAsObject(entt::entity object, bool insert, bool hasBody) override;
+	void RaiseClearOfWhatIsUnder(PhysicsEntry& entry) override;
+	void SettleOnLand(PhysicsEntry& entry, bool noPullDown, bool alignToSlope) override;
+	FromHandResult LetGoFromHand(entt::entity object, const FromHand& release) override;
 	[[nodiscard]] std::optional<std::pair<glm::mat3, glm::vec3>> ReleasePose(entt::entity object, bool alignToSlope) override;
 	float PushObject(entt::entity object) override;
 	[[nodiscard]] const physics::Ground* GetGround() const override;
 
-	void SetHitObject(entt::entity hit, entt::entity hitter) override;
+	void RecordHit(entt::entity hit, entt::entity hitter) override;
 	[[nodiscard]] entt::entity GetHitObject() const override;
 	[[nodiscard]] entt::entity GetObjectWhichHit() const override;
 
@@ -91,8 +96,12 @@ private:
 	[[nodiscard]] physics_classes::ClassFacts FactsOf(entt::entity object) const;
 	/// A body for an object at its place, moving or resting; none for an object without a shape
 	[[nodiscard]] std::unique_ptr<physics::Body> MakeBody(entt::entity object, const physics_classes::ClassFacts& facts);
+	/// The creature's body: an obstacle of its bones' ellipsoids, as it stands posed now
+	[[nodiscard]] std::unique_ptr<physics::Body> MakeCreatureBody(entt::entity creature, const physics::Material& material);
+	/// The creature's bones as the ellipsoids a body hits, posed as they are now
+	[[nodiscard]] std::vector<physics::Ellipsoid> CreatureSkeleton(entt::entity creature);
 	/// The list grows by a few slots when it is full, before a body is added to it
-	void MakeSureEndSlotIsFree();
+	void MakeRoomForOne();
 	/// A resting obstacle for an object a moving body may hit
 	PhysicsEntry* AddProxy(entt::entity object);
 	/// Takes an entry out of the list, the last moving into its place
@@ -118,6 +127,8 @@ private:
 	void WakeNearMovingBodies();
 	void Step(const physics::Ground& ground);
 	void EndTurn();
+	/// What breaks buildings, come to rest or taken out, is no longer passed through by the buildings it struck
+	void ForgetAsBuildingHitter(entt::entity object);
 	/// The sound and the dust of a knock
 	void AttemptCollisionSound(PhysicsEntry& entry);
 	void AddLandingDust(glm::vec3 centre, float radius, uint32_t argb);
@@ -147,6 +158,22 @@ private:
 	bool _inTurnUpdate {false};
 	physics::turn::SoundPairs _soundPairs;
 	std::vector<physics::turn::DustPuff> _dust;
+	/// Each creature model's bones' boxes, by the model, worked out once
+	std::unordered_map<entt::id_type, std::vector<physics::shapes::BoneBox>> _creatureBoxes;
+	/// A collision sound that follows the thing that made it while it plays
+	struct FollowingSound
+	{
+		entt::entity emitter {entt::null};
+		entt::entity owner {entt::null};
+	};
+	std::vector<FollowingSound> _followingSounds;
+	/// The system clock's milliseconds, which pick the fly-by whoosh
+	std::function<uint64_t()> _ticks {[]() {
+		return static_cast<uint64_t>(
+		    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
+	}};
+	/// What the dust's puffs are drawn as
+	particles::Creator _dustCreator;
 	entt::entity _hitObject {entt::null};
 	entt::entity _objectWhichHit {entt::null};
 };

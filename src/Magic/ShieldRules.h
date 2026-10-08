@@ -136,6 +136,8 @@ struct DomeVolume
 [[nodiscard]] bool InsideDome(const DomeVolume& volume, float distanceAcross, float heightAboveLand);
 /// The dome's solid shape as it is raised: its model's physics triangles at its full size, at a height above the land of
 /// its raise with scale (at a scale of 1, as the game takes it) and shield height, unturned
+/// Where the dome's solid shape stands, its model's origin, from the land under it
+[[nodiscard]] glm::vec3 DomeHullOrigin(glm::vec3 ground, const DomeShape& shape);
 [[nodiscard]] std::vector<std::array<glm::vec3, 3>> DomeHull(std::span<const std::array<glm::vec3, 3>> modelTriangles,
                                                              glm::vec3 ground, const DomeShape& shape);
 /// Where a thing moving from one point to another crosses into the dome's solid shape, and the face's outward normal:

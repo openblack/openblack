@@ -147,11 +147,16 @@ bool shield::InsideDome(const DomeVolume& volume, float distanceAcross, float he
 	return heightAboveLand <= volume.height - (volume.height * distanceAcross / volume.radius);
 }
 
+glm::vec3 shield::DomeHullOrigin(glm::vec3 ground, const DomeShape& shape)
+{
+	// The game works out the height while the dome's scale is still 1
+	return {ground.x, ground.y + shape.shieldHeight + shape.raiseWithScale, ground.z};
+}
+
 std::vector<std::array<glm::vec3, 3>> shield::DomeHull(std::span<const std::array<glm::vec3, 3>> modelTriangles,
                                                        glm::vec3 ground, const DomeShape& shape)
 {
-	// The game works out the height while the dome's scale is still 1
-	const glm::vec3 origin(ground.x, ground.y + shape.shieldHeight + shape.raiseWithScale, ground.z);
+	const auto origin = DomeHullOrigin(ground, shape);
 	std::vector<std::array<glm::vec3, 3>> hull;
 	hull.reserve(modelTriangles.size());
 	for (const auto& triangle : modelTriangles)

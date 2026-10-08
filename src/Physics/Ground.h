@@ -25,8 +25,8 @@ public:
 	[[nodiscard]] virtual float HeightAt(glm::vec2 xz) const = 0;
 	/// The flat normal of the land's triangle under a point
 	[[nodiscard]] virtual glm::vec3 NormalAt(glm::vec2 xz) const = 0;
-	/// Whether the map cell nearest to a point (its coordinates rounded to the nearest cell) is open sea: off the map,
-	/// without a cell, or a cell whose land is at the sea's level
+	/// Whether the map cell nearest to a point (its coordinates times a tenth, rounded to the nearest with halves to even)
+	/// is open sea: off the map, without a cell, or a cell whose land is at the sea's level
 	[[nodiscard]] virtual bool IsSeaCell(glm::vec2 xz) const = 0;
 };
 

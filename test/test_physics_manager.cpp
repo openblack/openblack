@@ -58,6 +58,8 @@ protected:
 		ball.meshId = MeshId::ObjectToyBall;
 		auto& bowling = _info->mobileStatic.at(static_cast<size_t>(MobileStaticInfo::ToyBowlingBall));
 		bowling.meshId = MeshId::ObjectToyBowlingBall;
+		auto& die = _info->mobileStatic.at(static_cast<size_t>(MobileStaticInfo::ToyDie));
+		die.meshId = MeshId::ObjectToyDice;
 		auto& lantern = _info->mobileStatic.at(static_cast<size_t>(MobileStaticInfo::StreetLantern));
 		lantern.mobileType = MobileStaticInfo::None;
 		lantern.meshId = MeshId::Dummy;
@@ -117,8 +119,12 @@ TEST_F(PhysicsClassesTest, FencesAndToysHaveTheirOwnMaterials)
 	const auto bowling = Classify(Static(MobileStaticInfo::ToyBowlingBall));
 	EXPECT_EQ(bowling.row, MaterialRow::BowlingBall);
 	EXPECT_TRUE(bowling.physicallyDestroysAbodes);
-	// A toy whose model the game doesn't list is as heavy as a rock
-	EXPECT_EQ(Classify(Static(MobileStaticInfo::ToyDie)).row, MaterialRow::Rock);
+	// A toy is known by its model
+	EXPECT_EQ(Classify(Static(MobileStaticInfo::ToyDie)).row, MaterialRow::ToyDie);
+	// A static without a toy's model isn't one, whatever its kind
+	auto& plain = _info->mobileStatic.at(static_cast<size_t>(MobileStaticInfo::ToyCuddly));
+	plain.meshId = MeshId::Dummy;
+	EXPECT_EQ(Classify(Static(MobileStaticInfo::ToyCuddly)).row, MaterialRow::DefaultMovable);
 }
 
 TEST_F(PhysicsClassesTest, OtherStaticsStandAsBuildingsDo)
@@ -128,10 +134,64 @@ TEST_F(PhysicsClassesTest, OtherStaticsStandAsBuildingsDo)
 	EXPECT_TRUE(Classify(altar).interacts);
 	EXPECT_FALSE(Classify(altar, {.life = 0.005f}).interacts);
 	EXPECT_FALSE(Classify(altar, {.percentBuilt = 0.1f}).interacts);
-	EXPECT_FALSE(Classify(Static(MobileStaticInfo::StreetLantern)).interacts);
 	const auto bonfire = Classify(Static(MobileStaticInfo::Bonfire));
 	EXPECT_FALSE(bonfire.interacts);
 	EXPECT_FALSE(bonfire.canBecomePhysicsObject);
+}
+
+TEST_F(PhysicsClassesTest, LanternsAndTheSingingStonesBaseArePlainObjects)
+{
+	for (const auto type : {MobileStaticInfo::StreetLantern, MobileStaticInfo::CountryLantern})
+	{
+		const auto lantern = Classify(Static(type));
+		EXPECT_FALSE(lantern.canBecomePhysicsObject);
+		EXPECT_FALSE(lantern.interacts);
+		EXPECT_EQ(lantern.row, MaterialRow::DefaultUnmovable);
+	}
+	const auto base = Classify(Static(MobileStaticInfo::SingingStoneBase));
+	EXPECT_FALSE(base.canBecomePhysicsObject);
+	EXPECT_TRUE(base.interacts);
+	EXPECT_EQ(base.row, MaterialRow::DefaultUnmovable);
+	EXPECT_FALSE(base.dynamic);
+}
+
+TEST_F(PhysicsClassesTest, AThingHeldImmovableNeverMoves)
+{
+	const auto rock = Static(MobileStaticInfo::RockChalk);
+	EXPECT_TRUE(Classify(rock).dynamic);
+	const auto held = Classify(rock, {.immovable = true});
+	EXPECT_TRUE(held.immovable);
+	EXPECT_FALSE(held.dynamic);
+	// It still is a kind that can fly, and so still made of its own material
+	EXPECT_TRUE(held.canBecomePhysicsObject);
+	EXPECT_EQ(held.row, MaterialRow::Rock);
+}
+
+TEST_F(PhysicsClassesTest, GatesTheCaveAndThePhoneBoxCollideWithModelsOfTheirOwn)
+{
+	const auto make = [this](AnimatedStaticInfo type, int32_t open = 0, int32_t plinth = 0, int32_t full = 0) {
+		const auto entity = _registry.Create();
+		_registry.Assign<AnimatedStatic>(
+		    entity, AnimatedStatic {.type = type, .openState = open, .plinthState = plinth, .plinthFull = full});
+		return Classify(entity);
+	};
+	const auto gate = make(AnimatedStaticInfo::NorseGate);
+	EXPECT_TRUE(gate.interacts);
+	EXPECT_FALSE(gate.checksPoints);
+	EXPECT_FALSE(gate.canBecomePhysicsObject);
+	EXPECT_FALSE(gate.dynamic);
+	EXPECT_FLOAT_EQ(gate.fixedMass.value_or(0.0f), 10000.0f);
+	EXPECT_EQ(gate.row, MaterialRow::DefaultUnmovable);
+	EXPECT_EQ(gate.collisionMesh, static_cast<uint32_t>(MeshId::NorseGatePhys1));
+	EXPECT_EQ(make(AnimatedStaticInfo::NorseGate, 1).collisionMesh, static_cast<uint32_t>(MeshId::NorseGatePhys2));
+	EXPECT_EQ(make(AnimatedStaticInfo::GateStonePlinth).collisionMesh, static_cast<uint32_t>(MeshId::GateTotemPlinthePhys1));
+	EXPECT_EQ(make(AnimatedStaticInfo::GateStonePlinth, 0, 1).collisionMesh,
+	          static_cast<uint32_t>(MeshId::GateTotemPlinthePhys2));
+	EXPECT_EQ(make(AnimatedStaticInfo::GateStonePlinth, 0, 1, 1).collisionMesh,
+	          static_cast<uint32_t>(MeshId::GateTotemPlinthePhys3));
+	EXPECT_EQ(make(AnimatedStaticInfo::PhoneBox).collisionMesh, static_cast<uint32_t>(MeshId::GateTotemPlinthePhys1));
+	EXPECT_EQ(make(AnimatedStaticInfo::PiperCaveEntrance).collisionMesh, static_cast<uint32_t>(MeshId::PiperEntrancePhys1));
+	EXPECT_FALSE(make(AnimatedStaticInfo::ChessKingTeamA).interacts);
 }
 
 TEST_F(PhysicsClassesTest, PotsFlyByTheirInfoAndAreHitUnlessInAStoragePit)
@@ -166,6 +226,9 @@ TEST_F(PhysicsClassesTest, MobileObjects)
 	EXPECT_FALSE(whale.canBecomePhysicsObject);
 	EXPECT_TRUE(whale.interacts);
 	EXPECT_FALSE(make(MobileObjectInfo::Creed).interacts);
+	// The puzzle's base never moves; its blocks do while they aren't set in place
+	EXPECT_FALSE(make(MobileObjectInfo::HanoiPuzzleBase).canBecomePhysicsObject);
+	EXPECT_TRUE(make(MobileObjectInfo::HanoiPuzzlePart1).canBecomePhysicsObject);
 }
 
 TEST_F(PhysicsClassesTest, LivingThings)
@@ -178,7 +241,10 @@ TEST_F(PhysicsClassesTest, LivingThings)
 	EXPECT_TRUE(facts.canBecomePhysicsObject);
 	EXPECT_TRUE(facts.animated);
 	EXPECT_TRUE(facts.upright);
+	EXPECT_TRUE(facts.dynamic);
+	// One that can't be reached can't fly, but its body still moves when it stands in the way
 	EXPECT_FALSE(Classify(villager, {.villagerReachable = false}).canBecomePhysicsObject);
+	EXPECT_TRUE(Classify(villager, {.villagerReachable = false}).dynamic);
 
 	const auto animal = _registry.Create();
 	_registry.Assign<Animal>(animal);
@@ -203,6 +269,9 @@ TEST_F(PhysicsClassesTest, TreesFlyButAreNotHitWhileDeadTreesAre)
 	EXPECT_TRUE(standing.rooted);
 	EXPECT_FALSE(standing.interacts);
 	EXPECT_TRUE(standing.canBecomePhysicsObject);
+	// A tree's weight is never raised to the least a body weighs
+	EXPECT_TRUE(standing.unclampedMass);
+	EXPECT_TRUE(standing.dynamic);
 
 	const auto dead = _registry.Create();
 	_registry.Assign<DeadTree>(dead);
@@ -235,16 +304,23 @@ TEST_F(PhysicsClassesTest, BuildingsAreHeavyStaticObstacles)
 	EXPECT_EQ(facts.row, MaterialRow::DefaultUnmovable);
 	EXPECT_FALSE(Classify(house, {.life = 0.01f}).interacts);
 	EXPECT_FALSE(Classify(house, {.percentBuilt = 0.05f}).interacts);
-	// The village centre is always in the way; graveyards, pitches and totems never
+	// The village centre is always in the way; graveyards and pitches never; the town's totem and the spell dispensers
+	// stand as buildings do
 	EXPECT_TRUE(Classify(make(AbodeNumber::TownCentre), {.life = 0.0f}).interacts);
 	EXPECT_FALSE(Classify(make(AbodeNumber::Graveyard)).interacts);
 	EXPECT_FALSE(Classify(make(AbodeNumber::FootballPitch)).interacts);
-	EXPECT_FALSE(Classify(make(AbodeNumber::Totem)).interacts);
+	EXPECT_TRUE(Classify(make(AbodeNumber::Totem)).interacts);
+	EXPECT_FALSE(Classify(make(AbodeNumber::Totem), {.percentBuilt = 0.05f}).interacts);
+	EXPECT_TRUE(Classify(make(AbodeNumber::SpellDispenser)).interacts);
+	EXPECT_FALSE(Classify(make(AbodeNumber::SpellDispenser), {.life = 0.0f}).interacts);
 
 	const auto temple = _registry.Create();
 	_registry.Assign<Temple>(temple);
 	EXPECT_FLOAT_EQ(Classify(temple).fixedMass.value_or(0.0f), 10000.0f);
 	EXPECT_FALSE(Classify(temple).checksPoints);
+	// The heart's tenth is tested in double precision: a tenth built as a float is just over it
+	EXPECT_TRUE(Classify(temple, {.percentBuilt = 0.1f}).interacts);
+	EXPECT_FALSE(Classify(temple, {.percentBuilt = 0.09f}).interacts);
 
 	const auto feature = _registry.Create();
 	_registry.Assign<Feature>(feature);
@@ -395,4 +471,12 @@ TEST(PhysicsTurn, SinkingAndBobbing)
 	EXPECT_TRUE(turn::Bobbed(1.0f, -0.5f));
 	EXPECT_FALSE(turn::Bobbed(0.0f, 0.5f));
 	EXPECT_FLOAT_EQ(turn::PushForce(10.0f), 98.1f);
+}
+
+TEST(PhysicsTurn, CollisionSoundsFollowWhatMadeThemButOne)
+{
+	EXPECT_TRUE(turn::CollisionSoundFollows(turn::CollisionKeys(turn::SoundLevel::Hard, 0, 27)));
+	auto keys = turn::CollisionKeys(turn::SoundLevel::Hard, 0, 27);
+	keys[2] = turn::k_StayingHitterCode;
+	EXPECT_FALSE(turn::CollisionSoundFollows(keys));
 }

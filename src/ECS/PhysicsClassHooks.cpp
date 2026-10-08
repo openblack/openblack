@@ -25,7 +25,7 @@ using namespace openblack::ecs::systems;
 PhysicsStarted PhysicsClassHooks::InitialisePhysics(DynamicsSystemInterface& dynamics, entt::entity object,
                                                     const PhysicsStart& start)
 {
-	return dynamics.ObjectInitialisePhysics(object, start);
+	return dynamics.StartPhysicsAsObject(object, start);
 }
 
 void PhysicsClassHooks::ReactToImpact([[maybe_unused]] DynamicsSystemInterface& dynamics, [[maybe_unused]] PhysicsEntry& entry,
@@ -38,10 +38,10 @@ void PhysicsClassHooks::ImpactFeedback([[maybe_unused]] DynamicsSystemInterface&
 {
 }
 
-entt::entity PhysicsClassHooks::EndPhysics(DynamicsSystemInterface& dynamics, [[maybe_unused]] PhysicsEntry* entry,
-                                           entt::entity object, bool insert)
+entt::entity PhysicsClassHooks::EndPhysics(DynamicsSystemInterface& dynamics, PhysicsEntry* entry, entt::entity object,
+                                           bool insert)
 {
-	return dynamics.ObjectEndPhysics(object, insert);
+	return dynamics.EndPhysicsAsObject(object, insert, entry != nullptr);
 }
 
 bool PhysicsClassHooks::HasSunk([[maybe_unused]] DynamicsSystemInterface& dynamics, [[maybe_unused]] PhysicsEntry& entry)
@@ -69,9 +69,7 @@ SoundCollisionType PhysicsClassHooks::CollideSoundType(entt::entity object) cons
 
 void PhysicsClassHooks::FelledTreeToppled([[maybe_unused]] entt::entity tree) {}
 
-void PhysicsClassHooks::CheckAllCreaturesForCatching([[maybe_unused]] entt::entity object, [[maybe_unused]] PhysicsEntry& entry)
-{
-}
+void PhysicsClassHooks::OfferToCatchingCreatures([[maybe_unused]] entt::entity object, [[maybe_unused]] PhysicsEntry& entry) {}
 
 void PhysicsClassHooks::ForgetBuildingHitter([[maybe_unused]] entt::entity object) {}
 
@@ -79,11 +77,6 @@ bool PhysicsClassHooks::RaisesObjects(entt::entity object) const
 {
 	// A shield's dome never lifts what is dropped inside it
 	return !Locator::entitiesRegistry::value().AllOf<components::MagicShield>(object);
-}
-
-std::unique_ptr<physics::Body> PhysicsClassHooks::CreatureBody([[maybe_unused]] entt::entity creature)
-{
-	return nullptr;
 }
 
 void PhysicsClassHooks::StartFlyingFromHand([[maybe_unused]] DynamicsSystemInterface& dynamics,

@@ -112,6 +112,16 @@ public:
 		std::vector<uint16_t> indices;
 	};
 	[[nodiscard]] const Surface& GetSurface() const { return _surface; }
+	/// Every submesh's vertices as the file holds them (a boned one's in the space of the bone that moves each), its
+	/// triangles over them, and for a boned one the bone of each vertex: what the physics builds bodies from
+	static constexpr uint16_t k_NoBone = 0xFFFF;
+	struct BodyGeometry
+	{
+		std::vector<glm::vec3> positions;
+		std::vector<uint16_t> indices;
+		std::vector<uint16_t> bones;
+	};
+	[[nodiscard]] const BodyGeometry& GetBodyGeometry() const { return _bodyGeometry; }
 	/// Whether some of the vertices are blended towards others where the body's parts meet (see vertex_blend). Each
 	/// vertex then names its partner in its bone indices' second and its weight, in 32767ths, in their third.
 	[[nodiscard]] bool HasBlends() const { return _hasBlends; }
@@ -159,6 +169,7 @@ private:
 	std::vector<SurfacePoint> _surfacePoints;
 	std::vector<SurfacePrimitive> _surfacePrimitives;
 	Surface _surface;
+	BodyGeometry _bodyGeometry;
 
 	AxisAlignedBoundingBox _boundingBox;
 	bool _hasBlends {false};

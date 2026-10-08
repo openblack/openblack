@@ -50,6 +50,8 @@ enum class BodyKind : uint8_t
 	Creature,
 	/// The physical shield's dome, as it stands
 	ShieldDome,
+	/// A gate, the piper's cave or the phone box: a collision model of its own, picked by its state
+	CollisionModel,
 };
 
 /// What the physics knows of an object's kind
@@ -76,6 +78,15 @@ struct ClassFacts
 	bool animated {false};
 	/// Turned by the physics only about its up axis: it stands upright wherever it comes to rest
 	bool upright {false};
+	/// A script holds it where it is: it is never thrown, dropped or knocked into flight
+	bool immovable {false};
+	/// Its body moves: a villager's, an animal's, a tree's and a building piece's always do; a model's only when its object
+	/// can become a physics object and isn't held immovable
+	bool dynamic {false};
+	/// The weight of its body is never raised to the least a body weighs (a tree's isn't)
+	bool unclampedMass {false};
+	/// The model a gate, the piper's cave or the phone box collides with
+	std::optional<uint32_t> collisionMesh;
 };
 
 /// What deciding an object's kind needs from the rest of the game
@@ -89,6 +100,8 @@ struct ClassInputs
 	bool villagerReachable {true};
 	/// A pile that is part of a storage pit
 	bool partOfStoragePit {false};
+	/// A script holds it where it is: it never becomes a physics object, and a model's body never moves
+	bool immovable {false};
 };
 
 /// The kind of an object, from its components and its table row

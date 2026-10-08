@@ -39,6 +39,7 @@
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/TownAggression.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -1664,10 +1665,23 @@ void FlySpirit() // 167 FLY_SPIRIT
 
 void SetIdMoveable() // 168 SET_ID_MOVEABLE
 {
-	// const auto obj = Pop().uintVal;
-	// const auto moveable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto moveable = static_cast<bool>(Pop().intVal);
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(object))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "SET_ID_MOVEABLE: thing not valid");
+		return;
+	}
+	// A thing made unmoveable is held where it is: the physics never takes it
+	if (moveable)
+	{
+		registry.Remove<ecs::components::Immovable>(object);
+	}
+	else
+	{
+		registry.AssignOrReplace<ecs::components::Immovable>(object);
+	}
 }
 
 void SetIdPickupable() // 169 SET_ID_PICKUPABLE
@@ -1905,7 +1919,7 @@ void IsOfType() // 192 IS_OF_TYPE
 void ClearHitObject() // 193 CLEAR_HIT_OBJECT
 {
 	// The physics forgets the last thing hit and what hit it
-	Locator::dynamicsSystem::value().SetHitObject(entt::null, entt::null);
+	Locator::dynamicsSystem::value().RecordHit(entt::null, entt::null);
 }
 
 void GameThingHit() // 194 GAME_THING_HIT

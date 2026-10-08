@@ -57,12 +57,12 @@ std::optional<std::pair<glm::mat3, glm::vec3>> DynamicsSystem::ReleasePose(entt:
 		return std::nullopt;
 	}
 	// Lifted out of the land, never pulled down to it
-	body->AdjustToGroundLevel(*land, true, alignToSlope);
+	body->SettleOnLand(*land, true, alignToSlope);
 	const auto pose = body->ObjectPose();
 	return std::pair {pose.axes, pose.origin};
 }
 
-FromHandResult DynamicsSystem::InitialisePhysicsFromHand(entt::entity object, const FromHand& release)
+FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand& release)
 {
 	auto& registry = Entities();
 	if (!IsAvailable(object) || registry.AllOf<InPhysics>(object))
@@ -79,7 +79,7 @@ FromHandResult DynamicsSystem::InitialisePhysicsFromHand(entt::entity object, co
 	if (entry == nullptr)
 	{
 		// A thing with no shape to move with stays where it was let go
-		ObjectEndPhysics(object, true);
+		EndPhysicsAsObject(object, true, false);
 		return {};
 	}
 	auto& body = *entry->body;
@@ -93,10 +93,10 @@ FromHandResult DynamicsSystem::InitialisePhysicsFromHand(entt::entity object, co
 	float settled = before;
 	if (!(byCreature && thrown))
 	{
-		AdjustToGroundLevel(*entry, thrown, !anyTree);
+		SettleOnLand(*entry, thrown, !anyTree);
 		settled = body.Centre().y;
 		body.ClearForces();
-		RaiseUntilNotIntersecting(*entry);
+		RaiseClearOfWhatIsUnder(*entry);
 	}
 
 	const auto* land = Land();
@@ -163,7 +163,7 @@ FromHandResult DynamicsSystem::InitialisePhysicsFromHand(entt::entity object, co
 		                                         .position = centre,
 		                                         .playerless = !release.player.has_value()});
 	}
-	Hooks().CheckAllCreaturesForCatching(object, *entry);
+	Hooks().OfferToCatchingCreatures(object, *entry);
 	Hooks().StartFlyingFromHand(*this, *entry);
 	// TODO(physics): a toy a player let go makes the player's creature think of playing with it
 	return {.entry = entry, .landed = false};
