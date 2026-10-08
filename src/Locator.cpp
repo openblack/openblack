@@ -50,6 +50,7 @@
 #include "ECS/Systems/Implementations/CreatureSkinSystem.h"
 #include "ECS/Systems/Implementations/DynamicsSystem.h"
 #include "ECS/Systems/Implementations/EditorSystem.h"
+#include "ECS/Systems/Implementations/ExplosionSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/FireSystem.h"
 #include "ECS/Systems/Implementations/FootprintSystem.h"
@@ -245,6 +246,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::particleSystem::emplace<ParticleSystem>();
 	Locator::magicSystem::emplace<MagicSystem>();
 	Locator::fireSystem::emplace<ecs::systems::FireSystem>();
+	Locator::explosionSystem::emplace<ecs::systems::ExplosionSystem>();
 	return true;
 }
 
