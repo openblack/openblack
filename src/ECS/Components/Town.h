@@ -15,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <glm/vec2.hpp>
+
 #include "Enums.h"
 
 namespace openblack::ecs::components
@@ -34,6 +36,8 @@ struct Town
 	std::array<std::array<float, static_cast<size_t>(DeathReason::_COUNT)>, 8> deathsByKiller {};
 	/// The forest of the lone trees about it, made as the land is laid out; a tree replanted near the town joins it
 	std::optional<uint32_t> scenicForest;
+	/// Where its scenic forest was made: the town's centre then
+	glm::vec2 scenicForestCentre {0.0f};
 };
 
 } // namespace openblack::ecs::components

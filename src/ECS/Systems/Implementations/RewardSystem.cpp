@@ -73,8 +73,9 @@ entt::entity RewardSystem::Create(glm::vec3 position, RewardObjectInfo type, std
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
+	// Given on the land it stands at the height asked for; from the sky it falls to the land itself
 	const glm::vec3 ground {position.x, LandHeight(position), position.z};
-	registry.Assign<Transform>(entity, fromSky ? ground + glm::vec3(0.0f, reward::k_FallFrom, 0.0f) : ground, glm::mat3(1.0f),
+	registry.Assign<Transform>(entity, fromSky ? ground + glm::vec3(0.0f, reward::k_FallFrom, 0.0f) : position, glm::mat3(1.0f),
 	                           glm::vec3(1.0f));
 	registry.Assign<Mesh>(entity, k_ChestMesh.value(), static_cast<int8_t>(0), static_cast<int8_t>(1));
 	auto& chest = registry.Assign<Reward>(entity);
@@ -82,6 +83,7 @@ entt::entity RewardSystem::Create(glm::vec3 position, RewardObjectInfo type, std
 	chest.player = player;
 	chest.town = town;
 	chest.landingPoint = ground;
+	chest.madeAt = position;
 	// Its dust is made with it, and only shown once it has fallen
 	chest.dust = reward::MakeDust(LocalRandom);
 	if (fromSky)
@@ -112,9 +114,10 @@ void RewardSystem::Update(float milliseconds)
 			chest.dustMilliseconds = std::max(chest.dustMilliseconds - milliseconds, 0.0f);
 			return;
 		}
-		chest.seconds += milliseconds * 0.001f;
+		// It is placed by its clock as it stood before this frame, which then runs on
 		const float height = reward::FallHeight(chest.seconds);
 		transform.rotation = glm::mat3(glm::eulerAngleY(-reward::FallYaw(chest.seconds)));
+		chest.seconds += milliseconds * 0.001f;
 		if (height > 0.0f)
 		{
 			transform.position = chest.landingPoint + glm::vec3(0.0f, height, 0.0f);
@@ -186,7 +189,7 @@ void RewardSystem::CollectDrawFrame(particles::draw::Frame& frame) const
 			walk.steps.push_back({.chain = false, .index = static_cast<uint32_t>(walk.atoms.size())});
 			walk.atoms.push_back({
 			    .creator = &creator,
-			    .position = chest.landingPoint + sprite.offset,
+			    .position = chest.madeAt + sprite.offset,
 			    .rotation = glm::mat3(1.0f),
 			    .scale = look.size * 0.5f,
 			    .stretch = 1.0f,
@@ -195,7 +198,7 @@ void RewardSystem::CollectDrawFrame(particles::draw::Frame& frame) const
 			    .rgb = sprite.rgb,
 			});
 		}
-		particles::draw::AddEffect(frame, walk, particles::draw::DrawPath::Sorted, chest.landingPoint,
+		particles::draw::AddEffect(frame, walk, particles::draw::DrawPath::Sorted, chest.madeAt,
 		                           particles::draw::k_NeutralPlayer, sources);
 	});
 }

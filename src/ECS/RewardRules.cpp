@@ -29,9 +29,10 @@ std::array<DustSprite, k_DustSprites> reward::MakeDust(const std::function<float
 	std::array<DustSprite, k_DustSprites> dust {};
 	for (auto& sprite : dust)
 	{
-		sprite.offset.x = random(-k_DustSpread, k_DustSpread);
-		sprite.offset.y = random(0.0f, k_DustRise);
+		// Across, then up, then along
 		sprite.offset.z = random(-k_DustSpread, k_DustSpread);
+		sprite.offset.y = random(0.0f, k_DustRise);
+		sprite.offset.x = random(-k_DustSpread, k_DustSpread);
 		sprite.frame = static_cast<uint32_t>(static_cast<int32_t>(random(0.0f, k_DustFrames))) & k_DustFrameMask;
 		const float shade = random(k_DustLeastShade, 1.0f);
 		for (size_t i = 0; i < sprite.rgb.size(); ++i)

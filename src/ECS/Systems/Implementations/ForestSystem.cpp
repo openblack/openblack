@@ -52,10 +52,12 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
+#include "ECS/ScenicForest.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Magic/ForestRules.h"
@@ -70,7 +72,6 @@ namespace forest = openblack::magic::forest;
 namespace
 {
 /// A town's scenic forest reaches this much further than its forests
-constexpr float k_ScenicForestBeyond = 10.0f;
 constexpr float k_TwoPi = 2.0f * std::numbers::pi_v<float>;
 /// Positions are kept in 1/6553.6 of a metre, as the map keeps them: the spiral's points are cut down to that
 constexpr float k_MapUnitsPerMetre = 6553.6f;
@@ -493,41 +494,75 @@ uint32_t ForestSystem::NewLandForestId() const
 
 void ForestSystem::MakeScenicForests()
 {
-	if (!Locator::infoConstants::has_value())
+	if (!Locator::infoConstants::has_value() || !Locator::entitiesMap::has_value())
 	{
 		return;
 	}
 	auto& registry = EntityRegistry();
-	const float reach = Locator::infoConstants::value().town.maxDistanceForTownForest + k_ScenicForestBeyond;
-	// Each town's own centre, where its scenic forest is reckoned from
+	const auto& map = Locator::entitiesMap::value();
+	const float reach = Locator::infoConstants::value().town.maxDistanceForTownForest + ecs::scenic_forest::k_Beyond;
+	// Where each scenic forest was made, by its number
 	std::unordered_map<uint32_t, glm::vec2> centres;
-	registry.Each<Town, const Transform>([&](entt::entity, Town& town, const Transform& transform) {
-		const glm::vec2 centre {transform.position.x, transform.position.z};
-		const auto centreCell = glm::vec2(map_coords::CellOf(centre));
-		std::optional<uint32_t> forest = town.scenicForest;
-		registry.Each<const Tree, const Transform>([&](entt::entity tree, const Tree&, const Transform& at) {
-			const glm::vec2 point {at.position.x, at.position.z};
-			// The cells are walked out from the centre for as far as the reach goes
-			if (glm::distance(glm::vec2(map_coords::CellOf(point)), centreCell) * map_coords::k_CellSize > reach)
+	registry.Each<const Town>([&centres](entt::entity, const Town& town) {
+		if (town.scenicForest.has_value())
+		{
+			centres[*town.scenicForest] = town.scenicForestCentre;
+		}
+	});
+	registry.Each<Town>([&](entt::entity, Town& town) {
+		// The town's centre is the middle of the ground its buildings and fields cover
+		ecs::scenic_forest::TownArea area;
+		registry.Each<const Abode, const Transform>([&](entt::entity thing, const Abode& abode, const Transform& at) {
+			if (abode.townId == town.id)
 			{
-				return;
+				area.Add({at.position.x, at.position.z}, ecs::world_objects::SizeOf(thing).radius);
 			}
-			if (const auto* member = registry.TryGet<const ForestMember>(tree))
-			{
-				// In another town's scenic forest, it comes to this one only when it stands nearer this town
-				const auto other = centres.find(member->forest);
-				if (other == centres.end() || glm::distance(other->second, point) <= glm::distance(centre, point))
-				{
-					return;
-				}
-			}
-			if (!forest.has_value())
-			{
-				forest = NewLandForestId();
-				centres[*forest] = centre;
-			}
-			registry.AssignOrReplace<ForestMember>(tree, ForestMember {.forest = *forest});
 		});
+		registry.Each<const Field, const Transform>([&](entt::entity thing, const Field& field, const Transform& at) {
+			if (field.town == static_cast<int>(town.id))
+			{
+				area.Add({at.position.x, at.position.z}, ecs::world_objects::SizeOf(thing).radius);
+			}
+		});
+		const auto centre = area.Centre();
+		std::optional<uint32_t> forest = town.scenicForest;
+		for (const auto& coords : ecs::scenic_forest::Walk(map_coords::FromMetres(centre), reach))
+		{
+			const glm::ivec2 cell = map_coords::Cell(coords);
+			if (!map_coords::InBounds(cell))
+			{
+				continue;
+			}
+			for (const auto tree : map.GetAllInCell(cell))
+			{
+				if (!registry.AllOf<Tree, Transform>(tree))
+				{
+					continue;
+				}
+				const auto& position = registry.Get<const Transform>(tree).position;
+				ecs::scenic_forest::Tree seen {.at = {position.x, position.z}};
+				if (const auto* member = registry.TryGet<const ForestMember>(tree))
+				{
+					seen.inForest = true;
+					if (const auto other = centres.find(member->forest); other != centres.end())
+					{
+						seen.scenicCentre = other->second;
+					}
+				}
+				if (!ecs::scenic_forest::Takes(seen, centre))
+				{
+					continue;
+				}
+				// The forest is made, about the town's centre, at the first tree it takes
+				if (!forest.has_value())
+				{
+					forest = NewLandForestId();
+					centres[*forest] = centre;
+					town.scenicForestCentre = centre;
+				}
+				registry.AssignOrReplace<ForestMember>(tree, ForestMember {.forest = *forest});
+			}
+		}
 		town.scenicForest = forest;
 	});
 }

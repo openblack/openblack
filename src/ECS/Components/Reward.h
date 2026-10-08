@@ -41,6 +41,8 @@ struct Reward
 	float seconds {0.0f};
 	/// Where it is to land: the point on the land under where it was given
 	glm::vec3 landingPoint {0.0f};
+	/// Where it was given, at the height the giver asked for: its dust stays about here
+	glm::vec3 madeAt {0.0f};
 	/// It has landed this frame, and goes into the map's cells at the next game turn
 	bool goesIntoMap {false};
 	/// How long its dust has left to show, once it has fallen

@@ -41,6 +41,16 @@ TEST(Reward, ItsDustSpreadsAboutItInSandColoursAndGrowsAsItFades)
 	EXPECT_FLOAT_EQ(gone.size, 2.5f);
 }
 
+TEST(Reward, ItsDustIsPlacedAcrossThenUpThenAlong)
+{
+	// Each draw is told apart by its order
+	float next = 0.0f;
+	const auto dust = reward::MakeDust([&next](float /*from*/, float /*to*/) { return next += 1.0f; });
+	EXPECT_FLOAT_EQ(dust[0].offset.z, 1.0f);
+	EXPECT_FLOAT_EQ(dust[0].offset.y, 2.0f);
+	EXPECT_FLOAT_EQ(dust[0].offset.x, 3.0f);
+}
+
 TEST(Reward, ItsThumpShakesTheCameraNearTheWorldsOrigin)
 {
 	std::vector<camera_shake::Shake> shakes {{.position = glm::vec3(0.0f),

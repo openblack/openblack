@@ -10,6 +10,7 @@
 #include "CameraShake.h"
 
 #include <algorithm>
+#include <ranges>
 
 #include <glm/geometric.hpp>
 
@@ -26,9 +27,10 @@ void camera_shake::Advance(std::vector<Shake>& shakes, float milliseconds)
 
 const Shake* camera_shake::Nearest(std::span<const Shake> shakes, const glm::vec3& camera)
 {
+	// The newest shake is met first, and only a strictly nearer one replaces the nearest so far
 	const Shake* nearest = nullptr;
 	float best = 0.0f;
-	for (const auto& shake : shakes)
+	for (const auto& shake : std::ranges::reverse_view(shakes))
 	{
 		const float distance = glm::distance(shake.position, camera);
 		if (nearest == nullptr || distance < best)
@@ -42,17 +44,8 @@ const Shake* camera_shake::Nearest(std::span<const Shake> shakes, const glm::vec
 
 float camera_shake::Amplitude(std::span<const Shake> shakes, const glm::vec3& camera)
 {
-	const Shake* nearest = nullptr;
-	float best = 0.0f;
-	for (const auto& shake : shakes)
-	{
-		const float distance = glm::distance(shake.position, camera);
-		if (nearest == nullptr || distance < best)
-		{
-			nearest = &shake;
-			best = distance;
-		}
-	}
+	const Shake* nearest = Nearest(shakes, camera);
+	const float best = nearest != nullptr ? glm::distance(nearest->position, camera) : 0.0f;
 	if (nearest == nullptr || best > nearest->radius || nearest->milliseconds <= 0.0f)
 	{
 		return 0.0f;
