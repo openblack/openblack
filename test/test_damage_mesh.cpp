@@ -199,3 +199,16 @@ TEST(DamageMesh, RepairAndBreakageShares)
 	EXPECT_FLOAT_EQ(BreakageShare(0.9f, 0.6f), 0.3f);
 	EXPECT_FLOAT_EQ(BreakageShare(0.5f, 0.6f), 0.0f);
 }
+
+TEST(DamageMesh, ABrokenBuildingIsDrawnAsFarAsItIsRepaired)
+{
+	// Right after a blow its repair starts a little short of its life: it is drawn an eleventh repaired
+	const float life = 0.6f;
+	EXPECT_NEAR(DrawShare(life, 1.0f, RepairStartLife(life)), 1.0f / 11.0f, 1e-5f);
+	// Healed whole, it is drawn whole
+	EXPECT_FLOAT_EQ(DrawShare(1.0f, 1.0f, RepairStartLife(life)), 1.0f);
+	// Without a repair, a little short of its life
+	EXPECT_FLOAT_EQ(DrawShare(0.5f, 1.0f, std::nullopt), 0.49f);
+	// Not built, drawn as built
+	EXPECT_FLOAT_EQ(DrawShare(1.0f, 0.3f, std::nullopt), 0.3f);
+}

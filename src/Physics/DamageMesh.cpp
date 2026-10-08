@@ -440,3 +440,18 @@ float damage::BreakageShare(float life, float remaining)
 {
 	return std::max(life - remaining, 0.0f);
 }
+
+float damage::DrawShare(float life, float built, std::optional<float> repairStart)
+{
+	if (built < 1.0f)
+	{
+		return std::min(1.0f, built);
+	}
+	constexpr float k_RepairedWithoutRepair = 0.98f;
+	float repaired = life * k_RepairedWithoutRepair;
+	if (repairStart.has_value())
+	{
+		repaired = (life == 0.0f || *repairStart == 1.0f) ? 0.0f : (life - *repairStart) / (1.0f - *repairStart);
+	}
+	return std::min(repaired, built);
+}

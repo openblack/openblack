@@ -161,6 +161,10 @@ inline constexpr float k_RebuildDrawShare = 0.2f;
 /// The life a building's repair starts from when it is struck: a little less than its own, so it is drawn mostly
 /// unrepaired
 [[nodiscard]] float RepairStartLife(float life);
+/// How much of a building is drawn standing: how far it is repaired since it was last broken (from the life its repair
+/// started at, else a little short of its life) and no more than is built; wholly drawn while it isn't built yet
+[[nodiscard]] float DrawShare(float life, float built, std::optional<float> repairStart);
+
 /// How much of a building's life a breaking blow takes, before its defences: down to what is left of its model
 [[nodiscard]] float BreakageShare(float life, float remaining);
 

@@ -68,8 +68,6 @@ constexpr std::array<int32_t, 5> k_SmashKeys {2, 1, 1, 9, 75};
 constexpr size_t k_CrushPreset = 3;
 /// How far behind each triangle its back face is drawn
 constexpr float k_BackFace = 0.45f;
-/// A repaired building's draw share without a repair under way is its life a little short of whole
-constexpr float k_RepairedWithoutRepair = 0.98f;
 /// A creature's blow breaks a building this far round where it struck, for each of its size
 constexpr float k_CreatureBlowReach = 3.75f;
 /// The dust a piece sheds at each of its corners as it starts to fly
@@ -144,25 +142,14 @@ bool IsBuilt(entt::entity building)
 	return progress == nullptr || progress->built >= 1.0f;
 }
 
-/// How much of a building is drawn standing: how far it is repaired since it was broken, and how much of it is built
+/// How much of a building is drawn standing
 float DrawShare(entt::entity building)
 {
 	const auto& registry = Entities();
 	const auto* progress = registry.TryGet<const BuildProgress>(building);
-	const float built = progress != nullptr ? progress->built : 1.0f;
-	if (!IsBuilt(building))
-	{
-		return std::min(1.0f, built);
-	}
-	const float life = world_objects::LifeOf(building);
 	const auto* broken = registry.TryGet<const BuildingDamage>(building);
-	float repaired = life * k_RepairedWithoutRepair;
-	if (broken != nullptr && broken->repairStart.has_value())
-	{
-		const float start = *broken->repairStart;
-		repaired = (life == 0.0f || start == 1.0f) ? 0.0f : (life - start) / (1.0f - start);
-	}
-	return std::min(repaired, built);
+	return damage::DrawShare(world_objects::LifeOf(building), progress != nullptr ? progress->built : 1.0f,
+	                         broken != nullptr ? broken->repairStart : std::nullopt);
 }
 
 /// The building's model, the drawn parts of its nearest level of detail, in the world
