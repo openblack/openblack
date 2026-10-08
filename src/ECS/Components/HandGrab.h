@@ -16,6 +16,7 @@
 #include <entt/entity/entity.hpp>
 #include <glm/vec3.hpp>
 
+#include "Common/Zoomer.h"
 #include "Enums.h"
 #include "Hand/HandGrabRules.h"
 
@@ -29,6 +30,11 @@ struct InHand
 	entt::entity hand {entt::null};
 };
 
+/// A thing a script has said the hand may not pick up
+struct CannotBePickedUp
+{
+};
+
 /// What a hand is doing with the things it picks up: taking hold of one, holding it, and letting it go
 struct HandGrab
 {
@@ -36,7 +42,7 @@ struct HandGrab
 	{
 		/// Holding nothing of its own
 		Empty,
-		/// The button is held on a thing, which the hand takes once it has waited or pulled it free
+		/// The button is held on a thing, which the hand takes once it has waited, or pulled it free
 		Grabbing,
 		/// Holding a thing, the button let go
 		Holding,
@@ -50,23 +56,37 @@ struct HandGrab
 	/// When the press began, by the clock and by the game's turns
 	uint32_t pressMs {0};
 	uint32_t pressTurn {0};
-	/// It waits before taking what can't be pulled and what is in flight
+	/// It waits before taking what can't be pulled
 	bool waits {false};
-	/// How long it has been pulling, for the fade into the pulling pose
+	/// How long it has been in its pulling pose, for the fade into it
 	float pullSeconds {0.0f};
+	/// It still pulls at the thing: the thing hasn't come free
+	bool pulling {false};
+	/// The pull on a rooted thing once the fade is over, leaning and stretching it
+	std::optional<hand_grab::Tug> tug;
+	/// How far it stretches towards the hand
+	Zoomer stretch {1.0f};
+	/// How far up the thing the hand grips it as it pulls
+	float holdDistance {0.0f};
+	/// The plane of the land under the thing the hand's point moves in as it pulls: a point of it and its normal
+	glm::vec3 pullPlanePoint {0.0f};
+	glm::vec3 pullPlaneNormal {0.0f, 1.0f, 0.0f};
 
 	/// How what it holds hangs
 	hand_grab::HoldFacts hold {};
-	/// How far below the hand it hung as it was taken
-	float pickUpLowering {0.0f};
+	/// How far below the hand what it holds hangs (its lowering times its height), as last measured
+	float lowering {0.0f};
 	/// How far the hand rises for it, and the point picked on the land with it
 	float rise {0.0f};
 
+	/// The spring, and that it is to take hold of the hand the next frame the hand holds something ready to throw
 	hand_grab::HandSpring spring {};
-	/// Where the hand was last meant to be while holding, for the twist of a throw
+	bool springOn {false};
+	bool springPending {false};
+	/// Where the hand was last meant to be while holding, before it rose, for the twist of a throw
 	glm::vec3 lastTarget {0.0f};
 
-	/// What it last threw, which gets a twist once the hand has moved on a little, and how long until it does
+	/// What it last let go, which gets a twist once the hand has moved on a little, and how long until it does
 	entt::entity released {entt::null};
 	std::optional<int32_t> releaseSpinMs;
 

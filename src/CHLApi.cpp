@@ -38,8 +38,10 @@
 #include "ECS/Components/CreatureSpells.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Physics.h"
+#include "ECS/Components/Player.h"
 #include "ECS/Components/TownAggression.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
@@ -51,6 +53,7 @@
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
@@ -1686,10 +1689,23 @@ void SetIdMoveable() // 168 SET_ID_MOVEABLE
 
 void SetIdPickupable() // 169 SET_ID_PICKUPABLE
 {
-	// const auto obj = Pop().uintVal;
-	// const auto pickupable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto pickupable = Pop().uintVal != 0;
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(object))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "SET_ID_PICKUPABLE: thing not valid");
+		return;
+	}
+	// A thing a script says can't be picked up is left by the hand
+	if (pickupable)
+	{
+		registry.Remove<ecs::components::CannotBePickedUp>(object);
+	}
+	else
+	{
+		registry.AssignOrReplace<ecs::components::CannotBePickedUp>(object);
+	}
 }
 
 void IsOnFire() // 170 IS_ON_FIRE
@@ -3823,22 +3839,38 @@ void GetPlayerAlly() // 398 GET_PLAYER_ALLY
 	Pushf(0.0f);
 }
 
+/// The player a script names: its 0 is the neutral player, the others count from 1
+ecs::components::Player* ScriptPlayer(float number)
+{
+	const auto scriptPlayer = static_cast<int32_t>(number);
+	const auto name = scriptPlayer == 0 ? PlayerNames::NEUTRAL : static_cast<PlayerNames>(scriptPlayer - 1);
+	if (!Locator::playerSystem::has_value())
+	{
+		return nullptr;
+	}
+	const auto entity = Locator::playerSystem::value().GetPlayer(name);
+	auto& registry = Locator::entitiesRegistry::value();
+	return registry.Valid(entity) ? registry.TryGet<ecs::components::Player>(entity) : nullptr;
+}
+
 void SetPlayerWindResistance() // 399 SET_PLAYER_WIND_RESISTANCE
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	auto* player = ScriptPlayer(Popf());
+	const auto resistance = Pop().uintVal;
+	// What the player's hand throws flies without the air's drag while it is set
+	if (player != nullptr)
+	{
+		player->windResistance = resistance;
+	}
 	Pushi(0);
 }
 
 void GetPlayerWindResistance() // 400 GET_PLAYER_WIND_RESISTANCE
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushi(0);
+	const auto* player = ScriptPlayer(Popf());
+	// Of its two arguments the game reads only the player
+	Pop();
+	Pushi(player != nullptr ? static_cast<int32_t>(player->windResistance) : 0);
 }
 
 void PauseUnpauseClimateSystem() // 401 PAUSE_UNPAUSE_CLIMATE_SYSTEM

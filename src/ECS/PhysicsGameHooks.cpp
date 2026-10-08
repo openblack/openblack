@@ -16,6 +16,7 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "Locator.h"
 
@@ -26,7 +27,7 @@ using namespace openblack::ecs::systems;
 
 namespace
 {
-/// A villager starts to fly: what it was doing is kept, unless it was in a hand, and it flies
+/// A villager starts to fly: it remembers what it was doing, unless it was in a hand, and it flies
 void StartFlying(entt::entity villager)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -43,7 +44,7 @@ void StartFlying(entt::entity villager)
 	}
 	if (top != VillagerStates::InHand)
 	{
-		living.VillagerSetState(*action, LivingAction::Index::Previous, top, true);
+		villager_memory::StorePreviousState(*action);
 	}
 	living.VillagerSetState(*action, LivingAction::Index::Top, VillagerStates::Flying, false);
 }

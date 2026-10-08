@@ -110,12 +110,14 @@ TEST(HandGrab, EachKindHangsItsOwnWay)
 
 TEST(HandGrab, TheHandRisesForWhatItHolds)
 {
-	// Taken, a thing hangs no closer than a share of the hand's height
-	EXPECT_FLOAT_EQ(PickUpLowering(0.65f, 2.0f, 1.0f), 1.3f);
-	EXPECT_FLOAT_EQ(PickUpLowering(0.0f, 2.0f, 1.0f), 0.3f * 3.2f);
-	// On the palm a little; any other way its hang, but at least 1.9; a standing tree a tenth of its height more
+	// Taken to be pulled free, a thing is gripped no closer than a share of the hand's height
+	EXPECT_FLOAT_EQ(HoldDistance(0.65f, 2.0f, 1.0f), 1.3f);
+	EXPECT_FLOAT_EQ(HoldDistance(0.0f, 2.0f, 1.0f), 0.3f * 3.2f);
+	// On the palm a little; any other way its hang, but at least 1.9, whatever the hand's size; a standing tree a tenth
+	// of its height more
 	EXPECT_FLOAT_EQ(HandRise(HoldType::Above, 5.0f, 1.0f, std::nullopt), 0.2f);
 	EXPECT_FLOAT_EQ(HandRise(HoldType::Villager, 1.3f, 1.0f, std::nullopt), 1.9f);
+	EXPECT_FLOAT_EQ(HandRise(HoldType::Villager, 1.3f, 2.0f, std::nullopt), 1.9f);
 	EXPECT_FLOAT_EQ(HandRise(HoldType::Side, 2.5f, 1.0f, std::nullopt), 2.5f);
 	EXPECT_FLOAT_EQ(HandRise(HoldType::Tree, 2.0f, 1.0f, 10.0f), 3.0f);
 	EXPECT_FLOAT_EQ(CursorRaise(3.0f), 1.8f);
@@ -125,32 +127,57 @@ TEST(HandGrab, TheSpringStepsAtLeastOnceAFrame)
 {
 	HandSpring spring;
 	spring.Start({0.0f, 0.0f, 0.0f});
-	spring.Step({1.0f, 0.0f, 0.0f}, 0);
+	spring.Count(0);
+	spring.Step({1.0f, 0.0f, 0.0f});
 	// One step of 10 ms: v = 260 * 1 * 0.01, then x = v * 0.01
+	EXPECT_EQ(spring.StepsTaken(), 1u);
 	EXPECT_FLOAT_EQ(spring.Velocity().x, 2.6f);
 	EXPECT_FLOAT_EQ(spring.Position().x, 0.026f);
 }
 
 TEST(HandGrab, TheSpringTakesAsManyStepsAsTheGameTimeAllows)
 {
+	const auto frame = [](HandSpring& spring, uint32_t ms) {
+		spring.Count(ms);
+		spring.Step({1.0f, 0.0f, 0.0f});
+	};
 	HandSpring once;
 	once.Start({0.0f, 0.0f, 0.0f});
-	once.Step({1.0f, 0.0f, 0.0f}, 30);
+	frame(once, 30);
 	HandSpring stepped;
 	stepped.Start({0.0f, 0.0f, 0.0f});
-	stepped.Step({1.0f, 0.0f, 0.0f}, 0);
-	stepped.Step({1.0f, 0.0f, 0.0f}, 0);
-	stepped.Step({1.0f, 0.0f, 0.0f}, 0);
+	frame(stepped, 0);
+	frame(stepped, 0);
+	frame(stepped, 0);
 	EXPECT_FLOAT_EQ(once.Position().x, stepped.Position().x);
 	// A frame of 15 ms after one of 0 ms takes one more step, not two
 	HandSpring uneven;
 	uneven.Start({0.0f, 0.0f, 0.0f});
-	uneven.Step({1.0f, 0.0f, 0.0f}, 0);
-	uneven.Step({1.0f, 0.0f, 0.0f}, 15);
+	frame(uneven, 0);
+	frame(uneven, 15);
 	HandSpring two;
 	two.Start({0.0f, 0.0f, 0.0f});
-	two.Step({1.0f, 0.0f, 0.0f}, 20);
+	frame(two, 20);
 	EXPECT_FLOAT_EQ(uneven.Position().x, two.Position().x);
+}
+
+TEST(HandGrab, TheSpringCatchesUpWithTheTimeHeldBeforeItTookHold)
+{
+	// Half a second holding with the spring off, then the first frame with it on takes all of that time's steps
+	HandSpring spring;
+	for (int i = 0; i < 50; ++i)
+	{
+		spring.Count(10);
+	}
+	spring.Start({0.0f, 0.0f, 0.0f});
+	spring.Count(10);
+	spring.Step({1.0f, 0.0f, 0.0f});
+	EXPECT_EQ(spring.StepsTaken(), 51u);
+	// Taking hold again keeps the time counted
+	spring.Start({0.0f, 0.0f, 0.0f});
+	spring.Count(10);
+	spring.Step({1.0f, 0.0f, 0.0f});
+	EXPECT_EQ(spring.StepsTaken(), 1u);
 }
 
 TEST(HandGrab, TheSpringSettlesOnItsTargetAndIsCapped)
@@ -159,14 +186,80 @@ TEST(HandGrab, TheSpringSettlesOnItsTargetAndIsCapped)
 	spring.Start({0.0f, 0.0f, 0.0f});
 	for (int i = 0; i < 200; ++i)
 	{
-		spring.Step({3.0f, 1.0f, -2.0f}, 10);
+		spring.Count(10);
+		spring.Step({3.0f, 1.0f, -2.0f});
 	}
 	EXPECT_NEAR(spring.Position().x, 3.0f, 1e-3f);
 	EXPECT_NEAR(spring.Position().z, -2.0f, 1e-3f);
 	HandSpring far;
 	far.Start({0.0f, 0.0f, 0.0f});
-	far.Step({10000.0f, 0.0f, 0.0f}, 10);
+	far.Count(10);
+	far.Step({10000.0f, 0.0f, 0.0f});
 	EXPECT_FLOAT_EQ(glm::length(far.Velocity()), k_MaxThrowSpeed);
+}
+
+TEST(HandGrab, TheTwistIsCancelledWhenItsCountdownEndsOnNothing)
+{
+	int32_t ms = 180;
+	EXPECT_EQ(CountDown(ms, 100), Countdown::Running);
+	EXPECT_EQ(CountDown(ms, 100), Countdown::RunOut);
+	// A countdown that lands on exactly nothing gives no twist
+	ms = 180;
+	EXPECT_EQ(CountDown(ms, 90), Countdown::Running);
+	EXPECT_EQ(CountDown(ms, 90), Countdown::Cancelled);
+	ms = 0;
+	EXPECT_EQ(CountDown(ms, 10), Countdown::Cancelled);
+}
+
+TEST(HandGrab, OnlyATreeTheHandCanLiftIsPulledFree)
+{
+	Tug tug {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	TugFrame frame {
+	    .hand = {0.0f, 2.0f, 0.0f}, .holdDistance = 1.0f, .weight = 50.0f, .height = 10.0f, .tree = true, .seconds = 0.01f};
+	// A pull of 1000 a unit of stretch, one unit away: more than the tree weighs
+	auto result = PullAt(tug, frame);
+	EXPECT_FLOAT_EQ(result.force.y, 1000.0f);
+	EXPECT_TRUE(result.comesFree);
+	// Pulled no harder than it weighs, it stays
+	tug = {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	frame.weight = 2000.0f;
+	EXPECT_FALSE(PullAt(tug, frame).comesFree);
+	// Too heavy for the hand's greatest pull it never comes free, however far the hand pulls
+	tug = {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	frame.weight = MaxForce(0.0f) / 9.81f + 1.0f;
+	frame.hand = {0.0f, 100000.0f, 0.0f};
+	result = PullAt(tug, frame);
+	EXPECT_FLOAT_EQ(glm::length(result.force), MaxForce(0.0f));
+	EXPECT_FALSE(result.comesFree);
+	// Anything but a tree comes free at once
+	tug = {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	frame.tree = false;
+	EXPECT_TRUE(PullAt(tug, frame).comesFree);
+}
+
+TEST(HandGrab, APulledTreeLeansAndStretchesTowardsTheHand)
+{
+	Tug tug {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	const TugFrame frame {
+	    .hand = {1.0f, 1.0f, 0.0f}, .holdDistance = 1.0f, .weight = 1.0e6f, .height = 10.0f, .tree = true, .seconds = 0.01f};
+	TugResult result;
+	for (int i = 0; i < 20; ++i)
+	{
+		result = PullAt(tug, frame);
+	}
+	// Its top leans towards the hand, which is off to its side
+	EXPECT_GT(tug.axes[1].x, 0.0f);
+	EXPECT_GT(glm::length(tug.pullVelocity), 0.0f);
+	// It stretches by how far the hand is from its grip, no more than 1.3 times
+	EXPECT_GT(result.stretchTarget, 1.0f);
+	EXPECT_LE(result.stretchTarget, 1.3f);
+	// Rock-like things neither lean nor stretch
+	Tug rock {.axes = glm::mat3(1.0f), .base = glm::vec3(0.0f)};
+	auto still = frame;
+	still.leans = false;
+	static_cast<void>(PullAt(rock, still));
+	EXPECT_FLOAT_EQ(rock.axes[1].x, 0.0f);
+	EXPECT_EQ(rock.pullVelocity, glm::vec3(0.0f));
 }
 
 TEST(HandGrab, AThrowIsFastAcrossTheGround)

@@ -15,6 +15,7 @@
 
 #include <entt/entity/fwd.hpp>
 
+#include "3D/AllMeshes.h"
 #include "Physics/Materials.h"
 
 namespace openblack
@@ -107,6 +108,11 @@ struct ClassInputs
 /// The kind of an object, from its components and its table row
 [[nodiscard]] ClassFacts Classify(const Registry& registry, entt::entity entity, const InfoConstants& info,
                                   const ClassInputs& inputs);
+
+/// Whether a static's model is one of the toys the hand plays with
+[[nodiscard]] bool IsToyModel(MeshId mesh);
+/// Whether a static's model is a fence
+[[nodiscard]] bool IsFenceModel(MeshId mesh);
 
 /// An object's weight: its table weight times its scale cubed
 [[nodiscard]] float Weight(float infoWeight, float scale);

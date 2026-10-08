@@ -63,11 +63,11 @@ const particles::Creator& DustCreator()
 }
 } // namespace
 
-void ExplosionSystem::AddRubble(const glm::vec3& centre, float yaw)
+void ExplosionSystem::AddRubble(const glm::vec3& centre, float yaw, float scale)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto entity = registry.Create();
-	registry.Assign<Transform>(entity, centre, glm::mat3(glm::eulerAngleY(yaw)), glm::vec3(particles::blast::k_RubbleScale));
+	registry.Assign<Transform>(entity, centre, glm::mat3(glm::eulerAngleY(yaw)), glm::vec3(scale));
 	registry.Assign<Mesh>(entity, resources::HashIdentifier(particles::blast::k_RubbleMesh), static_cast<int8_t>(0),
 	                      static_cast<int8_t>(0));
 	registry.Assign<GroundMark>(entity, GroundMark {.millisecondsLeft = particles::blast::k_RubbleMilliseconds});

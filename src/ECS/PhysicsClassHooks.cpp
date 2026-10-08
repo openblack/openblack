@@ -93,3 +93,5 @@ void PhysicsClassHooks::ConsiderMimickingLanding([[maybe_unused]] entt::entity o
                                                  [[maybe_unused]] std::optional<PlayerNames> player)
 {
 }
+
+void PhysicsClassHooks::ConsiderMimickingToyPlay([[maybe_unused]] entt::entity toy, [[maybe_unused]] PlayerNames player) {}

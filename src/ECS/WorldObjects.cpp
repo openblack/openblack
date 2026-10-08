@@ -336,6 +336,21 @@ void world_objects::Destroy(entt::entity object)
 	Remove(object);
 }
 
+void world_objects::LeaveGhost(entt::entity object)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* mesh = registry.TryGet<const Mesh>(object);
+	const auto* transform = registry.TryGet<const Transform>(object);
+	if (mesh == nullptr || transform == nullptr)
+	{
+		return;
+	}
+	auto model = glm::translate(glm::mat4(1.0f), transform->position) * glm::mat4(transform->rotation);
+	model = glm::scale(model, transform->scale);
+	const auto ghost = registry.Create();
+	registry.Assign<DestructionGhost>(ghost, DestructionGhost {.mesh = mesh->id, .model = model});
+}
+
 void world_objects::DestroyedByEffect(entt::entity object)
 {
 	auto& registry = Locator::entitiesRegistry::value();
@@ -346,16 +361,7 @@ void world_objects::DestroyedByEffect(entt::entity object)
 	if (registry.AnyOf<Abode, SpellDispenser>(object))
 	{
 		// A ghost of it flickers out where it stood, and it goes
-		if (const auto* mesh = registry.TryGet<const Mesh>(object))
-		{
-			if (const auto* transform = registry.TryGet<const Transform>(object))
-			{
-				auto model = glm::translate(glm::mat4(1.0f), transform->position) * glm::mat4(transform->rotation);
-				model = glm::scale(model, transform->scale);
-				const auto ghost = registry.Create();
-				registry.Assign<DestructionGhost>(ghost, DestructionGhost {.mesh = mesh->id, .model = model});
-			}
-		}
+		LeaveGhost(object);
 		Remove(object);
 		return;
 	}

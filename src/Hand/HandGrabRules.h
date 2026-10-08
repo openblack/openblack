@@ -13,6 +13,7 @@
 
 #include <optional>
 
+#include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 
 #include "3D/AllMeshes.h"
@@ -148,32 +149,112 @@ struct HoldFacts
 /// How a thing hangs: from its kind, its static's row and model, and its size at its scale
 [[nodiscard]] HoldFacts HoldOf(GrabKind kind, MobileStaticInfo staticType, MeshId mesh, float height, float radius);
 
-/// How far a thing hangs below the hand as it is taken: its own hang, but no closer than a share of the hand's height
-[[nodiscard]] float PickUpLowering(float loweringMultiplier, float height, float handSize);
-/// How far the hand rises for what it holds: a little for the palm, else its hang at the least; a standing tree a share
-/// of its height more
-[[nodiscard]] float HandRise(HoldType hold, float pickUpLowering, float handSize, std::optional<float> rootedHeight);
+/// How far a thing hangs below the hand as the hand takes hold of it to pull it free: its own hang, but no closer than a
+/// share of the hand's height
+[[nodiscard]] float HoldDistance(float loweringMultiplier, float height, float handSize);
+/// How far the hand rises for what it holds: a little for the palm, else its hang (its lowering times its height as the
+/// hand last measured it) at the least; a standing tree a share of its height more
+[[nodiscard]] float HandRise(HoldType hold, float lowering, float handSize, std::optional<float> rootedHeight);
 /// How far the point the hand picks on the land is raised for what it holds
 [[nodiscard]] float CursorRaise(float handRise);
 
 /// The spring that drags the hand after where it should be while it is ready to throw. It is stepped in fixed steps of
-/// game time, at least one each frame however short, and what it holds leaves the hand at its speed.
+/// game time, at least one each frame however short, and what it holds leaves the hand at its speed. The game time the
+/// hand spends holding things is counted all along, the spring on or not, and the spring catches up with all of it when
+/// it next steps.
 class HandSpring
 {
 public:
-	/// The spring takes hold at the hand, at rest
+	/// The spring takes hold at the hand, at rest; the time counted so far is kept
 	void Start(glm::vec3 position);
-	/// A frame of some game milliseconds towards where the hand should be
-	void Step(glm::vec3 target, uint32_t frameMs);
+	/// A frame of holding some game milliseconds long goes by, whether the spring is on or not
+	void Count(uint32_t frameMs);
+	/// The spring is stepped towards where the hand should be, as many steps as the time counted allows and at least one
+	void Step(glm::vec3 target);
 	[[nodiscard]] glm::vec3 Position() const { return _position; }
 	[[nodiscard]] glm::vec3 Velocity() const { return _velocity; }
+	[[nodiscard]] uint32_t StepsTaken() const { return _steps; }
 
 private:
 	glm::vec3 _position {0.0f};
 	glm::vec3 _velocity {0.0f};
 	uint32_t _elapsedMs {0};
 	uint32_t _steppedMs {0};
+	/// How many steps the last Step took
+	uint32_t _steps {0};
 };
+
+/// A countdown in game milliseconds: still to run, run out this frame, or used up without running out (it reached
+/// exactly nothing, or had nothing left), which cancels what it counts down to
+enum class Countdown : uint8_t
+{
+	Running,
+	RunOut,
+	Cancelled,
+};
+/// A frame of some game milliseconds passes on a countdown
+[[nodiscard]] Countdown CountDown(int32_t& msLeft, uint32_t frameMs);
+
+/// Pulling a rooted thing free
+inline constexpr float k_TugStiffness = 1000.0f;
+/// The hand's greatest pull, for each step of its strength (which is never more than nothing)
+inline constexpr float k_MaxForcePerStrength = 600000.0f;
+/// The pulled thing turns about its base with this much heaviness, and is damped by this much times its spin
+inline constexpr float k_TugTurnInertia = 1000.0f;
+inline constexpr float k_TugTurnDamping = 4000.0f;
+/// It stretches towards the hand by no more than this, easing to it over this long
+inline constexpr float k_TugMaxStretch = 1.3f;
+inline constexpr float k_TugStretchSeconds = 0.3f;
+
+/// The hand's greatest pull at a strength
+[[nodiscard]] float MaxForce(float strength);
+
+/// What a pulled thing is as the hand pulls at it
+struct Tug
+{
+	/// Its axes, scaled, as it leans; and its base on the land, which it turns about
+	glm::mat3 axes {1.0f};
+	glm::vec3 base {0.0f};
+	/// How it is turning
+	glm::vec3 spin {0.0f};
+	/// How fast the point at half its height moved last frame
+	glm::vec3 pullVelocity {0.0f};
+};
+
+/// What the hand pulls with and against, a frame long
+struct TugFrame
+{
+	/// Where the hand's line meets the plane of the land under the thing
+	glm::vec3 hand {0.0f};
+	/// How far up the thing the hand grips it
+	float holdDistance {0.0f};
+	float maxForce {k_MaxForcePerStrength};
+	/// Its weight (its mass) and its height
+	float weight {0.0f};
+	float height {0.0f};
+	/// Only trees are really pulled at; anything else comes free at once
+	bool tree {false};
+	/// Heavy things of the rock material neither lean nor stretch
+	bool leans {true};
+	float seconds {0.0f};
+};
+
+/// What a frame of pulling came to
+struct TugResult
+{
+	/// The pull, capped at the hand's greatest
+	glm::vec3 force {0.0f};
+	/// How far it stretches towards the hand next
+	float stretchTarget {1.0f};
+	bool comesFree {false};
+};
+
+/// Where the hand grips the thing: up its axis from its base
+[[nodiscard]] glm::vec3 TugGrip(const Tug& tug, float holdDistance);
+/// A frame of the hand pulling at a rooted thing: the pull, whether it comes free, and how it leans
+[[nodiscard]] TugResult PullAt(Tug& tug, const TugFrame& frame);
+/// Where the hand is drawn as it pulls, on the thing as it leans and stretches
+[[nodiscard]] glm::vec3 TugHandPoint(const Tug& tug, float holdDistance, float stretch);
 
 /// Whether a release at a velocity is a throw rather than a put-down (a creature's at a lower speed)
 [[nodiscard]] bool IsThrow(glm::vec3 velocity, bool byCreature);

@@ -37,6 +37,8 @@ struct Player
 	};
 	std::optional<Cast> lastCast;
 	std::array<uint32_t, 42> castsOfType {};
+	/// A script made the things the player's hand throws fly without the air's drag
+	uint32_t windResistance {0};
 
 	/// Each player's colour, 0xAARRGGBB, by player number; the neutral player's is black
 	static constexpr std::array<uint32_t, 8> k_Colours = {

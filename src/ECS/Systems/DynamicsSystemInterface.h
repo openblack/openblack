@@ -91,6 +91,8 @@ struct FromHand
 /// What letting go of a thing came to
 struct FromHandResult
 {
+	/// It was let go into the physics: it wasn't in it already
+	bool accepted {false};
 	/// Its body, none when it couldn't move
 	PhysicsEntry* entry {nullptr};
 	/// It was put down where it was rather than thrown or dropped to fall
@@ -141,6 +143,8 @@ public:
 	virtual void DropCarriedResource(DynamicsSystemInterface& dynamics, entt::entity villager, glm::vec3 velocity);
 	/// A thing a player's hand put down: the player's creature may copy what the player did with it
 	virtual void ConsiderMimickingLanding(entt::entity object, std::optional<PlayerNames> player);
+	/// A toy a player's hand let go: the player's creature may think of playing with it
+	virtual void ConsiderMimickingToyPlay(entt::entity toy, PlayerNames player);
 };
 
 /// The game's physics: thrown, dropped, knocked and pushed objects, simulated as the game simulates them in fixed steps

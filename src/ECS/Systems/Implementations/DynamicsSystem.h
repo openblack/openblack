@@ -92,6 +92,10 @@ public:
 	void ForEachEntry(const std::function<void(const PhysicsEntry&)>& visit) const override;
 
 private:
+	/// Any creature's leash tied to an object lets go, as the object starts to move
+	static void LetGoOfLeashesTiedTo(entt::entity object);
+	/// A toy a player's hand let go may set the player's creature thinking of playing with it, whether it landed or flew
+	void ConsiderToyPlay(entt::entity object, const FromHand& release);
 	/// The kind of an object as the physics sees it now
 	[[nodiscard]] physics_classes::ClassFacts FactsOf(entt::entity object) const;
 	/// A body for an object at its place, moving or resting; none for an object without a shape

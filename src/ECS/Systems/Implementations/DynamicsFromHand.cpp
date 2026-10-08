@@ -16,15 +16,19 @@
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/MapCellResident.h"
+#include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/PhysicsClasses.h"
 #include "ECS/PhysicsGround.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/FireSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "Hand/HandGrabRules.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 
 using namespace openblack;
@@ -43,7 +47,32 @@ bool IsAvailable(entt::entity object)
 {
 	return object != entt::null && Entities().Valid(object);
 }
+
+/// The model of a static, from its row of the tables; none for anything else
+std::optional<MeshId> StaticModel(entt::entity object)
+{
+	const auto* still = Entities().TryGet<const MobileStatic>(object);
+	if (still == nullptr || !Locator::infoConstants::has_value())
+	{
+		return std::nullopt;
+	}
+	const auto& rows = Locator::infoConstants::value().mobileStatic;
+	const auto index = static_cast<size_t>(still->type);
+	return index < rows.size() ? std::optional(rows[index].meshId) : std::nullopt;
+}
 } // namespace
+
+void DynamicsSystem::ConsiderToyPlay(entt::entity object, const FromHand& release)
+{
+	if (!release.player.has_value() || release.creature != entt::null || !IsAvailable(object))
+	{
+		return;
+	}
+	if (const auto model = StaticModel(object); model.has_value() && physics_classes::IsToyModel(*model))
+	{
+		Hooks().ConsiderMimickingToyPlay(object, *release.player);
+	}
+}
 
 // What happens as a hand, or a creature's hand, lets go of what it held. Whether it is put down where it is or flies is
 // decided here, as the game decides it for every kind of thing; each kind's own part is in its hooks.
@@ -70,6 +99,7 @@ FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand
 		return {};
 	}
 	const bool byCreature = release.creature != entt::null;
+	LetGoOfLeashesTiedTo(object);
 	registry.AssignOrReplace<InPhysics>(object);
 	// Out of the map's cells while it moves
 	registry.Remove<MapCellResident, MapCellMover>(object);
@@ -78,9 +108,8 @@ FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand
 	    object, {.velocity = release.velocity, .thrower = release.creature, .player = release.player, .fromHand = !byCreature});
 	if (entry == nullptr)
 	{
-		// A thing with no shape to move with stays where it was let go
-		EndPhysicsAsObject(object, true, false);
-		return {};
+		// A thing with no shape to move with is left as the game leaves it: counted in the physics, out of the map
+		return {.accepted = true};
 	}
 	auto& body = *entry->body;
 	body.angularMomentum = release.angularMomentum;
@@ -102,15 +131,16 @@ FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand
 	const auto* land = Land();
 	const auto centre = body.Centre();
 	const glm::vec2 xz(centre.x, centre.z);
-	const auto facts = FactsOf(object);
 	const bool living = registry.AnyOf<Villager, Animal>(object);
-	const bool fence = facts.row == physics::MaterialRow::Fence;
+	const auto model = StaticModel(object);
+	const bool fence = model.has_value() && physics_classes::IsFenceModel(*model);
 	const bool landed =
 	    land != nullptr && hand_grab::LandsOnRelease({
 	                           .thrown = thrown,
 	                           .raised = settled != body.Centre().y,
 	                           .computerVillager = registry.AllOf<Villager>(object) && release.player.has_value() &&
-	                                               *release.player != PlayerNames::PLAYER_ONE,
+	                                               Locator::playerSystem::has_value() &&
+	                                               Locator::playerSystem::value().IsComputerPlayer(*release.player),
 	                           .dryLand = land->IsDryLand(xz),
 	                           .nearestAltitude = land->CellAltitudeNearest(xz),
 	                           .needsGentleSlope = living || fence,
@@ -139,14 +169,16 @@ FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand
 		{
 		case hand_grab::LandedOutcome::LeavesPhysics:
 			RemoveObject(object, true, true);
-			return {.entry = nullptr, .landed = true};
+			ConsiderToyPlay(object, release);
+			return {.accepted = true, .entry = nullptr, .landed = true};
 		case hand_grab::LandedOutcome::Falls:
 			entry->flags &= static_cast<uint8_t>(~PhysicsEntry::k_Landed);
 			break;
 		case hand_grab::LandedOutcome::Settles:
 			break;
 		}
-		return {.entry = entry, .landed = true};
+		ConsiderToyPlay(object, release);
+		return {.accepted = true, .entry = entry, .landed = true};
 	}
 
 	// It flies: a villager lets go of what it carried, people and animals near it look or run, and creatures may try to
@@ -165,6 +197,6 @@ FromHandResult DynamicsSystem::LetGoFromHand(entt::entity object, const FromHand
 	}
 	Hooks().OfferToCatchingCreatures(object, *entry);
 	Hooks().StartFlyingFromHand(*this, *entry);
-	// TODO(physics): a toy a player let go makes the player's creature think of playing with it
-	return {.entry = entry, .landed = false};
+	ConsiderToyPlay(object, release);
+	return {.accepted = true, .entry = entry, .landed = false};
 }

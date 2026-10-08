@@ -63,6 +63,9 @@ float ReduceLife(entt::entity object, float damage);
 void Destroy(entt::entity object);
 /// The object goes from the world at once, with its physics and its place in its building or town
 void Remove(entt::entity object);
+/// A ghost of an object about to go flickers out where it is drawn for half a second, as things taken into a store or
+/// poured out of a pot vanish
+void LeaveGhost(entt::entity object);
 /// What an effect such as fire does to an object it has burnt down: a building flickers out as a ghost of itself and
 /// goes, leaving no ruin; a field loses its crop and its fire; a villager dies; anything else goes from the world. A
 /// creature is never destroyed.

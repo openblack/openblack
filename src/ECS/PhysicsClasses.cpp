@@ -79,18 +79,6 @@ std::optional<MaterialRow> ToyRow(MeshId mesh)
 	}
 }
 
-/// The toys are the statics whose model is one of the hand's toys
-bool IsToy(MeshId mesh)
-{
-	return mesh >= MeshId::ObjectToyBall && mesh <= MeshId::ObjectToySkittle;
-}
-
-bool IsFence(MeshId mesh)
-{
-	return mesh == MeshId::BuildingAmericanFence || mesh == MeshId::BuildingCelticFenceShort ||
-	       mesh == MeshId::BuildingCelticFenceTall;
-}
-
 /// The statics as heavy as rocks: the gate totems, the weeping stones and the singing stone
 bool HeavyStatic(MobileStaticInfo type)
 {
@@ -122,8 +110,8 @@ physics_classes::ClassFacts MobileStaticFacts(MobileStaticInfo type, const InfoC
 	const auto* row = Row<GMobileStaticInfo>(info.mobileStatic, type);
 	const auto mobileType = row != nullptr ? row->mobileType : MobileStaticInfo::None;
 	const auto mesh = row != nullptr ? row->meshId : MeshId::Dummy;
-	const bool toy = IsToy(mesh);
-	const bool fence = IsFence(mesh);
+	const bool toy = physics_classes::IsToyModel(mesh);
+	const bool fence = physics_classes::IsFenceModel(mesh);
 	const bool rockLike = HeavyStatic(type) || mobileType == MobileStaticInfo::Rock;
 	// The heavy statics and rocks first, then fences, then toys each of their own material (an unknown toy is as heavy
 	// as a rock)
@@ -240,6 +228,17 @@ physics_classes::ClassFacts AnimatedStaticFacts(const AnimatedStatic& still)
 	return facts;
 }
 } // namespace
+
+bool physics_classes::IsToyModel(MeshId mesh)
+{
+	return mesh >= MeshId::ObjectToyBall && mesh <= MeshId::ObjectToySkittle;
+}
+
+bool physics_classes::IsFenceModel(MeshId mesh)
+{
+	return mesh == MeshId::BuildingAmericanFence || mesh == MeshId::BuildingCelticFenceShort ||
+	       mesh == MeshId::BuildingCelticFenceTall;
+}
 
 float physics_classes::Weight(float infoWeight, float scale)
 {

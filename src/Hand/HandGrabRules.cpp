@@ -14,6 +14,9 @@
 #include <algorithm>
 
 #include <glm/geometric.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "Physics/Body.h"
 
 using namespace openblack;
 using namespace openblack::hand_grab;
@@ -137,12 +140,12 @@ HoldFacts hand_grab::HoldOf(GrabKind kind, MobileStaticInfo staticType, MeshId m
 	return facts;
 }
 
-float hand_grab::PickUpLowering(float loweringMultiplier, float height, float handSize)
+float hand_grab::HoldDistance(float loweringMultiplier, float height, float handSize)
 {
 	return std::max(loweringMultiplier * height, k_LeastLoweringShare * k_StandardHandHeight * handSize);
 }
 
-float hand_grab::HandRise(HoldType hold, float pickUpLowering, float handSize, std::optional<float> rootedHeight)
+float hand_grab::HandRise(HoldType hold, float lowering, float handSize, std::optional<float> rootedHeight)
 {
 	float rise = 0.0f;
 	switch (hold)
@@ -157,7 +160,7 @@ float hand_grab::HandRise(HoldType hold, float pickUpLowering, float handSize, s
 	case HoldType::Tree:
 	case HoldType::Side:
 	case HoldType::Villager:
-		rise = std::max(pickUpLowering, k_MinimumHang);
+		rise = std::max(lowering, k_MinimumHang);
 		break;
 	case HoldType::None:
 	case HoldType::Fingers:
@@ -179,18 +182,22 @@ void HandSpring::Start(glm::vec3 position)
 {
 	_position = position;
 	_velocity = glm::vec3(0.0f);
-	_elapsedMs = 0;
-	_steppedMs = 0;
 }
 
-void HandSpring::Step(glm::vec3 target, uint32_t frameMs)
+void HandSpring::Count(uint32_t frameMs)
+{
+	_elapsedMs += frameMs;
+}
+
+void HandSpring::Step(glm::vec3 target)
 {
 	constexpr float k_Step = static_cast<float>(k_SpringStepMs) * 0.001f;
-	_elapsedMs += frameMs;
 	// At least one step a frame, then as many as the game's time has run
+	_steps = 0;
 	do
 	{
 		_steppedMs += k_SpringStepMs;
+		++_steps;
 		_velocity += (k_SpringStiffness * (target - _position) - k_SpringDamping * _velocity) * k_Step;
 		if (const float speed = glm::length(_velocity); speed > k_MaxThrowSpeed)
 		{
@@ -198,6 +205,73 @@ void HandSpring::Step(glm::vec3 target, uint32_t frameMs)
 		}
 		_position += _velocity * k_Step;
 	} while (_steppedMs < _elapsedMs);
+}
+
+Countdown hand_grab::CountDown(int32_t& msLeft, uint32_t frameMs)
+{
+	if (msLeft <= 0)
+	{
+		return Countdown::Cancelled;
+	}
+	msLeft -= static_cast<int32_t>(frameMs);
+	if (msLeft < 0)
+	{
+		return Countdown::RunOut;
+	}
+	return msLeft == 0 ? Countdown::Cancelled : Countdown::Running;
+}
+
+float hand_grab::MaxForce(float strength)
+{
+	return (strength + 1.0f) * k_MaxForcePerStrength;
+}
+
+glm::vec3 hand_grab::TugGrip(const Tug& tug, float holdDistance)
+{
+	const float length = glm::length(tug.axes[1]);
+	const auto up = length > 0.0f ? tug.axes[1] / length : tug.axes[1];
+	return tug.base + up * holdDistance;
+}
+
+TugResult hand_grab::PullAt(Tug& tug, const TugFrame& frame)
+{
+	TugResult result;
+	const auto grip = TugGrip(tug, frame.holdDistance);
+	// The pull is a spring from where the hand grips it to the hand, no stronger than the hand
+	const auto stretch = frame.hand - grip;
+	const float distance = glm::length(stretch);
+	result.force = k_TugStiffness * distance >= frame.maxForce && distance > 0.0f ? stretch * (frame.maxForce / distance)
+	                                                                              : stretch * k_TugStiffness;
+	// It stretches towards the hand, by how far the hand is from its grip against how far up it is gripped
+	if (frame.holdDistance > 0.0f)
+	{
+		result.stretchTarget = std::min((distance + frame.holdDistance) / frame.holdDistance, k_TugMaxStretch);
+	}
+	// A tree comes free once the hand is strong enough to lift it and pulls harder than it weighs; anything else at once
+	result.comesFree =
+	    !frame.tree || (frame.weight * physics::k_Gravity <= frame.maxForce && frame.weight < glm::length(result.force));
+
+	// The pull turns it about its base, against its heaviness and a damping that grows with its spin
+	const glm::vec3 torque = frame.leans ? glm::cross(grip - tug.base, result.force) / k_TugTurnInertia : glm::vec3(0.0f);
+	const float damping = glm::length(tug.spin) * k_TugTurnDamping * frame.seconds / k_TugTurnInertia;
+	tug.spin += torque * frame.seconds - tug.spin * damping;
+	const auto halfBefore = tug.base + tug.axes[1] * (0.5f * frame.height);
+	const auto turn = tug.spin * frame.seconds;
+	if (const float angle = glm::length(turn); angle > 0.0f)
+	{
+		tug.axes = glm::mat3(glm::rotate(glm::mat4(1.0f), angle, turn / angle)) * tug.axes;
+	}
+	// How fast its middle moves as it leans, the speed it has when it comes free
+	const auto halfAfter = tug.base + tug.axes[1] * (0.5f * frame.height);
+	tug.pullVelocity = frame.leans && frame.seconds > 0.0f ? (halfAfter - halfBefore) / frame.seconds : glm::vec3(0.0f);
+	return result;
+}
+
+glm::vec3 hand_grab::TugHandPoint(const Tug& tug, float holdDistance, float stretch)
+{
+	const float length = glm::length(tug.axes[1]);
+	const auto up = length > 0.0f ? tug.axes[1] / length : tug.axes[1];
+	return tug.base + up * (holdDistance * stretch);
 }
 
 bool hand_grab::IsThrow(glm::vec3 velocity, bool byCreature)

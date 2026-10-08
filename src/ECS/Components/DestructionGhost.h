@@ -15,8 +15,9 @@
 namespace openblack::ecs::components
 {
 
-/// A ghost of a building an effect destroyed, flickering out where it stood for half a second: drawn first into the
-/// depth through a scrolling pattern that thins as it goes, then added over itself where that depth was laid
+/// A ghost of a thing that has just gone (a building an effect destroyed, a pot poured out of the hand), flickering out
+/// where it stood for half a second: drawn first into the depth through a scrolling pattern that thins as it goes, then
+/// added over itself where that depth was laid
 struct DestructionGhost
 {
 	entt::id_type mesh {0};

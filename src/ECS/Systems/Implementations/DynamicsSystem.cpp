@@ -754,6 +754,21 @@ PhysicsEntry* DynamicsSystem::AddProxy(entt::entity object)
 	return _entries.back().get();
 }
 
+void DynamicsSystem::LetGoOfLeashesTiedTo(entt::entity object)
+{
+	if (!Locator::leashSystem::has_value())
+	{
+		return;
+	}
+	auto& leashes = Locator::leashSystem::value();
+	Entities().Each<const Creature>([&leashes, object](entt::entity creature, const Creature&) {
+		if (leashes.TiedTo(creature) == object)
+		{
+			leashes.UntieToHand(creature);
+		}
+	});
+}
+
 PhysicsStarted DynamicsSystem::InitialisePhysics(entt::entity object, const PhysicsStart& start)
 {
 	return Hooks().InitialisePhysics(*this, object, start);
@@ -766,17 +781,7 @@ PhysicsStarted DynamicsSystem::StartPhysicsAsObject(entt::entity object, const P
 	{
 		return {};
 	}
-	// A creature's leash tied to it lets go
-	if (Locator::leashSystem::has_value())
-	{
-		auto& leashes = Locator::leashSystem::value();
-		registry.Each<const Creature>([&leashes, object](entt::entity creature, const Creature&) {
-			if (leashes.TiedTo(creature) == object)
-			{
-				leashes.UntieToHand(creature);
-			}
-		});
-	}
+	LetGoOfLeashesTiedTo(object);
 	registry.AssignOrReplace<InPhysics>(object);
 	// Out of the map's cells while it moves
 	registry.Remove<MapCellResident, MapCellMover>(object);

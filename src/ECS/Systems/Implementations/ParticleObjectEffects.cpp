@@ -49,6 +49,7 @@
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Particles/ParticleBlast.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -249,7 +250,8 @@ void GameObjectEffects::AddRubbleMark(glm::vec3 centre)
 {
 	if (Locator::explosionSystem::has_value() && Locator::gameRandom::has_value())
 	{
-		Locator::explosionSystem::value().AddRubble(centre, Locator::gameRandom::value().LocalFloatRand(k_TwoPi));
+		Locator::explosionSystem::value().AddRubble(centre, Locator::gameRandom::value().LocalFloatRand(k_TwoPi),
+		                                            particles::blast::k_RubbleScale);
 	}
 }
 

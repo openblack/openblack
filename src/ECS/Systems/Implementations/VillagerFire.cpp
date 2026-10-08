@@ -42,6 +42,7 @@
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "Fire/ViaPoint.h"
 #include "InfoConstants.h"
@@ -294,19 +295,6 @@ bool IsFireFightingState(VillagerStates state)
 	       state == VillagerStates::GetWaterToPutOutFire || state == VillagerStates::MoveAroundFire;
 }
 
-/// The villager remembers what it was doing, to go back to it: the state it is in or walking to, unless that is one
-/// it shouldn't come back to, when it keeps what it remembered
-void StorePreviousState(LivingAction& action)
-{
-	auto state = FinalState(action);
-	const auto& info = StateInfo(state);
-	if (info.keepsPreviousState != 0 || info.isReactionState != 0)
-	{
-		state = State(action, LivingAction::Index::Previous);
-	}
-	SetPrevious(action, state);
-}
-
 /// The villager goes back to what it remembered. Both the state it is in and the one it was walking to are left, so
 /// leaving a reaction it was walking to ends that reaction. When either refuses to be left it decides afresh what to
 /// do, without leaving them. Going into the remembered state clears the state it was walking to.
@@ -533,7 +521,7 @@ void villager_fire::SetupReactToFire(entt::entity villager, entt::entity object)
 	// The villager remembers what it was doing, unless it was reacting already
 	if (state.reaction == 0)
 	{
-		StorePreviousState(*action);
+		villager_memory::StorePreviousState(*action);
 	}
 	villager_home::LeaveHome(villager);
 	SetTopState(*action, VillagerStates::ReactToFire);
@@ -727,7 +715,7 @@ void villager_fire::SetupOnFire(entt::entity villager, entt::entity fire)
 	{
 		return;
 	}
-	StorePreviousState(*action);
+	villager_memory::StorePreviousState(*action);
 	auto& state = FireStateOf(villager);
 	state.walkTarget = GoalOf(villager);
 	villager_home::LeaveHome(villager);

@@ -25,7 +25,7 @@ namespace openblack::ecs::systems
 class ExplosionSystem final: public ExplosionSystemInterface
 {
 public:
-	void AddRubble(const glm::vec3& centre, float yaw) override;
+	void AddRubble(const glm::vec3& centre, float yaw, float scale) override;
 	void AddShake(const glm::vec3& position, float radius, float strength, float seconds) override;
 	[[nodiscard]] bool IsShaking() const override { return !_shakes.empty(); }
 	void Update(float milliseconds) override;
