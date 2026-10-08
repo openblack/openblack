@@ -345,7 +345,12 @@ void GestureSystem::Act(const gesture::Request& request, const gesture::Match& m
 	}
 
 	auto* leashes = Locator::leashSystem::has_value() ? &Locator::leashSystem::value() : nullptr;
-	const auto creature = leashes != nullptr ? leashes->PlayersCreature(frame.player) : std::nullopt;
+	// Set apart from its declaration: GCC on ARM otherwise takes the optional for possibly uninitialised
+	std::optional<entt::entity> creature = std::nullopt;
+	if (leashes != nullptr)
+	{
+		creature = leashes->PlayersCreature(frame.player);
+	}
 	const auto eventsBefore = _events.size();
 	switch (request.purpose)
 	{
