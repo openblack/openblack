@@ -75,6 +75,8 @@ public:
 	entt::entity ObjectEndPhysics(entt::entity object, bool insert) override;
 	void RaiseUntilNotIntersecting(PhysicsEntry& entry) override;
 	void AdjustToGroundLevel(PhysicsEntry& entry, bool noPullDown, bool alignToSlope) override;
+	FromHandResult InitialisePhysicsFromHand(entt::entity object, const FromHand& release) override;
+	[[nodiscard]] std::optional<std::pair<glm::mat3, glm::vec3>> ReleasePose(entt::entity object, bool alignToSlope) override;
 	float PushObject(entt::entity object) override;
 	[[nodiscard]] const physics::Ground* GetGround() const override;
 

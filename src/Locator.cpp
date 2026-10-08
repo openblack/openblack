@@ -28,6 +28,7 @@
 #include "Debug/DebugGuiInterface.h"
 #include "ECS/Archetypes/PlayerArchetype.h"
 #include "ECS/MapProduction.h"
+#include "ECS/PhysicsGameHooks.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/AnimalSystem.h"
@@ -57,6 +58,7 @@
 #include "ECS/Systems/Implementations/FootprintSystem.h"
 #include "ECS/Systems/Implementations/ForestSystem.h"
 #include "ECS/Systems/Implementations/GestureSystem.h"
+#include "ECS/Systems/Implementations/HandGrabSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LeashSystem.h"
@@ -134,6 +136,7 @@ using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::ForestSystem;
 using openblack::ecs::systems::GestureEventsInterface;
 using openblack::ecs::systems::GestureSystem;
+using openblack::ecs::systems::HandGrabSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LeashSystem;
@@ -220,6 +223,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::handSystem::emplace<HandSystem>();
+	Locator::handGrabSystem::emplace<HandGrabSystem>();
 	Locator::temple::emplace<TempleInterior>();
 	Locator::oceanSystem::emplace<Ocean>();
 	Locator::skySystem::emplace<Sky>();
@@ -284,6 +288,8 @@ void InitializeLevelWith(const LandSource& land)
 	Locator::gameRandom::value().SetSeeds({0, 0});
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
+	// The game's own kinds of thing in the physics
+	Locator::dynamicsSystem::value().SetClassHooks(std::make_unique<openblack::ecs::PhysicsGameHooks>());
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
 	Locator::weatherSystem::emplace<WeatherSystem>();
@@ -338,6 +344,7 @@ void openblack::ShutDownServices()
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
 	Locator::weatherSystem::reset();
+	Locator::handGrabSystem::reset();
 	Locator::handSystem::reset();
 	Locator::pathfindingSystem::reset();
 	Locator::creatureLocomotionSystem::reset();

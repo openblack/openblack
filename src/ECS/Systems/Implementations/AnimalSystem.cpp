@@ -33,8 +33,10 @@
 #include "ECS/Archetypes/AnimalArchetype.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/CarriedByTornado.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
@@ -447,8 +449,9 @@ void AnimalSystem::ProcessTurn()
 		{
 			continue;
 		}
-		// Carried off by a tornado, it is the tornado's until it lets go
-		if (registry.AllOf<CarriedByTornado>(entity))
+		// Carried off by a tornado, it is the tornado's until it lets go; held in a hand or flying, the hand's or the
+		// physics'
+		if (registry.AnyOf<CarriedByTornado, InHand, InPhysics>(entity))
 		{
 			continue;
 		}
@@ -1274,8 +1277,8 @@ void AnimalSystem::Update(uint32_t turn, float turnFraction)
 	auto& meshes = Locator::resources::value().GetMeshes();
 	registry.Each<Animal, Transform, const Mesh>([&](entt::entity entity, Animal& animal, Transform& transform,
 	                                                 const Mesh& mesh) {
-		// A tornado carrying it places it
-		if (registry.AllOf<CarriedByTornado>(entity))
+		// A tornado carrying it places it, as does a hand holding it or the physics moving it
+		if (registry.AnyOf<CarriedByTornado, InHand, InPhysics>(entity))
 		{
 			return;
 		}

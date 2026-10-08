@@ -20,7 +20,9 @@
 
 #include "Common/RandomNumberManager.h"
 #include "ECS/Components/CarriedByTornado.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/LivingAction.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
@@ -75,6 +77,9 @@ struct VillagerStateTableEntry
 	std::function<int(LivingAction&)> transitionAnimation = nullptr;
 	std::function<bool(LivingAction&)> validate = nullptr;
 };
+
+/// A villager held in a hand or flying does nothing of its own: the hand and the physics move it
+static const VillagerStateTableEntry k_MovedByOthersEntry = {};
 
 static const VillagerStateTableEntry k_TodoEntry = {
     .state = [](LivingAction& action) -> uint32_t {
@@ -162,7 +167,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     },
     /* FOLLOWING_OBJECT_REACTION */ k_TodoEntry,
     /* INSPECT_OBJECT_REACTION */ k_TodoEntry,
-    /* FLYING */ k_TodoEntry,
+    /* FLYING */ k_MovedByOthersEntry,
     /* LANDED */ k_TodoEntry,
     /* LOOK_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* SET_DYING */ k_TodoEntry,
@@ -188,7 +193,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* GOTO_WOOD_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_WOOD_REACTION */ k_TodoEntry,
     /* WAIT_FOR_ANIMATION */ k_TodoEntry,
-    /* IN_HAND */ k_TodoEntry,
+    /* IN_HAND */ k_MovedByOthersEntry,
     /* GOTO_PICKUP_BALL_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_PICKUP_BALL_REACTION */ k_TodoEntry,
     /* MOVE_IN_FLOCK */ k_TodoEntry,
@@ -512,14 +517,19 @@ void LivingActionSystem::Update()
 
 	// TODO(#475): process food speedup
 
-	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
-		VillagerCallValidate(action, LivingAction::Index::Top);
-	});
+	// What a hand holds, or what flies in the physics, does nothing of its own
+	registry.Each<const Villager, LivingAction>(
+	    [this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
+		    VillagerCallValidate(action, LivingAction::Index::Top);
+	    },
+	    entt::exclude<InHand, InPhysics>);
 	// TODO(#476): same call but for other types of living
 
-	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
-		VillagerCallValidate(action, LivingAction::Index::Final);
-	});
+	registry.Each<const Villager, LivingAction>(
+	    [this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
+		    VillagerCallValidate(action, LivingAction::Index::Final);
+	    },
+	    entt::exclude<InHand, InPhysics>);
 	// TODO(#476): same call but for other types of living
 
 	// TODO(bwrsandman): Store result of this call in vector or with tag component
@@ -528,7 +538,7 @@ void LivingActionSystem::Update()
 	    [this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
 		    VillagerCallState(action, LivingAction::Index::Top);
 	    },
-	    entt::exclude<CarriedByTornado>);
+	    entt::exclude<CarriedByTornado, InHand, InPhysics>);
 	// TODO(#476): same call but for other types of living
 }
 

@@ -17,6 +17,7 @@
 
 #include <entt/entity/entity.hpp>
 #include <glm/fwd.hpp>
+#include <glm/mat3x3.hpp>
 #include <glm/vec3.hpp>
 
 #include "ECS/PhysicsEntry.h"
@@ -73,6 +74,29 @@ struct PhysicsStart
 	bool fromHand {false};
 };
 
+/// How a hand, or a creature's hand, lets go of what it held
+struct FromHand
+{
+	glm::vec3 velocity {0.0f};
+	/// Its spin as it leaves the hand, as the bodies count turning
+	glm::vec3 angularMomentum {0.0f};
+	/// The player whose hand let it go, credited with what it does
+	std::optional<PlayerNames> player;
+	/// The creature whose hand let it go, none for a god's hand
+	entt::entity creature {entt::null};
+	/// It mustn't be planted again (a hand made to let go)
+	bool dontReplant {false};
+};
+
+/// What letting go of a thing came to
+struct FromHandResult
+{
+	/// Its body, none when it couldn't move
+	PhysicsEntry* entry {nullptr};
+	/// It was put down where it was rather than thrown or dropped to fall
+	bool landed {false};
+};
+
 /// Whether an object started to move, and its body when one was made
 struct PhysicsStarted
 {
@@ -113,6 +137,12 @@ public:
 	[[nodiscard]] virtual bool RaisesObjects(entt::entity object) const;
 	/// The creature's body, its skeleton's parts as ellipsoids; none until the creature's shape is known
 	[[nodiscard]] virtual std::unique_ptr<physics::Body> CreatureBody(entt::entity creature);
+	/// The kind's part of a thing let go by a hand that didn't land: a person or an animal starts to fly
+	virtual void StartFlyingFromHand(DynamicsSystemInterface& dynamics, PhysicsEntry& entry);
+	/// A villager let go by a hand that didn't land drops what it carried, which flies on with it
+	virtual void DropCarriedResource(DynamicsSystemInterface& dynamics, entt::entity villager, glm::vec3 velocity);
+	/// A thing a player's hand put down: the player's creature may copy what the player did with it
+	virtual void ConsiderMimickingLanding(entt::entity object, std::optional<PlayerNames> player);
 };
 
 /// The game's physics: thrown, dropped, knocked and pushed objects, simulated as the game simulates them in fixed steps
@@ -188,6 +218,21 @@ public:
 	virtual void AdjustToGroundLevel([[maybe_unused]] PhysicsEntry& entry, [[maybe_unused]] bool noPullDown,
 	                                 [[maybe_unused]] bool alignToSlope)
 	{
+	}
+	/// A hand, or a creature's hand, lets go of what it held, which starts from where it is drawn: put down where it is
+	/// (lowered onto the land and lifted clear of what is under it) when let go slowly, else thrown or dropped to fly.
+	/// Refused for a thing already in the physics.
+	virtual FromHandResult InitialisePhysicsFromHand([[maybe_unused]] entt::entity object,
+	                                                 [[maybe_unused]] const FromHand& release)
+	{
+		return {};
+	}
+	/// Where a thing about to leave a hand starts from: its body at its place, lifted out of the land and, when asked, laid
+	/// along its slope; its model's axes (scaled) and origin. None for a thing without a body.
+	[[nodiscard]] virtual std::optional<std::pair<glm::mat3, glm::vec3>> ReleasePose([[maybe_unused]] entt::entity object,
+	                                                                                 [[maybe_unused]] bool alignToSlope)
+	{
+		return std::nullopt;
 	}
 	/// A living thing pushes an object out of its way, which moves in the physics
 	virtual float PushObject([[maybe_unused]] entt::entity object) { return 0.0f; }

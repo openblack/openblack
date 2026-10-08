@@ -95,6 +95,7 @@ namespace ecs::systems
 class CameraBookmarkSystemInterface;
 class DynamicsSystemInterface;
 class HandSystemInterface;
+class HandGrabSystemInterface;
 class CameraPathSystemInterface;
 class LivingActionSystemInterface;
 class MistSystemInterface;
@@ -192,6 +193,7 @@ struct Locator
 	using cameraHelpSystem = entt::locator<ecs::systems::CameraHelpSystemInterface>;
 	using templeExteriorSystem = entt::locator<ecs::systems::TempleExteriorSystemInterface>;
 	using handSystem = entt::locator<ecs::systems::HandSystemInterface>;
+	using handGrabSystem = entt::locator<ecs::systems::HandGrabSystemInterface>;
 	using temple = entt::locator<TempleInteriorInterface>;
 	using time = entt::locator<ecs::systems::TimeSystemInterface>;
 	using vegetation = entt::locator<ecs::systems::VegetationInterface>;

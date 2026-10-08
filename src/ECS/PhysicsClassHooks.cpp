@@ -85,3 +85,18 @@ std::unique_ptr<physics::Body> PhysicsClassHooks::CreatureBody([[maybe_unused]] 
 {
 	return nullptr;
 }
+
+void PhysicsClassHooks::StartFlyingFromHand([[maybe_unused]] DynamicsSystemInterface& dynamics,
+                                            [[maybe_unused]] PhysicsEntry& entry)
+{
+}
+
+void PhysicsClassHooks::DropCarriedResource([[maybe_unused]] DynamicsSystemInterface& dynamics,
+                                            [[maybe_unused]] entt::entity villager, [[maybe_unused]] glm::vec3 velocity)
+{
+}
+
+void PhysicsClassHooks::ConsiderMimickingLanding([[maybe_unused]] entt::entity object,
+                                                 [[maybe_unused]] std::optional<PlayerNames> player)
+{
+}

@@ -77,6 +77,7 @@ openblack_setup_and_add_test(
   test_hand_navigation_pose hand/test_hand_navigation_pose.cpp
 )
 openblack_setup_and_add_test(test_hand_morph hand/test_hand_morph.cpp)
+openblack_setup_and_add_test(test_hand_grab hand/test_hand_grab.cpp)
 openblack_setup_and_add_test(test_hand_hold_pose test_hand_hold_pose.cpp)
 openblack_setup_and_add_test(test_tribal_power_spin test_tribal_power_spin.cpp)
 openblack_setup_and_add_test(

@@ -115,6 +115,7 @@
 #include "ECS/Systems/ForestSystemInterface.h"
 #include "ECS/Systems/GestureEventsInterface.h"
 #include "ECS/Systems/GestureSystemInterface.h"
+#include "ECS/Systems/HandGrabSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
@@ -352,10 +353,19 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	auto& magic = Locator::magicSystem::value();
 	// The left button taps a one-shot bubble under the hand into it, before the creatures and the land
 	bool magicTookPress = false;
-	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton &&
-	    !Locator::debugGui::value().IsMouseOverWindow())
+	// The hand holds one thing at a time: a thing it picked up, or a miracle
+	auto* handGrab = Locator::handGrabSystem::has_value() ? &Locator::handGrabSystem::value() : nullptr;
+	const bool handHoldsThing = handGrab != nullptr && handGrab->IsBusy();
+	if (!inTemple && !handHoldsThing && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT &&
+	    !middleMouseButton && !Locator::debugGui::value().IsMouseOverWindow())
 	{
 		magicTookPress = magic.TapAction();
+	}
+	// Letting go of the Action button lets go of what the hand was taking, or puts down or throws what it holds
+	if (handGrab != nullptr && (rightLetGo || (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_RIGHT)))
+	{
+		// TODO(hand): a press too short to take the thing taps it
+		[[maybe_unused]] const auto tapped = handGrab->Release(SDL_GetTicks(), Locator::time::value().GetTurn());
 	}
 	// The action button (the right) casts the miracle in the hand, which comes before the creatures: pressed, it arms,
 	// locks on or casts it, and let go it throws an armed one or lets a locked one go. Without a miracle it takes hold
@@ -369,6 +379,17 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	    !Locator::debugGui::value().IsMouseOverWindow())
 	{
 		_actionPressTaken = magic.IsHandBusy() && magic.PressAction();
+		const auto pressScreen = Locator::windowing::value().GetSize();
+		glm::vec3 pressOrigin;
+		glm::vec3 pressDirection;
+		Locator::camera::value().DeprojectScreenToWorld(glm::vec2(event.button.x, event.button.y) /
+		                                                    static_cast<glm::vec2>(glm::max(pressScreen, glm::ivec2(1))),
+		                                                pressOrigin, pressDirection);
+		// Holding a thing, the hand makes ready to throw it
+		if (!_actionPressTaken && handHoldsThing)
+		{
+			_actionPressTaken = handGrab->Press(pressOrigin, pressDirection, SDL_GetTicks(), Locator::time::value().GetTurn());
+		}
 		if (!_actionPressTaken)
 		{
 			const auto screenSize = Locator::windowing::value().GetSize();
@@ -390,6 +411,11 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 					Locator::leashSystem::value().TapCreature(PlayerNames::PLAYER_ONE, *under);
 				}
 			}
+		}
+		// Otherwise the hand takes hold of a thing under it
+		if (!_actionPressTaken && !magic.IsHandBusy() && handGrab != nullptr)
+		{
+			_actionPressTaken = handGrab->Press(pressOrigin, pressDirection, SDL_GetTicks(), Locator::time::value().GetTurn());
 		}
 	}
 	if (!magicTookPress && !magic.IsHandBusy() && !inTemple && event.type == SDL_MOUSEBUTTONDOWN &&
@@ -865,6 +891,11 @@ bool Game::GameLogicLoop() noexcept
 		// The dispensers, then each miracle's upkeep, its own particle effect and what that effect tells it
 		auto magic = profiler.BeginScoped(Profiler::Stage::MagicUpdate);
 		Locator::magicSystem::value().ProcessTurn();
+	}
+	// What the hand holds stays where the hand is for the game, and is let go once it is gone
+	if (Locator::handGrabSystem::has_value())
+	{
+		Locator::handGrabSystem::value().ProcessTurn();
 	}
 	{
 		// The flocks fly and the wolves run and hunt
@@ -1443,6 +1474,28 @@ bool Game::Update() noexcept
 					handTransform.position.y += magic::HandHoldPoser::Lift(
 					    *held, glm::distance(camera.GetOrigin(), land.value_or(handTransform.position)));
 				}
+				else if (const auto screenSize =
+				             Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
+				         Locator::handGrabSystem::has_value() && screenSize.x > 0 && screenSize.y > 0)
+				{
+					// A thing the hand takes or holds lifts it, and makes ready to throw, its spring drags it
+					glm::vec3 rayOrigin;
+					glm::vec3 rayDirection;
+					camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+					                              rayOrigin, rayDirection);
+					const auto land = _cursorWorldPosition.value_or(handTransform.position);
+					handTransform.position = Locator::handGrabSystem::value().UpdateFrame({
+					    .target = handTransform.position,
+					    .rayOrigin = rayOrigin,
+					    .rayDirection = rayDirection,
+					    .cursorGround = _cursorWorldPosition,
+					    .handSize = HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), land)),
+					    .seconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count(),
+					    .gameMs = static_cast<uint32_t>(std::lround(gameTime.count())),
+					    .nowMs = SDL_GetTicks(),
+					    .turn = Locator::time::value().GetTurn(),
+					});
+				}
 				UpdateMagicHand(handTransform.position,
 				                std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 			}
@@ -1462,8 +1515,24 @@ bool Game::Update() noexcept
 			Locator::leashSystem::value().Update(std::chrono::duration<float>(gameTime).count());
 		}
 
-		// Holding a miracle's seed, the hand takes the still pose of its hold, sways with the seed and tips with a pour
+		// Holding a miracle's seed, the hand takes the still pose of its hold, sways with the seed and tips with a pour. A
+		// thing it picked up it holds the same way.
 		const auto heldSeed = magic::HandHoldPoser::Find();
+		auto heldThing = heldSeed;
+		if (!heldThing.has_value() && Locator::handGrabSystem::has_value())
+		{
+			if (const auto held = Locator::handGrabSystem::value().GetHeldPose())
+			{
+				heldThing = magic::HandHoldPoser::HeldSeed {
+				    .entity = held->object,
+				    .hold = held->hold,
+				    .hang = held->hang,
+				    .reach = held->reach,
+				    .yRotate = 0.0f,
+				    .effectInFingers = false,
+				};
+			}
+		}
 		bool holdingSeed = false;
 		{
 			const auto handEntity = Locator::handSystem::value()
@@ -1477,9 +1546,10 @@ bool Game::Update() noexcept
 				    .levelTurn = glm::mat3(glm::eulerAngleY(camera.GetRotation().y)),
 				    .modelCorrection = glm::mat3(glm::eulerAngleX(glm::radians(90.0f))),
 				    .tilt = Locator::magicSystem::value().GetHandPour(Locator::time::value().GetTurnFraction()).tilt,
-				    .rightHanded = config.rightHandedHand,
+				    // A thing the hand picked up isn't turned about for a right hand as a seed is
+				    .rightHanded = heldSeed.has_value() && config.rightHandedHand,
 				};
-				holdingSeed = _handHold.Pose(heldSeed, holdFrame, _handAnimation.get(), *handTransform);
+				holdingSeed = _handHold.Pose(heldThing, holdFrame, _handAnimation.get(), *handTransform);
 			}
 		}
 
@@ -1561,7 +1631,7 @@ bool Game::Update() noexcept
 			{
 				const float handSize =
 				    HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), handTransform->position));
-				_handHold.Fade(heldSeed, deltaTime, *handTransform);
+				_handHold.Fade(heldThing, deltaTime, *handTransform);
 				_handHold.PlaceHandEffect(heldSeed, _handAnimation.get(), *handTransform, handSize);
 				// The trails' sheets of light and the chain behind the gesturing hand move on every frame
 				Locator::particleSystem::value().UpdateFrame(
@@ -2488,6 +2558,11 @@ void Game::PrepareNewLand()
 	if (Locator::dynamicsSystem::has_value())
 	{
 		Locator::dynamicsSystem::value().ResetSimulation();
+	}
+	// Nor anything in the hand
+	if (Locator::handGrabSystem::has_value())
+	{
+		Locator::handGrabSystem::value().Reset();
 	}
 
 	// Reset everything. Deletes all entities and their components
