@@ -39,6 +39,19 @@ struct ForcedStorm
 	float rainSpeed {0.0f};
 };
 
+/// A storm a miracle lays over the land around a point. It comes in over its fading time, then stays at full strength,
+/// standing still, until the miracle moves it or takes it away; it has no lightning of its own.
+struct MiracleStorm
+{
+	glm::vec3 centre {0.0f};
+	float innerRadius {0.0f};
+	float outerRadius {0.0f};
+	float fadeSeconds {0.0f};
+	float cloudHeight {0.0f};
+	/// What it brings: the temperature it pulls towards, and the rain, snow, cloud and wind it adds, in percent
+	components::WeatherInfo effect;
+};
+
 /// The island's weather: climates breed storms that drift with the wind and bring rain, snow and wind
 class WeatherSystemInterface
 {
@@ -69,6 +82,18 @@ public:
 	virtual void ClearStorms() = 0;
 	/// Every storm with lightning flashes on its next turn, with a bolt or with thunder
 	virtual void StrikeLightning(bool bolt) = 0;
+
+	// Scripts
+	/// Every storm whose middle is nearer a point across the land than the radius and its own outer radius ends at once
+	virtual void KillStormsInArea(glm::vec3 position, float radius) = 0;
+
+	// Miracles
+	/// A miracle's storm is laid over the land
+	virtual entt::entity AddMiracleStorm(const MiracleStorm& storm) = 0;
+	/// The miracle's storm moved; false once the storm has ended, which a script can do
+	virtual bool MoveMiracleStorm(entt::entity storm, glm::vec3 centre) = 0;
+	/// The miracle's storm goes at once, its rain and wind with it
+	virtual void RemoveMiracleStorm(entt::entity storm) = 0;
 
 	/// One game turn
 	virtual void Update(uint32_t turn) = 0;

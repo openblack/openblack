@@ -257,6 +257,7 @@ openblack_setup_and_add_test(
 openblack_setup_and_add_test(test_reactions test_reactions.cpp)
 openblack_setup_and_add_test(test_magic_heal test_magic_heal.cpp)
 openblack_setup_and_add_test(test_lightning_maths test_lightning_maths.cpp)
+openblack_setup_and_add_test(test_tornado_creature test_tornado_creature.cpp)
 openblack_setup_and_add_test(
   test_creature_spell_mind test_creature_spell_mind.cpp
 )

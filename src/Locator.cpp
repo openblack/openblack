@@ -72,8 +72,10 @@
 #include "ECS/Systems/Implementations/SnowSystem.h"
 #include "ECS/Systems/Implementations/SnowfallSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
+#include "ECS/Systems/Implementations/TeleportSystem.h"
 #include "ECS/Systems/Implementations/TempleExteriorSystem.h"
 #include "ECS/Systems/Implementations/TimeSystem.h"
+#include "ECS/Systems/Implementations/TornadoSystem.h"
 #include "ECS/Systems/Implementations/TownDesireSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
@@ -145,8 +147,10 @@ using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::SnowfallSystem;
 using openblack::ecs::systems::SnowSystem;
 using openblack::ecs::systems::SoundTagSystem;
+using openblack::ecs::systems::TeleportSystem;
 using openblack::ecs::systems::TempleExteriorSystem;
 using openblack::ecs::systems::TimeSystem;
+using openblack::ecs::systems::TornadoSystem;
 using openblack::ecs::systems::TownDesireSystem;
 using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
@@ -248,6 +252,15 @@ bool openblack::InitializeGame() noexcept
 	Locator::influenceSystem::emplace<InfluenceSystem>();
 	Locator::townDesireSystem::emplace<TownDesireSystem>();
 	Locator::particleSystem::emplace<ParticleSystem>();
+	Locator::reactionSystem::emplace<ReactionSystem>();
+	Locator::teleportSystem::emplace<TeleportSystem>();
+	Locator::tornadoSystem::emplace<TornadoSystem>();
+	Locator::magicShieldSystem::emplace<MagicShieldSystem>();
+	Locator::forestSystem::emplace<ForestSystem>();
+	Locator::gestureSystem::emplace<GestureSystem>();
+	// The miracles take the gestures the gesture system recognises; the system stays the owner
+	Locator::gestureEvents::reset(static_cast<GestureEventsInterface*>(&Locator::gestureSystem::value()),
+	                              [](GestureEventsInterface* /*unowned*/) {});
 	Locator::magicSystem::emplace<MagicSystem>();
 	Locator::fireSystem::emplace<ecs::systems::FireSystem>();
 	Locator::explosionSystem::emplace<ecs::systems::ExplosionSystem>();

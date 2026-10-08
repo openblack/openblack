@@ -32,12 +32,14 @@
 #include "VillagerHome.h"
 #include "VillagerReactions.h"
 #include "VillagerShieldShelter.h"
+#include "VillagerTeleport.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 namespace villager_home = openblack::ecs::villager_home;
 namespace villager_eaten = openblack::ecs::villager_eaten;
+namespace villager_teleport = openblack::ecs::villager_teleport;
 namespace villager_shield = openblack::ecs::villager_shield;
 namespace villager_fire = openblack::ecs::villager_fire;
 
@@ -403,8 +405,14 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* WEAK_ON_GROUND */ k_TodoEntry,
     /* SCRIPT_WANDER_AROUND_POSITION */ k_TodoEntry,
     /* SCRIPT_PLAY_ANIM */ k_TodoEntry,
-    /* GO_TOWARDS_TELEPORT_REACTION */ k_TodoEntry,
-    /* TELEPORT_REACTION */ k_TodoEntry,
+    /* GO_TOWARDS_TELEPORT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_teleport::GoTowardsTeleportReaction,
+    },
+    /* TELEPORT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_teleport::TeleportReaction,
+    },
     /* DANCE_WHILE_REACTING */ k_TodoEntry,
     /* CONTROLLED_BY_CREATURE */ k_TodoEntry,
     /* POINT_AT_DEAD_PERSON */ k_TodoEntry,
@@ -487,7 +495,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* RESTART_MEETING */ k_TodoEntry,
     /* GOTO_ABODE_BURNING_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_ABODE_BURNING_REACTION */ k_TodoEntry,
-    /* REPAIRS_ABODE */ k_TodoEntry,
+    /* GO_TOWARDS_TELEPORT_REACTION_QUICKLY: running to a teleport stone is walking to it, faster */
+    VillagerStateTableEntry {
+        .state = &villager_teleport::GoTowardsTeleportReaction,
+    },
     /* ARRIVES_AT_SCAFFOLD_FOR_PICKUP */ k_TodoEntry,
     /* ARRIVES_AT_BUILDING_SITE_WITH_SCAFFOLD */ k_TodoEntry,
     /* MOVE_SCAFFOLD_TO_BUILDING_SITE */ k_TodoEntry,

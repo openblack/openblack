@@ -27,6 +27,8 @@ public:
 	virtual ~VegetationInterface() = default;
 	/// Moves the trees' sway on by the game time that has passed, which stops while the game is paused
 	virtual void Update(std::chrono::duration<float, std::milli> gameTime) = 0;
+	/// A game turn: the trees smaller than they may be grow now and then, faster in the rain and on good land
+	virtual void ProcessTurn() = 0;
 	/// Notes where the hand is, for the trees it bends this frame
 	virtual void UpdateBendPoints() = 0;
 	/// The trees being bent crash about and the trees around the camera rustle now and then (TreeRustle),

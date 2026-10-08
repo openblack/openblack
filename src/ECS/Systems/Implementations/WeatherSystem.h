@@ -55,6 +55,11 @@ public:
 	void ClearStorms() override;
 	void StrikeLightning(bool bolt) override;
 
+	entt::entity AddMiracleStorm(const MiracleStorm& storm) override;
+	bool MoveMiracleStorm(entt::entity storm, glm::vec3 centre) override;
+	void KillStormsInArea(glm::vec3 position, float radius) override;
+	void RemoveMiracleStorm(entt::entity storm) override;
+
 	void Update(uint32_t turn) override;
 	[[nodiscard]] std::span<const components::Storm> GetActiveStorms() const override { return _activeStorms; }
 

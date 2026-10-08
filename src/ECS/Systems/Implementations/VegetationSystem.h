@@ -40,6 +40,7 @@ class VegetationSystem final: public VegetationInterface
 {
 public:
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
+	void ProcessTurn() override;
 	void UpdateBendPoints() override;
 	void Rustle(std::chrono::duration<float, std::milli> gameTime) override;
 	[[nodiscard]] glm::mat4 GetTreeMatrix(const glm::mat4& model, const glm::vec3& position, float scale, float height,

@@ -98,6 +98,8 @@ constexpr float k_StrikeNearCamera = 300.0f;
 constexpr float k_ArrivalDistance = 0.001f;
 constexpr float k_EffectScale = 256.0f;
 constexpr uint8_t k_DeadStormTurns = 2;
+/// A miracle's storm lives until its miracle takes it away
+constexpr float k_MiracleStormLife = 1e9f;
 
 int32_t Ftol(double value)
 {
@@ -947,6 +949,77 @@ void WeatherSystem::ForceStorm(const ForcedStorm& forced)
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "Forced a storm over the island: {}s, rain {} snow {} cloud {} wind ({}, {})",
 	                   storm.lastsFor, forced.effect.rain, forced.effect.snow, forced.effect.overcast, forced.effect.windX,
 	                   forced.effect.windZ);
+}
+
+entt::entity WeatherSystem::AddMiracleStorm(const MiracleStorm& miracle)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto entity = registry.Create();
+	auto& storm = registry.Assign<Storm>(entity);
+	storm.position = miracle.centre;
+	storm.destination = miracle.centre;
+	storm.currentPosition = miracle.centre;
+	storm.speed = 0.0f;
+	storm.arrived = true;
+	storm.innerRadius = miracle.innerRadius;
+	storm.outerRadius = miracle.outerRadius;
+	storm.fadeTime = std::max(miracle.fadeSeconds, k_TurnDuration);
+	// It lasts as long as its miracle, which takes it away
+	storm.lastsFor = k_MiracleStormLife;
+	storm.strength = 1.0f;
+	storm.cloudHeight = miracle.cloudHeight;
+	storm.rainSpeed = registry.Get<const Climate>(GetGlobalClimate()).stormSpeed;
+	storm.effect = miracle.effect;
+	storm.climate = entt::null;
+	storm.serial = _nextStormSerial++;
+	return entity;
+}
+
+bool WeatherSystem::MoveMiracleStorm(entt::entity entity, glm::vec3 centre)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* storm = registry.Valid(entity) ? registry.TryGet<Storm>(entity) : nullptr;
+	if (storm == nullptr || storm->dead)
+	{
+		return false;
+	}
+	storm->position = centre;
+	storm->destination = centre;
+	storm->currentPosition = centre;
+	return true;
+}
+
+void WeatherSystem::KillStormsInArea(glm::vec3 position, float radius)
+{
+	Locator::entitiesRegistry::value().Each<Storm>([position, radius](entt::entity, Storm& storm) {
+		const float distance = glm::distance(glm::vec2(storm.position.x, storm.position.z), glm::vec2(position.x, position.z));
+		if (distance < radius + storm.outerRadius)
+		{
+			storm.dead = true;
+		}
+	});
+}
+
+void WeatherSystem::RemoveMiracleStorm(entt::entity entity)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* storm = registry.Valid(entity) ? registry.TryGet<const Storm>(entity) : nullptr;
+	if (storm == nullptr)
+	{
+		return;
+	}
+	// The weather it brought goes this turn, not at the next
+	const auto serial = storm->serial;
+	registry.Destroy(entity);
+	std::erase_if(_activeStorms, [serial](const Storm& active) { return active.serial == serial; });
+	if (++_stamp == 0)
+	{
+		for (auto& cell : _grid)
+		{
+			cell.stamp = 0;
+		}
+		_stamp = 1;
+	}
 }
 
 void WeatherSystem::EndStorm(entt::entity entity)
