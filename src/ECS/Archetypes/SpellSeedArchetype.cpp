@@ -17,7 +17,6 @@
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/SpellSeed.h"
 #include "ECS/Components/Transform.h"
-#include "ECS/Components/Translucent.h"
 #include "ECS/Registry.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -55,29 +54,19 @@ entt::entity SpellSeedArchetype::Create(const glm::vec3& position, SpellSeedType
 	return entity;
 }
 
-entt::entity OneOffSpellSeedArchetype::Create(const glm::vec3& position, SpellSeedType seedType, int powerUp, float multiplier,
-                                              entt::id_type bubbleMesh)
+entt::entity OneOffSpellSeedArchetype::Create(const glm::vec3& position, SpellSeedType seedType, int powerUp, float multiplier)
 {
 	if (!IsSeed(seedType))
 	{
 		return entt::null;
 	}
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& info = magic::GetSpellSeedInfo(Locator::infoConstants::value(), seedType);
-	// The seed spinning inside, at a share of the bubble's size
-	const auto seedGraphic = registry.Create();
-	registry.Assign<Transform>(seedGraphic, position, glm::mat3(1.0f), glm::vec3(info.scale * magic::k_OrbSeedScale));
-	registry.Assign<Mesh>(seedGraphic, resources::HashIdentifier(info.mesh), static_cast<int8_t>(0), static_cast<int8_t>(0));
-
 	const auto entity = registry.Create();
 	registry.Assign<Transform>(entity, position, glm::mat3(1.0f), glm::vec3(1.0f));
-	registry.Assign<Mesh>(entity, bubbleMesh, static_cast<int8_t>(0), static_cast<int8_t>(0));
-	registry.Assign<Translucent>(entity, Translucent {.share = magic::k_OrbShare});
-	registry.Assign<OneOffSpellSeed>(entity, OneOffSpellSeed {.seedType = seedType,
-	                                                          .position = position,
-	                                                          .powerUp = powerUp,
-	                                                          .multiplier = multiplier,
-	                                                          .seedGraphic = seedGraphic});
+	registry.Assign<OneOffSpellSeed>(
+	    entity,
+	    OneOffSpellSeed {
+	        .seedType = seedType, .position = position, .powerUp = powerUp, .multiplier = multiplier, .middle = position});
 	return entity;
 }
 

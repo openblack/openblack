@@ -595,10 +595,7 @@ void MoveTo(entt::entity entity, glm::vec3 position)
 	if (auto* orb = registry.TryGet<OneOffSpellSeed>(entity))
 	{
 		orb->position += delta;
-		if (orb->seedGraphic != entt::null && registry.Valid(orb->seedGraphic))
-		{
-			registry.Get<Transform>(orb->seedGraphic).position += delta;
-		}
+		orb->middle += delta;
 	}
 	if (auto* locomotion = registry.TryGet<CreatureLocomotion>(entity))
 	{

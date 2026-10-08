@@ -682,7 +682,8 @@ struct GMagicResourceInfo: GMagicInfo
 	uint32_t resourceAmountFirstEvent;
 	uint32_t resourceAmountPerEvent;
 	uint32_t costPerUnit;
-	uint32_t poisoned;
+	/// A new pile of the food speeds up the people who take from it (it poisons nothing)
+	uint32_t speedUp;
 };
 
 struct GPBallInfo: GMobileObjectInfo

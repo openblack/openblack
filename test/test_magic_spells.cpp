@@ -74,28 +74,33 @@ public:
 	[[nodiscard]] float LandHeight(glm::vec2 /*xz*/) const override { return 0.0f; }
 	[[nodiscard]] bool InBounds(glm::vec3 point) const override { return point.x >= 0.0f && point.z >= 0.0f; }
 	[[nodiscard]] bool IsDryLand(glm::vec3 point) const override { return InBounds(point) && !(point.x < wetBelowX); }
+	[[nodiscard]] bool IsLand(glm::vec3 point) const override
+	{
+		return InBounds(point) && !(point.x < wetBelowX) && !(point.z < waterBelowZ);
+	}
 	[[nodiscard]] bool InInfluence(PlayerNames /*player*/, glm::vec3 /*point*/) const override { return influence; }
 	[[nodiscard]] std::optional<glm::vec3> PositionOf(entt::entity object) const override
 	{
 		const auto found = objects.find(object);
 		return found != objects.end() ? std::optional(found->second) : std::nullopt;
 	}
-	bool ApplyEffect(entt::entity object, const EffectValues& values) override
+	bool ApplyEffect(entt::entity object, const EffectValues& values, const EffectSource& source) override
 	{
+		lastSource = source;
 		applied.emplace_back(object, values);
 		return true;
 	}
-	entt::entity ApplyEffectAt(glm::vec3 point, const EffectValues& values) override
+	std::vector<entt::entity> ApplyEffectAt(glm::vec3 point, const EffectValues& values, const EffectSource& source) override
 	{
+		lastSource = source;
 		appliedAt.emplace_back(point, values);
-		return entt::null;
+		return {};
 	}
-	void Heat(glm::vec3 point, float radius, float temperature) override { heats.push_back({point, radius, temperature}); }
-	void Water(glm::vec3 drop, float reach, std::optional<float> ringGrowth) override
+	void Water(const WaterDrop& drop) override
 	{
-		drops.push_back(drop);
-		rings.push_back(ringGrowth);
-		(void)reach;
+		drops.push_back(drop.position);
+		rings.push_back(drop.ringGrowth);
+		extremeDrops.push_back(drop.extreme);
 	}
 	[[nodiscard]] std::vector<entt::entity> HealTargets(glm::vec3 /*point*/, float radius, size_t maximum) const override
 	{
@@ -110,18 +115,12 @@ public:
 		}
 		return targets;
 	}
-	bool AddResource(ResourceType type, glm::vec3 point, uint32_t amount, bool sparkles) override
+	bool AddResource(ResourceType type, glm::vec3 point, uint32_t amount, bool sparkles, PlayerNames /*player*/) override
 	{
 		resources.push_back({type, point, amount, sparkles});
 		return true;
 	}
 
-	struct HeatRecord
-	{
-		glm::vec3 point;
-		float radius;
-		float temperature;
-	};
 	struct ResourceRecord
 	{
 		ResourceType type;
@@ -131,11 +130,14 @@ public:
 	};
 	bool influence {true};
 	float wetBelowX {-1.0f};
+	/// Cells with water in them, though their land stands above the sea, south of this
+	float waterBelowZ {-1.0f};
 	std::map<entt::entity, glm::vec3> objects;
 	std::vector<std::pair<entt::entity, EffectValues>> applied;
 	std::vector<std::pair<glm::vec3, EffectValues>> appliedAt;
-	std::vector<HeatRecord> heats;
+	EffectSource lastSource;
 	std::vector<glm::vec3> drops;
+	std::vector<bool> extremeDrops;
 	std::vector<std::optional<float>> rings;
 	std::vector<ResourceRecord> resources;
 	mutable float lastHealRadius {0.0f};
@@ -173,6 +175,33 @@ public:
 		return found != spells.end() ? found->second : nullptr;
 	}
 	[[nodiscard]] float GameRandom(float max) override { return max * 0.5f; }
+	void ReactToSpell(Spell& spell, bool onCast) override
+	{
+		if (spell.reaction == 0)
+		{
+			spell.reaction = 1;
+			reactions.push_back(onCast);
+		}
+	}
+	void StartCastEffect(Spell& /*spell*/, ParticleType type) override { castEffects.push_back(type); }
+	void ShieldStruck(const Spell& struckShield, bool destroyed) override
+	{
+		for (const auto& [entity, spell] : spells)
+		{
+			if (spell == &struckShield)
+			{
+				struck.emplace_back(entity, destroyed);
+			}
+		}
+	}
+	[[nodiscard]] bool HasWorldObjects(const Spell& /*spell*/) const override { return worldObjects; }
+	bool PlantForest(Spell& spell) override
+	{
+		++planted;
+		spell.forestPlanted = true;
+		return true;
+	}
+	[[nodiscard]] bool ForestCanGrowAt(glm::vec3 /*point*/) const override { return forestGrows; }
 
 	InfoConstants& info;
 	FakeWorld world;
@@ -184,6 +213,12 @@ public:
 	float shieldRadius {0.0f};
 	std::vector<glm::vec3> strikes;
 	std::map<entt::entity, Spell*> spells;
+	std::vector<bool> reactions;
+	std::vector<ParticleType> castEffects;
+	std::vector<std::pair<entt::entity, bool>> struck;
+	bool worldObjects {false};
+	int planted {0};
+	bool forestGrows {true};
 };
 
 Spell MakeSpell(MagicType type, float chants)
@@ -430,12 +465,20 @@ TEST(SpellBehaviours, AnEventPaysItsCostAndActsOnItsTargetByTheMiraclesStrength)
 	auto spell = MakeSpell(MagicType::LightningBolt, 5000.0f);
 	const auto creature = static_cast<entt::entity>(7);
 	services.world.objects[creature] = {100.0f, 0.0f, 120.0f};
-	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {100.0f, 9.0f, 120.0f}, creature)));
+	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Object, {100.0f, 9.0f, 120.0f}, creature)));
 	EXPECT_FLOAT_EQ(spell.chants.chants, 4998.0f);
 	ASSERT_EQ(services.world.applied.size(), 1u);
 	EXPECT_EQ(services.world.applied[0].first, creature);
-	// Full strength times the tribal power
-	EXPECT_NEAR(services.world.applied[0].second[EffectKind::Burn], 800.0f * 1.5f, 0.01f);
+	// Full strength, which carries the tribal power, times the tribal power once more
+	EXPECT_NEAR(services.world.applied[0].second[EffectKind::Burn], 800.0f * 1.5f * 1.5f, 0.01f);
+	// Only an event at an object acts on it alone; any other acts round its point, on the land under it
+	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {100.0f, 9.0f, 120.0f}, creature)));
+	ASSERT_EQ(services.world.appliedAt.size(), 1u);
+	EXPECT_FLOAT_EQ(services.world.appliedAt[0].first.y, 0.0f);
+	services.world.appliedAt.clear();
+	// From the player who cast it
+	EXPECT_EQ(services.world.lastSource.player, PlayerNames::PLAYER_ONE);
+	EXPECT_EQ(services.world.lastSource.casterCreature, entt::entity {entt::null});
 	EXPECT_NEAR(spell.position.z, 120.0f, k_Epsilon);
 	// Without a target it acts round the point
 	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {90.0f, 2.0f, 90.0f})));
@@ -466,20 +509,30 @@ TEST(SpellBehaviours, AMiracleWithoutACasterHasNoStrengthAndDoesNothing)
 	EXPECT_FALSE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Point, {1.0f, 0.0f, 1.0f})));
 }
 
-TEST(SpellBehaviours, AFireballHeatsWhereItIsEachStep)
+TEST(SpellBehaviours, AFireballsStepMovesItButBurnsNothingByItself)
 {
 	auto info = MakeTables();
 	Effect(*info, MagicType::Fireball).initialChants = 1000.0f;
 	Effect(*info, MagicType::Fireball).radius = 5.0f;
-	info->magicFireBall.at(0).initialTemperature = 6000.0f;
 	FakeServices services(*info);
 	auto spell = MakeSpell(MagicType::Fireball, 1000.0f);
 	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Point, {50.0f, 20.0f, 60.0f})));
-	ASSERT_EQ(services.world.heats.size(), 1u);
-	EXPECT_FLOAT_EQ(services.world.heats[0].radius, 5.0f);
-	EXPECT_FLOAT_EQ(services.world.heats[0].temperature, 6000.0f);
-	// Its zero effect values act on nothing directly
-	EXPECT_TRUE(services.world.appliedAt.empty());
+	EXPECT_FLOAT_EQ(spell.position.x, 50.0f);
+	// Its zero effect values reach what is round it, doing nothing: its ball's own fire does the burning
+	ASSERT_EQ(services.world.appliedAt.size(), 1u);
+	EXPECT_FLOAT_EQ(services.world.appliedAt[0].second[EffectKind::Burn], 0.0f);
+}
+
+TEST(SpellBehaviours, EveryFireballBurnsAsTheFirstRow)
+{
+	auto info = MakeTables();
+	info->magicFireBall.at(0).initialTemperature = 6000.0f;
+	info->magicFireBall.at(1).initialTemperature = 10000.0f;
+	info->magicFireBall.at(2).initialTemperature = 14000.0f;
+	for (const auto type : {MagicType::Fireball, MagicType::FireballPowerUpOne, MagicType::FireballPowerUpTwo})
+	{
+		EXPECT_FLOAT_EQ(spells::FireballTemperature(*info, type), 6000.0f);
+	}
 }
 
 TEST(SpellBehaviours, FoodLandsOnDryLandAsPilesAndPaysForEveryGrain)
@@ -555,6 +608,20 @@ TEST(SpellBehaviours, TheCastRulesAskForLandAndInfluence)
 	EXPECT_FALSE(spells::CanCastAt(services, MagicType::CreatureSpellBig, PlayerNames::PLAYER_ONE, land, true));
 }
 
+TEST(SpellBehaviours, LandForACastRuleIsACellWithoutWaterWhateverItsHeight)
+{
+	auto info = MakeTables();
+	info->magicGeneral.at(1).castRuleType = CastRuleType::OnLand;
+	FakeServices services(*info);
+	services.world.waterBelowZ = 50.0f;
+	// Above the sea but with water in its cell: not land
+	EXPECT_TRUE(services.world.IsDryLand({100.0f, 0.0f, 10.0f}));
+	EXPECT_FALSE(spells::CanCastAt(services, MagicType::Fireball, PlayerNames::PLAYER_ONE, {100.0f, 0.0f, 10.0f}, true));
+	EXPECT_TRUE(spells::CanCastAt(services, MagicType::Fireball, PlayerNames::PLAYER_ONE, {100.0f, 0.0f, 100.0f}, true));
+	// Food and wood go on land by the same test
+	EXPECT_FALSE(spells::CanCastAt(services, MagicType::Food, PlayerNames::PLAYER_ONE, {100.0f, 0.0f, 10.0f}, true));
+}
+
 TEST(SpellBehaviours, AShieldStopsAnEventUntilItIsWornDown)
 {
 	auto info = MakeTables();
@@ -581,14 +648,77 @@ TEST(SpellBehaviours, AShieldStopsAnEventUntilItIsWornDown)
 	EXPECT_FLOAT_EQ(shield.chants.chants, 4400.0f);
 	// A maintained shield's strength is what it has over what it started with
 	EXPECT_NEAR(spells::StrengthOf(services, shield), 4400.0f / 5000.0f, k_Epsilon);
-	// An event checking for shields inside one strikes it first
+	EXPECT_EQ(services.struck, (std::vector<std::pair<entt::entity, bool>> {{shieldEntity, false}}));
+	// An event checking for shields inside one strikes itself, as the game has it: it pays for another event and its own
+	// cost of striking and is stopped, the shield neither sparking nor losing anything
 	auto checked = EventAt(SpellEventInfo::Type::Point, {100.0f, 0.0f, 90.0f});
 	checked.checkShields = true;
+	const float ballBefore = ball.chants.chants;
 	EXPECT_FALSE(spells::OnEvent(services, ball, checked));
 	EXPECT_TRUE(services.world.appliedAt.empty());
+	EXPECT_FLOAT_EQ(shield.chants.chants, 4400.0f);
+	EXPECT_LT(ball.chants.chants, ballBefore);
+	EXPECT_TRUE(services.strikes.empty());
 	// Worn down to nothing, it lets the next through
 	SetChants(shield.chants, 0.0f);
 	EXPECT_TRUE(spells::OnEvent(services, ball, event));
+}
+
+TEST(SpellBehaviours, AShieldDestroyedByABlowLetsItThroughAndItsPeopleSeeItFall)
+{
+	auto info = MakeTables();
+	auto& blast = Effect(*info, MagicType::ExplosionOne);
+	blast.initialChants = 10000.0f;
+	blast.costPerShieldCollide = 3000.0f;
+	auto& dome = Effect(*info, MagicType::Shield);
+	dome.initialChants = 5000.0f;
+	FakeServices services(*info);
+	auto shield = MakeSpell(MagicType::Shield, 2000.0f);
+	const auto shieldEntity = static_cast<entt::entity>(4);
+	services.spells[shieldEntity] = &shield;
+	auto beam = MakeSpell(MagicType::ExplosionOne, 10000.0f);
+	// The beam's 3000 is more than the shield's 2000: it goes through and the shield is destroyed
+	EXPECT_TRUE(spells::StrikeSpell(services, beam, shield));
+	EXPECT_EQ(services.struck, (std::vector<std::pair<entt::entity, bool>> {{shieldEntity, true}}));
+}
+
+TEST(SpellBehaviours, TheForestPlantsOnceAsItsSeedLandsAndPaysForEachTree)
+{
+	auto info = MakeTables();
+	auto& nature = Effect(*info, MagicType::Forest);
+	nature.initialChants = 10000.0f;
+	nature.costPerEvent = 1.0f;
+	nature.costPerGameTurn = 5.0f;
+	info->magicForest.at(0).finalNoTrees = 18;
+	FakeServices services(*info);
+	auto forest = MakeSpell(MagicType::Forest, 10000.0f);
+	// Its start is no event; its seed landing plants it, and pays for the event
+	EXPECT_TRUE(spells::OnEvent(services, forest, EventAt(SpellEventInfo::Type::Started, forest.castPosition)));
+	EXPECT_EQ(services.planted, 0);
+	EXPECT_TRUE(spells::OnEvent(services, forest, EventAt(SpellEventInfo::Type::Landed, forest.castPosition)));
+	EXPECT_EQ(services.planted, 1);
+	EXPECT_FLOAT_EQ(forest.chants.chants, 9999.0f);
+	// Planted, it plants no more
+	EXPECT_FALSE(spells::OnEvent(services, forest, EventAt(SpellEventInfo::Type::Landed, forest.castPosition)));
+	EXPECT_EQ(services.planted, 1);
+	// Its upkeep is its own and one event's cost for each tree
+	forest.objectCount = 18;
+	EXPECT_FLOAT_EQ(spells::CostToMaintain(*info, forest), 23.0f);
+	// It lives on while its trees stand
+	services.worldObjects = true;
+	EXPECT_TRUE(spells::KeptByKind(services, forest));
+	services.worldObjects = false;
+	EXPECT_FALSE(spells::KeptByKind(services, forest));
+}
+
+TEST(SpellBehaviours, AForestIsCastOnlyWhereATreeMayGrow)
+{
+	auto info = MakeTables();
+	info->magicForest.at(0).castRuleType = CastRuleType::OnLandInInfluence;
+	FakeServices services(*info);
+	EXPECT_TRUE(spells::CanCastAt(services, MagicType::Forest, PlayerNames::PLAYER_ONE, {10.0f, 0.0f, 10.0f}, false));
+	services.forestGrows = false;
+	EXPECT_FALSE(spells::CanCastAt(services, MagicType::Forest, PlayerNames::PLAYER_ONE, {10.0f, 0.0f, 10.0f}, false));
 }
 
 TEST(SpellBehaviours, AShieldsUpkeepGrowsWithItsSize)
@@ -605,6 +735,32 @@ TEST(SpellBehaviours, AShieldsUpkeepGrowsWithItsSize)
 	EXPECT_FLOAT_EQ(shield.magnitude, 5.0f);
 	shield.magnitude = 60.0f;
 	EXPECT_FLOAT_EQ(spells::CostToMaintain(*info, shield), 80.0f);
+}
+
+TEST(SpellBehaviours, AStormIsAsWideAsItsCircleWithinItsLimitsAndCostsByItsArea)
+{
+	auto info = MakeTables();
+	Effect(*info, MagicType::StormWindRainLightning).costPerGameTurn = 25.0f;
+	auto& storm = info->magicStormAndTornado.at(1);
+	storm.radiusForNormalCost = 40.0f;
+	storm.minRadius = 20.0f;
+	storm.maxRadius = 1000.0f;
+	FakeServices services(*info);
+	auto spell = MakeSpell(MagicType::StormWindRainLightning, 5000.0f);
+	spell.magnitude = 5.0f;
+	spells::Prepare(services, spell);
+	EXPECT_FLOAT_EQ(spell.magnitude, 20.0f);
+	spell.magnitude = 5000.0f;
+	spells::Prepare(services, spell);
+	EXPECT_FLOAT_EQ(spell.magnitude, 1000.0f);
+	spell.magnitude = 40.0f;
+	EXPECT_FLOAT_EQ(spells::CostToMaintain(*info, spell), 25.0f);
+	spell.magnitude = 120.0f;
+	EXPECT_FLOAT_EQ(spells::CostToMaintain(*info, spell), 225.0f);
+	// Its swirl plays where it is cast
+	EXPECT_TRUE(spells::Start(services, spell));
+	ASSERT_EQ(services.castEffects.size(), 1u);
+	EXPECT_EQ(services.castEffects.front(), ParticleType::StormCast);
 }
 
 TEST(SpellBehaviours, TheWaterRainsADropEachTurnAndLeavesRingsEveryTenthOfASecond)
@@ -628,6 +784,7 @@ TEST(SpellBehaviours, TheWaterRainsADropEachTurnAndLeavesRingsEveryTenthOfASecon
 	// The drop cools what it lands on
 	ASSERT_EQ(services.world.appliedAt.size(), 1u);
 	EXPECT_LT(services.world.appliedAt[0].second[EffectKind::Burn], 0.0f);
+	EXPECT_FALSE(services.world.extremeDrops[0]);
 	// No ring in the same tenth of a second
 	spells::ProcessTurn(services, spell);
 	EXPECT_FALSE(services.world.rings[1].has_value());
@@ -659,4 +816,33 @@ TEST(SpellBehaviours, AHeldMiraclesPrayerPowerRunsDownWithItsUpkeep)
 	}
 	// A human player's hand gives nothing more: it weakens below the safety level
 	EXPECT_NEAR(spells::StrengthOf(services, spell), 1250.0f / 2500.0f, k_Epsilon);
+}
+
+TEST(SpellBehaviours, AnEventMakesTheLivingReactOnceWhenItsTableSaysSo)
+{
+	auto info = MakeTables();
+	auto& bolt = Effect(*info, MagicType::LightningBolt);
+	bolt.initialChants = 5000.0f;
+	bolt.effectHit = 0.1f;
+	bolt.reactionType = Reaction::FleeFromSpell;
+	FakeServices services(*info);
+	auto spell = MakeSpell(MagicType::LightningBolt, 5000.0f);
+	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {90.0f, 0.0f, 90.0f})));
+	EXPECT_TRUE(services.reactions.empty());
+	bolt.createReactionOnEvent = 1;
+	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {90.0f, 0.0f, 90.0f})));
+	ASSERT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::Landed, {91.0f, 0.0f, 90.0f})));
+	ASSERT_EQ(services.reactions.size(), 1u);
+	EXPECT_FALSE(services.reactions[0]);
+}
+
+TEST(SpellBehaviours, AMiracleWithoutAnEffectStartsWithoutActing)
+{
+	auto info = MakeTables();
+	Effect(*info, MagicType::FlockFlying).effectHit = 0.5f;
+	FakeServices services(*info);
+	auto spell = MakeSpell(MagicType::FlockFlying, 5000.0f);
+	EXPECT_TRUE(spells::OnEvent(services, spell, EventAt(SpellEventInfo::Type::InitWithoutEffect, {90.0f, 0.0f, 90.0f})));
+	EXPECT_TRUE(services.world.appliedAt.empty());
+	EXPECT_FALSE(spells::KeptByKind(services, spell));
 }

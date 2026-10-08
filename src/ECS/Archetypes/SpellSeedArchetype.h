@@ -30,9 +30,9 @@ public:
 class OneOffSpellSeedArchetype
 {
 public:
-	/// A bubble of a model with a seed's model spinning inside, at a point; none for a seed that doesn't exist
-	static entt::entity Create(const glm::vec3& position, SpellSeedType seedType, int powerUp, float multiplier,
-	                           entt::id_type bubbleMesh);
+	/// A globe with a miracle in it, at a point; none for a seed that doesn't exist. The globe and what is in it are drawn
+	/// by themselves rather than as the world's models.
+	static entt::entity Create(const glm::vec3& position, SpellSeedType seedType, int powerUp, float multiplier);
 	OneOffSpellSeedArchetype() = delete;
 };
 

@@ -251,6 +251,7 @@ openblack_setup_and_add_test(test_teleport_rules test_teleport_rules.cpp)
 openblack_setup_and_add_test(test_fire test_fire.cpp)
 openblack_setup_and_add_test(test_blast test_blast.cpp)
 openblack_setup_and_add_test(test_gesture_events test_gesture_events.cpp)
+openblack_setup_and_add_test(test_magic_foundation test_magic_foundation.cpp)
 openblack_setup_and_add_test(
   test_magic_shield_forest test_magic_shield_forest.cpp
 )

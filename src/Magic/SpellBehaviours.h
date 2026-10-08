@@ -9,14 +9,19 @@
 
 #pragma once
 
+#include <functional>
 #include <optional>
+#include <utility>
 
 #include <entt/entity/entity.hpp>
 #include <glm/vec3.hpp>
 
 #include "Enums.h"
+#include "FlockMiracleInterface.h"
 #include "InfoConstants.h"
+#include "MagicWorldInterface.h"
 #include "Particles/ParticleSpellLink.h"
+#include "PrayerRules.h"
 #include "SpellChants.h"
 
 namespace openblack::ecs::components
@@ -31,7 +36,6 @@ struct Spell;
 
 namespace openblack::magic
 {
-class MagicWorldInterface;
 
 /// What the miracles' rules need from the miracle system
 class SpellServicesInterface
@@ -62,21 +66,61 @@ public:
 	[[nodiscard]] virtual ecs::components::Spell* FindSpell(entt::entity spell) = 0;
 	/// A random number up to a maximum on the stream every machine of the game shares
 	[[nodiscard]] virtual float GameRandom(float max) = 0;
+	/// The living near the miracle react to it as its table says, as it is cast or as it acts, unless it already has a
+	/// reaction going
+	virtual void ReactToSpell(ecs::components::Spell& spell, bool onCast) = 0;
+	/// A further effect of the miracle's own at the point it is cast, such as the storm's swirl, which plays out by itself
+	/// and goes with the miracle
+	virtual void StartCastEffect(ecs::components::Spell& /*spell*/, ParticleType /*type*/) {}
+	/// The flock miracles' animals, none where there are none to make
+	[[nodiscard]] virtual FlockMiracleInterface* Flocks() { return nullptr; }
+	/// The teleport's stone for the miracle at where it was cast, none if one may not go there
+	virtual entt::entity CreateTeleportStone(const ecs::components::Spell& /*spell*/) { return entt::null; }
+	/// Whether a teleport stone may go at a point: nothing fixed on the land within its reach
+	[[nodiscard]] virtual bool CanPlaceTeleportStone(glm::vec3 /*point*/) const { return true; }
+	/// A shield was struck by another miracle and stood, or was destroyed: the people about it see it
+	virtual void ShieldStruck(const ecs::components::Spell& /*shield*/, bool /*destroyed*/) {}
+	/// Whether what a miracle made in the world still stands: a shield's dome, a forest's trees
+	[[nodiscard]] virtual bool HasWorldObjects(const ecs::components::Spell& /*spell*/) const { return false; }
+	/// The forest plants its trees round where it was cast; whether it planted any
+	virtual bool PlantForest(ecs::components::Spell& /*spell*/) { return false; }
+	/// Whether a forest may be cast at a point: there is room for a tree, and no building's fire there
+	[[nodiscard]] virtual bool ForestCanGrowAt(glm::vec3 /*point*/) const { return true; }
+	/// The miracle's own entity, none where there are no entities
+	[[nodiscard]] virtual entt::entity SpellEntity(const ecs::components::Spell& /*spell*/) const { return entt::null; }
 };
 
-/// A player as a caster: the neutral player, whose miracles scripts cast, gives all the prayer power they ask for; a
-/// human player gives none, so a miracle from the hand lives on what it was cast with
+/// A player as a caster: the neutral player, whose miracles scripts cast, gives all the prayer power they ask for; any
+/// other player pays from their prayer power, which the store function finds (none without a store)
 class PlayerSpellCaster final: public SpellCasterInterface
 {
 public:
-	explicit PlayerSpellCaster(PlayerNames player)
+	using StoreOf = std::function<ecs::components::PrayerPower*(PlayerNames)>;
+	explicit PlayerSpellCaster(PlayerNames player, StoreOf store = {})
 	    : _player(player)
+	    , _store(std::move(store))
 	{
 	}
-	float MaintainSpell(float amount) override { return _player == PlayerNames::NEUTRAL ? amount : 0.0f; }
+	float MaintainSpell(float amount) override
+	{
+		return PlayerMaintainSpell(_player, _store ? _store(_player) : nullptr, amount);
+	}
 
 private:
 	PlayerNames _player;
+	StoreOf _store;
+};
+
+/// A player as the caster of a miracle whose seed came from a globe or a dispenser. The player made that seed, not a
+/// worship site, and a player tops up no miracle; only the neutral player gives all its miracles ask for.
+class GlobeSpellCaster final: public SpellCasterInterface
+{
+public:
+	void Bind(PlayerNames player) { _player = player; }
+	float MaintainSpell(float amount) override { return PlayerMaintainSpell(_player, nullptr, amount); }
+
+private:
+	PlayerNames _player {PlayerNames::NEUTRAL};
 };
 
 /// Any other object as a caster gives all the prayer power its miracle asks for
@@ -97,10 +141,18 @@ namespace spells
 /// What it costs to keep each turn
 [[nodiscard]] float CostToMaintain(const InfoConstants& info, const ecs::components::Spell& spell);
 
-/// Whether a player may cast a magic type at a point: its tables' rule (on land, in the player's influence, unless
-/// influence is ignored), then its kind's own (the heal needs someone to heal, food and wood dry land)
+/// Whether a miracle held in the hand may stay where the hand points: on the map, and its table's rule alone, land being
+/// a cell without water (influence counts unless ignored)
+[[nodiscard]] bool MeetsCastRule(SpellServicesInterface& services, MagicType type, PlayerNames player, glm::vec3 point,
+                                 bool ignoreInfluence);
+/// Whether a player may cast a magic type at a point: its tables' rule (on land, a cell without water, and in the player's
+/// influence, unless influence is ignored), then its kind's own (the heal needs someone to heal, food, wood and the
+/// forest land)
 [[nodiscard]] bool CanCastAt(SpellServicesInterface& services, MagicType type, PlayerNames player, glm::vec3 point,
                              bool ignoreInfluence);
+/// Whether a miracle can be cast at a point by itself, as a creature casts it, with no influence to hold it back: a heal
+/// only where it finds someone to heal
+[[nodiscard]] bool CanCastAtPointItself(SpellServicesInterface& services, MagicType type, glm::vec3 point);
 
 /// What its kind does before its effect starts: a shield takes its size within its limits, and what a kind keeps
 /// starts afresh
@@ -126,7 +178,22 @@ bool StrikeSpell(SpellServicesInterface& services, ecs::components::Spell& spell
 /// What its kind does each turn beyond its particles: the water rains a drop round where it is cast
 void ProcessTurn(SpellServicesInterface& services, ecs::components::Spell& spell);
 
-/// Whether what it has left is enough to cast it again from its seed: food and wood need enough for their first grain
+/// Whether what its kind made keeps it alive after its effect has gone or it has closed down: a shield's dome fading out,
+/// a forest's trees withering, a flock still flying
+[[nodiscard]] bool KeptByKind(SpellServicesInterface& services, const ecs::components::Spell& spell);
+
+/// The particle effect its kind starts: its magic type's, but the flocks' by kind (and the flying flock's by its caster's
+/// alignment)
+[[nodiscard]] ParticleType ParticleTypeOf(SpellServicesInterface& services, const ecs::components::Spell& spell);
+
+/// Whether its kind keeps following its caster's hand after the cast: a flock while it still makes its animals
+[[nodiscard]] bool FollowsHand(SpellServicesInterface& services, const ecs::components::Spell& spell);
+
+/// Who its effects come from, whose alignment they move
+[[nodiscard]] EffectSource SourceOf(const ecs::components::Spell& spell);
+
+/// Whether what it has left is enough to cast it again from its seed: food and wood need enough for their first grain,
+/// a forest trees still to make
 [[nodiscard]] bool HasEnoughForRecast(const InfoConstants& info, const ecs::components::Spell& spell);
 
 /// The heat a fireball of a magic type gives off at full strength

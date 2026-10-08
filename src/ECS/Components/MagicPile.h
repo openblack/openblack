@@ -14,12 +14,11 @@
 namespace openblack::ecs::components
 {
 
-/// A pile of food or wood a miracle put down, which more of the same miracle tops up
+/// A pile of food or wood a miracle put down, and the player whose it is
 struct MagicPile
 {
 	ResourceType resource {ResourceType::Food};
-	/// Its food makes the people who eat it work faster
-	bool sparkles {false};
+	PlayerNames player {PlayerNames::NEUTRAL};
 };
 
 } // namespace openblack::ecs::components

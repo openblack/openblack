@@ -155,9 +155,9 @@ public:
 	/// Whether a player may cast a magic type at a point
 	[[nodiscard]] virtual bool CanCastAt(MagicType type, PlayerNames player, glm::vec3 point) = 0;
 	/// Something the miracle made acts for it, as its particles would: whether the miracle acted
-	virtual bool SpellEvent(entt::entity /*spell*/, const particles::SpellEventInfo& /*event*/) { return false; }
+	virtual bool SpellEvent(entt::entity spell, const particles::SpellEventInfo& event) = 0;
 	/// The miracle pays prayer power, or is given it back for a negative cost
-	virtual void PayForSpell(entt::entity /*spell*/, float /*cost*/) {}
+	virtual void PayForSpell(entt::entity spell, float cost) = 0;
 
 	// Dispensers and one-shot miracles
 
@@ -180,7 +180,7 @@ public:
 	virtual entt::entity GiveSeedToHand(PlayerNames player, SpellSeedType seed, int powerUp, float multiplier) = 0;
 	/// A seed summoned from the player's worship into their hand, if it is free: its cost to create is charged from the
 	/// player's prayer power, as much as they have, and it is ready after the usual delay. The seed, or none.
-	virtual entt::entity SummonSeed(PlayerNames /*player*/, SpellSeedType /*seed*/, int /*powerUp*/) { return entt::null; }
+	virtual entt::entity SummonSeed(PlayerNames player, SpellSeedType seed, int powerUp) = 0;
 	/// The hand drops the miracle it holds, as a scribble or a shake does: what was started is called off and what the
 	/// seed still holds goes back to the player's worship
 	virtual void DiscardHeldSeed() = 0;
@@ -191,7 +191,7 @@ public:
 	virtual void UpdateHand(const HandFrame& frame, float seconds) = 0;
 	/// The left button tapped: a bubble under the cursor goes into the hand. Whether one did, so the hand doesn't grip
 	/// the land with the press.
-	virtual bool TapAction() { return false; }
+	virtual bool TapAction() = 0;
 	/// The action button went down with a miracle in the hand: it is armed, locked on or cast. Whether the miracles took
 	/// the press, so the creatures don't.
 	virtual bool PressAction() = 0;
@@ -200,8 +200,8 @@ public:
 	/// Whether the hand holds a miracle, so it doesn't take hold of creatures or things
 	[[nodiscard]] virtual bool IsHandBusy() const = 0;
 	/// How a pour of food or wood lifts and tips the hand now, a fraction of the way from the last turn to the next
-	[[nodiscard]] virtual magic::PourPose GetHandPour(float /*fraction*/) const { return {}; }
-	[[nodiscard]] virtual HandCastState GetHandCastState() const { return {}; }
+	[[nodiscard]] virtual magic::PourPose GetHandPour(float fraction) const = 0;
+	[[nodiscard]] virtual HandCastState GetHandCastState() const = 0;
 	[[nodiscard]] virtual std::optional<entt::entity> GetHeldSeed() const = 0;
 	/// The one-shot bubble nearest along a line of sight, if any
 	[[nodiscard]] virtual std::optional<entt::entity> OrbAlong(glm::vec3 origin, glm::vec3 direction) const = 0;
@@ -216,12 +216,12 @@ public:
 
 	/// An event a miracle's object sends it, as its particles do, such as a blow on the physical shield's dome; whether it
 	/// acted
-	virtual bool SendSpellEvent(entt::entity /*spell*/, const particles::SpellEventInfo& /*event*/) { return false; }
+	virtual bool SendSpellEvent(entt::entity spell, const particles::SpellEventInfo& event) = 0;
 	/// A miracle is made to pay prayer power, its caster asked for the whole shortfall, as a blow on a shield is; its
 	/// strength after
-	virtual float ForcePayForSpell(entt::entity /*spell*/, float /*cost*/) { return 0.0f; }
+	virtual float ForcePayForSpell(entt::entity spell, float cost) = 0;
 	/// A miracle's strength now, 0 once it has gone
-	[[nodiscard]] virtual float SpellStrength(entt::entity /*spell*/) { return 0.0f; }
+	[[nodiscard]] virtual float SpellStrength(entt::entity spell) = 0;
 
 	// Turns and frames
 
@@ -240,9 +240,9 @@ public:
 	virtual void SetIgnoreInfluence(bool ignore) = 0;
 	/// For the testbed's scenarios: the hand is where the scenario puts it, not where the mouse is, until none is given,
 	/// so that a scenario can cast through the hand as a player does
-	virtual void DriveHand(std::optional<HandFrame> /*frame*/) {}
+	virtual void DriveHand(std::optional<HandFrame> frame) = 0;
 	/// Where a scenario puts the hand, if it does: the hand is drawn there
-	[[nodiscard]] virtual std::optional<HandFrame> GetDrivenHand() const { return std::nullopt; }
+	[[nodiscard]] virtual std::optional<HandFrame> GetDrivenHand() const = 0;
 	[[nodiscard]] virtual bool IsIgnoringInfluence() const = 0;
 	[[nodiscard]] virtual std::vector<SpellInfo> GetSpells() const = 0;
 	/// The newest miracle of a kind, closing down or not, whose last event was strictly within a radius of a point
@@ -252,7 +252,7 @@ public:
 	}
 	/// The rain puts out a fire at a point: the first storm miracle whose size covers it, without such a reaction going,
 	/// has the people come to watch
-	virtual void RainOnFire(const glm::vec3& /*point*/) {}
+	virtual void RainOnFire(const glm::vec3& point) = 0;
 	[[nodiscard]] virtual std::vector<DispenserInfo> GetDispensers() const = 0;
 };
 
