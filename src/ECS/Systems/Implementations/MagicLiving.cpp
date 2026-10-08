@@ -322,9 +322,12 @@ bool magic_living::TakesEffectItsOwnWay(entt::entity entity, const magic::Effect
 		FrightenedAndAngered(entity, damage, source);
 		return false;
 	}
-	// A thing striking a fighting creature in the physics is neither a blow of the fight nor taken from its life
+	// A thing striking a fighting creature in the physics is neither a blow of the fight nor taken from its life; as
+	// after any effect, a heal in it still mends its marks and its opinion of a creature behind it still changes
 	if (source.blow)
 	{
+		HealMarks(entity, magic::HealFrom(values, defence));
+		ChangeOpinion(entity, values, source);
 		return true;
 	}
 	// In a fight it takes the miracle as a blow: blocking, a tenth of it; it reels, a heal gives back the health it fights

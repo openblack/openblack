@@ -9,6 +9,8 @@
 
 #include "ObjectPhysics.h"
 
+#include <cmath>
+
 #include <algorithm>
 #include <array>
 #include <numbers>
@@ -37,6 +39,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
 #include "ECS/Components/Town.h"
@@ -321,7 +324,9 @@ entt::entity object_physics::EndDeadTree(systems::DynamicsSystemInterface& dynam
 {
 	ConsiderArtefact(entry, deadTree, insert);
 	const auto kept = dynamics.EndPhysicsAsObject(deadTree, insert, entry != nullptr);
-	if (kept == deadTree && Entities().Valid(deadTree))
+	// A felled tree comes down as a fixed thing does: it called people to its wood as it fell
+	const auto* data = Entities().TryGet<const DeadTree>(deadTree);
+	if (kept == deadTree && Entities().Valid(deadTree) && (data == nullptr || !data->felled))
 	{
 		CallForWood(deadTree, entry != nullptr ? entry->player : std::nullopt);
 	}
@@ -503,6 +508,7 @@ entt::entity object_physics::FellTree(systems::DynamicsSystemInterface& dynamics
 	// A dead tree of the tree's kind and size, as it stands, the neutral player's
 	const auto felled = archetypes::DeadTreeArchetype::Create(transform->position, feature->type, 0.0f, transform->scale.x);
 	registry.Get<Transform>(felled).rotation = transform->rotation;
+	registry.Get<DeadTree>(felled).felled = true;
 	const auto fall = physics::objects::FellingOf(
 	    height, glm::vec2(transform->position.x - from->position.x, transform->position.z - from->position.z));
 	const auto started = dynamics.InitialisePhysics(felled, {.velocity = fall.velocity,
@@ -524,6 +530,59 @@ entt::entity object_physics::FellTree(systems::DynamicsSystemInterface& dynamics
 	return felled;
 }
 
+namespace
+{
+/// The nearest thing of a kind within a reach of a point, as the game finds one: the cells in a spiral out from the
+/// point's own, at least three by three of them and as many as twice the reach covers; a thing counts when it is
+/// strictly within the reach and strictly nearer than the nearest so far, so the first met wins a tie; and once one is
+/// found the walk ends at the first cell farther than half as far again as it, and ten more
+template <typename Kind>
+entt::entity FindNearest(const map_coords::MapCoords& from, float reach, entt::entity except, Kind isKind)
+{
+	if (!Locator::entitiesMap::has_value())
+	{
+		return entt::null;
+	}
+	const auto& map = Locator::entitiesMap::value();
+	auto& registry = Entities();
+	auto side = static_cast<int32_t>(std::ceil((reach + reach) / map_coords::k_CellSize));
+	side = std::max(side, 3);
+	int32_t cells = side * side;
+	entt::entity nearest = entt::null;
+	float best = 0.0f;
+	auto coords = from;
+	map_coords::Spiral spiral;
+	while (cells != 0 && (nearest == entt::null || gutils::GetDistanceInMetres(from, coords) <= best * 1.5f + 10.0f))
+	{
+		if (const glm::ivec2 cell = map_coords::Cell(coords); map_coords::InBounds(cell))
+		{
+			for (const auto thing : map.GetAllInCell(cell))
+			{
+				if (thing == except || !registry.Valid(thing) || !isKind(thing))
+				{
+					continue;
+				}
+				const auto* place = registry.TryGet<const Transform>(thing);
+				if (place == nullptr)
+				{
+					continue;
+				}
+				const float distance =
+				    gutils::GetDistanceInMetres(from, map_coords::FromMetres({place->position.x, place->position.z}));
+				if (distance < reach && (distance < best || nearest == entt::null))
+				{
+					nearest = thing;
+					best = distance;
+				}
+			}
+		}
+		--cells;
+		map_coords::AddCells(coords, spiral.Next());
+	}
+	return nearest;
+}
+} // namespace
+
 void object_physics::ConsiderArtefact(const PhysicsEntry* entry, entt::entity object, bool insert)
 {
 	auto& registry = Entities();
@@ -535,28 +594,29 @@ void object_physics::ConsiderArtefact(const PhysicsEntry* entry, entt::entity ob
 	}
 	const auto* info = world_objects::InfoOf(object);
 	const auto* transform = registry.TryGet<const Transform>(object);
+	// TODO(scripts): a thing a script holds can't become an artefact either; openblack's scripts hold no objects yet
 	if (info == nullptr || transform == nullptr || !(info->artifactMultiplier > 0.0f))
 	{
 		return;
 	}
-	// The nearest building within reach
-	const glm::vec2 at {transform->position.x, transform->position.z};
-	entt::entity nearest = entt::null;
-	float best = physics::objects::k_ArtefactReach;
-	registry.Each<const Abode, const Transform>([&](entt::entity abode, const Abode&, const Transform& place) {
-		const float distance = glm::distance(at, glm::vec2(place.position.x, place.position.z));
-		if (distance <= best)
-		{
-			best = distance;
-			nearest = abode;
-		}
-	});
+	// The nearest building within reach, found as the game finds the nearest of a kind of thing: a spiral of cells out
+	// from its own, nearest strictly first, until the cells lie well beyond the nearest found
+	// TODO(worship): a worship site is suitable as well, and a nearer one takes the artefact; openblack has none yet
+	const auto own = map_coords::FromMetres({transform->position.x, transform->position.z});
+	const auto nearest = FindNearest(own, physics::objects::k_ArtefactReach, object,
+	                                 [&registry](entt::entity thing) { return registry.AnyOf<Abode, SpellDispenser>(thing); });
 	if (nearest == entt::null)
 	{
 		return;
 	}
+	// TODO(dispensers): a spell dispenser belongs to its town in the game; openblack's keep no town, so none takes it
+	const auto* abode = registry.TryGet<const Abode>(nearest);
+	if (abode == nullptr)
+	{
+		return;
+	}
 	entt::entity town = entt::null;
-	const auto townId = registry.Get<const Abode>(nearest).townId;
+	const auto townId = abode->townId;
 	registry.Each<const Town>([&town, townId](entt::entity entity, const Town& data) {
 		if (data.id == townId)
 		{

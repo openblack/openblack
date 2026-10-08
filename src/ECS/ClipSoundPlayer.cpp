@@ -14,10 +14,10 @@
 
 #include "3D/AllMeshes.h"
 #include "3D/L3DAnim.h"
+#include "3D/TempleInteriorInterface.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Audio/ClipSounds.h"
 #include "ECS/Components/LivingAction.h"
-#include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/SoundGround.h"
@@ -36,12 +36,6 @@ constexpr std::string_view k_BanterBank = "VillagersBanter.sad";
 /// The alignment key every clip's sound is played with
 constexpr int32_t k_ClipSoundAlignment = 2;
 
-/// A clip's name as the animation pack spells it, up to its first null
-std::string_view NameOf(const L3DAnim& clip)
-{
-	const auto& name = clip.GetName();
-	return std::string_view(name.c_str());
-}
 } // namespace
 
 void ecs::clip_sound_player::Play(entt::entity entity, AnimId clipId, const L3DAnim& clip, uint32_t place, uint32_t played,
@@ -56,7 +50,7 @@ void ecs::clip_sound_player::Play(entt::entity entity, AnimId clipId, const L3DA
 	{
 		return;
 	}
-	const auto* sounds = tables.Handle(clip_sounds::k_TableId.value())->Find(NameOf(clip));
+	const auto* sounds = tables.Handle(clip_sounds::k_TableId.value())->OfClip(static_cast<uint32_t>(clipId));
 	if (sounds == nullptr || sounds->sounds.empty())
 	{
 		return;
@@ -79,49 +73,37 @@ void ecs::clip_sound_player::Play(entt::entity entity, AnimId clipId, const L3DA
 	                                      villager != nullptr && villager->lifeStage == Villager::LifeStage::Child,
 	                                      villager != nullptr && villager->sex == Villager::Sex::FEMALE);
 	const auto surface = creature_audio::SurfaceKey(sound_ground::At(position));
+	const bool insideTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	for (const auto index : passed)
 	{
 		const auto& sound = sounds->sounds[index];
-		// A person's clip sounds only while the person is alive
-		if (sounds->soundType == clip_sounds::k_PeopleSounds && world_objects::LifeOf(entity) <= 0.0f)
+		const auto route = clip_sounds::RouteOf({
+		    .soundType = sounds->soundType,
+		    .action = sound.action,
+		    .mode = sound.mode,
+		    .clip = static_cast<uint32_t>(clipId),
+		    .isVillager = villager != nullptr,
+		    .alive = world_objects::LifeOf(entity) > 0.0f,
+		    .turnsInState = action != nullptr ? action->turnsSinceStateChange : uint16_t {0},
+		    .insideTemple = insideTemple,
+		});
+		if (route.outcome == clip_sounds::Outcome::Stop)
 		{
 			return;
+		}
+		if (route.outcome == clip_sounds::Outcome::Skip)
+		{
+			continue;
 		}
 		const audio::AnimEffectKeys keys {.size = size,
 		                                  .alignment = k_ClipSoundAlignment,
 		                                  .object = static_cast<audio::SoundObject>(sounds->soundType),
 		                                  .surface = surface,
 		                                  .action = static_cast<audio::SoundAction>(sound.action)};
-		std::string_view bank = k_EditorBank;
-		entt::entity owner = entity;
-		glm::vec3 from = position;
-		if (sound.action >= clip_sounds::k_HomeBanter && sound.action <= clip_sounds::k_LastBanter)
-		{
-			bank = k_BanterBank;
-			if (sound.action == clip_sounds::k_HomeBanter)
-			{
-				// Only a villager has a home to banter from
-				if (villager == nullptr || !registry.Valid(villager->abode))
-				{
-					continue;
-				}
-				owner = villager->abode;
-				if (const auto* home = registry.TryGet<const Transform>(owner); home != nullptr)
-				{
-					from = home->position;
-				}
-			}
-		}
-		else if (villager != nullptr && action != nullptr)
-		{
-			// A thrown person screams only early in its flight
-			const auto turns = action->turnsSinceStateChange;
-			if ((clipId == AnimId::PThrown && turns >= clip_sounds::k_ThrownSoundTurns) ||
-			    (clipId == AnimId::PThrownVortex && turns >= clip_sounds::k_ThrownVortexSoundTurns))
-			{
-				continue;
-			}
-		}
-		Locator::audio::value().PlayAnimEffect(std::string(bank), keys.ToArray(), owner, from);
+		// The home's banter belongs to the home, which a homeless villager hasn't, and is heard as far off as the
+		// villager is
+		const auto owner = route.fromHome ? villager->abode : entity;
+		const auto bank = route.bank == clip_sounds::Bank::Banter ? k_BanterBank : k_EditorBank;
+		Locator::audio::value().PlayAnimEffect(std::string(bank), keys.ToArray(), owner, position);
 	}
 }

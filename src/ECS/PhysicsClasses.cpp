@@ -315,7 +315,8 @@ physics_classes::ClassFacts ClassifyKind(const Registry& registry, entt::entity 
 	{
 		// The wood the hand carries is a dead tree drawn as a log, a movable thing of its own model
 		const auto* mesh = registry.TryGet<const Mesh>(entity);
-		const bool log = mesh != nullptr && mesh->id == resources::HashIdentifier(MeshId::ObjectWoodInHand);
+		const bool log = mesh != nullptr && mesh->id == resources::HashIdentifier(MeshId::ObjectWoodInHand) &&
+		                 !registry.Get<const DeadTree>(entity).felled;
 		if (log)
 		{
 			return {

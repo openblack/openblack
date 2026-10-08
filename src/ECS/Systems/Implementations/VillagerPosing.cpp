@@ -55,9 +55,10 @@ void LivingActionSystem::UpdatePoses(uint32_t turn, float turnFraction)
 	        const Transform& transform, VillagerPose& pose) {
 		    const auto state = action.states[static_cast<size_t>(LivingAction::Index::Top)];
 		    std::optional<AnimId> chosen;
+		    // A clip chosen by an earlier state is no choice of this one
 		    if (const auto* own = registry.TryGet<const VillagerClip>(entity); own != nullptr)
 		    {
-			    chosen = own->clip;
+			    chosen = physics::living::ChoiceOfState(state, static_cast<uint8_t>(own->state), own->clip);
 		    }
 		    const int32_t tableClip = state < states.size() ? static_cast<int32_t>(states[state].animation) : -1;
 		    // A state starts its clip from the beginning; a negative clip keeps the one playing

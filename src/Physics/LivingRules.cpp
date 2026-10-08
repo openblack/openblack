@@ -339,3 +339,12 @@ std::optional<AnimId> living::VillagerStateClip(uint8_t state, std::optional<Ani
 	}
 	return static_cast<AnimId>(tableClip);
 }
+
+std::optional<AnimId> openblack::physics::living::ChoiceOfState(uint8_t state, uint8_t chosenBy, AnimId clip)
+{
+	if (state != chosenBy)
+	{
+		return std::nullopt;
+	}
+	return clip;
+}

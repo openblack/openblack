@@ -7,7 +7,9 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <array>
 #include <sstream>
+#include <string_view>
 
 #include <SASFile.h>
 #include <gtest/gtest.h>
@@ -72,4 +74,36 @@ TEST(ClipSounds, TheTableFindsAClipByName)
 	ASSERT_NE(table.Find("M_P_Drowning"), nullptr);
 	EXPECT_EQ(table.Find("M_P_Drowning")->sounds[0].action, 134);
 	EXPECT_EQ(table.Find("M_P_Thrown"), nullptr);
+}
+
+TEST(ClipSounds, ANamesSoundsGoToTheFirstPackedClipBearingIt)
+{
+	ClipSoundTable table(
+	    sas::SASFile {.version = 1, .clips = {{.clip = "M_P_Drowning", .soundType = 1, .sounds = {{257, 134, 0}}}}});
+	const std::array<std::string_view, 4> names {"M_P_Walk", "M_P_Drowning", "M_P_Run", "M_P_Drowning"};
+	table.Attach(names);
+	EXPECT_EQ(table.OfClip(0), nullptr);
+	ASSERT_NE(table.OfClip(1), nullptr);
+	EXPECT_EQ(table.OfClip(1)->sounds[0].action, 134);
+	EXPECT_EQ(table.OfClip(3), nullptr);
+}
+
+TEST(ClipSounds, ASoundsRouteFollowsTheGamesRules)
+{
+	// A dead person's clip falls silent for the rest of its sounds
+	EXPECT_EQ(RouteOf({.soundType = k_PeopleSounds, .isVillager = true, .alive = false}).outcome, Outcome::Stop);
+	// The first banter comes from the villager's home, the others from the villager; both from the banter bank
+	const auto home = RouteOf({.soundType = k_PeopleSounds, .action = k_HomeBanter, .isVillager = true});
+	EXPECT_EQ(home.outcome, Outcome::Play);
+	EXPECT_EQ(home.bank, Bank::Banter);
+	EXPECT_TRUE(home.fromHome);
+	EXPECT_FALSE(RouteOf({.soundType = k_PeopleSounds, .action = k_LastBanter, .isVillager = true}).fromHome);
+	// A thrown person screams only early in its flight
+	EXPECT_EQ(RouteOf({.soundType = 1, .clip = k_ThrownClip, .isVillager = true, .turnsInState = 14}).outcome, Outcome::Play);
+	EXPECT_EQ(RouteOf({.soundType = 1, .clip = k_ThrownClip, .isVillager = true, .turnsInState = 15}).outcome, Outcome::Skip);
+	EXPECT_EQ(RouteOf({.soundType = 1, .clip = k_ThrownVortexClip, .isVillager = true, .turnsInState = 10}).outcome,
+	          Outcome::Skip);
+	// Inside the temple only sounds played another way than the ordinary one are heard
+	EXPECT_EQ(RouteOf({.soundType = 3, .mode = 0, .insideTemple = true}).outcome, Outcome::Skip);
+	EXPECT_EQ(RouteOf({.soundType = 3, .mode = 1, .insideTemple = true}).outcome, Outcome::Play);
 }

@@ -168,6 +168,8 @@ enum class FleeStep : uint8_t
 [[nodiscard]] std::optional<AnimId> VillagerStateClip(uint8_t state, std::optional<AnimId> chosen, int32_t tableClip);
 /// Whether a villager state picks its clip itself rather than taking its row of the state table
 [[nodiscard]] bool VillagerStateChoosesClip(uint8_t state);
+/// The clip a villager's state chose, when the state that chose it is still the one it is in: each state chooses afresh
+[[nodiscard]] std::optional<AnimId> ChoiceOfState(uint8_t state, uint8_t chosenBy, AnimId clip);
 
 /// The rows of the deeds creatures copy that the physics reports
 inline constexpr uint32_t k_DeedDamageByThrowing = 15;

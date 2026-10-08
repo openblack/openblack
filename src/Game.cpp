@@ -2074,7 +2074,7 @@ bool Game::Initialize() noexcept
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 	// The game stops one of the packed clips playing round and round as it loads them
-	if (constexpr uint32_t k_HeldOnceClip = 323; animationManager.Contains(k_HeldOnceClip))
+	if (constexpr uint32_t k_HeldOnceClip = 323; animationManager.Contains(resources::HashIdentifier(k_HeldOnceClip)))
 	{
 		animationManager.Handle(resources::HashIdentifier(k_HeldOnceClip))->StopLooping();
 	}
@@ -2087,6 +2087,17 @@ bool Game::Initialize() noexcept
 	else
 	{
 		resources.GetClipSounds().Load(audio::clip_sounds::k_TableId.value(), resources::ClipSoundsLoader::EmptyTag {});
+	}
+	{
+		// Each name's sounds go to the first packed clip bearing it
+		std::vector<std::string_view> packNames;
+		packNames.reserve(animations.size());
+		for (size_t i = 0; i < animations.size(); ++i)
+		{
+			const auto clip = animationManager.Handle(resources::HashIdentifier(i));
+			packNames.emplace_back(clip ? std::string_view(clip->GetName().c_str()) : std::string_view {});
+		}
+		resources.GetClipSounds().Handle(audio::clip_sounds::k_TableId.value())->Attach(packNames);
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {

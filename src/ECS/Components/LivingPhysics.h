@@ -19,9 +19,11 @@
 namespace openblack::ecs::components
 {
 
-/// The clip a villager's state chose for it, where the state picks its own rather than its table's
+/// The clip a villager's state chose for it, where the state picks its own rather than its table's. A choice belongs
+/// to the state that made it: a later state chooses afresh.
 struct VillagerClip
 {
+	VillagerStates state {VillagerStates::InvalidState};
 	AnimId clip {AnimId::Invalid};
 };
 

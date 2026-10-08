@@ -172,7 +172,8 @@ bool villager_physics::StartFlying(entt::entity villager)
 	// It flies dead or thrown. Only a vortex bringing people from another land flings them out with the vortex clip;
 	// openblack has no such vortex yet, and a tornado's passengers are simply thrown.
 	registry.AssignOrReplace<VillagerClip>(
-	    villager, VillagerClip {.clip = living::VillagerThrownClip(world_objects::LifeOf(villager) > 0.0f, false)});
+	    villager, VillagerClip {.state = VillagerStates::Flying,
+	                            .clip = living::VillagerThrownClip(world_objects::LifeOf(villager) > 0.0f, false)});
 	return true;
 }
 
@@ -260,7 +261,8 @@ void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
 	}
 	const auto previous = Living().VillagerGetState(*action, LivingAction::Index::Previous);
 	SetTopState(*action, VillagerStates::Landed);
-	registry.AssignOrReplace<VillagerClip>(villager, VillagerClip {.clip = living::VillagerLandedClip(pose, false)});
+	registry.AssignOrReplace<VillagerClip>(
+	    villager, VillagerClip {.state = VillagerStates::Landed, .clip = living::VillagerLandedClip(pose, false)});
 	// Some states it was in it goes straight back to
 	// TODO(physics): a villager scripts control goes back too; openblack keeps no script control of villagers yet
 	if (const auto* row = StateRowOf(previous); row != nullptr && row->field0xf4 != 0)
@@ -360,7 +362,8 @@ void villager_physics::SetupReactToFlyingObject(entt::entity villager, entt::ent
 		const auto first = womanOrChild ? random.GameRand(3) : 1;
 		const auto second = first != 0 ? random.GameRand(3) : 0;
 		registry.AssignOrReplace<VillagerClip>(villager,
-		                                       VillagerClip {.clip = living::PointingClip(womanOrChild, first, second)});
+		                                       VillagerClip {.state = VillagerStates::PointAtFlyingObjectReaction,
+		                                                     .clip = living::PointingClip(womanOrChild, first, second)});
 	}
 }
 
@@ -396,7 +399,7 @@ uint32_t villager_physics::Landed(LivingAction& action)
 		Locator::reactionSystem::value().RemoveFrom(villager, Reaction::ReactToVillagerInHand);
 	}
 	const auto* clip = registry.TryGet<const VillagerClip>(villager);
-	if (clip != nullptr && !ClipPlayed(action, clip->clip))
+	if (clip != nullptr && clip->state == VillagerStates::Landed && !ClipPlayed(action, clip->clip))
 	{
 		return 1;
 	}

@@ -215,3 +215,11 @@ TEST(PhysicsLiving, AVillagersStateChoosesItsClipOrTakesItsRow)
 	// A negative row keeps the clip playing
 	EXPECT_EQ(VillagerStateClip(24, std::nullopt, -1), std::nullopt);
 }
+
+TEST(PhysicsLiving, AStatesClipChoiceIsNoChoiceOfTheNextState)
+{
+	// Landed chose its landing clip; walking on afterwards chooses afresh and rests until it does
+	EXPECT_EQ(ChoiceOfState(11, 11, AnimId::PLanded), AnimId::PLanded);
+	EXPECT_EQ(ChoiceOfState(1, 11, AnimId::PLanded), std::nullopt);
+	EXPECT_EQ(VillagerStateClip(1, ChoiceOfState(1, 11, AnimId::PLanded), 0), AnimId::Invalid);
+}
