@@ -1867,6 +1867,21 @@ void AddParticles(std::vector<Scenario>& all)
 	});
 
 	all.push_back({
+	    .id = "particles.vortex_and_flies_sounds",
+	    .name = "The landscape vortex's and the flies' sounds",
+	    .facet = Facet::Particles,
+	    .description = "The landscape vortex as it opens and as it closes, and a swarm of flies, side by side and close up, "
+	                   "every eight seconds. Their sounds are named in the effect files by sound actions the game's header "
+	                   "numbers by counting on from the one before.",
+	    .expected = "The vortices play the vortex's hum and the flies their buzz as they start; the debug log names an "
+	                "emitter for each.",
+	    .framing = {.shot = Shot::Overview, .include = {{-15.0f, 30.0f}, {15.0f, 50.0f}}, .distance = 0.4f},
+	    .particles = {{.file = "SF_LandscapeVortexInBefore", .offset = {-8.0f, 40.0f}, .restartSeconds = 8.0f},
+	                  {.file = "SF_LandscapeVortexOutAfter", .offset = {8.0f, 40.0f}, .restartSeconds = 8.0f},
+	                  {.file = "SF_Flies", .offset = {0.0f, 36.0f}, .height = 2.0f, .restartSeconds = 8.0f}},
+	});
+
+	all.push_back({
 	    .id = "particles.mist",
 	    .name = "Mist over the holders",
 	    .facet = Facet::Particles,
@@ -2017,9 +2032,15 @@ std::vector<Scenario> Build()
 	AddEditor(all);
 	AddMiracleScenarios(all);
 	AddGlobeScenarios(all);
+	AddLifeLightScenarios(all);
+	AddCreatureCastingScenarios(all);
 	AddBenchmark(all);
 	AddCreatureModeScenarios(all);
 	AddGestureScenarios(all);
+	AddStormScenarios(all);
+	AddFlockScenarios(all);
+	AddTeleportScenarios(all);
+	AddTornadoScenarios(all);
 	AddHandNavigationScenarios(all);
 	AddHandLookScenarios(all);
 	return all;

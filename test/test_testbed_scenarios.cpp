@@ -743,3 +743,38 @@ TEST(TestbedScenarios, CrowdsAreChecked)
 	scenario.crowd = Crowd {.count = 0, .perFrame = 5};
 	EXPECT_FALSE(Problems(scenario).empty());
 }
+
+TEST(TestbedScenarios, CoversCastingThroughTheHand)
+{
+	// Every way the hand casts is tried through the action button: thrown, at a circle, held, placed, on a creature,
+	// and from a seed summoned from worship
+	bool thrown = false;
+	bool circle = false;
+	bool held = false;
+	bool onCreature = false;
+	bool worship = false;
+	std::set<MagicType> withoutEffects;
+	for (const auto& scenario : All())
+	{
+		for (const auto& miracle : scenario.miracles)
+		{
+			thrown =
+			    thrown || (miracle.byHand && miracle.type == MagicType::Fireball && glm::length(miracle.throwVelocity) > 0.0f);
+			circle = circle || (miracle.byHand && miracle.circleRadius.has_value());
+			held = held || (miracle.byHand && miracle.holdSeconds.has_value());
+			onCreature = onCreature || (miracle.byHand && miracle.target == MiracleCast::Target::Creature);
+			worship = worship || (miracle.byHand && miracle.fromWorship);
+			withoutEffects.insert(miracle.type);
+		}
+	}
+	EXPECT_TRUE(thrown);
+	EXPECT_TRUE(circle);
+	EXPECT_TRUE(held);
+	EXPECT_TRUE(onCreature);
+	EXPECT_TRUE(worship);
+	// The miracles with no particle effect of their own, which used to go on their first turn
+	for (const auto type : {MagicType::Teleport, MagicType::FlockFlying, MagicType::FlockGround, MagicType::PhysicalShield})
+	{
+		EXPECT_TRUE(withoutEffects.contains(type)) << static_cast<int>(type);
+	}
+}
