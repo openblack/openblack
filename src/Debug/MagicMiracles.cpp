@@ -17,14 +17,18 @@
 
 #include <fmt/format.h>
 #include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <imgui.h>
 
 #include "Camera/Camera.h"
 #include "Creature/CreatureSpells.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureSpells.h"
+#include "ECS/Components/Player.h"
+#include "ECS/Components/PrayerPower.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/GestureEventsInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "EngineConfig.h"
 #include "InfoConstants.h"
@@ -39,8 +43,9 @@ using namespace openblack::debug::gui;
 namespace
 {
 constexpr std::array k_PhaseNames {"off", "waiting", "starting", "holding", "finishing"};
-constexpr std::array k_HandResults {"",          "took a miracle",   "readied", "cast",   "cast, held",
-                                    "not ready", "can't cast there", "let go",  "dropped"};
+constexpr std::array k_HandResults {"",           "took a miracle",  "readied",          "cast",
+                                    "cast, held", "not ready",       "can't cast there", "let go",
+                                    "dropped",    "no circle drawn", "powered up"};
 constexpr std::array k_CreatureSpellNames {"Freeze", "Small", "Big",    "Weak",       "Strong", "Fat", "Thin",    "Invisible",
                                            "Nice",   "Nasty", "Hungry", "Frightened", "Tired",  "Ill", "Thirsty", "Itchy"};
 
@@ -72,6 +77,80 @@ std::optional<entt::entity> NearestCreature(glm::vec3 point)
 }
 } // namespace
 
+void Magic::DrawCasting(ecs::systems::MagicSystemInterface& magic, glm::vec3 point) noexcept
+{
+	constexpr std::array k_States {"idle", "armed", "locked on"};
+	const auto state = magic.GetHandCastState();
+	ImGui::Text("Action %s, %s%s", k_States.at(static_cast<size_t>(state.state)), state.holding ? "held down" : "up",
+	            state.pointValid ? "" : ", can't cast here");
+	if (magic.GetHeldSeed().has_value())
+	{
+		ImGui::Text(
+		    "Seed from %s, %s, power-up %d, charge %.0f%s", state.origin == magic::SeedOrigin::Worship ? "worship" : "a bubble",
+		    state.ready ? "ready" : fmt::format("ready in {:.1f} s", state.readyIn).c_str(), state.powerUp, state.chantStore,
+		    state.storedChants >= 0.0f ? fmt::format(", kept {:.0f}", state.storedChants).c_str() : "");
+	}
+	ImGui::Text("Hand moving %.0f, would throw at %.0f", glm::length(state.velocity), state.throwSpeed);
+	if (state.pour.raise != 0.0f || state.pour.tilt != 0.0f)
+	{
+		ImGui::Text("Pouring: up %.1f, tipped %.0f degrees", state.pour.raise, glm::degrees(state.pour.tilt));
+	}
+	if (state.circleCentre.has_value())
+	{
+		ImGui::Text("Circle of %.0f at (%.0f, %.0f), %.1f s left", state.circleRadius, state.circleCentre->x,
+		            state.circleCentre->z, state.circleSecondsLeft);
+	}
+
+	// The gestures, as if drawn, until the hand can draw them
+	if (!Locator::gestureEvents::has_value())
+	{
+		return;
+	}
+	auto& gestures = Locator::gestureEvents::value();
+	ImGui::SetNextItemWidth(120.0f);
+	ImGui::SliderFloat("##radius", &_circleRadius, 5.0f, 200.0f, "radius %.0f");
+	ImGui::SameLine();
+	if (ImGui::Button("Draw circle here"))
+	{
+		gestures.Inject({.kind = ecs::systems::GestureEvent::Kind::Circle,
+		                 .gesture = GestureType::Circle,
+		                 .centre = point,
+		                 .radius = _circleRadius,
+		                 .powerUpLevel = -1});
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Power up 1"))
+	{
+		gestures.Inject({.kind = ecs::systems::GestureEvent::Kind::PowerUp, .powerUpLevel = 0});
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Power up 2"))
+	{
+		gestures.Inject({.kind = ecs::systems::GestureEvent::Kind::PowerUp, .powerUpLevel = 1});
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Scribble"))
+	{
+		gestures.Inject({.kind = ecs::systems::GestureEvent::Kind::Scribble, .gesture = GestureType::Scribble});
+	}
+}
+
+void Magic::DrawPrayer() noexcept
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	registry.Each<const ecs::components::Player, ecs::components::PrayerPower>(
+	    [](entt::entity, const ecs::components::Player& player, ecs::components::PrayerPower& prayer) {
+		    if (player.name != PlayerNames::PLAYER_ONE)
+		    {
+			    return;
+		    }
+		    ImGui::SetNextItemWidth(160.0f);
+		    ImGui::InputFloat("Prayer power", &prayer.chants, 1000.0f, 10000.0f, "%.0f");
+		    ImGui::SameLine();
+		    ImGui::Checkbox("Infinite", &prayer.infinite);
+	    });
+}
+
 void Magic::DrawMiracles() noexcept
 {
 	if (!Locator::magicSystem::has_value())
@@ -83,7 +162,7 @@ void Magic::DrawMiracles() noexcept
 	auto& config = Locator::config::value();
 
 	bool ignore = magic.IsIgnoringInfluence();
-	if (ImGui::Checkbox("Cast anywhere", &ignore))
+	if (ImGui::Checkbox("Cast outside influence", &ignore))
 	{
 		magic.SetIgnoreInfluence(ignore);
 	}
@@ -124,6 +203,15 @@ void Magic::DrawMiracles() noexcept
 		{
 			const auto step = magic::GetPowerUpGesture(magic::GetSpellSeedInfo(info, *seed), _miracle);
 			magic.GiveSeedToHand(PlayerNames::PLAYER_ONE, *seed, step.level, 1.0f);
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Summon from worship"))
+	{
+		if (const auto seed = magic::FindFirstSpellSeedForMagicType(info, _miracle))
+		{
+			const auto step = magic::GetPowerUpGesture(magic::GetSpellSeedInfo(info, *seed), _miracle);
+			magic.SummonSeed(PlayerNames::PLAYER_ONE, *seed, step.level);
 		}
 	}
 	ImGui::SameLine();
@@ -169,6 +257,8 @@ void Magic::DrawMiracles() noexcept
 		ImGui::TextUnformatted("Empty: tap a dispenser's bubble to take its miracle");
 	}
 	ImGui::TextDisabled("Last: %s", k_HandResults.at(static_cast<size_t>(magic.GetLastHandResult())));
+	DrawCasting(magic, point);
+	DrawPrayer();
 
 	ImGui::SeparatorText("Running miracles");
 	constexpr auto k_Flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit;

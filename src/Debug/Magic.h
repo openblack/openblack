@@ -22,6 +22,11 @@
 #include "Particles/ParticleDrawPath.h"
 #include "Window.h"
 
+namespace openblack::ecs::systems
+{
+class MagicSystemInterface;
+}
+
 namespace openblack::debug::gui
 {
 
@@ -47,6 +52,11 @@ private:
 	void DrawRunningEffects() noexcept;
 	/// The running miracles, the dispensers and the creatures' spells, and tools to cast and put them down
 	void DrawMiracles() noexcept;
+	/// The hand's casting: its state, the seed's readiness and charge, the throw, the pour and the circle, and the
+	/// gestures to put in as if drawn
+	void DrawCasting(ecs::systems::MagicSystemInterface& magic, glm::vec3 point) noexcept;
+	/// The player's prayer power, to read and set
+	void DrawPrayer() noexcept;
 	/// The spawned effects given a time close down when it is up
 	void UpdateTimedEffects(float seconds) noexcept;
 	/// Where a spawned effect goes: the hand, or what the camera looks at, on the land
@@ -63,6 +73,8 @@ private:
 	MagicType _selected {MagicType::Fireball};
 	/// The miracle the miracles' tab casts and puts down
 	MagicType _miracle {MagicType::Fireball};
+	/// The radius of a circle put in as if drawn
+	float _circleRadius {30.0f};
 
 	// The sandbox
 	Tribe _tribe {Tribe::NORSE};

@@ -62,6 +62,7 @@
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
+#include "Gestures.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Gui/CreatureCaveScreen.h"
 #include "ImGuiUtils.h"
@@ -132,6 +133,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new gui::Camera);
 	debugWindows.emplace_back(new Weather);
 	debugWindows.emplace_back(new Magic);
+	debugWindows.emplace_back(new Gestures);
 	debugWindows.emplace_back(new KeyBindingsWindow);
 	auto spawner = std::make_unique<CreatureSpawner>();
 	auto scenarios = std::make_unique<TestbedScenarios>(*spawner);

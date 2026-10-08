@@ -208,7 +208,7 @@ void PalettePanel::DrawCreatures(EditorContext& context) noexcept
 	context.spawner.DrawSpawnSettings();
 	ImGui::EndChild();
 	// The species can change while placing
-	if (placing)
+	if (placing && context.placement.item.has_value())
 	{
 		context.placement.item->type = static_cast<int32_t>(context.spawner.GetSpecies());
 	}

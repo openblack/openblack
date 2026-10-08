@@ -385,7 +385,8 @@ void CreatureSpawner::DrawLearning(entt::entity entity) noexcept
 			ImGui::SameLine();
 			if (ImGui::SmallButton("Do it near##deed"))
 			{
-				minds.PlayerDid(static_cast<size_t>(_deed), transform->position + glm::vec3(20.0f, 0.0f, 0.0f), std::nullopt);
+				minds.PlayerDid(static_cast<size_t>(_deed), transform->position + glm::vec3(20.0f, 0.0f, 0.0f), std::nullopt,
+				                std::nullopt);
 			}
 		}
 		if (learnt.mimicry.has_value())
