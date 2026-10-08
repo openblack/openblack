@@ -33,7 +33,7 @@ std::optional<float> villager_clips::ClipMilliseconds(AnimId clip)
 		return std::nullopt;
 	}
 	auto& animations = Locator::resources::value().GetAnimations();
-	const auto key = static_cast<entt::id_type>(clip);
+	const auto key = resources::HashIdentifier(static_cast<uint32_t>(clip));
 	if (!animations.Contains(key))
 	{
 		return std::nullopt;

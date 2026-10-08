@@ -18,6 +18,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/Components/VillagerPose.h"
 #include "ECS/Components/WallHug.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/TownSystemInterface.h"
@@ -62,6 +63,7 @@ entt::entity VillagerArchetype::Create([[maybe_unused]] const glm::vec3& abodePo
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	auto turnsSinceStateChange = Locator::rng::value().NextValue<uint16_t>(1, 500);
 	registry.Assign<LivingAction>(entity, VillagerStates::Created, turnsSinceStateChange);
+	registry.Assign<VillagerPose>(entity);
 
 	return entity;
 }

@@ -195,3 +195,23 @@ TEST(PhysicsLiving, AFleeingThingGivesUpWatchesOrRunsByDistanceAndHeading)
 	EXPECT_EQ(FleeFromObject(5.0f, 10.0f, 50.0f, false), Run);
 	EXPECT_EQ(FleeFromObject(50.0f, 10.0f, 50.0f, false), Watch);
 }
+
+TEST(PhysicsLiving, AVillagersStateChoosesItsClipOrTakesItsRow)
+{
+	// No state plays scared stiff
+	EXPECT_EQ(VillagerStateClip(0, std::nullopt, 385), AnimId::PScaredStiff);
+	EXPECT_EQ(VillagerStateClip(0xFF, std::nullopt, 385), AnimId::PScaredStiff);
+	// Flying and landing choose their own clips
+	EXPECT_TRUE(VillagerStateChoosesClip(10));
+	EXPECT_TRUE(VillagerStateChoosesClip(11));
+	EXPECT_EQ(VillagerStateClip(10, AnimId::PThrownDead, 399), AnimId::PThrownDead);
+	// A choosing state whose choice isn't made yet rests in its model's pose
+	EXPECT_EQ(VillagerStateClip(1, std::nullopt, 0), AnimId::Invalid);
+	// Drowning and being held play their rows
+	EXPECT_FALSE(VillagerStateChoosesClip(16));
+	EXPECT_FALSE(VillagerStateChoosesClip(24));
+	EXPECT_EQ(VillagerStateClip(16, AnimId::PThrown, 252), static_cast<AnimId>(252));
+	EXPECT_EQ(VillagerStateClip(24, std::nullopt, 355), AnimId::PScaredStiff);
+	// A negative row keeps the clip playing
+	EXPECT_EQ(VillagerStateClip(24, std::nullopt, -1), std::nullopt);
+}

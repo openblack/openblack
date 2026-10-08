@@ -41,6 +41,7 @@
 #include "ECS/Components/Translucent.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Unlit.h"
+#include "ECS/Components/VillagerPose.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
@@ -95,7 +96,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
 		count.first->second.unlit |= registry.AnyOf<Unlit>(entity);
 		// The creatures and the animals are each posed as they are
-		count.first->second.perEntity |= registry.AnyOf<CreatureMorph, AnimalPose>(entity);
+		count.first->second.perEntity |= registry.AnyOf<CreatureMorph, AnimalPose, VillagerPose>(entity);
 		if (const auto* translucent = registry.TryGet<const Translucent>(entity))
 		{
 			count.first->second.translucent = true;

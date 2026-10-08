@@ -23,6 +23,7 @@ class LivingActionSystem final: public LivingActionSystemInterface
 {
 public:
 	void Update() override;
+	void UpdatePoses(uint32_t turn, float turnFraction) override;
 
 	[[nodiscard]] VillagerStates VillagerGetState(const components::LivingAction& action,
 	                                              components::LivingAction::Index index) const override;
@@ -35,5 +36,9 @@ public:
 	                           VillagerStates next) const override;
 	int VillagerCallOutOfAnimation(components::LivingAction& action, components::LivingAction::Index index) const override;
 	bool VillagerCallValidate(components::LivingAction& action, components::LivingAction::Index index) const override;
+
+private:
+	/// The game's clock in milliseconds at the last frame the villagers were posed
+	uint32_t _poseDrawTime {0};
 };
 } // namespace openblack::ecs::systems

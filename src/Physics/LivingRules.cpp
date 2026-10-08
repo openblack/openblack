@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include <algorithm>
+#include <array>
 #include <numbers>
 
 #include <glm/geometric.hpp>
@@ -310,4 +311,31 @@ AnimId living::PointingClip(bool womanOrChild, uint32_t firstRoll, uint32_t seco
 	default:
 		return AnimId::PTalkingAndPointing;
 	}
+}
+
+bool living::VillagerStateChoosesClip(uint8_t state)
+{
+	// The states whose clip comes from a choice of their own rather than from the state table
+	static constexpr std::array<uint8_t, 69> k_Choosing = {
+	    1,   2,   3,   5,   6,   10,  11,  12,  14,  15,  28,  29,  41,  45,  47,  51,  60,  65,  66,  71,  72,  73,  74,
+	    75,  78,  82,  83,  90,  92,  93,  94,  123, 133, 136, 140, 144, 146, 147, 148, 152, 153, 154, 155, 156, 157, 160,
+	    161, 162, 167, 168, 182, 183, 186, 187, 188, 189, 193, 197, 200, 203, 204, 222, 230, 231, 239, 243, 244, 246, 253};
+	return std::ranges::binary_search(k_Choosing, state);
+}
+
+std::optional<AnimId> living::VillagerStateClip(uint8_t state, std::optional<AnimId> chosen, int32_t tableClip)
+{
+	if (state == 0 || state == 0xFF)
+	{
+		return AnimId::PScaredStiff;
+	}
+	if (VillagerStateChoosesClip(state))
+	{
+		return chosen.value_or(AnimId::Invalid);
+	}
+	if (tableClip < 0)
+	{
+		return std::nullopt;
+	}
+	return static_cast<AnimId>(tableClip);
 }

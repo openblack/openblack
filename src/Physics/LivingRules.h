@@ -160,6 +160,14 @@ enum class FleeStep : uint8_t
 /// otherwise the second roll of three picks looking, standing or pointing and talking
 [[nodiscard]] AnimId PointingClip(bool womanOrChild, uint32_t firstRoll, uint32_t secondRoll);
 
+/// The clip a villager's state plays, as a villager picks it each time its state changes: no state (0 or 255) plays
+/// scared stiff; a state with a clip of its own plays the one it chose (`chosen`), and while openblack doesn't yet
+/// choose it the villager rests in its model's pose (Invalid); any other state plays its row of the state table. None
+/// when the table's clip is negative: the villager keeps the clip it has.
+[[nodiscard]] std::optional<AnimId> VillagerStateClip(uint8_t state, std::optional<AnimId> chosen, int32_t tableClip);
+/// Whether a villager state picks its clip itself rather than taking its row of the state table
+[[nodiscard]] bool VillagerStateChoosesClip(uint8_t state);
+
 /// The rows of the deeds creatures copy that the physics reports
 inline constexpr uint32_t k_DeedDamageByThrowing = 15;
 inline constexpr uint32_t k_DeedDamageByThrowingAt = 16;

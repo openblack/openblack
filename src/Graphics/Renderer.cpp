@@ -83,6 +83,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/VillageLight.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/Components/VillagerPose.h"
 #include "ECS/Components/Weather.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
@@ -4041,7 +4042,7 @@ void Renderer::SelectDrawnCreatures(const DrawSceneDesc& drawDesc) const
 	for (const auto& [entity, instance] : draws)
 	{
 		// The animals are drawn one by one by themselves
-		if (!drawDesc.entities.AnyOf<ecs::components::AnimalPose>(entity))
+		if (!drawDesc.entities.AnyOf<ecs::components::AnimalPose, ecs::components::VillagerPose>(entity))
 		{
 			_drawnCreatures.push_back({.entity = entity, .instance = instance});
 		}
@@ -4628,9 +4629,31 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				              &entityPose);
 				submitDesc.objectLook.reset();
 			};
+			// The villagers, each posed by its state's clip, or in its model's own pose while its state plays none
+			const auto drawVillager = [&](entt::entity entity, uint32_t instance) {
+				const auto* pose = desc.entities.TryGet<const ecs::components::VillagerPose>(entity);
+				const auto* mesh = desc.entities.TryGet<const ecs::components::Mesh>(entity);
+				if (pose == nullptr || mesh == nullptr || !meshManager.Contains(mesh->id))
+				{
+					return;
+				}
+				const auto placers = renderCtx.instancedDrawDescs.find(mesh->id);
+				if (placers == renderCtx.instancedDrawDescs.end() ||
+				    (desc.viewId == RenderPass::Reflection && placers->second.hiddenFromReflection))
+				{
+					return;
+				}
+				const auto model = meshManager.Handle(mesh->id);
+				const bool posed = pose->bones.size() == model->GetBoneMatrices().size();
+				const EntityPose entityPose {.bones = posed ? std::span<const glm::mat4>(pose->bones)
+				                                            : std::span<const glm::mat4>(model->GetBoneMatrices()),
+				                             .morphTargets = nullptr};
+				drawInstances(mesh->id, placers->second, placers->second.materialBlending, instance, 1, &entityPose);
+			};
 			for (const auto& [entity, instance] : renderCtx.entityDraws)
 			{
 				drawAnimal(entity, instance, false);
+				drawVillager(entity, instance);
 			}
 			DrawTempleUnderside(desc);
 			// In the temple, whose draws keep their order, the sun's glare comes after its solid parts, which hide it, and

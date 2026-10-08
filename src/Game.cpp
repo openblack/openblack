@@ -1261,6 +1261,8 @@ bool Game::Update() noexcept
 		// The animals are drawn between their last two turns, their models posed by their clips
 		auto animals = profiler.BeginScoped(Profiler::Stage::AnimalsUpdate);
 		Locator::animalSystem::value().Update(clock.GetTurn(), clock.GetTurnFraction());
+		// The villagers are posed by the clips their states play
+		Locator::livingActionSystem::value().UpdatePoses(clock.GetTurn(), clock.GetTurnFraction());
 	}
 	{
 		// The creatures are drawn moving between the last two turns

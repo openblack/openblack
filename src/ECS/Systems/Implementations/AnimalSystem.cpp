@@ -1471,15 +1471,15 @@ void AnimalSystem::Update(uint32_t turn, float turnFraction)
 	auto& meshes = Locator::resources::value().GetMeshes();
 	registry.Each<Animal, Transform, const Mesh>([&](entt::entity entity, Animal& animal, Transform& transform,
 	                                                 const Mesh& mesh) {
-		// A tornado carrying it places it, as does a hand holding it or the physics moving it
-		if (registry.AnyOf<CarriedByTornado, InHand, InPhysics>(entity))
+		// A tornado carrying it places it, as does a hand holding it or the physics moving it; it still plays its clip
+		if (!registry.AnyOf<CarriedByTornado, InHand, InPhysics>(entity))
 		{
-			return;
+			// Drawn between its last two turns, tilted as far as its bank has glided
+			transform.position = animal.previousPosition + ((animal.position - animal.previousPosition) * t);
+			const float heading =
+			    animal.previousHeading + (std::remainder(animal.heading - animal.previousHeading, k_TwoPi) * t);
+			transform.rotation = animals::Orientation(heading, animal.bank.Step(elapsedSeconds));
 		}
-		// Drawn between its last two turns, tilted as far as its bank has glided
-		transform.position = animal.previousPosition + ((animal.position - animal.previousPosition) * t);
-		const float heading = animal.previousHeading + (std::remainder(animal.heading - animal.previousHeading, k_TwoPi) * t);
-		transform.rotation = animals::Orientation(heading, animal.bank.Step(elapsedSeconds));
 		auto* pose = registry.TryGet<AnimalPose>(entity);
 		// The clips are kept by the hash of their number in the animation pack
 		const auto clipId = resources::HashIdentifier(static_cast<uint32_t>(animal.animation));

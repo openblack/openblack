@@ -33,6 +33,7 @@
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/VillagerPose.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/WorldObjects.h"
@@ -74,6 +75,10 @@ std::span<const glm::mat4> BonesOf(const ecs::Registry& registry, entt::entity e
 {
 	const auto& rest = mesh.GetBoneMatrices();
 	if (const auto* pose = registry.TryGet<const AnimalPose>(entity); pose != nullptr && pose->bones.size() == rest.size())
+	{
+		return pose->bones;
+	}
+	if (const auto* pose = registry.TryGet<const VillagerPose>(entity); pose != nullptr && pose->bones.size() == rest.size())
 	{
 		return pose->bones;
 	}
