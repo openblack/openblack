@@ -30,6 +30,7 @@
 #include "ECS/MapProduction.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
+#include "ECS/Systems/Implementations/AnimalSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/CameraHelpSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
@@ -106,6 +107,7 @@ using openblack::debug::gui::DebugGuiInterface;
 using openblack::ecs::MapProduction;
 using openblack::ecs::Registry;
 using openblack::ecs::systems::AlignmentSystem;
+using openblack::ecs::systems::AnimalSystem;
 using openblack::ecs::systems::CameraBookmarkSystem;
 using openblack::ecs::systems::CameraHelpSystem;
 using openblack::ecs::systems::CameraPathSystem;
@@ -228,6 +230,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::cloudSystem::emplace<CloudSystem>();
 	Locator::villageLightSystem::emplace<VillageLightSystem>();
 	Locator::fieldSystem::emplace<FieldSystem>();
+	Locator::animalSystem::emplace<AnimalSystem>();
 	Locator::snowSystem::emplace<SnowSystem>();
 	Locator::snowfallSystem::emplace<SnowfallSystem>();
 	Locator::waterRingSystem::emplace<WaterRingSystem>();
