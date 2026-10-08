@@ -64,6 +64,7 @@ public:
 	void Wake(entt::entity creature) override;
 	void FoughtFight(entt::entity creature, bool won) override;
 	void AbandonAction(entt::entity creature) override;
+	void ForceCatch(entt::entity creature, entt::entity object) override;
 	void ReactToNastyMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
 	void ReactToNiceMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
 	bool TryMiracle(entt::entity creature, MagicType type, entt::entity target) override;

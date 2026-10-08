@@ -72,3 +72,27 @@ TEST(CreatureCatch, TheCatchingAnimationsBlendByHeightAndSide)
 	// Far above the highest it leans past its limit and misses
 	EXPECT_TRUE(Weigh({0.0f, 20.0f, -3.0f}, hands, 1.0f, false).clamped);
 }
+
+TEST(CreatureCatch, ReadyItWaitsStepsCatchesOrGivesUp)
+{
+	// The hand closes 1 to the right in the high corner and 1 to the left in the other, at a model scale of 1: a step is
+	// needed beyond 1 + 1.2 × (−1 − 1) = −1.4 to either side
+	const std::array<glm::vec3, 4> hands {glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f, 2.0f, 0.0f),
+	                                      glm::vec3(-1.0f, 2.0f, 0.0f)};
+	const float lead = 0.5f;
+	// Ahead at 10, closing at 10 a second: due in a second, so it waits
+	EXPECT_EQ(ReadyToCatch({0.5f, 2.0f, -10.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead).readiness, Readiness::Wait);
+	// Due in half a second, as the hand closes: it catches, with the left hand when the thing is to its left
+	const auto now = ReadyToCatch({0.5f, 2.0f, -5.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead);
+	EXPECT_EQ(now.readiness, Readiness::Catch);
+	EXPECT_TRUE(now.mirrored);
+	EXPECT_FALSE(ReadyToCatch({-0.5f, 2.0f, -5.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead).mirrored);
+	// Too late
+	EXPECT_EQ(ReadyToCatch({0.0f, 2.0f, -2.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead).readiness, Readiness::GiveUp);
+	// Behind it
+	EXPECT_EQ(ReadyToCatch({0.0f, 2.0f, 3.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead).readiness, Readiness::GiveUp);
+	// Passing out of reach: it steps across
+	const auto step = ReadyToCatch({3.0f, 2.0f, -10.0f}, {0.0f, 0.0f, 10.0f}, hands, 1.0f, lead);
+	EXPECT_EQ(step.readiness, Readiness::Step);
+	EXPECT_TRUE(step.mirrored);
+}

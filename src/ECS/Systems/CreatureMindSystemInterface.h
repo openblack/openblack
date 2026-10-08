@@ -106,6 +106,9 @@ public:
 	virtual void FoughtFight(entt::entity creature, bool won) = 0;
 	/// Something stops what the creature is doing, which it gives up as a failure, as a spell freezing it does
 	virtual void AbandonAction(entt::entity /*creature*/) {}
+	/// The creature is made to catch a thing flying at it: what it was doing fails, and it plays with the thing by catching
+	/// it, wanting to play less for a while
+	virtual void ForceCatch(entt::entity /*creature*/, entt::entity /*object*/) {}
 	/// A nasty miracle struck near the creature: it is frightened by it, and runs from where it struck, or goes to look
 	/// at it when it isn't afraid or is on the learning leash; it learns the miracle when it may
 	virtual void ReactToNastyMagic(entt::entity /*creature*/, const glm::vec3& /*point*/, std::optional<size_t> /*learn*/) {}

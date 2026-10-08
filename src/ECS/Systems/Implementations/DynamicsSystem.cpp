@@ -561,6 +561,12 @@ bool DynamicsSystem::IsFlying(entt::entity object) const
 	return index.has_value() && _entries[*index]->IsFlying();
 }
 
+float DynamicsSystem::WeightOf(entt::entity object) const
+{
+	const auto* transform = IsAvailable(object) ? Entities().TryGet<const Transform>(object) : nullptr;
+	return transform != nullptr ? physics_classes::Weight(InfoWeight(object), transform->scale.x) : 0.0f;
+}
+
 void DynamicsSystem::RemoveAt(size_t index)
 {
 	auto* gone = _entries[index].get();

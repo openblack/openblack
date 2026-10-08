@@ -74,4 +74,29 @@ struct Blend
 /// The thing's place against the creature, in its own axes at the world's scale; the hand's place in each catching
 /// animation at the moment it closes, in the model's units; the model's scale
 [[nodiscard]] Blend Weigh(glm::vec3 thing, const std::array<glm::vec3, 4>& hands, float modelScale, bool mirrored);
+
+/// Ready to catch, the creature waits for the thing, steps across to it when it will pass out of reach, catches it when
+/// it arrives at the moment the hand would close, or gives up when it is behind or too late
+enum class Readiness : uint8_t
+{
+	Wait,
+	Step,
+	Catch,
+	GiveUp,
+};
+struct Ready
+{
+	Readiness readiness;
+	/// The step or the catch is made with the left hand, the right one's mirrored
+	bool mirrored;
+};
+/// A step further than this share of the way from the high corner's hand to the other high corner's is out of reach
+constexpr float k_ReachBeyondHand = 1.2f;
+/// The thing arrives in time when it is due from a hundredth of a second before the hand closes to a tenth after
+constexpr float k_EarlyArrival = 0.01f;
+constexpr float k_LateArrival = 0.1f;
+/// The thing's place and flight in the creature's own axes (ahead is along negative z), the hand's place in each
+/// catching animation as it closes, the model's scale, and how long after the catch begins the hand closes, in seconds
+[[nodiscard]] Ready ReadyToCatch(glm::vec3 thing, glm::vec3 velocity, const std::array<glm::vec3, 4>& hands, float modelScale,
+                                 float leadSeconds);
 } // namespace openblack::creature_catch

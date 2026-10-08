@@ -141,6 +141,8 @@ struct ObjectOrder
 		Destroy,
 		/// Pointing at a point
 		PointAt,
+		/// Catching a thing flying at it
+		Catch,
 	};
 	Kind kind {Kind::PickUp};
 	/// What it acts on, by its entity's number

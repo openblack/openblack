@@ -58,6 +58,7 @@ public:
 	PhysicsEntry* AddObject(entt::entity object, const PhysicsStart& start) override;
 	[[nodiscard]] PhysicsEntry* Find(entt::entity object) override;
 	[[nodiscard]] bool IsFlying(entt::entity object) const override;
+	[[nodiscard]] float WeightOf(entt::entity object) const override;
 	[[nodiscard]] bool PhysicallyDestroysAbodes(entt::entity object) const override;
 	entt::entity RemoveObject(entt::entity object, bool insert, bool endPhysics) override;
 	entt::entity EndPhysicsAsObject(entt::entity object, bool insert, bool hasBody) override;

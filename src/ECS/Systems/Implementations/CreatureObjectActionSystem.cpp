@@ -559,8 +559,69 @@ bool StartCatch(entt::entity creature, CreatureObjectAction& action, const Creat
 	SetSlots(action, creature_catch::k_CatchAnimations, weights);
 	action.mirrored = false;
 	action.eventMs = points.catchMs;
-	action.catching = CreatureObjectAction::Catching::Reaching;
+	action.catching = CreatureObjectAction::Catching::Ready;
 	return true;
+}
+
+/// Ready to catch: once it has turned, it waits for the thing, steps across to where it will pass when that is out of
+/// reach, and starts the catch when the thing will arrive as the hand closes; behind it or too late, it gives up
+void UpdateReady(ecs::Registry& registry, entt::entity creature, const Creature& body, const Transform& transform,
+                 CreatureAnimation& animation, CreatureObjectAction& action, float step)
+{
+	using Catching = CreatureObjectAction::Catching;
+	const auto flight = action.target.has_value() && registry.Valid(*action.target) ? FlightOf(*action.target) : std::nullopt;
+	if (!flight.has_value())
+	{
+		action.status = Status::Done;
+		animation.slots.clear();
+		return;
+	}
+	const auto* points = PointsOf(body);
+	if (action.catching == Catching::Stepping)
+	{
+		const float duration = DurationOf(creature, creature_catch::k_CatchStep);
+		action.timeMs += step;
+		if (action.timeMs >= duration)
+		{
+			action.catching = Catching::Ready;
+			action.timeMs = 0.0f;
+		}
+		animation.slots.clear();
+		animation.slots.push_back({.animation = creature_catch::k_CatchStep,
+		                           .timeMs = std::clamp(action.timeMs, 0.0f, std::max(duration - 1.0f, 0.0f)),
+		                           .weight = 1.0f,
+		                           .mirrored = action.mirrored});
+		return;
+	}
+	const bool turning =
+	    Locator::creatureLocomotionSystem::has_value() && Locator::creatureLocomotionSystem::value().IsMoving(creature);
+	if (turning || points == nullptr)
+	{
+		return;
+	}
+	const auto lead = points->catchMs / (1000.0f * creature_layers::PlaybackRate(body.size));
+	const auto velocity = glm::transpose(transform.rotation) * flight->second;
+	const auto ready =
+	    creature_catch::ReadyToCatch(ToLocal(transform, flight->first), velocity, action.catchHands, transform.scale.x, lead);
+	switch (ready.readiness)
+	{
+	case creature_catch::Readiness::Wait:
+		break;
+	case creature_catch::Readiness::Step:
+		action.catching = Catching::Stepping;
+		action.mirrored = ready.mirrored;
+		action.timeMs = 0.0f;
+		break;
+	case creature_catch::Readiness::Catch:
+		action.catching = Catching::Reaching;
+		action.mirrored = ready.mirrored;
+		action.timeMs = 0.0f;
+		break;
+	case creature_catch::Readiness::GiveUp:
+		action.status = Status::Done;
+		animation.slots.clear();
+		break;
+	}
 }
 
 /// Each frame of a catch: the four animations blended by where the thing is against where the hand closes in each, the
@@ -1069,7 +1130,16 @@ void CreatureObjectActionSystem::Update(std::chrono::duration<float, std::milli>
 		    const float step = gameTime.count() * creature_layers::PlaybackRate(body.size);
 		    if (action.kind == Kind::Catch)
 		    {
-			    UpdateCatch(registry, entity, body, transform, animation, action, step);
+			    using Catching = CreatureObjectAction::Catching;
+			    if (action.catching == Catching::Ready || action.catching == Catching::Stepping)
+			    {
+				    UpdateReady(registry, entity, body, transform, animation, action, step);
+			    }
+			    if (action.catching != Catching::Ready && action.catching != Catching::Stepping &&
+			        action.status != Status::Done)
+			    {
+				    UpdateCatch(registry, entity, body, transform, animation, action, step);
+			    }
 			    return;
 		    }
 		    action.timeMs += step;

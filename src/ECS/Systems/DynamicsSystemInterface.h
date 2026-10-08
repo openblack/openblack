@@ -172,6 +172,8 @@ public:
 	[[nodiscard]] virtual PhysicsEntry* Find([[maybe_unused]] entt::entity object) { return nullptr; }
 	/// In the physics and moving, not a resting obstacle
 	[[nodiscard]] virtual bool IsFlying([[maybe_unused]] entt::entity object) const { return false; }
+	/// An object's weight as the physics weighs it: its table weight times its scale cubed, not kept from 0
+	[[nodiscard]] virtual float WeightOf([[maybe_unused]] entt::entity object) const { return 0.0f; }
 	/// Whether thrown it breaks buildings: rocks and the bowling ball
 	[[nodiscard]] virtual bool PhysicallyDestroysAbodes([[maybe_unused]] entt::entity object) const { return false; }
 	/// The object takes its body's place and the body goes, its kind's end of physics run when asked; nothing while the

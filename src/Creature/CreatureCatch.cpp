@@ -9,7 +9,10 @@
 
 #include "CreatureCatch.h"
 
+#include <cmath>
+
 #include <algorithm>
+#include <limits>
 
 #include <glm/geometric.hpp>
 
@@ -65,5 +68,36 @@ Blend Weigh(glm::vec3 thing, const std::array<glm::vec3, 4>& hands, float modelS
 	const bool clamped = keep(height) | keep(side);
 	return {.weights = {(1.0f - height) * (1.0f - side), (1.0f - height) * side, height * (1.0f - side), height * side},
 	        .clamped = clamped};
+}
+
+Ready ReadyToCatch(glm::vec3 thing, glm::vec3 velocity, const std::array<glm::vec3, 4>& hands, float modelScale,
+                   float leadSeconds)
+{
+	// It must be in front of the creature
+	const float ahead = -thing.z;
+	if (ahead < 0.0f)
+	{
+		return {.readiness = Readiness::GiveUp, .mirrored = false};
+	}
+	const float side = -thing.x;
+	const auto& highSide = hands[2];
+	const auto& highOther = hands[3];
+	const float reach = modelScale * (highSide.x + k_ReachBeyondHand * (highOther.x - highSide.x));
+	if (std::abs(side) > std::abs(reach))
+	{
+		return {.readiness = Readiness::Step, .mirrored = side <= 0.0f};
+	}
+	// When it arrives, coming at the creature along its front
+	const float closing = velocity.z;
+	const float arrives = closing != 0.0f ? ahead / closing : std::numeric_limits<float>::infinity();
+	if (arrives >= leadSeconds + k_LateArrival)
+	{
+		return {.readiness = Readiness::Wait, .mirrored = false};
+	}
+	if (arrives > leadSeconds - k_EarlyArrival)
+	{
+		return {.readiness = Readiness::Catch, .mirrored = side < 0.0f};
+	}
+	return {.readiness = Readiness::GiveUp, .mirrored = false};
 }
 } // namespace openblack::creature_catch

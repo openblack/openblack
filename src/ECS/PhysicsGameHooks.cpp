@@ -49,6 +49,7 @@
 #include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
@@ -426,10 +427,18 @@ void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntr
 	std::vector<entt::entity> creatures;
 	registry.Each<const Creature, const Transform>(
 	    [&creatures](entt::entity creature, const Creature&, const Transform&) { creatures.push_back(creature); });
+	const auto handHeld =
+	    Locator::creatureHandSystem::has_value() ? Locator::creatureHandSystem::value().GetCreature() : std::nullopt;
+	const float objectWeight = Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().WeightOf(object) : 0.0f;
 	for (const auto creature : creatures)
 	{
-		// One that is fighting, out cold or busy with something in its hands doesn't catch
-		if (registry.AnyOf<CreatureFighting, CreatureKnockedOut, CreatureHeldObject>(creature))
+		// Not one the hand is holding, one fighting, one a script controls, nor one already catching. (A creature under a
+		// script's only desire must also be free to react; openblack's scripts set no only desire.)
+		const auto* acting = registry.TryGet<const CreatureObjectAction>(creature);
+		if (handHeld == creature || registry.AllOf<CreatureFighting>(creature) || registry.AllOf<ScriptControlled>(creature) ||
+		    (acting != nullptr && acting->kind == creature_object_actions::Kind::Catch &&
+		     acting->status != creature_object_actions::Status::Done &&
+		     acting->status != creature_object_actions::Status::Failed))
 		{
 			continue;
 		}
@@ -438,11 +447,12 @@ void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntr
 		const auto* morph = registry.TryGet<const CreatureMorph>(creature);
 		const float weight = living::CreatureMass(body.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
 		                                          morph != nullptr ? morph->drawn.weakStrong : 0.0f);
-		if (!(entry.body->Mass() < creature_catch::k_MostWeightShare * weight) || !actions.CanPickUp(object))
+		// The thing's own weight, not kept from nothing as its body's mass is
+		if (!(objectWeight < creature_catch::k_MostWeightShare * weight) || !actions.CanPickUp(object))
 		{
 			continue;
 		}
-		// Not its own throw; another player's only now and then
+		// Not its own throw; another player's (none are allied in openblack) only now and then
 		if (entry.thrower == creature)
 		{
 			continue;
@@ -471,16 +481,19 @@ void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntr
 		{
 			continue;
 		}
-		// It drops what it was doing and stands to catch
-		if (Locator::creatureMindSystem::has_value())
-		{
-			Locator::creatureMindSystem::value().AbandonAction(creature);
-		}
+		// It stops where it is, and is made to play by catching the thing: what it was doing fails
 		if (Locator::creatureLocomotionSystem::has_value())
 		{
 			Locator::creatureLocomotionSystem::value().Stop(creature);
 		}
-		actions.Catch(creature, object);
+		if (Locator::creatureMindSystem::has_value())
+		{
+			Locator::creatureMindSystem::value().ForceCatch(creature, object);
+		}
+		else
+		{
+			actions.Catch(creature, object);
+		}
 	}
 }
 
