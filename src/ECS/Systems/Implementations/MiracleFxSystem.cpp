@@ -13,6 +13,7 @@
 
 #include <cmath>
 
+#include <algorithm>
 #include <numbers>
 #include <vector>
 

@@ -16,6 +16,8 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include <algorithm>
+
 #include <glm/geometric.hpp>
 
 #include "3D/CreatureBody.h"

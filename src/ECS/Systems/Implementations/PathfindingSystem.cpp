@@ -11,6 +11,7 @@
 
 #include "PathfindingSystem.h"
 
+#include <algorithm>
 #include <optional>
 #include <unordered_set>
 #include <vector>

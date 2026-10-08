@@ -9,6 +9,7 @@
 
 #include "FeatureScriptCommands.h"
 
+#include <algorithm>
 #include <tuple>
 
 #include <glm/gtx/euler_angles.hpp>
