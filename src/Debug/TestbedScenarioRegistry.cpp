@@ -2041,6 +2041,7 @@ std::vector<Scenario> Build()
 	AddFlockScenarios(all);
 	AddTeleportScenarios(all);
 	AddTornadoScenarios(all);
+	AddNatureScenarios(all);
 	AddHandNavigationScenarios(all);
 	AddHandLookScenarios(all);
 	return all;
@@ -2145,7 +2146,7 @@ std::string_view testbed_scenarios::Name(Facet facet)
 	constexpr std::array<std::string_view, k_FacetCount> k_Names {
 	    "Idle",     "Expressions", "Senses", "Needs",    "Growth",    "Appearance",    "Light",
 	    "Movement", "Footprints",  "Audio",  "Objects",  "Hand",      "Leash",         "Combat",
-	    "Mind",     "Particles",   "Editor", "Miracles", "Benchmark", "Creature Mode",
+	    "Mind",     "Particles",   "Editor", "Miracles", "Benchmark", "Creature Mode", "Nature",
 	};
 	return k_Names.at(static_cast<size_t>(facet));
 }
