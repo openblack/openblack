@@ -14,6 +14,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <glm/vec2.hpp>
 
@@ -38,6 +39,8 @@ struct Town
 	std::optional<uint32_t> scenicForest;
 	/// Where its scenic forest was made: the town's centre then
 	glm::vec2 scenicForestCentre {0.0f};
+	/// The things its people play with, the newest first: footballs
+	std::vector<entt::entity> playthings;
 };
 
 } // namespace openblack::ecs::components

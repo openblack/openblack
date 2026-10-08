@@ -572,10 +572,10 @@ std::optional<float> CreatureAnimationSystem::AnimationDuration(entt::entity cre
 	return played != nullptr ? std::optional(static_cast<float>(played->duration)) : std::nullopt;
 }
 
-std::optional<float> CreatureAnimationSystem::AnimationTravel(entt::entity creature, size_t animation)
+std::optional<glm::vec3> CreatureAnimationSystem::AnimationTravel(entt::entity creature, size_t animation)
 {
 	const auto* played = PosedAnimationOf(creature, animation);
-	return played != nullptr ? std::optional(played->displacement.x) : std::nullopt;
+	return played != nullptr ? std::optional(played->displacement) : std::nullopt;
 }
 
 void CreatureAnimationSystem::KickSway(entt::entity creature, glm::vec3 force, glm::vec3 point)

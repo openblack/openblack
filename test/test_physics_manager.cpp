@@ -16,6 +16,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/Feature.h"
@@ -210,6 +211,24 @@ TEST_F(PhysicsClassesTest, PotsFlyByTheirInfoAndAreHitUnlessInAStoragePit)
 	EXPECT_FALSE(Classify(pile).canBecomePhysicsObject);
 }
 
+TEST_F(PhysicsClassesTest, TheFootballIsAToyOfItsOwnMaterial)
+{
+	const auto football = _registry.Create();
+	_registry.Assign<Mobile>(football);
+	_registry.Assign<Ball>(football);
+	const auto facts = Classify(football);
+	EXPECT_EQ(facts.row, MaterialRow::Football);
+	EXPECT_TRUE(facts.canBecomePhysicsObject);
+	EXPECT_TRUE(facts.interacts);
+	EXPECT_TRUE(physics_classes::IsToy(_registry, football, *_info));
+	// The toys among the statics go by their model; a mobile object's ball row is no toy
+	EXPECT_TRUE(physics_classes::IsToy(_registry, Static(MobileStaticInfo::ToyBall), *_info));
+	EXPECT_FALSE(physics_classes::IsToy(_registry, Static(MobileStaticInfo::RockChalk), *_info));
+	const auto plain = _registry.Create();
+	_registry.Assign<MobileObject>(plain, MobileObjectInfo::Ball);
+	EXPECT_FALSE(physics_classes::IsToy(_registry, plain, *_info));
+}
+
 TEST_F(PhysicsClassesTest, MobileObjects)
 {
 	const auto make = [this](MobileObjectInfo type) {
@@ -220,7 +239,8 @@ TEST_F(PhysicsClassesTest, MobileObjects)
 	EXPECT_EQ(make(MobileObjectInfo::Champi).row, MaterialRow::Champignon);
 	EXPECT_EQ(make(MobileObjectInfo::MagicMushroom).row, MaterialRow::MagicMushroom);
 	EXPECT_EQ(make(MobileObjectInfo::Toadstool).row, MaterialRow::Toadstool);
-	EXPECT_EQ(make(MobileObjectInfo::Ball).row, MaterialRow::Football);
+	// The mobile object's ball row is a plain thing; only the football itself is of the football's material
+	EXPECT_EQ(make(MobileObjectInfo::Ball).row, MaterialRow::DefaultMovable);
 	EXPECT_EQ(make(MobileObjectInfo::EgyptBarrel).row, MaterialRow::DefaultMovable);
 	const auto whale = make(MobileObjectInfo::Whale);
 	EXPECT_FALSE(whale.canBecomePhysicsObject);

@@ -18,6 +18,7 @@
 #include <ranges>
 
 #include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
 
 using namespace openblack;
 using namespace openblack::creature_route;
@@ -545,4 +546,70 @@ Advanced creature_route::Advance(Route& route, float distance)
 		changed = true;
 	}
 	return {.position = route.Position(), .heading = route.Heading(), .segmentChanged = changed, .finished = route.Finished()};
+}
+
+glm::ivec2 creature_route::StepBlock(glm::vec3 end)
+{
+	// Truncated towards nothing, as the game turns them to whole numbers
+	return {static_cast<int32_t>(end.x / k_StepBlockSize), static_cast<int32_t>(end.y / k_StepBlockSize)};
+}
+
+std::vector<creature_route::Circle> creature_route::StepBlockCircles(const WalkableLand& land, glm::ivec2 block,
+                                                                     glm::vec2 standing)
+{
+	// The follower is never closer to a circle's centre than this
+	constexpr float k_LeastRange = 0.1f;
+	// Circles are kept in 80-unit squares, the land's 64 a side: one reaching past them is left out
+	constexpr int32_t k_Squares = 64;
+	const auto inSquares = [](float low, float high) {
+		return static_cast<int32_t>(low / k_StepBlockSize) >= 0 && static_cast<int32_t>(high / k_StepBlockSize) < k_Squares;
+	};
+	std::vector<Circle> circles;
+	const auto add = [&](glm::vec2 centre, float radius) {
+		const float range = glm::distance(standing, centre);
+		if (range < k_LeastRange)
+		{
+			return;
+		}
+		radius = std::min(radius, range);
+		if (inSquares(centre.x - radius, centre.x + radius) && inSquares(centre.y - radius, centre.y + radius))
+		{
+			circles.push_back({.centre = centre, .radius = radius});
+		}
+	};
+	const auto inLand = [](int32_t i) { return i >= 0 && i < k_CellsPerSide; };
+	for (int32_t z = block.y * k_StepBlockCells; z < (block.y + 1) * k_StepBlockCells; ++z)
+	{
+		for (int32_t x = block.x * k_StepBlockCells; x < (block.x + 1) * k_StepBlockCells; ++x)
+		{
+			if (!inLand(x) || !inLand(z))
+			{
+				continue;
+			}
+			for (int32_t nx = x - 1; nx <= x + 1; ++nx)
+			{
+				for (int32_t nz = z - 1; nz <= z + 1; ++nz)
+				{
+					// The neighbour's sort is read from the cell a row further on. No land stands high enough for that to
+					// pass the last row.
+					if (!inLand(nx) || !inLand(nz) || !inLand(nz + 1) || land.At(nx, nz + 1) != Ground::Blocked)
+					{
+						continue;
+					}
+					add({(static_cast<float>(nx) * k_CellSize) + (0.5f * k_CellSize),
+					     (static_cast<float>(nz) * k_CellSize) + (0.5f * k_CellSize)},
+					    k_DestinationClearance);
+				}
+			}
+		}
+	}
+	return circles;
+}
+
+bool creature_route::InsideAny(glm::vec2 point, const std::vector<Circle>& circles)
+{
+	return std::ranges::any_of(circles, [point](const Circle& circle) {
+		const auto d = point - circle.centre;
+		return glm::dot(d, d) < circle.radius * circle.radius;
+	});
 }

@@ -38,6 +38,7 @@
 #include "CreatureMindSystemDetail.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureMind.h"
@@ -193,7 +194,7 @@ bool Accepts(const ecs::Registry& registry, Target target, entt::entity entity, 
 	case Target::LiveFood:
 		return !heldByOther && registry.AllOf<Villager>(entity) && FoodValueOf(entity).has_value();
 	case Target::Pickable:
-		return !heldByOther && registry.AllOf<MobileObject>(entity) && hands != nullptr && hands->CanPickUp(entity);
+		return !heldByOther && registry.AnyOf<MobileObject, Ball>(entity) && hands != nullptr && hands->CanPickUp(entity);
 	case Target::Destroyable:
 		return hands != nullptr && hands->CanDestroy(entity);
 	case Target::Tree:
@@ -379,7 +380,7 @@ std::optional<creature_tree::Belief> mind_detail::BeliefOf(const ecs::Registry& 
 		common(types::k_Feature, k_Neutral, 0, 0, k_NoPlayer);
 		return belief;
 	}
-	if (registry.AnyOf<MobileObject, Pot>(entity))
+	if (registry.AnyOf<MobileObject, Ball, Pot>(entity))
 	{
 		common(types::k_Other, k_Neutral, 1, 0, k_NoPlayer);
 		return belief;

@@ -143,3 +143,12 @@ TEST(PhysicsObjects, AnArtefactImpressesOnlyAnotherTownAndOnlyWhenWorthMoreThanO
 	EXPECT_FALSE(ArtefactWillImpress(1.0f, false));
 	EXPECT_FALSE(ArtefactWillImpress(0.01f, false));
 }
+
+TEST(PhysicsObjects, AKickedFootballComesDownAtItsDestination)
+{
+	const auto velocity = KickVelocity({0.0f, 0.0f, 0.0f}, {30.0f, 0.0f, 40.0f}, 10.0f);
+	// Fifty units at ten a second take five seconds, in which it falls 122.625
+	EXPECT_FLOAT_EQ(velocity.x, 6.0f);
+	EXPECT_FLOAT_EQ(velocity.y, 24.525f);
+	EXPECT_FLOAT_EQ(velocity.z, 8.0f);
+}

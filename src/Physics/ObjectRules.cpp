@@ -115,3 +115,14 @@ bool objects::ArtefactWillImpress(float worth, bool ownTown)
 {
 	return worth > k_ArtefactImpressingWorth && !ownTown;
 }
+
+glm::vec3 objects::KickVelocity(glm::vec3 from, glm::vec3 to, float speed)
+{
+	// The fall in that time, then each axis over the time, worked as the game works them
+	constexpr float k_Fall = -9.81f;
+	const auto d = to - from;
+	const float time = std::sqrt((d.x * d.x) + (d.y * d.y) + (d.z * d.z)) / speed;
+	const float drop = time * time * 0.5f * k_Fall;
+	const float perTime = 1.0f / time;
+	return {d.x * perTime, (d.y - drop) * perTime, d.z * perTime};
+}

@@ -274,3 +274,36 @@ TEST(CreatureRoute, FollowsTheRoute)
 	EXPECT_TRUE(advanced.finished);
 	EXPECT_EQ(advanced.position, glm::vec2(10, 10));
 }
+
+TEST(CreatureRoute, ACatchStepIsCheckedAgainstTheBlockOfItsHeight)
+{
+	EXPECT_EQ(StepBlock({100.0f, 30.0f, 3000.0f}), glm::ivec2(1, 0));
+	EXPECT_EQ(StepBlock({100.0f, 85.0f, 3000.0f}), glm::ivec2(1, 1));
+	EXPECT_EQ(StepBlock({100.0f, -30.0f, 3000.0f}), glm::ivec2(1, 0));
+}
+
+TEST(CreatureRoute, AStepBlocksCellsReadARowOn)
+{
+	// Deep sea along the first three rows of cells
+	const auto land = WalkableLand::Build([](int32_t /*x*/, int32_t z) { return z <= 3 ? 0.0f : 5.0f; }, Dry);
+	ASSERT_EQ(land.At(3, 2), Ground::Blocked);
+	ASSERT_EQ(land.At(3, 3), Ground::Open);
+	const glm::vec2 far {3000.0f, 3000.0f};
+	const auto circles = StepBlockCircles(land, {0, 0}, far);
+	// Each circle's cell is judged by the one a row further on, so the last blocked row has none of its own
+	EXPECT_TRUE(InsideAny({35.0f, 20.0f}, circles));
+	EXPECT_FALSE(InsideAny({35.0f, 25.0f}, circles));
+	EXPECT_FALSE(InsideAny({35.0f, 40.0f}, circles));
+	// The circles give way to where the creature stands
+	const auto nearby = StepBlockCircles(land, {0, 0}, {35.0f, 18.0f});
+	EXPECT_FALSE(InsideAny({35.0f, 20.0f}, nearby));
+	EXPECT_TRUE(InsideAny({35.0f, 15.5f}, nearby));
+}
+
+TEST(CreatureRoute, AStepIgnoresCellsReachingOffTheLand)
+{
+	// Deep sea in the last column of cells only
+	const auto land = WalkableLand::Build([](int32_t x, int32_t /*z*/) { return x >= k_CellsPerSide - 1 ? 0.0f : 5.0f; }, Dry);
+	ASSERT_EQ(land.At(k_CellsPerSide - 1, 20), Ground::Blocked);
+	EXPECT_TRUE(StepBlockCircles(land, {63, 1}, {0.0f, 0.0f}).empty());
+}

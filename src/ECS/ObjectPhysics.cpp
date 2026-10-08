@@ -28,14 +28,17 @@
 #include "ECS/Archetypes/DeadTreeArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/FallingRoots.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Fire.h"
 #include "ECS/Components/ForestMember.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Indestructible.h"
 #include "ECS/Components/MagicForest.h"
+#include "ECS/Components/MapCellResident.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
@@ -646,4 +649,33 @@ void object_physics::ArtefactTaken(entt::entity object, PlayerNames player)
 		record->town = entt::null;
 		record->player = player;
 	}
+}
+
+bool object_physics::KickBall(systems::DynamicsSystemInterface& dynamics, entt::entity ball, glm::vec3 destination, float speed)
+{
+	auto& registry = Entities();
+	if (!registry.Valid(ball) || !registry.AllOf<Ball, Transform>(ball))
+	{
+		return false;
+	}
+	const auto velocity = objects::KickVelocity(registry.Get<const Transform>(ball).position, destination, speed);
+	if (registry.AllOf<InPhysics>(ball) && !registry.AllOf<CarriedByTornado>(ball))
+	{
+		dynamics.RemoveObject(ball, true, true);
+	}
+	const bool inMap = registry.AllOf<MapCellResident>(ball) && !registry.AnyOf<InHand, InPhysics, CarriedByTornado>(ball);
+	// A kick at its own place would fly on no number at all; openblack doesn't start that
+	if (!inMap || !std::isfinite(velocity.x) || !std::isfinite(velocity.y) || !std::isfinite(velocity.z))
+	{
+		return false;
+	}
+	auto* entry = dynamics.InitialisePhysics(ball, {.velocity = velocity, .add = true}).entry;
+	if (entry == nullptr)
+	{
+		return false;
+	}
+	entry->flags |= PhysicsEntry::k_PushedByLiving;
+	dynamics.SettleOnLand(*entry, false, true);
+	registry.Get<Ball>(ball).destination = destination;
+	return true;
 }

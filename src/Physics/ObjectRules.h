@@ -158,4 +158,8 @@ inline constexpr float k_FellLeastSquaredDistance = 0.001f;
 /// A tree of a height felled from a place: the flat offset from the feller to the tree
 [[nodiscard]] Felling FellingOf(float height, glm::vec2 fellerToTree);
 
+/// The velocity a kick gives a football to come down at a point: it takes as long as the straight way there at the speed,
+/// flying up by as much as it falls in that time
+[[nodiscard]] glm::vec3 KickVelocity(glm::vec3 from, glm::vec3 to, float speed);
+
 } // namespace openblack::physics::objects

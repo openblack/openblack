@@ -32,7 +32,9 @@
 #include "Audio/GameMusic.h"
 #include "Camera/Camera.h"
 #include "Creature/LeashRules.h"
+#include "ECS/Archetypes/BallArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureObjectAction.h"
@@ -67,6 +69,7 @@
 #include "ECS/Systems/ScriptObjectsSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
+#include "ECS/TownPlaythings.h"
 #include "Enums.h"
 #include "Game.h"
 #include "Locator.h"
@@ -154,6 +157,30 @@ bool IsScriptObject(const ecs::Registry& registry, entt::entity thing)
 	       registry.AnyOf<ecs::components::Creature, ecs::components::Field>(thing);
 }
 
+/// A football made by a script goes to the nearest town, however far, for its people to play with; a town that already
+/// has a football still about keeps that one
+entt::entity CreateScriptBall(const glm::vec3& position)
+{
+	const auto ball = BallArchetype::Create(position);
+	auto& registry = Locator::entitiesRegistry::value();
+	std::vector<ecs::town_playthings::Candidate> towns;
+	registry.Each<const ecs::components::Town, const ecs::components::Transform>(
+	    [&towns](entt::entity entity, const ecs::components::Town& town, const ecs::components::Transform& transform) {
+		    towns.push_back({.town = entity, .owner = town.owner, .id = town.id, .position = transform.position});
+	    });
+	const auto nearest = ecs::town_playthings::Nearest(towns, position);
+	if (!nearest.has_value())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Ball Created but unable to add it to a town.");
+		return ball;
+	}
+	auto& town = registry.Get<ecs::components::Town>(*nearest);
+	ecs::town_playthings::Add(town.playthings, ball, [&registry](entt::entity thing) {
+		return registry.Valid(thing) && registry.AllOf<ecs::components::Ball>(thing);
+	});
+	return ball;
+}
+
 entt::entity CreateScriptObject(const ObjectType type, uint32_t subtype, const glm::vec3& position, float altitude,
                                 float xAngleRadians, float yAngleRadians, const float zAngleRadians, const float scale)
 {
@@ -164,6 +191,8 @@ entt::entity CreateScriptObject(const ObjectType type, uint32_t subtype, const g
 	case ObjectType::Rock: // TODO(Daniels118): add a Rock archetype
 		return MobileStaticArchetype::Create(position, static_cast<MobileStaticInfo>(subtype), altitude, xAngleRadians,
 		                                     yAngleRadians, zAngleRadians, scale);
+	case ObjectType::Ball:
+		return CreateScriptBall(position);
 	default:
 		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "CreateScriptObject not implemented for type {}", static_cast<int>(type));
 	}

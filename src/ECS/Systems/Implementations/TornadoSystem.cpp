@@ -25,6 +25,7 @@
 #include "ECS/Archetypes/PotArchetype.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/LivingAction.h"
@@ -155,7 +156,7 @@ std::optional<TornadoCandidate> CandidateOf(const ecs::Registry& registry, entt:
 		return candidate;
 	}
 	// Trees, animals, things lying about and rocks and the like; never buildings, features or the teleport stones
-	if (registry.AnyOf<Tree, Animal, MobileObject, MobileStatic>(entity))
+	if (registry.AnyOf<Tree, Animal, MobileObject, Ball, MobileStatic>(entity))
 	{
 		candidate.kind = TornadoCandidate::Kind::Liftable;
 		return candidate;

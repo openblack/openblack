@@ -21,6 +21,7 @@
 #include "3D/MapCoords.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/Feature.h"
@@ -160,7 +161,7 @@ std::optional<MapProduction::Kind> MapProduction::KindOf(const Registry& registr
 	{
 		return Kind {.placement = Placement::FixedBack, .coversOutline = false, .moves = true};
 	}
-	if (registry.AnyOf<Villager, Creature, Animal, MobileObject, RewardOnLand>(entity))
+	if (registry.AnyOf<Villager, Creature, Animal, MobileObject, Ball, RewardOnLand>(entity))
 	{
 		return Kind {.placement = Placement::MobileFront, .coversOutline = false, .moves = true};
 	}

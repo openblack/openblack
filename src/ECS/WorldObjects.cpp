@@ -20,6 +20,7 @@
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AnimatedStatic.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/DeadTree.h"
@@ -209,6 +210,11 @@ const GObjectInfo* world_objects::InfoOf(entt::entity object)
 	if (const auto* mobile = registry.TryGet<const MobileObject>(object))
 	{
 		return Row(info.mobileObject, mobile->type);
+	}
+	// The football has a row of its own
+	if (registry.AllOf<Ball>(object))
+	{
+		return &info.ball;
 	}
 	return nullptr;
 }

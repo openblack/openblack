@@ -113,6 +113,8 @@ struct ClassInputs
 
 /// Whether a static's model is one of the toys the hand plays with
 [[nodiscard]] bool IsToyModel(MeshId mesh);
+/// Whether a thing is a toy: the football, or a static of a toy's model
+[[nodiscard]] bool IsToy(const Registry& registry, entt::entity entity, const InfoConstants& info);
 /// Whether a static's model is a fence
 [[nodiscard]] bool IsFenceModel(MeshId mesh);
 

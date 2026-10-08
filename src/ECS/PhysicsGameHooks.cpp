@@ -149,10 +149,7 @@ void HurtLiving(entt::entity living, const ImpactInfo& impact)
 /// Whether a thing is a toy, which strikes a creature without hurting it
 bool IsToy(entt::entity object)
 {
-	const auto* mobile = Entities().TryGet<const MobileStatic>(object);
-	return mobile != nullptr && Locator::infoConstants::has_value() &&
-	       physics_classes::IsToyModel(
-	           Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(mobile->type)).meshId);
+	return Locator::infoConstants::has_value() && physics_classes::IsToy(Entities(), object, Locator::infoConstants::value());
 }
 
 /// The bones a creature acts with and the moments of its object animations, if its species has them
@@ -508,7 +505,7 @@ void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntr
 		                                         .modelScale = transform.scale.x,
 		                                         .catchMs = points->catchMs,
 		                                         .stepMs = *stepMs,
-		                                         .stepTravel = *stepTravel};
+		                                         .stepTravel = stepTravel->x};
 		if (!creature_catch::Reaches(approach))
 		{
 			continue;

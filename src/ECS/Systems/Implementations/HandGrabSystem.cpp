@@ -17,6 +17,7 @@
 
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
@@ -171,6 +172,11 @@ GrabKind HandGrabSystem::KindOf(entt::entity object) const
 	if (const auto* mobile = registry.TryGet<const MobileObject>(object))
 	{
 		return mobile->type == MobileObjectInfo::LumpOfPoo ? GrabKind::Poo : GrabKind::MobileObject;
+	}
+	// The football is held as any thing lying about
+	if (registry.AllOf<Ball>(object))
+	{
+		return GrabKind::MobileObject;
 	}
 	return GrabKind::None;
 }

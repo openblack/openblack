@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 /// Where a creature can walk, and the routes it takes there.
 ///
@@ -108,6 +109,21 @@ constexpr float k_ObjectAvoidHeight = 0.1f;
 
 /// The shortest distance from a point to a segment
 [[nodiscard]] float DistanceToSegment(glm::vec2 point, glm::vec2 from, glm::vec2 to);
+
+/// A creature's side step towards a catch is checked against one block of 8 by 8 cells, 80 units a side
+constexpr int32_t k_StepBlockCells = 8;
+constexpr float k_StepBlockSize = 80.0f;
+/// The block a step ending at a point is checked against: its column from the point's x and, as the game has it, its row
+/// from the point's height rather than its z, so that for ordinary heights it is a block of the land's first rows
+[[nodiscard]] glm::ivec2 StepBlock(glm::vec3 end);
+/// The circles a side step must not end in, gathered over a block as the game gathers them: for each cell of the block,
+/// a circle of the destination clearance at the centre of each of the cell and its eight neighbours that may not be
+/// stood on. The game reads each neighbour's sort from the cell one row further on, and only blocked cells count (water
+/// is waded). A circle about a point within a tenth of a unit of where the creature stands is left out, and one reaching
+/// further than it is shrunk to reach it; one reaching off the land's last 80 units is left out.
+[[nodiscard]] std::vector<Circle> StepBlockCircles(const WalkableLand& land, glm::ivec2 block, glm::vec2 standing);
+/// Whether a point lies strictly inside any of the circles
+[[nodiscard]] bool InsideAny(glm::vec2 point, const std::vector<Circle>& circles);
 
 /// Where to go and what is in the way
 struct Request

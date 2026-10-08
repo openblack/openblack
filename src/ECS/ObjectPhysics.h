@@ -67,6 +67,11 @@ void ArtefactTaken(entt::entity object, PlayerNames player);
 /// people are called to its wood; the tree itself is left for the feller to remove. The felled tree, none if it could
 /// not be made.
 entt::entity FellTree(systems::DynamicsSystemInterface& dynamics, entt::entity tree, entt::entity feller);
+/// A footballer kicks the football at a point at a speed: one flying or lying in the physics, but not one a tornado
+/// carries, is first taken out of it; then, standing in the map, it flies at that point with no spin and no thrower,
+/// laid onto the land, the people's bodies letting it through as something a living thing pushed, and it remembers
+/// where it was kicked at. Whether it was set flying.
+bool KickBall(systems::DynamicsSystemInterface& dynamics, entt::entity ball, glm::vec3 destination, float speed);
 
 } // namespace object_physics
 } // namespace openblack::ecs

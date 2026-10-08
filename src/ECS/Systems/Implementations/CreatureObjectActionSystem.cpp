@@ -27,14 +27,17 @@
 #include "3D/CreatureBody.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
+#include "Creature/CreatureAnimation.h"
 #include "Creature/CreatureCatch.h"
 #include "Creature/CreatureLayers.h"
 #include "Creature/CreatureObjectActions.h"
 #include "Creature/CreatureReach.h"
 #include "Creature/CreatureRig.h"
+#include "Creature/CreatureRoute.h"
 #include "Creature/CreatureThrow.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureNeeds.h"
@@ -220,6 +223,10 @@ std::optional<float> WeightOf(const ecs::Registry& registry, entt::entity entity
 	{
 		const auto kind = static_cast<size_t>(object->type);
 		return kind < info.mobileObject.size() ? std::optional(info.mobileObject.at(kind).weight) : std::nullopt;
+	}
+	if (registry.AllOf<Ball>(entity))
+	{
+		return info.ball.weight;
 	}
 	if (const auto* creature = registry.TryGet<const Creature>(entity))
 	{
@@ -578,6 +585,40 @@ bool StartCatch(entt::entity creature, CreatureObjectAction& action, const Creat
 	return true;
 }
 
+/// Whether a side step towards a catch may be taken: not while the creature moves, and not when the step would end inside
+/// a cell it may not stand on, gathered over the block the game checks
+bool StepAccepted(entt::entity creature, const Transform& transform, bool mirrored)
+{
+	if (!Locator::creatureLocomotionSystem::has_value() || !Locator::creatureAnimationSystem::has_value())
+	{
+		return false;
+	}
+	auto& locomotion = Locator::creatureLocomotionSystem::value();
+	if (locomotion.IsMoving(creature))
+	{
+		return false;
+	}
+	const auto travel = Locator::creatureAnimationSystem::value().AnimationTravel(creature, creature_catch::k_CatchStep);
+	if (!travel.has_value())
+	{
+		return false;
+	}
+	// Where the step ends: the step's travel, the other way across for the left hand, turned and sized as the creature is
+	auto step = *travel;
+	if (mirrored)
+	{
+		step.x = -step.x;
+	}
+	const auto end = transform.position + (transform.rotation * (step * transform.scale));
+	// TODO(physics): the game also keeps the step out of the circles of the objects in the block's cells that a creature
+	// walks round, as its route planner lays them out for each kind of object; openblack's routes don't lay them out as
+	// the game does yet
+	// The circles give way to where the creature's route last left it, which is where it stands
+	const auto circles = creature_route::StepBlockCircles(locomotion.GetWalkableLand(), creature_route::StepBlock(end),
+	                                                      glm::xz(transform.position));
+	return !creature_route::InsideAny(glm::xz(end), circles);
+}
+
 /// Ready to catch: once it has turned, it waits for the thing, steps across to where it will pass when that is out of
 /// reach, and starts the catch when the thing will arrive as the hand closes; behind it or too late, it gives up
 void UpdateReady(ecs::Registry& registry, entt::entity creature, const Creature& body, const Transform& transform,
@@ -621,8 +662,22 @@ void UpdateReady(ecs::Registry& registry, entt::entity creature, const Creature&
 	switch (ready.readiness)
 	{
 	case creature_catch::Readiness::Wait:
+		// It stands breathing as it waits for the thing to come nearer
+		animation.slots.clear();
+		animation.slots.push_back(
+		    {.animation = creature_layers::animations::k_Stand,
+		     .timeMs = static_cast<float>(creature_animation::BreathTime(
+		         animation.breathPhase, static_cast<uint32_t>(DurationOf(creature, creature_layers::animations::k_Stand)))),
+		     .weight = 1.0f,
+		     .mirrored = false});
 		break;
 	case creature_catch::Readiness::Step:
+		if (!StepAccepted(creature, transform, ready.mirrored))
+		{
+			action.status = Status::Done;
+			animation.slots.clear();
+			break;
+		}
 		action.catching = Catching::Stepping;
 		action.mirrored = ready.mirrored;
 		action.timeMs = 0.0f;
@@ -1062,13 +1117,15 @@ bool CreatureObjectActionSystem::CanPickUp(entt::entity object) const
 		return false;
 	}
 	// Of pots and piles, only food can be picked up, to eat
-	return registry.AnyOf<MobileObject, Villager>(object) || (registry.AllOf<Pot>(object) && FoodValueOf(object).has_value());
+	return registry.AnyOf<MobileObject, Ball, Villager>(object) ||
+	       (registry.AllOf<Pot>(object) && FoodValueOf(object).has_value());
 }
 
 bool CreatureObjectActionSystem::CanDestroy(entt::entity target) const
 {
 	const auto& registry = Locator::entitiesRegistry::value();
-	return registry.Valid(target) && registry.AllOf<Transform>(target) && registry.AnyOf<Tree, Abode, MobileObject>(target);
+	return registry.Valid(target) && registry.AllOf<Transform>(target) &&
+	       registry.AnyOf<Tree, Abode, MobileObject, Ball>(target);
 }
 
 void CreatureObjectActionSystem::ProcessTurn()

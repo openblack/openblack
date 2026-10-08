@@ -28,7 +28,7 @@ public:
 	[[nodiscard]] std::optional<glm::vec3> BoneInAnimation(entt::entity creature, size_t animation, float timeMs, uint32_t bone,
 	                                                       bool mirrored) override;
 	[[nodiscard]] std::optional<float> AnimationDuration(entt::entity creature, size_t animation) override;
-	[[nodiscard]] std::optional<float> AnimationTravel(entt::entity creature, size_t animation) override;
+	[[nodiscard]] std::optional<glm::vec3> AnimationTravel(entt::entity creature, size_t animation) override;
 	void KickSway(entt::entity creature, glm::vec3 force, glm::vec3 point) override;
 
 private:

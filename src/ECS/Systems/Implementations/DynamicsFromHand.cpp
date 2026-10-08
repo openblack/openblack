@@ -68,7 +68,8 @@ void DynamicsSystem::ConsiderToyPlay(entt::entity object, const FromHand& releas
 	{
 		return;
 	}
-	if (const auto model = StaticModel(object); model.has_value() && physics_classes::IsToyModel(*model))
+	// A toy: the football, or a static of a toy's model
+	if (Locator::infoConstants::has_value() && physics_classes::IsToy(Entities(), object, Locator::infoConstants::value()))
 	{
 		Hooks().ConsiderMimickingToyPlay(object, *release.player);
 	}

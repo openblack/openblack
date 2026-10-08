@@ -15,6 +15,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/Ball.h"
 #include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
@@ -152,9 +153,6 @@ physics_classes::ClassFacts MobileObjectFacts(MobileObjectInfo type)
 	case MobileObjectInfo::Toadstool:
 		facts.row = MaterialRow::Toadstool;
 		break;
-	case MobileObjectInfo::Ball:
-		facts.row = MaterialRow::Football;
-		break;
 	case MobileObjectInfo::LumpOfPoo:
 		facts.row = MaterialRow::Poo;
 		break;
@@ -234,6 +232,17 @@ physics_classes::ClassFacts AnimatedStaticFacts(const AnimatedStatic& still)
 bool physics_classes::IsToyModel(MeshId mesh)
 {
 	return mesh >= MeshId::ObjectToyBall && mesh <= MeshId::ObjectToySkittle;
+}
+
+bool physics_classes::IsToy(const Registry& registry, entt::entity entity, const InfoConstants& info)
+{
+	if (registry.AllOf<Ball>(entity))
+	{
+		return true;
+	}
+	const auto* still = registry.TryGet<const MobileStatic>(entity);
+	const auto* row = still != nullptr ? Row<GMobileStaticInfo>(info.mobileStatic, still->type) : nullptr;
+	return row != nullptr && IsToyModel(row->meshId);
 }
 
 bool physics_classes::IsFenceModel(MeshId mesh)
@@ -345,6 +354,13 @@ physics_classes::ClassFacts ClassifyKind(const Registry& registry, entt::entity 
 	if (const auto* still = registry.TryGet<const MobileStatic>(entity))
 	{
 		return MobileStaticFacts(still->type, info, inputs);
+	}
+	if (registry.AllOf<Ball>(entity))
+	{
+		// The football is a thing lying about of its own material
+		auto facts = MobileObjectFacts(MobileObjectInfo::None);
+		facts.row = MaterialRow::Football;
+		return facts;
 	}
 	if (const auto* mobile = registry.TryGet<const MobileObject>(entity))
 	{
