@@ -254,6 +254,7 @@ openblack_setup_and_add_test(test_gesture_events test_gesture_events.cpp)
 openblack_setup_and_add_test(
   test_magic_shield_forest test_magic_shield_forest.cpp
 )
+openblack_setup_and_add_test(test_magic_heal test_magic_heal.cpp)
 openblack_setup_and_add_test(test_lightning_maths test_lightning_maths.cpp)
 openblack_setup_and_add_test(
   test_creature_spell_mind test_creature_spell_mind.cpp

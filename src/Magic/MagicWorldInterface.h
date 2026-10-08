@@ -25,6 +25,13 @@
 namespace openblack::magic
 {
 
+/// Who an effect comes from, whose alignment what it does moves
+struct EffectSource
+{
+	PlayerNames player {PlayerNames::NEUTRAL};
+	/// The creature that cast it, if a creature did: its own alignment moves rather than its player's
+	entt::entity casterCreature {entt::null};
+};
 /// What the miracles do to the world and ask of it. The game backs it with the land, the creatures, villagers, trees,
 /// piles and the other systems; tests use a fake. Where the game has nothing yet to act on, such as fire, the game's
 /// world does what it can and says so.
