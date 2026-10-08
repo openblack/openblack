@@ -41,9 +41,9 @@
 #include "3D/FlatLand.h"
 #include "3D/GripLandscapeEffect.h"
 #include "3D/HandAnimation.h"
+#include "3D/HandMorph.h"
 #include "3D/HandNavigationPose.h"
 #include "3D/HandOrientation.h"
-#include "3D/HandMorph.h"
 #include "3D/L3DMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "3D/LandLightFrame.h"
@@ -78,12 +78,16 @@
 #include "ECS/Components/CreatureNeeds.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/HandMorph.h"
+#include "ECS/Components/Influence.h"
 #include "ECS/Components/Mist.h"
+#include "ECS/Components/Player.h"
+#include "ECS/Components/PrayerPower.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
@@ -104,24 +108,34 @@
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/EditorSystemInterface.h"
+#include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
+#include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
+#include "ECS/Systems/ForestSystemInterface.h"
+#include "ECS/Systems/GestureEventsInterface.h"
+#include "ECS/Systems/GestureSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/MiracleFxSystemInterface.h"
 #include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
+#include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/SnowfallSystemInterface.h"
 #include "ECS/Systems/SoundTagSystemInterface.h"
+#include "ECS/Systems/TeleportSystemInterface.h"
 #include "ECS/Systems/TempleExteriorSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/Systems/TornadoSystemInterface.h"
 #include "ECS/Systems/TownDesireSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
 #include "ECS/Systems/VillageLightSystemInterface.h"
@@ -129,6 +143,7 @@
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
+#include "Gestures/GestureTrailBuilder.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/RendererInterface.h"
 #include "Gui/GameInterface.h"
@@ -153,6 +168,9 @@ namespace
 {
 // Where the camera starts on the testbed: above and behind the middle of the map
 constexpr float k_TestbedCameraHeight = 60.0f;
+/// How far the testbed's player's influence reaches from its middle, and the prayer power their worship has stored
+constexpr float k_TestbedInfluenceRadius = 400.0f;
+constexpr float k_TestbedPrayer = 1.0e6f;
 constexpr float k_TestbedCameraBack = 120.0f;
 
 /// The meshes the hand is pulled towards as its player turns evil or good, the first two of its morph file's variants,
@@ -284,6 +302,10 @@ Game::~Game() noexcept
 	{
 		Locator::creatureCaveSystem::value().SetInterface(nullptr);
 	}
+	if (Locator::miracleFxSystem::has_value())
+	{
+		Locator::miracleFxSystem::value().SetInterface(nullptr);
+	}
 	_interface.reset();
 	ShutDownServices();
 	SDL_Quit(); // todo: move to GameWindow
@@ -327,23 +349,25 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	auto& creatureHand = Locator::creatureHandSystem::value();
 	auto& fights = Locator::creatureFightSystem::value();
 	auto& magic = Locator::magicSystem::value();
-	// A miracle in the hand, or a one-shot bubble under it, takes the press before the creatures and the land
+	// The left button taps a one-shot bubble under the hand into it, before the creatures and the land
 	bool magicTookPress = false;
 	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT && !middleMouseButton &&
 	    !Locator::debugGui::value().IsMouseOverWindow())
 	{
-		magicTookPress = magic.PressAction();
+		magicTookPress = magic.TapAction();
 	}
-	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
+	// The action button (the right) casts the miracle in the hand, which comes before the creatures: pressed, it arms,
+	// locks on or casts it, and let go it throws an armed one or lets a locked one go. Without a miracle it takes hold
+	// of the creature under the hand; with the leash on, pressed on another creature it ties the leash to that one
+	// instead (see the leash's input).
+	if (rightLetGo || (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_RIGHT))
 	{
 		magic.ReleaseAction();
 	}
-	// The other button lets go of the miracle in the hand, or else takes hold of the creature under the hand. With the
-	// leash on, pressed on another creature it ties the leash to that one instead (see the leash's input).
-	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_RIGHT)
+	if (!inTemple && event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_RIGHT &&
+	    !Locator::debugGui::value().IsMouseOverWindow())
 	{
-		_actionPressTaken = magic.GetHeldSeed().has_value();
-		magic.DiscardHeldSeed();
+		_actionPressTaken = magic.IsHandBusy() && magic.PressAction();
 		if (!_actionPressTaken)
 		{
 			const auto screenSize = Locator::windowing::value().GetSize();
@@ -405,8 +429,8 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	}
 	const bool onCreature = creatureHand.GetCreature().has_value();
 
-	_handGripping =
-	    !inTemple && (middleMouseButton || (leftMouseButton && !onCreature && !fights.IsPressed() && !magic.IsHandBusy()));
+	// A miracle in the hand doesn't stop the hand moving the land; the middle button, or both buttons, turn the camera
+	_handGripping = !inTemple && (middleMouseButton || (leftMouseButton && !onCreature && !fights.IsPressed()));
 	_handRotating = !inTemple && (middleMouseButton || (leftMouseButton && rightMouseButton));
 
 	auto& window = Locator::windowing::value();
@@ -535,6 +559,97 @@ bool Game::IsPaused() const
 	return Locator::time::value().IsPaused();
 }
 
+void Game::UpdateGestures(const Camera& camera, glm::ivec2 screenSize, float deltaSeconds)
+{
+	if (!Locator::gestureSystem::has_value() || screenSize.x <= 0 || screenSize.y <= 0)
+	{
+		return;
+	}
+	const auto size = static_cast<glm::vec2>(screenSize);
+	const auto rayAt = [&camera, size](glm::vec2 pixel) {
+		glm::vec3 origin;
+		glm::vec3 direction;
+		camera.DeprojectScreenToWorld(pixel / size, origin, direction);
+		return std::pair {origin, direction};
+	};
+	ecs::systems::GestureSystemInterface::Frame frame {
+	    .seconds = deltaSeconds,
+	    .cursor = static_cast<glm::vec2>(_mousePosition),
+	    // Not over a debug window, nor while a cut scene has the screen
+	    .overWorld = !Locator::debugGui::value().StealsFocus() && !Locator::debugGui::value().IsMouseOverWindow() &&
+	                 Locator::cinematicDirectorSystem::value().IsInterfaceActive(),
+	    .actionHeld = Locator::gameActionSystem::value().Get(input::BindableActionMap::ACTION),
+	    .player = PlayerNames::PLAYER_ONE,
+	    .view = {.screenSize = size,
+	             .cameraRight = camera.GetRight(),
+	             .cameraEye = camera.GetOrigin(),
+	             .cameraForward = camera.GetForward()},
+	    .cameraShaking = Locator::explosionSystem::has_value() && Locator::explosionSystem::value().IsShaking(),
+	};
+	// The land or the sea under a point of the screen
+	frame.view.landAt = [rayAt](glm::vec2 pixel) -> std::optional<glm::vec3> {
+		const auto [origin, direction] = rayAt(pixel);
+		if (glm::any(glm::isnan(origin) || glm::isnan(direction)))
+		{
+			return std::nullopt;
+		}
+		if (auto hit = Locator::dynamicsSystem::value().RayCastClosestHit(origin, direction, 1e10f))
+		{
+			return hit->first.position;
+		}
+		float distance = 0.0f;
+		if (glm::intersectRayPlane(origin, direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), distance))
+		{
+			return origin + (direction * distance);
+		}
+		return std::nullopt;
+	};
+	// A point of the screen as far in front of the camera as another point
+	frame.view.atDepthOf = [rayAt, forward = camera.GetForward()](glm::vec2 pixel, glm::vec3 sameDepthAs) {
+		const auto [origin, direction] = rayAt(pixel);
+		float distance = 0.0f;
+		if (glm::intersectRayPlane(origin, direction, sameDepthAs, -forward, distance))
+		{
+			return origin + (direction * distance);
+		}
+		return sameDepthAs;
+	};
+	// Where a recognised gesture's trail is laid under a pixel: where the ray meets the land through whatever stands on
+	// it, or the sea's level no further than 7500 units from the camera across the land, at the land's height there;
+	// otherwise 400 units from the camera towards the pixel
+	frame.view.trailPointUnder = [rayAt, eye = camera.GetOrigin()](glm::ivec2 pixel) {
+		constexpr float k_FarthestSea = 7500.0f;
+		const auto [origin, direction] = rayAt(glm::vec2(pixel));
+		std::optional<glm::vec3> hit;
+		if (!glm::any(glm::isnan(origin) || glm::isnan(direction)))
+		{
+			hit = Locator::dynamicsSystem::value().RayCastLand(origin, direction, 1e10f);
+			if (!hit.has_value() && direction.y < 0.0f)
+			{
+				const auto atSea = origin + (direction * (-origin.y / direction.y));
+				const auto across = glm::vec2(atSea.x - eye.x, atSea.z - eye.z);
+				if (glm::dot(across, across) <= k_FarthestSea * k_FarthestSea)
+				{
+					hit = atSea;
+				}
+			}
+		}
+		if (hit.has_value())
+		{
+			const auto height =
+			    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt({hit->x, hit->z}) : hit->y;
+			return glm::vec3(hit->x, height, hit->z);
+		}
+		return eye + (direction * gesture::k_TrailSkyDistance);
+	};
+	Locator::gestureSystem::value().Update(frame);
+	// A path drawn for the testbed is drawn by the hand, which follows it
+	if (const auto drawing = Locator::gestureSystem::value().GetDrawingPoint())
+	{
+		_mousePosition = glm::ivec2(*drawing * (size.y / gesture::k_ReferenceHeight));
+	}
+}
+
 void Game::UpdateHandInterface()
 {
 	if (!_interface)
@@ -659,6 +774,8 @@ bool Game::GameLogicLoop() noexcept
 	Locator::influenceSystem::value().ProcessTurn(Locator::time::value().GetTurn());
 	// The crops in the fields grow
 	Locator::fieldSystem::value().ProcessTurn(Locator::time::value().GetTurn());
+	// The trees that are still growing grow, faster in the rain
+	Locator::vegetation::value().ProcessTurn();
 	{
 		// The creatures age, grow, get hungry, tired and thirsty, and heal while they sleep
 		auto creaturePhysiology = profiler.BeginScoped(Profiler::Stage::CreaturePhysiologyUpdate);
@@ -706,6 +823,14 @@ bool Game::GameLogicLoop() noexcept
 		auto actions = profiler.BeginScoped(Profiler::Stage::LivingActionUpdate);
 		Locator::livingActionSystem::value().Update();
 	}
+	// The living that walked this turn go into their new map cells before anything searches them
+	Locator::entitiesMap::value().Sync();
+	// The game burns its fires here, after the living and before the scripts and the miracles: a fire either of those
+	// lights this turn waits for the next before it burns
+	if (Locator::fireSystem::has_value())
+	{
+		Locator::fireSystem::value().MarkBurnPoint();
+	}
 
 	auto& lhvm = Locator::vm::value();
 	lhvm.LookIn(lhvm::ScriptType::All);
@@ -735,9 +860,45 @@ bool Game::GameLogicLoop() noexcept
 		Locator::magicSystem::value().ProcessTurn();
 	}
 	{
+		// The flocks fly and the wolves run and hunt
+		auto animals = profiler.BeginScoped(Profiler::Stage::AnimalsUpdate);
+		Locator::animalSystem::value().ProcessTurn();
+	}
+	{
+		// The shields' objects: the spiritual shields' marks and the physical shields' domes, and the people sheltering
+		auto shields = profiler.BeginScoped(Profiler::Stage::MagicShieldsUpdate);
+		Locator::magicShieldSystem::value().ProcessTurn();
+	}
+	{
+		// The forest miracles' forests grow or wither
+		auto forests = profiler.BeginScoped(Profiler::Stage::ForestsUpdate);
+		Locator::forestSystem::value().ProcessTurn();
+	}
+	{
+		// What is hot burns, cools and spreads, and the villagers near it react
+		auto fire = profiler.BeginScoped(Profiler::Stage::FireUpdate);
+		Locator::fireSystem::value().ProcessTurn();
+	}
+	{
+		// What the miracles and other happenings made the living react to: belief for the villagers' towns, and the
+		// creatures impressed
+		auto reactions = profiler.BeginScoped(Profiler::Stage::ReactionsUpdate);
+		Locator::reactionSystem::value().ProcessTurn();
+	}
+	{
+		// The teleport stones: the passers-by turn aside into them and jump between them
+		auto teleport = profiler.BeginScoped(Profiler::Stage::TeleportUpdate);
+		Locator::teleportSystem::value().ProcessTurn();
+	}
+	{
 		// The particle effects not owned by a miracle step, and the spot visuals count down
 		auto particles = profiler.BeginScoped(Profiler::Stage::ParticlesUpdate);
 		Locator::particleSystem::value().ProcessTurn();
+	}
+	{
+		// What a tornado carried and flung is let go once its particle has gone
+		auto tornado = profiler.BeginScoped(Profiler::Stage::TornadoUpdate);
+		Locator::tornadoSystem::value().ProcessTurn();
 	}
 
 	// Each turn ends with the camera taking the alignment of the player of most influence where it is
@@ -894,7 +1055,19 @@ bool Game::Update() noexcept
 		{
 			_mousePosition = glm::ivec2(actions.GetMousePosition());
 		}
-		camera.HandleActions(deltaTime);
+		// A miracle's camera path keeps the camera until the player moves it with the movement keys or grips the land,
+		// which hand it straight back; meanwhile the player's other camera controls do nothing
+		auto& cameraPaths = Locator::cameraPathSystem::value();
+		cameraPaths.HandlePlayerControl(
+		    {.movementKey = actions.GetAny(input::BindableActionMap::MOVE_LEFT, input::BindableActionMap::MOVE_RIGHT,
+		                                   input::BindableActionMap::MOVE_FORWARDS, input::BindableActionMap::MOVE_BACKWARDS),
+		     .frameMilliseconds =
+		         static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(deltaTime).count()),
+		     .grippingLand = _handGripping && !_handRotating});
+		if (!cameraPaths.HoldsCamera())
+		{
+			camera.HandleActions(deltaTime);
+		}
 		if (const auto warp = actions.GetCursorWarp(); warp.has_value())
 		{
 			_mousePosition = *warp;
@@ -938,13 +1111,20 @@ bool Game::Update() noexcept
 		Locator::creatureCaveSystem::value().Update();
 	}
 
-	camera.Update(deltaTime);
-	// Outside a camera with a lens of its own, the near plane follows the camera's height over the land
+	// While a miracle's camera path has the camera, the player's camera doesn't move it
+	const bool pathHoldsCamera = Locator::cameraPathSystem::value().HoldsCamera();
+	if (!pathHoldsCamera)
+	{
+		camera.Update(deltaTime);
+	}
+	// Outside a camera with a lens of its own, the near plane follows the camera's height over the land, but for close
+	// shots: a script's, and a miracle's camera path
 	if (!camera.GetModel().GetLens().has_value() && Locator::terrainSystem::has_value())
 	{
 		const auto origin = camera.GetOrigin();
 		const float height = origin.y - Locator::terrainSystem::value().GetHeightAt(glm::vec2(origin.x, origin.z));
-		const float nearClip = near_clipping::NearPlane(height, Locator::cinematicDirectorSystem::value().IsCloseClipping());
+		const float nearClip =
+		    near_clipping::NearPlane(height, Locator::cinematicDirectorSystem::value().IsCloseClipping() || pathHoldsCamera);
 		if (nearClip != camera.GetNearClip())
 		{
 			camera.SetNearClip(nearClip);
@@ -988,9 +1168,24 @@ bool Game::Update() noexcept
 	// The rings on the water grow and fade
 	Locator::waterRingSystem::value().Update(gameTime);
 	{
+		// The flames, steam and smoke of what burns move on
+		auto fire = profiler.BeginScoped(Profiler::Stage::FireUpdate);
+		Locator::fireSystem::value().Update(std::chrono::duration<float>(gameTime).count());
+	}
+	{
+		// The blasts' rubble lies and fades, their dust flies and the camera shakes
+		auto explosions = profiler.BeginScoped(Profiler::Stage::ExplosionUpdate);
+		Locator::explosionSystem::value().Update(std::chrono::duration<float, std::milli>(gameTime).count());
+	}
+	{
 		// The fight animations play, blows land and the fighters move as their animations carry them
 		auto creatureCombat = profiler.BeginScoped(Profiler::Stage::CreatureCombatUpdate);
 		Locator::creatureFightSystem::value().Update(gameTime);
+	}
+	{
+		// The animals are drawn between their last two turns, their models posed by their clips
+		auto animals = profiler.BeginScoped(Profiler::Stage::AnimalsUpdate);
+		Locator::animalSystem::value().Update(clock.GetTurn(), clock.GetTurnFraction());
 	}
 	{
 		// The creatures are drawn moving between the last two turns
@@ -1037,6 +1232,11 @@ bool Game::Update() noexcept
 		auto creatureSkin = profiler.BeginScoped(Profiler::Stage::CreatureSkinUpdate);
 		Locator::creatureSkinSystem::value().Update();
 	}
+	{
+		// What a tornado carries is drawn where it whirls, between the last two turns
+		auto tornado = profiler.BeginScoped(Profiler::Stage::TornadoUpdate);
+		Locator::tornadoSystem::value().Update(clock.GetTurnFraction());
+	}
 	// The snow falls as the rain does
 	Locator::snowfallSystem::value().Update(std::chrono::duration<float>(gameTime).count(),
 	                                        Locator::rainSystem::value().GetFall());
@@ -1058,7 +1258,9 @@ bool Game::Update() noexcept
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
 		// Update Hand and intersection point
-		ecs::components::Transform intersectionTransform {};
+		// Upright where nothing is under the cursor
+		ecs::components::Transform intersectionTransform {
+		    .position = glm::vec3(0.0f), .rotation = glm::mat3(1.0f), .scale = glm::vec3(1.0f)};
 		bool enterTemple = false;
 		// The point the interface picks under the cursor, which the hand's influence is tested at
 		std::optional<map_coords::MapCoords> handPick;
@@ -1098,7 +1300,8 @@ bool Game::Update() noexcept
 					// TODO(raffclar): in a game of one player, only once a script lets the player use the temple
 					const auto& actions = Locator::gameActionSystem::value();
 					if (Locator::cinematicDirectorSystem::value().IsInterfaceActive() &&
-					    actions.GetChanged(input::BindableActionMap::ACTION) && actions.Get(input::BindableActionMap::ACTION))
+					    !Locator::magicSystem::value().IsHandBusy() && actions.GetChanged(input::BindableActionMap::ACTION) &&
+					    actions.Get(input::BindableActionMap::ACTION))
 					{
 						enterTemple = Locator::templeExteriorSystem::value().EntranceAt(rayOrigin, rayDirection) ==
 						              PlayerNames::PLAYER_ONE;
@@ -1111,13 +1314,13 @@ bool Game::Update() noexcept
 						auto& leashes = Locator::leashSystem::value();
 						leashes.HandleInput(rayOrigin, rayDirection, _actionPressTaken);
 						_actionPressTaken = false;
-						// Shaking the free hand takes off the leash held in it
-						const auto seconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count();
-						const bool handFree = !_handGripping && !Locator::creatureHandSystem::value().GetCreature() &&
-						                      !Locator::magicSystem::value().GetHeldSeed().has_value();
-						leashes.TrackHand(PlayerNames::PLAYER_ONE,
-						                  static_cast<glm::vec2>(_mousePosition) / static_cast<float>(screenSize.y), seconds,
-						                  handFree);
+					}
+					// The gestures drawn with the hand: circles and power-ups for the miracles, the leash's gestures, and
+					// the scribble that shakes off what the hand holds
+					{
+						auto gestures = profiler.BeginScoped(Profiler::Stage::GestureUpdate);
+						UpdateGestures(camera, screenSize,
+						               std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 					}
 					_cursorOnObject = false;
 					handPick =
@@ -1199,8 +1402,7 @@ bool Game::Update() noexcept
 					if (hands.GetCreature().has_value())
 					{
 						_handOnCreature =
-						    hands.Update(rayOrigin, rayDirection, static_cast<glm::vec2>(_mousePosition),
-						                 std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+						    hands.Update(rayOrigin, rayDirection, static_cast<glm::vec2>(_mousePosition), HandStepSeconds());
 					}
 					if (_handOnCreature.has_value())
 					{
@@ -1211,8 +1413,33 @@ bool Game::Update() noexcept
 			}
 			{
 				auto magic = profiler.BeginScoped(Profiler::Stage::MagicUpdate);
+				// Food and wood pouring from the hand lift it and tip it forward, and what it pours comes from there
+				const auto pour = Locator::magicSystem::value().GetHandPour(Locator::time::value().GetTurnFraction());
+				// The hand is drawn where a scenario puts it, and stays where a pour that holds it began
+				const auto driven = Locator::magicSystem::value().GetDrivenHand();
+				if (driven.has_value())
+				{
+					handTransform.position = driven->handPosition;
+				}
+				handTransform.position = pour.pinned.value_or(handTransform.position);
+				handTransform.position.y += pour.raise;
+				// A seed in the hand lifts it, by how it is held; the pour tips it as the hand is posed (magic::HandHoldPoser)
+				if (const auto held = magic::HandHoldPoser::Find())
+				{
+					// Measured to the land under the cursor, or under the hand a scenario puts
+					const auto land = driven.has_value() ? driven->point : _cursorWorldPosition;
+					handTransform.position.y += magic::HandHoldPoser::Lift(
+					    *held, glm::distance(camera.GetOrigin(), land.value_or(handTransform.position)));
+				}
 				UpdateMagicHand(handTransform.position,
 				                std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
+			}
+			{
+				// The globes and the hand show their miracles
+				auto miracleFx = profiler.BeginScoped(Profiler::Stage::MiracleFxUpdate);
+				Locator::miracleFxSystem::value().Update(
+				    std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count(),
+				    std::chrono::duration<float>(gameTime).count());
 			}
 			Locator::entitiesRegistry::value().SetDirty();
 		}
@@ -1221,6 +1448,27 @@ bool Game::Update() noexcept
 		{
 			auto creatureLeash = profiler.BeginScoped(Profiler::Stage::CreatureLeashUpdate);
 			Locator::leashSystem::value().Update(std::chrono::duration<float>(gameTime).count());
+		}
+
+		// Holding a miracle's seed, the hand takes the still pose of its hold, sways with the seed and tips with a pour
+		const auto heldSeed = magic::HandHoldPoser::Find();
+		bool holdingSeed = false;
+		{
+			const auto handEntity = Locator::handSystem::value()
+			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			if (auto* handTransform = Locator::entitiesRegistry::value().TryGet<ecs::components::Transform>(handEntity))
+			{
+				const magic::HandHoldPoser::Frame holdFrame {
+				    .dt = deltaTime,
+				    .cursor = _mousePosition,
+				    .camera = camera.GetOrigin(),
+				    .levelTurn = glm::mat3(glm::eulerAngleY(camera.GetRotation().y)),
+				    .modelCorrection = glm::mat3(glm::eulerAngleX(glm::radians(90.0f))),
+				    .tilt = Locator::magicSystem::value().GetHandPour(Locator::time::value().GetTurnFraction()).tilt,
+				    .rightHanded = config.rightHandedHand,
+				};
+				holdingSeed = _handHold.Pose(heldSeed, holdFrame, _handAnimation.get(), *handTransform);
+			}
 		}
 
 		// Animate the hand: gripping while it drags the land, otherwise its normal pose. Turning the camera with the
@@ -1256,7 +1504,10 @@ bool Game::Update() noexcept
 				        : _handOnCreature->onBody ? HandCycle::Stroke
 				                                  : HandCycle::Wiggle;
 			}
-			_handAnimation->Update(deltaTime, state, cycle, _mousePosition);
+			if (!holdingSeed)
+			{
+				_handAnimation->Update(deltaTime, state, cycle, _mousePosition);
+			}
 
 			const auto handEntity = Locator::handSystem::value()
 			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
@@ -1289,6 +1540,27 @@ bool Game::Update() noexcept
 					}
 				}
 			}
+		}
+		// Taking or letting go of a seed cross-fades the drawn hand, and the seed's in-hand effect sits in its fingers
+		{
+			const auto handEntity = Locator::handSystem::value()
+			                            .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+			if (auto* handTransform = Locator::entitiesRegistry::value().TryGet<ecs::components::Transform>(handEntity))
+			{
+				const float handSize =
+				    HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), handTransform->position));
+				_handHold.Fade(heldSeed, deltaTime, *handTransform);
+				_handHold.PlaceHandEffect(heldSeed, _handAnimation.get(), *handTransform, handSize);
+				// The trails' sheets of light and the chain behind the gesturing hand move on every frame
+				Locator::particleSystem::value().UpdateFrame(
+				    std::chrono::duration<float>(gameTime).count(),
+				    {.position = handTransform->position,
+				     .size = handSize,
+				     .cameraPosition = camera.GetOrigin(),
+				     .gesturing = Locator::gestureSystem::has_value() && Locator::gestureSystem::value().IsGesturing()});
+			}
+			// A tribe's power behind a miracle spins its name round the hand, or up from where it was cast
+			Locator::miracleFxSystem::value().UpdateTribalPower(std::chrono::duration<float>(gameTime).count());
 		}
 
 		// The hand shows its player's alignment, catching up with it each frame once it has moved far enough. Its skin is
@@ -1685,6 +1957,10 @@ bool Game::Initialize() noexcept
 			if (Locator::creatureCaveSystem::has_value())
 			{
 				Locator::creatureCaveSystem::value().SetInterface(_interface.get());
+			}
+			if (Locator::miracleFxSystem::has_value())
+			{
+				Locator::miracleFxSystem::value().SetInterface(_interface.get());
 			}
 		}
 	}
@@ -2124,9 +2400,21 @@ void Game::LoadTestbed() noexcept
 
 	StartNewLand();
 
-	// The testbed has no temple to give its player influence: its miracles may be cast anywhere. A dispenser of every
-	// miracle stands in a grid in front of the camera.
-	Locator::magicSystem::value().SetIgnoreInfluence(true);
+	// The testbed has no temple to give its player influence, so a source of influence over its middle gives them the
+	// reach a citadel would: the miracles cast only in influence may be cast there, and nowhere beyond. Their worship
+	// stands behind them with prayer power to spare, which the miracles still draw from. A dispenser of every miracle
+	// stands in a grid in front of the camera.
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto influence = registry.Create();
+	registry.Assign<ecs::components::Transform>(influence, glm::vec3(middle.x, ground, middle.y), glm::mat3(1.0f),
+	                                            glm::vec3(1.0f));
+	registry.Assign<ecs::components::InfluenceSource>(influence, PlayerNames::PLAYER_ONE, k_TestbedInfluenceRadius);
+	registry.Each<const ecs::components::Player>([&registry](entt::entity entity, const ecs::components::Player& player) {
+		if (player.name == PlayerNames::PLAYER_ONE)
+		{
+			registry.AssignOrReplace<ecs::components::PrayerPower>(entity, k_TestbedPrayer, false);
+		}
+	});
 	testbed_dispensers::PlaceGrid(middle);
 
 	// The testbed comes with its window of scenarios to try out on it
@@ -2150,9 +2438,18 @@ void Game::PrepareNewLand()
 	Locator::influenceSystem::value().Reset();
 	// Nor its creatures' footprints
 	Locator::footprintSystem::value().Reset();
-	// Nor its miracles, nor their particle effects
+	// Nor its miracles, nor their particle effects, nor its fires
 	Locator::magicSystem::value().Reset();
+	Locator::miracleFxSystem::value().Reset();
+	Locator::fireSystem::value().Reset();
+	Locator::explosionSystem::value().Reset();
 	Locator::magicSystem::value().SetIgnoreInfluence(false);
+	Locator::animalSystem::value().Reset();
+	Locator::magicShieldSystem::value().Reset();
+	Locator::forestSystem::value().Reset();
+	Locator::reactionSystem::value().Reset();
+	Locator::teleportSystem::value().Reset();
+	Locator::gestureEvents::value().Reset();
 	Locator::particleSystem::value().Reset();
 
 	// Reset everything. Deletes all entities and their components
@@ -2580,6 +2877,18 @@ void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3
 	handTransform.rotation = glm::length(up) > 0.0f ? StandOnSlope(onLevelLand, _handHeading, up) : onLevelLand;
 }
 
+float Game::HandStepSeconds() const
+{
+	// The hand steps by the frame's real time in whole milliseconds, or by the game's time while a script holds the
+	// widescreen
+	const auto& time = Locator::time::value();
+	const bool scripted = Locator::cinematicDirectorSystem::has_value() &&
+	                      Locator::cinematicDirectorSystem::value().IsWideScreenOn() &&
+	                      Locator::cinematicDirectorSystem::value().GetWideScreenOwner() != 0;
+	const auto step = ecs::systems::CameraStep(time.GetFrameRealTime(), time.GetFrameGameTime(), scripted);
+	return static_cast<float>(static_cast<int32_t>(step.count())) * 0.001f;
+}
+
 void Game::UpdateMagicHand(const glm::vec3& handPosition, float deltaSeconds)
 {
 	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
@@ -2593,8 +2902,10 @@ void Game::UpdateMagicHand(const glm::vec3& handPosition, float deltaSeconds)
 	const bool inTemple = Locator::temple::has_value() && Locator::temple::value().Active();
 	frame.overWorld = !inTemple && !Locator::debugGui::value().IsMouseOverWindow();
 	auto& magic = Locator::magicSystem::value();
-	magic.UpdateHand(frame, deltaSeconds);
+	// The hand's movement, and the spin it gives a miracle, are measured by what the hand steps by
+	magic.UpdateHand(frame, HandStepSeconds());
 	magic.Update(deltaSeconds);
+	Locator::magicShieldSystem::value().Update(deltaSeconds);
 }
 
 void Game::PlayHandGrabSound()

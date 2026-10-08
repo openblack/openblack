@@ -47,6 +47,16 @@ public:
 		VegetationUpdate,
 		ParticlesUpdate,
 		MagicUpdate,
+		MagicShieldsUpdate,
+		ForestsUpdate,
+		MiracleFxUpdate,
+		FireUpdate,
+		ExplosionUpdate,
+		ReactionsUpdate,
+		AnimalsUpdate,
+		TeleportUpdate,
+		TornadoUpdate,
+		GestureUpdate,
 		SdlInput,
 		UpdateUniforms,
 		UpdateEntities,
@@ -107,6 +117,16 @@ public:
 	    "Vegetation Update",    //
 	    "Particles",            //
 	    "Magic",                //
+	    "Magic Shields",        //
+	    "Forests",              //
+	    "Miracle FX",           //
+	    "Fire",                 //
+	    "Explosions",           //
+	    "Reactions",            //
+	    "Animals",              //
+	    "Teleport",             //
+	    "Tornado",              //
+	    "Gestures",             //
 	    "SDL Input",            //
 	    "Update Uniforms",      //
 	    "Entities",             //

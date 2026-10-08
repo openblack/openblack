@@ -12,6 +12,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include <chrono>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -31,17 +33,29 @@
 #include "Camera/Camera.h"
 #include "Creature/LeashRules.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureMind.h"
+#include "ECS/Components/CreatureSpells.h"
+#include "ECS/Components/Field.h"
+#include "ECS/Components/Hand.h"
+#include "ECS/Components/Mesh.h"
+#include "ECS/Components/TownAggression.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
+#include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
+#include "ECS/Systems/MagicShieldSystemInterface.h"
+#include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "Enums.h"
 #include "Game.h"
 #include "Locator.h"
+#include "Magic/MagicTables.h"
+#include "Magic/ScriptCast.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
 namespace openblack::chlapi
@@ -113,6 +127,14 @@ std::vector<float> PopVarArg(const int32_t argc)
 		vals[i] = lhvm.Popf();
 	}
 	return vals;
+}
+
+/// Whether a thing is one of the world's objects, which a miracle can be cast on, rather than something with only a place,
+/// such as a town or a miracle: anything with a model but the hand, a creature, or a field
+bool IsScriptObject(const ecs::Registry& registry, entt::entity thing)
+{
+	return (registry.AnyOf<ecs::components::Mesh>(thing) && !registry.AnyOf<ecs::components::Hand>(thing)) ||
+	       registry.AnyOf<ecs::components::Creature, ecs::components::Field>(thing);
 }
 
 entt::entity CreateScriptObject(const ObjectType type, uint32_t subtype, const glm::vec3& position, float altitude,
@@ -1657,19 +1679,15 @@ void SetIdPickupable() // 169 SET_ID_PICKUPABLE
 
 void IsOnFire() // 170 IS_ON_FIRE
 {
-	// const auto obj = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	Pushb(Locator::fireSystem::has_value() && Locator::fireSystem::value().IsOnFire(object));
 }
 
 void IsFireNear() // 171 IS_FIRE_NEAR
 {
-	// const auto radius = Popf();
-	// const auto position = PopVec();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushb(false);
+	const auto radius = Popf();
+	const auto position = PopVec();
+	Pushb(Locator::fireSystem::has_value() && Locator::fireSystem::value().IsFireNear(position, radius));
 }
 
 void StopScriptsInFiles() // 172 STOP_SCRIPTS_IN_FILES
@@ -1693,19 +1711,32 @@ void SetPoisoned() // 173 SET_POISONED
 
 void SetTemperature() // 174 SET_TEMPERATURE
 {
-	// const auto temperature = Popf();
-	// const auto obj = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto temperature = Popf();
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	if (Locator::fireSystem::has_value())
+	{
+		Locator::fireSystem::value().SetTemperature(object, temperature, entt::null);
+	}
 }
 
 void SetOnFire() // 175 SET_ON_FIRE
 {
-	// const auto burnSpeed = Popf();
-	// const auto object = Pop().uintVal;
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto burnSpeed = Popf();
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = static_cast<bool>(Pop().intVal);
+	if (!Locator::fireSystem::has_value())
+	{
+		return;
+	}
+	// Set alight at the speed, or brought back to the air's temperature
+	if (enable)
+	{
+		Locator::fireSystem::value().SetOnFire(object, burnSpeed);
+	}
+	else
+	{
+		Locator::fireSystem::value().PutOut(object);
+	}
 }
 
 void SetTarget() // 176 SET_TARGET
@@ -1886,28 +1917,73 @@ void GameThingHit() // 194 GAME_THING_HIT
 
 void SpellAtThing() // 195 SPELL_AT_THING
 {
-	// const auto curl = Popf();
-	// const auto duration = Popf();
-	// const auto radius = Popf();
-	// const auto from = PopVec();
-	// const auto target = Pop().uintVal;
-	// const auto spell = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto curl = Popf();
+	const auto duration = Popf();
+	const auto radius = Popf();
+	const auto from = PopVec();
+	const auto target = static_cast<entt::entity>(Pop().uintVal);
+	const auto spell = Pop().intVal;
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* transform = registry.Valid(target) ? registry.TryGet<const ecs::components::Transform>(target) : nullptr;
+	if (transform == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Invalid thing");
+		Pusho(0);
+		return;
+	}
+	if (!magic::IsScriptMagicType(spell) || !Locator::magicSystem::has_value() || !Locator::infoConstants::has_value())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Invalid magic");
+		Pusho(0);
+		return;
+	}
+	// The neutral player's miracle, spun by the script's curl: on an object as its seed casts, else at the thing's place
+	const auto type = static_cast<MagicType>(spell);
+	const auto& info = Locator::infoConstants::value();
+	const auto cast = magic::MakeScriptCast(magic::GetMagicEffectInfo(info, type).initialChants, transform->position, from,
+	                                        radius, duration, curl);
+	const auto seed = magic::FindFirstSpellSeedForMagicType(info, type);
+	const bool object = IsScriptObject(registry, target);
+	const bool onObject = object && seed.has_value() && magic::GetSpellSeedInfo(info, *seed).castOnObject != 0;
+	auto& magicSystem = Locator::magicSystem::value();
+	const auto entity = onObject ? magicSystem.CastOnObject(type, PlayerNames::NEUTRAL, target, cast.cast, cast.info)
+	                             : magicSystem.CastAtPoint(type, PlayerNames::NEUTRAL, cast.point, cast.cast, cast.info);
+	if (entity == entt::null)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Spell not created");
+		Pusho(0);
+		return;
+	}
+	Pusho(static_cast<uint32_t>(entity));
 }
 
 void SpellAtPos() // 196 SPELL_AT_POS
 {
-	// const auto curl = Popf();
-	// const auto duration = Popf();
-	// const auto radius = Popf();
-	// const auto from = PopVec();
-	// const auto target = PopVec();
-	// const auto spell = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	const auto curl = Popf();
+	const auto duration = Popf();
+	const auto radius = Popf();
+	const auto from = PopVec();
+	const auto target = PopVec();
+	const auto spell = Pop().intVal;
+	if (!magic::IsScriptMagicType(spell) || !Locator::magicSystem::has_value() || !Locator::infoConstants::has_value())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Invalid magic");
+		// The script still takes a result off the stack
+		Pusho(0);
+		return;
+	}
+	// The neutral player's miracle, spun by the script's curl
+	const auto type = static_cast<MagicType>(spell);
+	const auto cast = magic::MakeScriptCast(magic::GetMagicEffectInfo(Locator::infoConstants::value(), type).initialChants,
+	                                        target, from, radius, duration, curl);
+	const auto entity = Locator::magicSystem::value().CastAtPoint(type, PlayerNames::NEUTRAL, cast.point, cast.cast, cast.info);
+	if (entity == entt::null)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Spell not created");
+		Pusho(0);
+		return;
+	}
+	Pusho(static_cast<uint32_t>(entity));
 }
 
 void CallPlayerCreature() // 197 CALL_PLAYER_CREATURE
@@ -2008,6 +2084,14 @@ void DevFunction() // 205 DEV_FUNCTION
 	case 3:
 		leashes.SetKnown(*creature, LeashType::Good, true);
 		leashes.SetKnown(*creature, LeashType::Evil, true);
+		break;
+	case 8:
+	case 9:
+		// Whether the creature can die: a miracle that takes the last of its life knocks it out, or gives it all back
+		if (auto* body = Locator::entitiesRegistry::value().TryGet<ecs::components::Creature>(*creature))
+		{
+			body->canDie = func == 8;
+		}
 		break;
 	default:
 		// TODO(Daniels118): implement the other functions
@@ -2191,12 +2275,24 @@ void GetNearestTownOfPlayer() // 226 GET_NEAREST_TOWN_OF_PLAYER
 
 void SpellAtPoint() // 227 SPELL_AT_POINT
 {
-	// const auto radius = Popf();
-	// const auto position = PopVec();
-	// const auto spell = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	// Finds a miracle already at a point, casting nothing: for either shield the first shield standing over the point,
+	// else the newest miracle of the kind whose last event was strictly within the radius
+	const auto radius = Popf();
+	const auto position = PopVec();
+	const auto spell = Pop().intVal;
+	std::optional<entt::entity> found;
+	if (spell == static_cast<int32_t>(MagicType::Shield) || spell == static_cast<int32_t>(MagicType::PhysicalShield))
+	{
+		if (Locator::magicShieldSystem::has_value())
+		{
+			found = Locator::magicShieldSystem::value().ShieldAt(position);
+		}
+	}
+	else if (Locator::magicSystem::has_value())
+	{
+		found = Locator::magicSystem::value().SpellAt(static_cast<MagicType>(spell), position, radius);
+	}
+	Pusho(found.has_value() ? static_cast<uint32_t>(*found) : 0);
 }
 
 void SetAttackOwnTown() // 228 SET_ATTACK_OWN_TOWN
@@ -2245,10 +2341,27 @@ void RunTextWithNumber() // 232 RUN_TEXT_WITH_NUMBER
 
 void CreatureSpellReversion() // 233 CREATURE_SPELL_REVERSION
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// Whether the spells on a creature put it back as it was once they wear off. The creature is on top of the stack, the
+	// flag under it.
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = Pop().intVal != 0;
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(object))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Thing not found");
+		return;
+	}
+	if (!registry.AllOf<ecs::components::Creature>(object))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "Thing not creature");
+		return;
+	}
+	auto* spells = registry.TryGet<ecs::components::CreatureSpells>(object);
+	if (spells == nullptr)
+	{
+		spells = &registry.Assign<ecs::components::CreatureSpells>(object);
+	}
+	spells->spells.reversion = enable;
 }
 
 void GetDesire() // 234 GET_DESIRE
@@ -2997,10 +3110,12 @@ void ObjectInfoBits() // 320 OBJECT_INFO_BITS
 
 void SetHurtByFire() // 321 SET_HURT_BY_FIRE
 {
-	// const auto object = Pop().uintVal;
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = static_cast<bool>(Pop().intVal);
+	if (Locator::fireSystem::has_value())
+	{
+		Locator::fireSystem::value().SetHurtByFire(object, enable);
+	}
 }
 
 void ConfinedObject() // 322 CONFINED_OBJECT
@@ -3739,10 +3854,13 @@ void GetManaForSpell() // 403 GET_MANA_FOR_SPELL
 
 void KillStormsInArea() // 404 KILL_STORMS_IN_AREA
 {
-	// const auto radius = Popf();
-	// const auto position = PopVec();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto radius = Popf();
+	const auto position = PopVec();
+	// A miracle's storm comes back over its clouds at the next step, fading in again
+	if (Locator::weatherSystem::has_value())
+	{
+		Locator::weatherSystem::value().KillStormsInArea(position, radius);
+	}
 }
 
 void InsideTemple() // 405 INSIDE_TEMPLE
@@ -3901,10 +4019,12 @@ void GetTotemStatue() // 425 GET_TOTEM_STATUE
 
 void SetSetOnFire() // 426 SET_SET_ON_FIRE
 {
-	// const auto object = Pop().uintVal;
-	// const auto enable = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto enable = static_cast<bool>(Pop().intVal);
+	if (Locator::fireSystem::has_value())
+	{
+		Locator::fireSystem::value().SetCanBeSetOnFire(object, enable);
+	}
 }
 
 void SetLandBalance() // 427 SET_LAND_BALANCE
@@ -4035,11 +4155,25 @@ void PosValidForCreature() // 441 POS_VALID_FOR_CREATURE
 
 void GetTimeSinceObjectAttacked() // 442 GET_TIME_SINCE_OBJECT_ATTACKED
 {
-	// const auto town = Pop().uintVal;
-	// const auto player = Popf();
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushf(0.0f);
+	const auto town = static_cast<entt::entity>(Pop().uintVal);
+	const auto scriptPlayer = static_cast<int32_t>(Popf());
+	// A script's player 0 is the neutral player, the others count from 1
+	const auto player = scriptPlayer == 0 ? PlayerNames::NEUTRAL : static_cast<PlayerNames>(scriptPlayer - 1);
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* aggression = registry.Valid(town) ? registry.TryGet<const ecs::components::TownAggression>(town) : nullptr;
+	const auto index = static_cast<size_t>(player);
+	// The seconds since the player last attacked the town, while the town still holds more than a little against them
+	constexpr double k_StillHeld = 0.15;
+	if (aggression == nullptr || index >= aggression->record.aggression.size() ||
+	    !(aggression->record.aggression.at(index) > k_StillHeld) || !Locator::time::has_value())
+	{
+		Pushf(std::numeric_limits<float>::max());
+		return;
+	}
+	const auto turns = static_cast<int32_t>(Locator::time::value().GetTurn() - aggression->record.lastTurns.at(index));
+	const auto msPerTurn =
+	    std::chrono::duration_cast<std::chrono::milliseconds>(ecs::systems::TimeSystemInterface::k_TurnDuration);
+	Pushf(static_cast<float>(turns * msPerTurn.count()) * 0.001f);
 }
 
 void GetTownAndVillagerHealthTotal() // 443 GET_TOWN_AND_VILLAGER_HEALTH_TOTAL

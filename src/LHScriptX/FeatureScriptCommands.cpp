@@ -44,6 +44,7 @@
 #include "ECS/Components/Stream.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
+#include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
@@ -854,10 +855,19 @@ void FeatureScriptCommands::SetComputerPlayerPersonality(const std::string&, glm
 	// __func__);
 }
 
-void FeatureScriptCommands::SetGlobalLandBalance(int32_t, float)
+void FeatureScriptCommands::SetGlobalLandBalance(int32_t index, float value)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	auto& balances = Locator::entitiesRegistry::value().Context().mapScriptGlobals.landBalance;
+	if (index >= 0 && static_cast<size_t>(index) < balances.size())
+	{
+		balances.at(static_cast<size_t>(index)) = value;
+	}
+	// The land's balance of how impressive miracles are goes to the reactions
+	constexpr int32_t k_ImpressivenessBalance = 2;
+	if (index == k_ImpressivenessBalance && Locator::reactionSystem::has_value())
+	{
+		Locator::reactionSystem::value().SetLandBalance(value);
+	}
 }
 
 void FeatureScriptCommands::SetLandBalance(const std::string&, int32_t, float)
@@ -917,8 +927,8 @@ void FeatureScriptCommands::MakeLastObjectArtifact(int32_t, const std::string&, 
 	// __func__);
 }
 
-void FeatureScriptCommands::SetLostTownScale([[maybe_unused]] float scale)
+void FeatureScriptCommands::SetLostTownScale(float scale)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	// TODO(raffclar): the game also scales the belief a town keeps in the player who lost it by this
+	Locator::entitiesRegistry::value().Context().mapScriptGlobals.lostTownScale = scale;
 }

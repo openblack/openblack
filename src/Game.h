@@ -25,6 +25,7 @@
 #include "ECS/Systems/CreatureHandSystemInterface.h"
 #include "EngineConfig.h"
 #include "Input/ShortcutKeys.h"
+#include "Magic/HandHoldPoser.h"
 #include "Windowing/WindowingInterface.h" // For DisplayMode
 
 union SDL_Event;
@@ -37,6 +38,7 @@ namespace audio
 class AtmosAudio;
 class GameMusic;
 } // namespace audio
+class Camera;
 class HandAnimation;
 namespace gui
 {
@@ -200,7 +202,7 @@ private:
 	std::chrono::steady_clock::time_point _lastGameLoopTime;
 	std::chrono::steady_clock::duration _turnDeltaTime;
 	uint32_t _frameCount {0};
-	glm::ivec2 _mousePosition;
+	glm::ivec2 _mousePosition {0, 0};
 	bool _handGripping;
 	/// Whether the last press of the Action button went to letting go of a miracle in the hand or to a creature, so it
 	/// taps nothing else for the leash
@@ -245,8 +247,12 @@ private:
 
 	/// Plays the sound of the hand grabbing the land or the sea at the grab point, as the game does
 	void PlayHandGrabSound();
+	/// What the hand steps by this frame, in seconds
+	[[nodiscard]] float HandStepSeconds() const;
 	/// The miracles hear where the hand and cursor are, and the held miracle follows the hand
 	void UpdateMagicHand(const glm::vec3& handPosition, float deltaSeconds);
+	/// The gestures drawn with the cursor this frame, through the gesture system
+	void UpdateGestures(const Camera& camera, glm::ivec2 screenSize, float deltaSeconds);
 	/// Turns the hand to face along the line of sight through the cursor and stands it on the slope under it
 	void OrientHand(ecs::components::Transform& handTransform, const glm::mat3& facingCamera, glm::vec3 surfaceUp,
 	                float deltaSeconds);
@@ -271,6 +277,8 @@ private:
 	std::unique_ptr<audio::AtmosAudio> _atmosAudio;
 	std::unique_ptr<audio::GameMusic> _gameMusic;
 	std::unique_ptr<HandAnimation> _handAnimation;
+	/// Poses the hand around the miracle seed it holds
+	magic::HandHoldPoser _handHold;
 	/// The game's own interface, null without the game's files for it
 	std::unique_ptr<gui::GameInterface> _interface;
 	/// Whether the game was paused when the menu opened, which pauses it
