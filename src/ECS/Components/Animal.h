@@ -61,6 +61,10 @@ enum class AnimalState : uint8_t
 	Dying,
 	/// Lying dead its time, then gone
 	Dead,
+	/// Running from a thing it reacts to, as from something flying at it
+	FleeingFromObject,
+	/// Far enough from the thing it fled, turned to watch it
+	FleeingAndLookingAtObject,
 };
 
 /// A living animal: a kind of the tables, flying or on the land
@@ -70,6 +74,8 @@ struct Animal
 	PlayerNames owner {PlayerNames::NEUTRAL};
 	/// The flock it belongs to, none for an animal on its own
 	entt::entity flock {entt::null};
+	/// The thing it flees, none when fleeing nothing
+	entt::entity fleeing {entt::null};
 	AnimalState state {AnimalState::DecideWhatToDo};
 	/// The state it goes into once it gets where it is going, and once its clip has played while it waits
 	AnimalState finalState {AnimalState::DecideWhatToDo};

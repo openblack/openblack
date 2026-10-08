@@ -35,6 +35,7 @@
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureMind.h"
+#include "ECS/Components/CreatureObjectAction.h"
 #include "ECS/Components/CreatureSpells.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Hand.h"
@@ -1020,17 +1021,29 @@ void RemoveCountdownTimer() // 087 REMOVE_COUNTDOWN_TIMER
 
 void GetObjectDropped() // 088 GET_OBJECT_DROPPED
 {
-	// const auto creature = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pusho(0);
+	// The last thing a creature let go of, none once it has gone; asked only of creatures
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	const auto& registry = Locator::entitiesRegistry::value();
+	const auto* dropped = registry.Valid(creature) && registry.AllOf<ecs::components::Creature>(creature)
+	                          ? registry.TryGet<const ecs::components::CreatureDroppedObject>(creature)
+	                          : nullptr;
+	if (registry.Valid(creature) && !registry.AllOf<ecs::components::Creature>(creature))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "GET_OBJECT_DROPPED: only creatures drop things");
+	}
+	const bool exists = dropped != nullptr && dropped->object != entt::null && registry.Valid(dropped->object);
+	Pusho(exists ? static_cast<uint32_t>(dropped->object) : 0);
 }
 
 void ClearDroppedByObject() // 089 CLEAR_DROPPED_BY_OBJECT
 {
-	// const auto creature = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	// The creature forgets what it last let go of
+	const auto creature = static_cast<entt::entity>(Pop().uintVal);
+	auto& registry = Locator::entitiesRegistry::value();
+	if (registry.Valid(creature) && registry.AllOf<ecs::components::CreatureDroppedObject>(creature))
+	{
+		registry.Remove<ecs::components::CreatureDroppedObject>(creature);
+	}
 }
 
 void CreateReaction() // 090 CREATE_REACTION

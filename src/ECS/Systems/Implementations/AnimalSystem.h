@@ -46,6 +46,10 @@ public:
 	void SendWolf(entt::entity wolf, glm::vec2 start, glm::vec2 destination, float halfWidth) override;
 	void StartFading(entt::entity animal) override;
 
+	[[nodiscard]] bool IsAvailableForReaction(entt::entity animal) const override;
+	bool SetupReactToFlyingObject(entt::entity animal, entt::entity object, float speed) override;
+	void StopReaction(entt::entity animal) override;
+
 	[[nodiscard]] bool IsFrighteningToCreature(entt::entity animal) const override;
 	[[nodiscard]] bool CanPlayerPickUp(entt::entity animal) const override;
 
@@ -68,6 +72,10 @@ private:
 	void StartWander(entt::entity entity, components::Animal& animal);
 	/// A follower near its leader, then in formation
 	void FollowFlock(entt::entity entity, components::Animal& animal);
+
+	// Fleeing what it reacts to, for any animal on the land
+	/// A turn of its flight or its watching; whether it was fleeing at all
+	bool Flee(entt::entity entity, components::Animal& animal);
 
 	// The wolves
 	void Wolf(entt::entity entity, components::Animal& animal);

@@ -182,3 +182,16 @@ TEST(PhysicsLiving, AHeadingStandsAThingUpright)
 	EXPECT_NEAR(axes[1].y, 1.0f, 1e-6f);
 	EXPECT_NEAR(axes[2].x, -1.0f, 1e-6f);
 }
+
+TEST(PhysicsLiving, AFleeingThingGivesUpWatchesOrRunsByDistanceAndHeading)
+{
+	using enum FleeStep;
+	// Beyond the reaction's furthest it gives up
+	EXPECT_EQ(FleeFromObject(51.0f, 10.0f, 50.0f, true), GiveUp);
+	// Between its nearest and furthest it watches a thing not coming at it, and runs from one that is
+	EXPECT_EQ(FleeFromObject(30.0f, 10.0f, 50.0f, false), Watch);
+	EXPECT_EQ(FleeFromObject(30.0f, 10.0f, 50.0f, true), Run);
+	// Within its nearest it runs whatever the thing does
+	EXPECT_EQ(FleeFromObject(5.0f, 10.0f, 50.0f, false), Run);
+	EXPECT_EQ(FleeFromObject(50.0f, 10.0f, 50.0f, false), Watch);
+}

@@ -76,6 +76,19 @@ public:
 	/// kind has one
 	virtual void IntoHand([[maybe_unused]] entt::entity animal) {}
 
+	/// Whether an animal may take up a reaction: not held, flying or carried, and not dying, dead, brought down or holding
+	/// still while a clip plays
+	[[nodiscard]] virtual bool IsAvailableForReaction([[maybe_unused]] entt::entity animal) const { return false; }
+	/// An animal takes up the reaction to a thing flying at a speed: it flees when the thing is nearer than it flies in
+	/// two seconds, remembering it; otherwise it takes no notice. Whether it took it up.
+	virtual bool SetupReactToFlyingObject([[maybe_unused]] entt::entity animal, [[maybe_unused]] entt::entity object,
+	                                      [[maybe_unused]] float speed)
+	{
+		return false;
+	}
+	/// An animal's reaction ends: it forgets what it fled and decides what to do again
+	virtual void StopReaction([[maybe_unused]] entt::entity animal) {}
+
 	/// Whether a creature is frightened of an animal: bats frighten creatures, doves don't
 	[[nodiscard]] virtual bool IsFrighteningToCreature(entt::entity animal) const = 0;
 	/// Whether the player's hand may pick the animal up

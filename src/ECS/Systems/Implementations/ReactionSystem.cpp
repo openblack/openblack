@@ -23,6 +23,7 @@
 #include "3D/MapCoords.h"
 #include "Common/GUtilsDistance.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/LivingAction.h"
@@ -36,10 +37,13 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Map.h"
+#include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
+#include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/TeleportSystemInterface.h"
@@ -109,7 +113,25 @@ const GLivingInfo* LivingInfoOf(const ecs::Registry& registry, entt::entity enti
 		const auto kind = static_cast<size_t>(GVillagerInfo::Find(villager->tribe, villager->number));
 		return kind < info.villager.size() ? &info.villager.at(kind) : nullptr;
 	}
+	if (const auto* animal = registry.TryGet<const Animal>(entity))
+	{
+		const auto kind = static_cast<size_t>(animal->type);
+		return kind < info.animal.size() ? &info.animal.at(kind) : nullptr;
+	}
 	return nullptr;
+}
+
+/// Whether a reaction reaches a kind of living thing: villagers and creatures every kind; animals, so far, only things
+/// flying at them
+// TODO(animals): the reactions animals take up beside flying things (fire, predators and the others whose priority the
+// animal doesn't zero) belong to the animals' own behaviour, which openblack doesn't run yet
+bool Reaches(const ecs::Registry& registry, entt::entity entity, Reaction type)
+{
+	if (registry.AnyOf<Villager, Creature>(entity))
+	{
+		return true;
+	}
+	return type == Reaction::ReactToFlyingObject && registry.AllOf<Animal>(entity);
 }
 
 /// Whether a kind of living thing reacts to a kind of reaction at all, by its table's flags in the reactions' order
@@ -164,6 +186,10 @@ bool Available(const ecs::Registry& registry, entt::entity entity, Reaction type
 	if (registry.AllOf<Villager>(entity))
 	{
 		return villager_reactions::Available(entity, type);
+	}
+	if (registry.AllOf<Animal>(entity))
+	{
+		return Locator::animalSystem::has_value() && Locator::animalSystem::value().IsAvailableForReaction(entity);
 	}
 	if (!registry.AllOf<Creature>(entity))
 	{
@@ -408,7 +434,7 @@ void ReactionSystem::SpreadInCell(Active& reaction, const std::vector<entt::enti
 		// else
 		// TODO(raffclar): the game weighs another reaction against a villager's shield reaction as against any other
 		if (!registry.Valid(entity) || !registry.AllOf<Transform>(entity) || entity == reaction.source.initiator ||
-		    !registry.AnyOf<Villager, Creature>(entity) ||
+		    !Reaches(registry, entity, reaction.source.type) ||
 		    (registry.AllOf<Villager>(entity) &&
 		     (ShieldKind(reaction.source.type) || registry.AllOf<VillagerShieldReaction>(entity))) ||
 		    !Available(registry, entity, reaction.source.type))
@@ -497,6 +523,23 @@ void ReactionSystem::Start(Active& reaction, entt::entity living, LivingReaction
 			return;
 		}
 	}
+	// An animal takes up a flying thing's reaction only when the thing is near enough to flee
+	if (registry.AllOf<Animal>(living))
+	{
+		const auto* entry =
+		    Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().Find(source.initiator) : nullptr;
+		if (source.type != Reaction::ReactToFlyingObject || entry == nullptr || entry->body == nullptr ||
+		    !Locator::animalSystem::has_value() ||
+		    !Locator::animalSystem::value().SetupReactToFlyingObject(living, source.initiator, entry->body->Speed()))
+		{
+			return;
+		}
+		state.reaction = reaction.id;
+		state.type = reaction.source.type;
+		state.startTurn = _turn;
+		Impress(reaction, living, registry.Get<const Transform>(living).position);
+		return;
+	}
 	const bool wasReacting = state.reaction != 0;
 	state.reaction = reaction.id;
 	state.type = reaction.source.type;
@@ -559,6 +602,10 @@ void ReactionSystem::Stop(entt::entity living, LivingReaction& state, bool reset
 	if (registry.AllOf<Villager>(living))
 	{
 		villager_reactions::Stop(living, state, resetState);
+	}
+	else if (registry.AllOf<Animal>(living) && Locator::animalSystem::has_value())
+	{
+		Locator::animalSystem::value().StopReaction(living);
 	}
 	state.reaction = 0;
 	state.type = Reaction::None;

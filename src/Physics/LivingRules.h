@@ -143,6 +143,19 @@ inline constexpr float k_InjuredLife = 0.7f;
 [[nodiscard]] int InjuredChange(float before, float after);
 /// Whether an animal flees a flying thing: the same nearness; otherwise it takes no notice
 [[nodiscard]] bool AnimalFleesFlyingObject(float distance, float speed);
+/// What a living thing fleeing a thing does each turn
+enum class FleeStep : uint8_t
+{
+	/// It is far enough away that it stops reacting
+	GiveUp,
+	/// Far enough from a thing not coming at it, it turns and watches
+	Watch,
+	/// It runs on away from the thing
+	Run,
+};
+/// The turn's step of a flight from a thing at a distance across the map: beyond the reaction's furthest it gives up;
+/// beyond its nearest, from a thing not coming towards it, it watches; otherwise it runs
+[[nodiscard]] FleeStep FleeFromObject(float distance, float nearest, float furthest, bool comingTowards);
 /// The clip a villager points with: a woman or child is scared stiff one time in three (first roll of three is 0),
 /// otherwise the second roll of three picks looking, standing or pointing and talking
 [[nodiscard]] AnimId PointingClip(bool womanOrChild, uint32_t firstRoll, uint32_t secondRoll);

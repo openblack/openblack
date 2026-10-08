@@ -703,6 +703,11 @@ void CreatureObjectActionSystem::LetGo(entt::entity creature, entt::entity objec
 	                                                .angularMomentum = k_ReleaseTurn,
 	                                                .player = owner != nullptr ? std::optional(owner->owner) : std::nullopt,
 	                                                .creature = registry.Valid(creature) ? creature : entt::null});
+	// The creature remembers it as the last thing it dropped
+	if (registry.Valid(creature))
+	{
+		registry.AssignOrReplace<CreatureDroppedObject>(creature, CreatureDroppedObject {.object = object});
+	}
 }
 
 CreatureObjectActionSystem::State CreatureObjectActionSystem::GetState(entt::entity creature) const

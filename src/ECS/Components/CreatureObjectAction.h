@@ -67,6 +67,12 @@ struct CreatureObjectAction
 };
 
 /// What a creature holds in its hand, and which hand
+/// The last thing a creature let go of into the physics, which the scripts can ask for and forget
+struct CreatureDroppedObject
+{
+	entt::entity object {entt::null};
+};
+
 struct CreatureHeldObject
 {
 	entt::entity object {entt::null};

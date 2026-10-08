@@ -282,6 +282,19 @@ bool living::AnimalFleesFlyingObject(float distance, float speed)
 	return distance < k_RunSeconds * speed;
 }
 
+living::FleeStep living::FleeFromObject(float distance, float nearest, float furthest, bool comingTowards)
+{
+	if (!(distance <= furthest))
+	{
+		return FleeStep::GiveUp;
+	}
+	if (nearest < distance && !comingTowards)
+	{
+		return FleeStep::Watch;
+	}
+	return FleeStep::Run;
+}
+
 AnimId living::PointingClip(bool womanOrChild, uint32_t firstRoll, uint32_t secondRoll)
 {
 	if (womanOrChild && firstRoll == 0)

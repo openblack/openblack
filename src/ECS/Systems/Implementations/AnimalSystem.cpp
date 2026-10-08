@@ -40,6 +40,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
+#include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -47,6 +48,7 @@
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Magic/ReactionRules.h"
 #include "Physics/LivingRules.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
@@ -55,6 +57,7 @@
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
+namespace living = openblack::physics::living;
 // Not "flock": on Linux that is also a function from <sys/file.h>
 namespace flock_rules = openblack::magic::flock;
 
@@ -478,6 +481,11 @@ void AnimalSystem::ProcessTurn()
 		if (info.hunger != 0 && animal.hunger < static_cast<int32_t>(info.hunger))
 		{
 			++animal.hunger;
+		}
+		// Fleeing what it reacts to comes before its own ways
+		if (Flee(entity, animal))
+		{
+			continue;
 		}
 		if (IsBird(animal.type))
 		{
@@ -1271,6 +1279,140 @@ bool AnimalSystem::IsFrighteningToCreature(entt::entity animal) const
 	// Bats, the evil flock's bats, vultures and lions frighten creatures
 	return data != nullptr && (data->type == AnimalInfo::Bat || data->type == AnimalInfo::SpellBat ||
 	                           data->type == AnimalInfo::Vulture || data->type == AnimalInfo::Lion);
+}
+
+bool AnimalSystem::IsAvailableForReaction(entt::entity entity) const
+{
+	const auto& registry = EntityRegistry();
+	const auto* animal = registry.TryGet<const Animal>(entity);
+	if (animal == nullptr || registry.AnyOf<CarriedByTornado, InHand, InPhysics>(entity))
+	{
+		return false;
+	}
+	// Judged by the state it is to end up in
+	const auto state = animal->state == AnimalState::MoveToPos ? animal->finalState : animal->state;
+	switch (state)
+	{
+	case AnimalState::Dying:
+	case AnimalState::Dead:
+	case AnimalState::Downed:
+	case AnimalState::WaitForClip:
+		return false;
+	default:
+		return true;
+	}
+}
+
+bool AnimalSystem::SetupReactToFlyingObject(entt::entity entity, entt::entity object, float speed)
+{
+	auto& registry = EntityRegistry();
+	auto* animal = registry.TryGet<Animal>(entity);
+	const auto* at = registry.Valid(object) ? registry.TryGet<const Transform>(object) : nullptr;
+	if (animal == nullptr || at == nullptr)
+	{
+		return false;
+	}
+	// Measured across the map, against how far the thing flies in two seconds
+	const auto& here = registry.Get<const Transform>(entity).position;
+	if (!living::AnimalFleesFlyingObject(living::MapDistance(here, at->position), speed))
+	{
+		return false;
+	}
+	animal->fleeing = object;
+	SetState(*animal, AnimalState::FleeingFromObject);
+	return true;
+}
+
+void AnimalSystem::StopReaction(entt::entity entity)
+{
+	auto* animal = EntityRegistry().TryGet<Animal>(entity);
+	if (animal == nullptr)
+	{
+		return;
+	}
+	animal->fleeing = entt::null;
+	if (animal->state == AnimalState::FleeingFromObject || animal->state == AnimalState::FleeingAndLookingAtObject ||
+	    (animal->state == AnimalState::MoveToPos && animal->finalState == AnimalState::FleeingAndLookingAtObject))
+	{
+		SetState(*animal, AnimalState::DecideWhatToDo);
+	}
+}
+
+bool AnimalSystem::Flee(entt::entity entity, Animal& animal)
+{
+	const bool running = animal.state == AnimalState::MoveToPos && animal.finalState == AnimalState::FleeingAndLookingAtObject;
+	if (animal.state != AnimalState::FleeingFromObject && animal.state != AnimalState::FleeingAndLookingAtObject && !running)
+	{
+		return false;
+	}
+	auto& registry = EntityRegistry();
+	const auto* at = registry.Valid(animal.fleeing) ? registry.TryGet<const Transform>(animal.fleeing) : nullptr;
+	const auto& info = Locator::infoConstants::value().reaction.at(static_cast<size_t>(Reaction::ReactToFlyingObject));
+	// With nothing left to flee it decides again
+	if (at == nullptr)
+	{
+		StopReaction(entity);
+		return true;
+	}
+	// Running to where it flees, it gets there first
+	if (running)
+	{
+		if (MoveTo3D(animal))
+		{
+			SetState(animal, animal.finalState);
+		}
+		return true;
+	}
+	auto& transform = registry.Get<Transform>(entity);
+	const auto& here = transform.position;
+	const float distance = living::MapDistance(here, at->position);
+	// Watching, it gives up once the thing is beyond the reaction's furthest
+	if (animal.state == AnimalState::FleeingAndLookingAtObject)
+	{
+		if (!(distance <= info.maxDistanceToRunAwayFromObject))
+		{
+			StopReaction(entity);
+		}
+		return true;
+	}
+	const auto* entry = Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().Find(animal.fleeing) : nullptr;
+	const glm::vec3 velocity = entry != nullptr && entry->body != nullptr ? entry->body->velocity : glm::vec3(0.0f);
+	const bool coming = magic::ComingTowards(here, at->position, velocity);
+	switch (living::FleeFromObject(distance, info.minDistanceToRunAwayFromObject, info.maxDistanceToRunAwayFromObject, coming))
+	{
+	case living::FleeStep::GiveUp:
+		StopReaction(entity);
+		break;
+	case living::FleeStep::Watch:
+		SetState(animal, AnimalState::FleeingAndLookingAtObject);
+		break;
+	case living::FleeStep::Run:
+	{
+		// A step away across the land, across the thing's way when it moves, at its fleeing speed
+		auto to = magic::FleePointFromStill(here, at->position);
+		if (glm::length(velocity) > 0.0f)
+		{
+			const float x = Random(magic::k_FleeJitter);
+			const float z = Random(magic::k_FleeJitter);
+			to = magic::FleePointFromMoving(here, at->position, velocity, x, z);
+		}
+		if (OnMap(Xz(to)))
+		{
+			const auto clip = animal.animation;
+			const auto place = animal.clipPlace;
+			// The speed of its kind the state table gives fleeing
+			const auto& row = Locator::infoConstants::value().villagerStateTable.at(
+			    static_cast<size_t>(VillagerStates::FleeingFromObjectReaction));
+			animal.move.speed = SpeedStateOf(InfoOf(animal.type), std::min<size_t>(row.speedIndex, 5));
+			SetupMoveTo(animal, Xz(to), 0.0f, AnimalState::FleeingAndLookingAtObject);
+			// An animal has no clip of its own for moving: it keeps the one it had
+			animal.animation = clip;
+			animal.clipPlace = place;
+		}
+		break;
+	}
+	}
+	return true;
 }
 
 bool AnimalSystem::CanPlayerPickUp(entt::entity animal) const
