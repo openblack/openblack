@@ -138,6 +138,16 @@ public:
 	}
 	[[nodiscard]] std::optional<Pose> ReleasePose(entt::entity, bool) override { return std::nullopt; }
 	void PourPot(entt::entity pot, PlayerNames) override { poured.push_back(pot); }
+	[[nodiscard]] std::optional<FieldFacts> FieldFactsOf(entt::entity field) const override
+	{
+		const auto found = fields.find(field);
+		return found != fields.end() ? std::optional(found->second) : std::nullopt;
+	}
+	void TakeFromField(entt::entity field, uint32_t amount) override
+	{
+		auto& facts = fields.at(field);
+		facts.food -= std::min(facts.food, amount);
+	}
 	[[nodiscard]] std::optional<PotFacts> PotFactsOf(entt::entity pot) const override
 	{
 		const auto* data = registry.TryGet<const Pot>(pot);
@@ -234,6 +244,7 @@ public:
 	std::vector<entt::entity> holes;
 	std::vector<entt::entity> poured;
 	std::vector<entt::entity> potReactionsSetUp;
+	std::map<entt::entity, FieldFacts> fields;
 	std::vector<std::pair<entt::entity, entt::entity>> takenWhole;
 	std::vector<std::pair<entt::entity, glm::vec3>> released;
 	std::vector<std::pair<entt::entity, glm::vec3>> twists;
@@ -576,4 +587,20 @@ TEST_F(HandGrabSystemWithWorld, AThingLetGoBeforeItIsTakenIsStillTheLastLetGo)
 	EXPECT_FALSE(system->GetHeld().has_value());
 	Release();
 	EXPECT_EQ(world->registry.Get<const HandGrab>(world->hand).released, rock);
+}
+
+TEST_F(HandGrabSystemWithWorld, ARipeFieldGivesHalfOfEachScoop)
+{
+	const auto field = world->registry.Create();
+	world->registry.Assign<Transform>(field, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->fields[field] = {.food = 1000, .ripe = true};
+	world->underCursor = field;
+	EXPECT_TRUE(Press());
+	const auto handful = system->GetHeld();
+	ASSERT_TRUE(handful.has_value());
+	// The first scoop of 25 is halved, and so is each turn's 8
+	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 12u);
+	EXPECT_EQ(world->fields[field].food, 988u);
+	system->ProcessTurn();
+	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 16u);
 }

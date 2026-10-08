@@ -72,6 +72,10 @@ private:
 	bool StartScoop(components::HandGrab& grab, entt::entity source);
 	/// A game turn of scooping: whether the scoop goes on
 	bool Scoop(components::HandGrab& grab);
+	using FieldFacts = hand_grab::HandGrabWorldInterface::FieldFacts;
+	/// A field gives its food the same way, half of it once ripe
+	bool StartFieldScoop(components::HandGrab& grab, entt::entity field, const FieldFacts& facts);
+	bool ScoopField(components::HandGrab& grab, const FieldFacts& facts);
 	/// The scoop ends: its stream stops, and the hand holds its handful as anything else
 	void EndScoop(components::HandGrab& grab);
 	/// The second press with the pointer on something the held thing is used on (a store, a pile of the same): it is

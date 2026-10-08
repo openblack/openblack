@@ -147,3 +147,25 @@ TEST(FieldCrop, AlignmentIsClamped)
 	EXPECT_FLOAT_EQ(field_crop::ClampAlignment(-3.0f), -1.0f);
 	EXPECT_FLOAT_EQ(field_crop::ClampAlignment(0.3f), 0.3f);
 }
+
+TEST(FieldCrop, TheHandTakesMoreFromAnUnripeCropAndEmptyingARipeOneUnsowsIt)
+{
+	const field_crop::Type type {.ageGrowth = 10.0f, .ageRipe = 20.0f, .timesToSow = 1.0f};
+	field_crop::Crop unripe {.timesSown = 1, .age = 15.0f, .food = 100.0f};
+	// Twenty taken, and half as much again lost
+	EXPECT_FALSE(field_crop::RemoveFood(unripe, type, 0.5f, 20.0f));
+	EXPECT_FLOAT_EQ(unripe.food, 70.0f);
+	EXPECT_TRUE(field_crop::RemoveFood(unripe, type, 0.5f, 100.0f));
+	EXPECT_FLOAT_EQ(unripe.food, 0.0f);
+	EXPECT_EQ(unripe.timesSown, 1);
+
+	field_crop::Crop ripe {.timesSown = 1, .age = 25.0f, .food = 30.0f};
+	EXPECT_TRUE(field_crop::RemoveFood(ripe, type, 0.5f, 30.0f));
+	EXPECT_EQ(ripe.timesSown, 0);
+	EXPECT_FLOAT_EQ(ripe.age, 0.0f);
+
+	// An unsown field gives nothing
+	field_crop::Crop unsown {.timesSown = 0, .age = 25.0f, .food = 30.0f};
+	EXPECT_FALSE(field_crop::RemoveFood(unsown, type, 0.5f, 10.0f));
+	EXPECT_FLOAT_EQ(unsown.food, 30.0f);
+}

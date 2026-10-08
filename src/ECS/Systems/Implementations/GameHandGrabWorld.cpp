@@ -31,6 +31,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
+#include "ECS/Components/Field.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/MapCellResident.h"
@@ -521,6 +522,38 @@ uint32_t GameHandGrabWorld::TakeFromPile(entt::entity pile, uint32_t amount)
 	}
 	// Taking from a town's store counts against its owner, and is remembered of the hand's player
 	return Locator::resourceStoreSystem::value().TakeFromPile(pile, facts->resource, amount, HandPlayer());
+}
+
+std::optional<hand_grab::HandGrabWorldInterface::FieldFacts> GameHandGrabWorld::FieldFactsOf(entt::entity field) const
+{
+	const auto* data = Locator::entitiesRegistry::value().TryGet<const Field>(field);
+	const auto* info = Info();
+	if (data == nullptr || info == nullptr)
+	{
+		return std::nullopt;
+	}
+	const auto& type = info->fieldType.at(static_cast<size_t>(data->type));
+	return FieldFacts {.food = data->crop.food > 0.0f ? static_cast<uint32_t>(data->crop.food) : 0u,
+	                   .ripe = data->crop.age >= type.ageRecolt};
+}
+
+void GameHandGrabWorld::TakeFromField(entt::entity field, uint32_t amount)
+{
+	auto* data = Locator::entitiesRegistry::value().TryGet<Field>(field);
+	const auto* info = Info();
+	if (data == nullptr || info == nullptr)
+	{
+		return;
+	}
+	const auto& type = info->fieldType.at(static_cast<size_t>(data->type));
+	const field_crop::Type crop {.ageGrowth = type.ageGrowth, .ageRipe = type.ageRecolt, .timesToSow = type.timesToSow};
+	if (field_crop::RemoveFood(data->crop, crop, type.ratioBeforeRipe, static_cast<float>(amount)) &&
+	    Locator::fireSystem::has_value())
+	{
+		// An emptied field's fire goes out
+		Locator::fireSystem::value().SetTemperature(field, 0.0f, entt::null);
+	}
+	// TODO(fields): the game also marks two of the town's flags when a field is emptied; their meaning isn't known
 }
 
 entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount)

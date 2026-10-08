@@ -320,6 +320,10 @@ std::optional<entt::entity> HandGrabSystem::Release(uint32_t nowMs, uint32_t tur
 
 bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 {
+	if (const auto field = _world->FieldFactsOf(source))
+	{
+		return StartFieldScoop(grab, source, *field);
+	}
 	const auto facts = _world->PotFactsOf(source);
 	// Only a pile is scooped from, never a handful, and only inside the player's influence
 	if (!facts.has_value() || facts->potType == PotType::Pot || !HandInInfluence())
@@ -358,8 +362,82 @@ bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 	return true;
 }
 
+bool HandGrabSystem::StartFieldScoop(HandGrab& grab, entt::entity field, const FieldFacts& facts)
+{
+	if (!HandInInfluence())
+	{
+		return false;
+	}
+	// A field gives its first handful of food at once, half of it once ripe
+	const auto scoop = _world->ScoopFactsOf(PotInfo::HandFood);
+	auto first = std::min(scoop.initial, facts.food);
+	if (facts.ripe)
+	{
+		first >>= 1u;
+	}
+	if (first == 0)
+	{
+		return false;
+	}
+	_world->TakeFromField(field, first);
+	const auto hand = _world->PoseOf(_world->Hand()).origin;
+	const auto handful = _world->MakeHandful(PotInfo::HandFood, hand, first);
+	if (!Exists(handful))
+	{
+		return false;
+	}
+	Take(grab, handful, false);
+	if (grab.state != HandGrab::State::Holding)
+	{
+		return false;
+	}
+	grab.scoopSource = field;
+	grab.scoopTurns = 0;
+	grab.scoopAnchor = hand;
+	grab.scoopStream = _world->StartScoopStream(ResourceType::Food, _world->PoseOf(field).origin);
+	return true;
+}
+
+bool HandGrabSystem::ScoopField(HandGrab& grab, const FieldFacts& facts)
+{
+	auto& registry = _world->Entities();
+	auto* handful = registry.TryGet<Pot>(grab.object);
+	if (handful == nullptr)
+	{
+		return false;
+	}
+	const auto scoop = _world->ScoopFactsOf(PotInfo::HandFood);
+	// As much as the ramp gives, no more than the field has, within what one handful holds, and half once ripe
+	auto taken = std::min(hand_grab::ScoopAmount(grab.scoopTurns, scoop), facts.food);
+	if (scoop.maxPickedUp != 0)
+	{
+		const auto room = static_cast<int64_t>(scoop.maxPickedUp) - static_cast<int64_t>(handful->amount);
+		taken = static_cast<uint32_t>(std::clamp<int64_t>(std::min<int64_t>(room, taken), 0, taken));
+	}
+	if (facts.ripe)
+	{
+		taken /= 2u;
+	}
+	if (taken == 0)
+	{
+		if (grab.scoopStream.has_value())
+		{
+			_world->StopScoopStream(*grab.scoopStream);
+			grab.scoopStream.reset();
+		}
+		return false;
+	}
+	_world->TakeFromField(grab.scoopSource, taken);
+	handful->amount += taken;
+	return true;
+}
+
 bool HandGrabSystem::Scoop(HandGrab& grab)
 {
+	if (const auto field = _world->FieldFactsOf(grab.scoopSource))
+	{
+		return ScoopField(grab, *field);
+	}
 	auto& registry = _world->Entities();
 	const auto* handful = registry.TryGet<Pot>(grab.object);
 	const auto source = _world->PotFactsOf(grab.scoopSource);

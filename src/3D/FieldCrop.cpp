@@ -42,6 +42,33 @@ bool IsRipe(const Crop& crop, const Type& type)
 	return crop.age >= type.ageRipe;
 }
 
+bool RemoveFood(Crop& crop, const Type& type, float ratioBeforeRipe, float amount)
+{
+	// Nothing is taken from a field with no food, or not yet sown
+	if (crop.food == 0.0f || static_cast<float>(crop.timesSown) < type.timesToSow)
+	{
+		return false;
+	}
+	const auto truncated = [](float value) { return static_cast<int64_t>(value); };
+	auto removed = truncated(amount);
+	if (crop.age < type.ageRipe)
+	{
+		removed = truncated(amount * ratioBeforeRipe + static_cast<float>(removed));
+	}
+	if (static_cast<float>(removed) < crop.food)
+	{
+		crop.food -= static_cast<float>(removed);
+		return false;
+	}
+	crop.food = 0.0f;
+	if (crop.age >= type.ageRipe)
+	{
+		crop.timesSown = 0;
+		crop.age = 0.0f;
+	}
+	return true;
+}
+
 float ClampAlignment(float sum)
 {
 	return std::clamp(sum, -1.0f, 1.0f);

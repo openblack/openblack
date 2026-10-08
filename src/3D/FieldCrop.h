@@ -49,6 +49,10 @@ inline constexpr uint32_t k_TurnsPerGrowth = 10;
 [[nodiscard]] bool IsSown(const Crop& crop, const Type& type);
 [[nodiscard]] bool IsRipe(const Crop& crop, const Type& type);
 
+/// Food taken out of a sown field by the hand: an unripe crop loses more than is taken, by its kind's share before it
+/// is ripe. Whether the field was emptied: an emptied ripe field must be sown again; an emptied unripe one stays sown.
+bool RemoveFood(Crop& crop, const Type& type, float ratioBeforeRipe, float amount);
+
 /// The land's alignment the crop grows on, from -1 for evil to 1 for good, from the sum of each player's influence there
 /// times their alignment
 [[nodiscard]] float ClampAlignment(float sum);
