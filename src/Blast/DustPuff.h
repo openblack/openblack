@@ -16,8 +16,9 @@
 
 #include <glm/vec3.hpp>
 
-/// The puff of brown dust a blast throws up as it leaves its rubble: fifteen sprites of the smoke sheet scattered round a
-/// point, each flying off up and out, spinning, growing and fading away over a second and a half
+/// A puff of smoke or dust: fifteen sprites of the smoke sheet scattered round a point, each flying off up and out,
+/// spinning, growing and fading away over a second and a half. A blast throws up a brown one as it leaves its rubble, and a
+/// tree taking root again a white one
 namespace openblack::dust_puff
 {
 
@@ -31,12 +32,15 @@ struct Puff
 {
 	float life {1.0f};
 	float size {1.0f};
+	/// Its colour, 0xRRGGBB
+	uint32_t colour {k_Colour};
 	std::array<glm::vec3, k_Sprites> positions {};
 	std::array<glm::vec3, k_Sprites> velocities {};
 };
 
 /// random(a, b) draws a number between them
-[[nodiscard]] Puff Make(const glm::vec3& centre, float size, const std::function<float(float, float)>& random);
+[[nodiscard]] Puff Make(const glm::vec3& centre, float size, const std::function<float(float, float)>& random,
+                        uint32_t colour = k_Colour);
 /// A frame of seconds; false once it has gone
 bool Advance(Puff& puff, float seconds);
 

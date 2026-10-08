@@ -29,10 +29,11 @@ constexpr float k_Cells = 15.0f;
 constexpr float k_SmallestHalfWidth = 0.0001f;
 } // namespace
 
-Puff dust_puff::Make(const glm::vec3& centre, float size, const std::function<float(float, float)>& random)
+Puff dust_puff::Make(const glm::vec3& centre, float size, const std::function<float(float, float)>& random, uint32_t colour)
 {
 	Puff puff;
 	puff.size = size;
+	puff.colour = colour;
 	for (size_t i = 0; i < k_Sprites; ++i)
 	{
 		const float z = random(-size, size);

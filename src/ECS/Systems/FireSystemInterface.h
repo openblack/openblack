@@ -132,6 +132,12 @@ public:
 	[[nodiscard]] virtual bool InSameBlaze(entt::entity a, entt::entity b) const = 0;
 	/// Another object's blaze joins the blaze of an object's fire
 	virtual void MergeBlazes(entt::entity object, entt::entity other) = 0;
+	/// An object's fire passes whole to what it becomes, as a burning tree that falls burns on as a dead tree: its heat, its
+	/// place in its blaze, its looks and the alarm it raises go with it
+	virtual void MoveFire(entt::entity from, entt::entity to) = 0;
+	/// An object's fire spreads to another, as a burning rock's to both its halves: the other catches if it isn't
+	/// burning, joins the blaze, and is made at least as hot
+	virtual void CopyFire(entt::entity from, entt::entity to) = 0;
 	/// The villagers about a blaze, those fighting it and those running from it on fire, are listed with its first
 	/// fire: a villager added to, taken from and looked for in the list of an object's blaze
 	virtual void AddFireman(entt::entity object, entt::entity villager) = 0;

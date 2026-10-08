@@ -804,6 +804,92 @@ void FireSystem::MergeBlazes(entt::entity object, entt::entity other)
 	}
 }
 
+void FireSystem::MoveFire(entt::entity from, entt::entity to)
+{
+	auto& registry = Entities();
+	if (!registry.Valid(from) || !registry.Valid(to) || registry.AllOf<Fire>(to))
+	{
+		return;
+	}
+	const auto* old = registry.TryGet<const Fire>(from);
+	if (old == nullptr)
+	{
+		return;
+	}
+	auto moved = *old;
+	// Its place in its blaze: first of it, the blaze goes with it; else it stands in the same place among the others
+	if (moved.root == from)
+	{
+		moved.root = to;
+		if (auto* group = registry.TryGet<FireGroup>(from))
+		{
+			auto blaze = std::move(*group);
+			std::ranges::replace(blaze.members, from, to);
+			for (const auto member : blaze.members)
+			{
+				if (auto* memberFire = member != to ? registry.TryGet<Fire>(member) : nullptr)
+				{
+					memberFire->root = to;
+				}
+			}
+			registry.Assign<FireGroup>(to, std::move(blaze));
+		}
+	}
+	else if (auto* blaze = registry.Valid(moved.root) ? registry.TryGet<FireGroup>(moved.root) : nullptr)
+	{
+		std::ranges::replace(blaze->members, from, to);
+	}
+	registry.Assign<Fire>(to, moved);
+	if (auto* look = registry.TryGet<FireLook>(from))
+	{
+		registry.Assign<FireLook>(to, std::move(*look));
+	}
+	std::ranges::replace(_fires, from, to);
+	// The alarm it raises now comes from what it became
+	if (moved.reaction != 0 && Locator::reactionSystem::has_value())
+	{
+		Locator::reactionSystem::value().SetInitiator(moved.reaction, to);
+	}
+	StopSound(from);
+	registry.Remove<FireGroup>(from);
+	registry.Remove<FireLook>(from);
+	registry.Remove<Fire>(from);
+	registry.SetDirty();
+}
+
+void FireSystem::CopyFire(entt::entity from, entt::entity to)
+{
+	auto& registry = Entities();
+	if (!registry.Valid(from) || !registry.Valid(to))
+	{
+		return;
+	}
+	const auto* source = registry.TryGet<const Fire>(from);
+	if (source == nullptr)
+	{
+		return;
+	}
+	const auto player = source->hasPlayer ? std::optional(source->player) : std::nullopt;
+	const auto temperature = source->state.temperature;
+	auto* fire = FindOrCreate(to, player, source->source);
+	if (fire == nullptr)
+	{
+		return;
+	}
+	JoinBlaze(from, to);
+	// It is made as hot as the first, if it was cooler
+	fire = &registry.Get<Fire>(to);
+	if (fire->state.temperature < temperature)
+	{
+		fire->state.previous = temperature;
+		fire->state.temperature = temperature;
+	}
+	else
+	{
+		fire->state.previous = fire->state.temperature;
+	}
+}
+
 void FireSystem::AddFireman(entt::entity object, entt::entity villager)
 {
 	if (auto* group = GroupOf(object))

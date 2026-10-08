@@ -101,6 +101,8 @@ public:
 	virtual void HeatHeld(entt::entity object) = 0;
 	/// A sound of the in-game bank where something is
 	virtual void PlaySample(uint32_t sample, glm::vec3 position) = 0;
+	/// The hand taps a thing at a point, for a player, as a rock breaks when tapped; whether the thing took the tap
+	virtual bool TapThing(entt::entity object, glm::vec3 handPoint, PlayerNames player) = 0;
 	/// A local random number below a count
 	[[nodiscard]] virtual uint32_t LocalRandom(uint32_t count) = 0;
 	/// A villager goes into the hand: it remembers what it was doing and is held

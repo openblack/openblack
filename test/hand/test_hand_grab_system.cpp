@@ -99,6 +99,11 @@ public:
 	void FireStartedMoving(entt::entity, bool) override {}
 	void HeatHeld(entt::entity object) override { heated.push_back(object); }
 	void PlaySample(uint32_t sample, glm::vec3) override { samples.push_back(sample); }
+	bool TapThing(entt::entity object, glm::vec3, PlayerNames) override
+	{
+		tapped.push_back(object);
+		return true;
+	}
 	[[nodiscard]] uint32_t LocalRandom(uint32_t) override { return 0; }
 	void VillagerIntoHand(entt::entity villager) override { villagersInHand.push_back(villager); }
 	void AnimalIntoOwnFlock(entt::entity) override {}
@@ -245,6 +250,7 @@ public:
 	std::vector<ReactionRequest> reactions;
 	std::vector<entt::entity> heated;
 	std::vector<uint32_t> samples;
+	std::vector<entt::entity> tapped;
 	std::vector<entt::entity> villagersInHand;
 	std::vector<entt::entity> uprooted;
 	std::vector<entt::entity> holes;
@@ -334,6 +340,9 @@ TEST_F(HandGrabSystemWithWorld, AShortPressIsATap)
 	ASSERT_TRUE(tapped.has_value());
 	EXPECT_EQ(*tapped, rock);
 	EXPECT_FALSE(system->IsBusy());
+	// The tap reaches the thing
+	ASSERT_EQ(world->tapped.size(), 1u);
+	EXPECT_EQ(world->tapped.front(), rock);
 }
 
 TEST_F(HandGrabSystemWithWorld, ThingsOutOfTheInfluenceOrHeldByAScriptAreLeft)
@@ -350,6 +359,9 @@ TEST_F(HandGrabSystemWithWorld, ThingsOutOfTheInfluenceOrHeldByAScriptAreLeft)
 	const auto boulder = world->AddRock({5.0f, 0.0f, 0.0f}, 4.0f);
 	world->underCursor = boulder;
 	EXPECT_FALSE(Press());
+	// Out of the influence or held by a script nothing is tapped; a boulder the hand can't lift is tapped at once
+	ASSERT_EQ(world->tapped.size(), 1u);
+	EXPECT_EQ(world->tapped.front(), boulder);
 }
 
 TEST_F(HandGrabSystemWithWorld, AThingInFlightIsCaughtOnlyAfterTheWait)

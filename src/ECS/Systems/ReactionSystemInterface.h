@@ -90,6 +90,8 @@ public:
 	virtual void RemoveFrom(entt::entity initiator, Reaction type) = 0;
 	/// One reaction goes, as a fire that has cooled stops alarming the living
 	virtual void Remove(uint32_t id) = 0;
+	/// A reaction now comes from another object, as a fire's alarm follows the fire to what its object became
+	virtual void SetInitiator(uint32_t id, entt::entity initiator) = 0;
 	/// Whether a reaction is still going
 	[[nodiscard]] virtual bool IsActive(uint32_t id) const = 0;
 	/// Whether an initiator has a reaction going

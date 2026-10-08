@@ -64,6 +64,7 @@
 #include "Particles/ParticleDrawFrame.h"
 #include "Particles/ParticleEffect.h"
 #include "Physics/BodyShapes.h"
+#include "Physics/ObjectRules.h"
 #include "Physics/PairRules.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
@@ -122,14 +123,7 @@ particles::Creator MakeDustCreator()
 /// Upright axes with the same heading across the ground as the given ones
 glm::mat3 UprightAxes(const glm::mat3& axes)
 {
-	glm::vec3 forward(axes[2].x, 0.0f, axes[2].z);
-	const float length = glm::length(forward);
-	forward = length > 0.0f ? forward / length : glm::vec3(0.0f, 0.0f, 1.0f);
-	glm::mat3 upright;
-	upright[1] = glm::vec3(0.0f, 1.0f, 0.0f);
-	upright[2] = forward;
-	upright[0] = glm::cross(upright[1], upright[2]);
-	return upright;
+	return physics::objects::HeadingOnly(axes);
 }
 
 /// The info weight of an object's kind

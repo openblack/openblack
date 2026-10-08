@@ -221,6 +221,17 @@ hand_grab::HoldFacts HandGrabSystem::HoldOfObject(entt::entity object) const
 	                         size.radius);
 }
 
+void HandGrabSystem::Tap(entt::entity object)
+{
+	// Only within the player's influence (unless the thing asks for none), and not a thing a script holds out of reach
+	const auto& registry = _world->Entities();
+	if (!HandInInfluence() || registry.AllOf<CannotBePickedUp>(object))
+	{
+		return;
+	}
+	_world->TapThing(object, _world->PoseOf(_world->Hand()).origin, _world->HandPlayer());
+}
+
 bool HandGrabSystem::Press(uint32_t nowMs, uint32_t turn)
 {
 	auto* grab = Grab();
@@ -256,6 +267,10 @@ bool HandGrabSystem::Press(uint32_t nowMs, uint32_t turn)
 	if (!object.has_value() || !MayTake(*object))
 	{
 		// A press the hand can't take is a tap on the thing (clicking and activating)
+		if (object.has_value())
+		{
+			Tap(*object);
+		}
 		return false;
 	}
 	grab->state = HandGrab::State::Grabbing;
@@ -289,7 +304,12 @@ std::optional<entt::entity> HandGrabSystem::Release(uint32_t nowMs, uint32_t tur
 		Empty(*grab);
 		// It still becomes the thing last let go, which a flying thing's twist then finds
 		grab->released = object;
-		return tap && Exists(object) ? std::optional(object) : std::nullopt;
+		if (tap && Exists(object))
+		{
+			Tap(object);
+			return object;
+		}
+		return std::nullopt;
 	}
 	case HandGrab::State::ReadyToThrow:
 	{

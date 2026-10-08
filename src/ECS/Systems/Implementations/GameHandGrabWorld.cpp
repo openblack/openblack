@@ -43,6 +43,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Map.h"
+#include "ECS/ObjectPhysics.h"
 #include "ECS/PhysicsClasses.h"
 #include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
@@ -357,6 +358,17 @@ void GameHandGrabWorld::TreeUprooted(PlayerNames player, entt::entity /*tree*/)
 	auto& alignment = Locator::alignmentSystem::value();
 	alignment.AddPendingAlignment(
 	    player, magic::DampAlignmentChange(-Info()->player.treePullPutAlignmentChange, alignment.GetPlayerAlignment(player)));
+}
+
+bool GameHandGrabWorld::TapThing(entt::entity object, glm::vec3 handPoint, PlayerNames player)
+{
+	// A rock tall enough breaks when tapped; other things' taps are the clicking and activating of the interface
+	if (!object_physics::CanTapRock(object) || !Locator::dynamicsSystem::has_value())
+	{
+		return false;
+	}
+	object_physics::TapRock(Locator::dynamicsSystem::value(), object, handPoint, player);
+	return true;
 }
 
 void GameHandGrabWorld::LeaveRootsHole(entt::entity tree)

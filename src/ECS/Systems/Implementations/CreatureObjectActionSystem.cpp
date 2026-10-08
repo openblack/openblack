@@ -45,6 +45,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/WallHug.h"
+#include "ECS/ObjectPhysics.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
@@ -1025,16 +1026,16 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 			{
 				break;
 			}
-			// Homes are knocked about by the blow; trees and things are knocked down
+			// Homes are knocked about by the blow, and a rock is smashed in two; the blow does nothing to anything else
 			if (registry.AllOf<Abode>(target))
 			{
 				auto& damage = registry.AllOf<PhysicalDamage>(target) ? registry.Get<PhysicalDamage>(target)
 				                                                      : registry.Assign<PhysicalDamage>(target);
 				damage.total += body.size * k_DestroyForcePerSize;
 			}
-			else
+			else if (object_physics::IsRock(target) && Locator::dynamicsSystem::has_value())
 			{
-				registry.Destroy(target);
+				object_physics::SmashRock(Locator::dynamicsSystem::value(), target);
 			}
 			break;
 		}

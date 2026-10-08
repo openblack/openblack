@@ -243,6 +243,15 @@ void ReactionSystem::Move(uint32_t id, const glm::vec3& position, const glm::vec
 	}
 }
 
+void ReactionSystem::SetInitiator(uint32_t id, entt::entity initiator)
+{
+	const auto found = std::ranges::find(_reactions, id, &Active::id);
+	if (found != _reactions.end())
+	{
+		found->source.initiator = initiator;
+	}
+}
+
 std::optional<ReactionSystemInterface::Active> ReactionSystem::Find(uint32_t id) const
 {
 	const auto found = std::ranges::find(_reactions, id, &Active::id);

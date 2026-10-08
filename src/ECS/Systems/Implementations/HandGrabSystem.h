@@ -60,6 +60,8 @@ private:
 	[[nodiscard]] hand_grab::Holdable HoldableOf(entt::entity object) const;
 	/// Whether the hand may take a thing now: what it is, what a script says of it, and the hand's influence
 	[[nodiscard]] bool MayTake(entt::entity object) const;
+	/// A press that doesn't take the thing taps it, when the player may touch it
+	void Tap(entt::entity object);
 	/// How a thing hangs in the hand
 	[[nodiscard]] hand_grab::HoldFacts HoldOfObject(entt::entity object) const;
 	/// The hand starts pulling at a thing: its base, the plane of the land the pull works in, and its lean

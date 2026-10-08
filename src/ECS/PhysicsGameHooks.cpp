@@ -11,6 +11,8 @@
 
 #include <cmath>
 
+#include <chrono>
+
 #include <glm/geometric.hpp>
 
 #include "3D/LandIslandInterface.h"
@@ -20,6 +22,7 @@
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/DeadTree.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingPhysics.h"
@@ -29,6 +32,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/ObjectPhysics.h"
 #include "ECS/PhysicsClasses.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AnimalSystemInterface.h"
@@ -272,8 +276,20 @@ PhysicsStarted PhysicsGameHooks::InitialisePhysics(DynamicsSystemInterface& dyna
 entt::entity PhysicsGameHooks::EndPhysics(DynamicsSystemInterface& dynamics, PhysicsEntry* entry, entt::entity object,
                                           bool insert)
 {
-	const auto kept = PhysicsClassHooks::EndPhysics(dynamics, entry, object, insert);
 	auto& registry = Entities();
+	if (registry.AllOf<Tree>(object))
+	{
+		return object_physics::EndTree(dynamics, entry, object, insert);
+	}
+	if (registry.AllOf<DeadTree>(object))
+	{
+		return object_physics::EndDeadTree(dynamics, entry, object, insert);
+	}
+	if (registry.AllOf<Pot>(object))
+	{
+		return object_physics::EndPot(dynamics, entry, object, insert);
+	}
+	const auto kept = PhysicsClassHooks::EndPhysics(dynamics, entry, object, insert);
 	if (kept == entt::null || !registry.Valid(kept))
 	{
 		return kept;
@@ -309,6 +325,13 @@ bool PhysicsGameHooks::HasSunk(DynamicsSystemInterface& dynamics, PhysicsEntry& 
 		return true;
 	}
 	return PhysicsClassHooks::HasSunk(dynamics, entry);
+}
+
+void PhysicsGameHooks::DropSound(entt::entity object)
+{
+	const auto ticks =
+	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+	object_physics::TreeDropSound(object, static_cast<uint64_t>(ticks));
 }
 
 void PhysicsGameHooks::StartFlyingFromHand([[maybe_unused]] DynamicsSystemInterface& dynamics, PhysicsEntry& entry)
@@ -368,6 +391,12 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	if (registry.AnyOf<Villager, Animal>(object))
 	{
 		HurtLiving(object, impact);
+		return;
+	}
+	// Rocks wear away under hard knocks, and break in two once worn out
+	if (object_physics::IsRock(object))
+	{
+		object_physics::KnockRock(dynamics, object, impact);
 	}
 }
 

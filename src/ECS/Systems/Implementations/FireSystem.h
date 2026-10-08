@@ -63,6 +63,8 @@ public:
 	[[nodiscard]] std::optional<entt::entity> NearestSafeFire(entt::entity object, const glm::vec3& point) const override;
 	[[nodiscard]] bool InSameBlaze(entt::entity a, entt::entity b) const override;
 	void MergeBlazes(entt::entity object, entt::entity other) override;
+	void MoveFire(entt::entity from, entt::entity to) override;
+	void CopyFire(entt::entity from, entt::entity to) override;
 	void AddFireman(entt::entity object, entt::entity villager) override;
 	void RemoveFireman(entt::entity object, entt::entity villager) override;
 	[[nodiscard]] bool IsFiremanOf(entt::entity object, entt::entity villager) const override;

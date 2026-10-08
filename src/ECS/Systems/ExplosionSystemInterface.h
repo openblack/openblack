@@ -29,6 +29,8 @@ public:
 	/// A heap of rubble at a point, turned and sized as given, with its puff of dust: what a blast leaves, and the hole of
 	/// roots a tree pulled out of the ground leaves
 	virtual void AddRubble(const glm::vec3& centre, float yaw, float scale) = 0;
+	/// A puff of smoke of a size and colour (0xRRGGBB) at a point, as a tree taking root again throws up
+	virtual void AddSmoke(const glm::vec3& centre, float size, uint32_t colour) = 0;
 	/// The camera shakes while within a radius of a point, from a strength down to none over the seconds
 	virtual void AddShake(const glm::vec3& position, float radius, float strength, float seconds) = 0;
 	/// Whether any shake is going on, near the camera or not

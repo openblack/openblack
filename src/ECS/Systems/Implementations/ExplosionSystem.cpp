@@ -76,6 +76,11 @@ void ExplosionSystem::AddRubble(const glm::vec3& centre, float yaw, float scale)
 	_puffs.push_back(dust_puff::Make(centre, k_DustSize, LocalRandom));
 }
 
+void ExplosionSystem::AddSmoke(const glm::vec3& centre, float size, uint32_t colour)
+{
+	_puffs.push_back(dust_puff::Make(centre, size, LocalRandom, colour));
+}
+
 void ExplosionSystem::AddShake(const glm::vec3& position, float radius, float strength, float seconds)
 {
 	const float milliseconds = seconds * 1000.0f;
@@ -160,12 +165,12 @@ void ExplosionSystem::CollectDrawFrame(particles::draw::Frame& frame) const
 	    .playerColour = {},
 	    .random = {},
 	};
-	const auto rgb = std::array<uint8_t, 3> {static_cast<uint8_t>(dust_puff::k_Colour >> 16u),
-	                                         static_cast<uint8_t>((dust_puff::k_Colour >> 8u) & 0xFFu),
-	                                         static_cast<uint8_t>(dust_puff::k_Colour & 0xFFu)};
 	particles::Effect::DrawWalk walk;
 	for (const auto& puff : _puffs)
 	{
+		const auto rgb =
+		    std::array<uint8_t, 3> {static_cast<uint8_t>(puff.colour >> 16u), static_cast<uint8_t>((puff.colour >> 8u) & 0xFFu),
+		                            static_cast<uint8_t>(puff.colour & 0xFFu)};
 		walk.Clear();
 		for (const auto& sprite : dust_puff::Look(puff))
 		{
