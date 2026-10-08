@@ -41,6 +41,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
@@ -1044,7 +1045,7 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 			}
 			// A building is broken about where it stands, and a rock is smashed in two; the blow does nothing to anything
 			// else
-			if (registry.AllOf<Abode>(target))
+			if (registry.AnyOf<Abode, SpellDispenser>(target))
 			{
 				if (Locator::buildingDamageSystem::has_value())
 				{

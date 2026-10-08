@@ -211,4 +211,8 @@ TEST(DamageMesh, ABrokenBuildingIsDrawnAsFarAsItIsRepaired)
 	EXPECT_FLOAT_EQ(DrawShare(0.5f, 1.0f, std::nullopt), 0.49f);
 	// Not built, drawn as built
 	EXPECT_FLOAT_EQ(DrawShare(1.0f, 0.3f, std::nullopt), 0.3f);
+	// A building at no life whose repair started below none is drawn as far as it has regained
+	EXPECT_NEAR(DrawShare(0.0f, 1.0f, -0.1f), 0.1f / 1.1f, 1e-6f);
+	// Nothing regained since the repair started is drawn as nothing
+	EXPECT_FLOAT_EQ(DrawShare(0.45f, 1.0f, 0.45f), 0.0f);
 }

@@ -36,6 +36,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/OneOffSpellSeed.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/TeleportStone.h"
@@ -57,6 +58,7 @@
 #include "ECS/TownAggression.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Physics/DamageMesh.h"
 #include "Physics/LivingRules.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -66,6 +68,24 @@ using namespace openblack::ecs::components;
 
 namespace
 {
+/// A building that is built and whose town stands: one whose repair the town would see to
+bool IsBuiltBuildingOfATown(const Registry& registry, entt::entity object)
+{
+	const auto* abode = registry.TryGet<const Abode>(object);
+	if (abode == nullptr)
+	{
+		return false;
+	}
+	if (const auto* progress = registry.TryGet<const BuildProgress>(object); progress != nullptr && progress->built < 1.0f)
+	{
+		return false;
+	}
+	bool townStands = false;
+	registry.Each<const Town>(
+	    [&townStands, abode](entt::entity, const Town& town) { townStands = townStands || town.id == abode->townId; });
+	return townStands;
+}
+
 /// A villager's health out of this is its life
 constexpr float k_VillagerHealthScale = 100.0f;
 /// An object with no model stands this big
@@ -265,6 +285,17 @@ float world_objects::ReduceLife(entt::entity object, float damage)
 		}
 		return needs->needs.life;
 	}
+	// A building not yet built loses what is built of it rather than life, and all its life once nothing is
+	if (auto* progress = registry.TryGet<BuildProgress>(object);
+	    progress != nullptr && progress->built < 1.0f && registry.AnyOf<Abode, SpellDispenser>(object))
+	{
+		progress->built = progress->built - damage <= 0.0f ? 0.0f : progress->built - damage;
+		if (progress->built != 0.0f)
+		{
+			return LifeOf(object);
+		}
+		damage = LifeOf(object);
+	}
 	// Villagers keep their life to a fraction of their health, so that small hurts add up
 	const float before = LifeOf(object);
 	auto& life = registry.AllOf<ObjectLife>(object) ? registry.Get<ObjectLife>(object)
@@ -279,6 +310,12 @@ float world_objects::ReduceLife(entt::entity object, float damage)
 	{
 		// Its people come out of a building that is being hurt
 		EmptyBuilding(object);
+	}
+	// A built building of a town left under its full life gets a site for its repair, which starts from a little less
+	// than the life it is left with
+	if (life.life < 1.0f && damage > 0.0f && IsBuiltBuildingOfATown(registry, object))
+	{
+		registry.AssignOrReplace<RepairSite>(object, RepairSite {.startLife = physics::damage::RepairStartLife(life.life)});
 	}
 	return life.life;
 }

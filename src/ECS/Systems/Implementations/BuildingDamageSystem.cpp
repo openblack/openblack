@@ -30,13 +30,13 @@
 #include "Common/GameRandom.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/BuildingDamage.h"
-#include "ECS/Components/Creature.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/WorldObjects.h"
@@ -46,6 +46,7 @@
 #include "Magic/SpellRules.h"
 #include "Physics/Body.h"
 #include "Physics/BodyShapes.h"
+#include "Physics/LivingRules.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -147,9 +148,11 @@ float DrawShare(entt::entity building)
 {
 	const auto& registry = Entities();
 	const auto* progress = registry.TryGet<const BuildProgress>(building);
+	// Drawn by its repair only while it is broken and has a site for the repair
 	const auto* broken = registry.TryGet<const BuildingDamage>(building);
+	const auto* site = registry.TryGet<const RepairSite>(building);
 	return damage::DrawShare(world_objects::LifeOf(building), progress != nullptr ? progress->built : 1.0f,
-	                         broken != nullptr ? broken->repairStart : std::nullopt);
+	                         broken != nullptr && site != nullptr ? std::optional(site->startLife) : std::nullopt);
 }
 
 /// The building's model, the drawn parts of its nearest level of detail, in the world
@@ -415,6 +418,7 @@ void ShedDustAndCheck(entt::entity piece)
 	}
 	if (physics::shapes::Fragment(triangles).tooThin)
 	{
+		EraseMesh(registry.Get<BuildingPiece>(piece).drawMesh);
 		world_objects::Remove(piece);
 	}
 }
@@ -464,9 +468,16 @@ void SplitLooseParts(damage::Mesh& mesh, glm::vec3 offset, bool groundTest, entt
 	}
 	const auto anchors = damage::Anchors(mesh, groups, land);
 	auto parts = damage::TakeAwayLooseGroups(mesh, anchors, groups);
+	auto& registry = Entities();
 	for (auto& part : parts)
 	{
 		const auto piece = MakePiece(std::move(part.primitive), offset, parent, sourceMesh, mesh.snowLevel);
+		// As every piece is made, it lets go of its own parts that don't hold on to its first, before it spins away;
+		// it stays about where it was made
+		auto childMesh = std::move(registry.Get<BuildingPiece>(piece).mesh);
+		const auto childPosition = registry.Get<const Transform>(piece).position;
+		SplitLooseParts(childMesh, childPosition, false, parent, sourceMesh);
+		registry.Get<BuildingPiece>(piece).mesh = std::move(childMesh);
 		DrawPiece(piece);
 		const auto spin = SpreadVector(damage::k_FallingSpin);
 		Launch(piece, parent, glm::vec3(0.0f), spin);
@@ -512,7 +523,7 @@ void Strike(entt::entity building, BuildingDamage& broken, glm::vec3 point, glm:
 }
 
 /// What breaking does to a building: it crashes, and loses life down to what is left of its model
-void ApplyBreakage(entt::entity building, entt::entity hitter, std::optional<PlayerNames> player, bool byCreature)
+void ApplyBreakage(entt::entity building, entt::entity hitter, std::optional<PlayerNames> player, bool hitterIsCreature)
 {
 	PlaySound(building, k_CrashKeys);
 	if (!Locator::magicSystem::has_value() || !Locator::infoConstants::has_value())
@@ -532,6 +543,8 @@ void ApplyBreakage(entt::entity building, entt::entity hitter, std::optional<Pla
 			const auto defence = magic::EffectDefence::From(*info);
 			for (size_t kind = 0; kind < values.numbers.size(); ++kind)
 			{
+				// (The game divides by a zero multiplier too; nothing ships one, and it is skipped here rather than made
+				// infinite)
 				if (defence.multipliers.at(kind) != 0.0f)
 				{
 					values.numbers.at(kind) /= defence.multipliers.at(kind);
@@ -543,15 +556,10 @@ void ApplyBreakage(entt::entity building, entt::entity hitter, std::optional<Pla
 	Locator::magicSystem::value().ApplyEffectToObject(building, values,
 	                                                  magic::EffectSource {
 	                                                      .player = player.value_or(PlayerNames::NEUTRAL),
-	                                                      .casterCreature = byCreature ? hitter : entt::null,
+	                                                      .casterCreature = hitterIsCreature ? hitter : entt::null,
 	                                                      .appliedBy = validHitter ? hitter : entt::null,
 	                                                      .playerless = !player.has_value(),
 	                                                  });
-	// Its repair starts from a little less than the life it is left with, so it is drawn mostly unrepaired
-	if (auto* broken = registry.TryGet<BuildingDamage>(building))
-	{
-		broken->repairStart = damage::RepairStartLife(world_objects::LifeOf(building));
-	}
 }
 
 /// After a blow: a building that lost nothing of its model forgets it was broken; otherwise it is drawn as it is left
@@ -574,12 +582,22 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 	auto& registry = Entities();
 	const auto building = entry.entity;
 	const auto hitter = impact.hitBy;
-	if (hitter == entt::null || !registry.Valid(hitter) || !dynamics.PhysicallyDestroysAbodes(hitter))
+	if (hitter == entt::null || !registry.Valid(hitter))
 	{
 		return;
 	}
 	auto* hitterEntry = dynamics.Find(hitter);
-	if (hitterEntry == nullptr || hitterEntry->body == nullptr)
+	// A creature may copy the player damaging the building by throwing at it, when the building's own body came from a
+	// hand; a building's resting body never does, so this is never seen
+	if (hitterEntry != nullptr && hitterEntry->player.has_value() && entry.Has(PhysicsEntry::k_FromHand) &&
+	    Locator::creatureMindSystem::has_value())
+	{
+		const auto* place = registry.TryGet<const Transform>(building);
+		Locator::creatureMindSystem::value().PlayerDid(physics::living::k_DeedDamageByThrowingAt,
+		                                               place != nullptr ? place->position : glm::vec3(0.0f), building,
+		                                               *hitterEntry->player);
+	}
+	if (!dynamics.PhysicallyDestroysAbodes(hitter) || hitterEntry == nullptr || hitterEntry->body == nullptr)
 	{
 		return;
 	}
@@ -598,8 +616,8 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 	case damage::Blow::Breaks:
 		break;
 	}
-	const bool byCreature =
-	    impact.thrower != entt::null && registry.Valid(impact.thrower) && registry.AllOf<Creature>(impact.thrower);
+	// TODO(buildings): while the blow's effects apply, the game marks a building struck by what a creature threw (a flag
+	// whose reader wasn't found); the rock, not the creature, applies them
 	if (IsBuilt(building))
 	{
 		auto* broken = registry.TryGet<BuildingDamage>(building);
@@ -617,7 +635,9 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 		else if (broken->lastHitter == hitter)
 		{
 			// The same rock again, hard: the rock and the building pass through each other from now on
-			if (momentum > damage::k_PassThroughMomentum && entry.entity == building)
+			// (The game also asks that the building's own body is the one struck, which only a temple's redirected blow
+			// isn't; openblack's temple takes no blows yet)
+			if (momentum > damage::k_PassThroughMomentum)
 			{
 				entry.thrower = hitter;
 				hitterEntry->thrower = building;
@@ -634,7 +654,7 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 			return;
 		}
 	}
-	ApplyBreakage(building, hitter, impact.player, byCreature);
+	ApplyBreakage(building, hitter, impact.player, false);
 }
 
 void BuildingDamageSystem::Smash(entt::entity building, entt::entity creature, float creatureSize)
@@ -749,6 +769,14 @@ entt::id_type BuildingDamageSystem::DrawnMesh(entt::entity object, entt::id_type
 void BuildingDamageSystem::Reset()
 {
 	auto& registry = Entities();
+	// The made models go, and the buildings forget they were broken (their pieces are taken with the level)
 	registry.Each<BuildingDamage>([](BuildingDamage& broken) { EraseMesh(broken.drawMesh); });
 	registry.Each<BuildingPiece>([](BuildingPiece& part) { EraseMesh(part.drawMesh); });
+	std::vector<entt::entity> broken;
+	registry.Each<const BuildingDamage>(
+	    [&broken](entt::entity building, const BuildingDamage&) { broken.push_back(building); });
+	for (const auto building : broken)
+	{
+		registry.Remove<BuildingDamage>(building);
+	}
 }

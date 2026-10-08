@@ -26,8 +26,6 @@ struct BuildingDamage
 	physics::damage::Mesh mesh;
 	/// The rock that last broke it: struck again by the same rock hard enough, the two pass through each other
 	entt::entity lastHitter {entt::null};
-	/// The life its repair starts from, set at each breaking blow; none before the first
-	std::optional<float> repairStart;
 	/// The model it is drawn with, made from the broken triangles
 	entt::id_type drawMesh {0};
 	/// Counts the models made for it, each named apart

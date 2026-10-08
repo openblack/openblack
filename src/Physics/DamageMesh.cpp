@@ -231,6 +231,8 @@ std::vector<Primitive> damage::Strike(Mesh& mesh, glm::vec3 point, glm::vec3 dir
 			broken.push_back(std::move(piece));
 		}
 	}
+	// A primitive left with nothing is gone from the mesh
+	std::erase_if(mesh.primitives, [](const Primitive& primitive) { return primitive.triangles.empty(); });
 	return broken;
 }
 
@@ -451,7 +453,10 @@ float damage::DrawShare(float life, float built, std::optional<float> repairStar
 	float repaired = life * k_RepairedWithoutRepair;
 	if (repairStart.has_value())
 	{
-		repaired = (life == 0.0f || *repairStart == 1.0f) ? 0.0f : (life - *repairStart) / (1.0f - *repairStart);
+		// Nothing regained since, or a repair that started whole, counts as none
+		const float regained = life - *repairStart;
+		const float toRegain = 1.0f - *repairStart;
+		repaired = (toRegain == 0.0f || regained == 0.0f) ? 0.0f : regained / toRegain;
 	}
 	return std::min(repaired, built);
 }

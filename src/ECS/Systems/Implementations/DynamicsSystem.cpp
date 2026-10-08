@@ -305,12 +305,13 @@ std::unique_ptr<physics::Body> DynamicsSystem::MakePieceBody(entt::entity piece,
 	{
 		return nullptr;
 	}
-	// It waits to come to rest as long as the game's first rock would, whatever its own size
+	// It waits to come to rest as long as the model of the static row the game makes its pieces from would, whatever its
+	// own size
 	float halfHeight = 0.0f;
 	if (Locator::infoConstants::has_value() && Locator::resources::has_value())
 	{
-		constexpr size_t k_FirstRock = 2;
-		const auto id = resources::HashIdentifier(Locator::infoConstants::value().mobileStatic.at(k_FirstRock).meshId);
+		constexpr size_t k_PieceInfoRow = 2;
+		const auto id = resources::HashIdentifier(Locator::infoConstants::value().mobileStatic.at(k_PieceInfoRow).meshId);
 		auto& meshes = Locator::resources::value().GetMeshes();
 		if (meshes.Contains(id))
 		{
@@ -1411,13 +1412,13 @@ void DynamicsSystem::AttemptCollisionSound(PhysicsEntry& entry)
 
 void DynamicsSystem::AddPuff(glm::vec3 position, glm::vec3 velocity, float size, uint32_t argb)
 {
-	auto* random = Locator::gameRandom::has_value() ? &Locator::gameRandom::value() : nullptr;
-	// Its look is drawn whether or not there is room for it
-	const auto variant = random != nullptr ? random->CrtRand() & 15 : 0;
+	// Only a puff there is room for is made, and only then is its look drawn
 	if (_dust.size() >= turn::k_MostPuffs)
 	{
 		return;
 	}
+	auto* random = Locator::gameRandom::has_value() ? &Locator::gameRandom::value() : nullptr;
+	const auto variant = random != nullptr ? random->CrtRand() & 15 : 0;
 	_dust.push_back({.position = position, .velocity = velocity, .size = size, .variant = variant, .argb = argb});
 }
 

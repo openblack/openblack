@@ -2727,10 +2727,11 @@ void Game::PrepareNewLand()
 	if (Locator::dynamicsSystem::has_value())
 	{
 		Locator::dynamicsSystem::value().ResetSimulation();
-		if (Locator::buildingDamageSystem::has_value())
-		{
-			Locator::buildingDamageSystem::value().Reset();
-		}
+	}
+	// Nor its broken buildings and their pieces
+	if (Locator::buildingDamageSystem::has_value())
+	{
+		Locator::buildingDamageSystem::value().Reset();
 	}
 	// Nor anything in the hand
 	if (Locator::handGrabSystem::has_value())

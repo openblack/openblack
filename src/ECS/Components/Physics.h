@@ -34,6 +34,13 @@ struct BuildProgress
 	float built {1.0f};
 };
 
+/// A built building of a town that has lost life has a site for its repair, which remembers the life its repair
+/// starts from: a little less than what it was left with by its latest hurt
+struct RepairSite
+{
+	float startLife {1.0f};
+};
+
 /// Where a moving body is drawn this frame, between where it was at the start of the last game turn and where it is now,
 /// so that its motion looks smooth whatever the frame rate. The game itself sees the object's Transform, where the body
 /// is at the end of the turn.

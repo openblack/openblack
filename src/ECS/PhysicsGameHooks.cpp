@@ -32,6 +32,7 @@
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
@@ -407,8 +408,8 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 		StrikeShield(dynamics, object, impact);
 		return;
 	}
-	// Rocks break buildings, the village centre and storage pits among them
-	if (registry.AnyOf<Abode, StoragePit>(object))
+	// Rocks break buildings, the village centre, storage pits and spell dispensers among them
+	if (registry.AnyOf<Abode, StoragePit, SpellDispenser>(object))
 	{
 		if (Locator::buildingDamageSystem::has_value())
 		{
