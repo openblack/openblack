@@ -1511,6 +1511,7 @@ bool Game::Update() noexcept
 					    .target = handTransform.position,
 					    .rayOrigin = rayOrigin,
 					    .rayDirection = rayDirection,
+					    .camera = camera.GetOrigin(),
 					    .cursorGround = _cursorWorldPosition,
 					    .handSize = HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), land)),
 					    .seconds = std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count(),

@@ -105,6 +105,7 @@ public:
 	void TreeUprooted(PlayerNames, entt::entity tree) override { uprooted.push_back(tree); }
 	void LeaveRootsHole(entt::entity tree) override { holes.push_back(tree); }
 	void RemovePotReaction(entt::entity) override {}
+	void SetUpPotReaction(entt::entity pot, PlayerNames) override { potReactionsSetUp.push_back(pot); }
 	[[nodiscard]] Pose PoseOf(entt::entity object) const override
 	{
 		const auto& transform = registry.Get<const Transform>(object);
@@ -222,6 +223,7 @@ public:
 	std::vector<entt::entity> uprooted;
 	std::vector<entt::entity> holes;
 	std::vector<entt::entity> poured;
+	std::vector<entt::entity> potReactionsSetUp;
 	std::vector<std::pair<entt::entity, glm::vec3>> released;
 	std::vector<std::pair<entt::entity, glm::vec3>> twists;
 	uint32_t streams {0};

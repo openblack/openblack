@@ -340,9 +340,12 @@ int32_t ScoopRampTurns(const ScoopFacts& facts)
 float hand_grab::ScoopRamp(uint32_t turns, const ScoopFacts& facts)
 {
 	const auto rampTurns = ScoopRampTurns(facts);
-	// A ramp of no turns is over at once
-	const float share =
-	    rampTurns > 0 ? std::clamp(static_cast<float>(turns) / static_cast<float>(rampTurns), 0.0f, 1.0f) : 1.0f;
+	// A ramp of no turns is over at once, except at its very first turn, where the game's share comes out as nothing
+	if (rampTurns <= 0)
+	{
+		return turns == 0 ? 0.0f : 1.0f;
+	}
+	const float share = std::clamp(static_cast<float>(turns) / static_cast<float>(rampTurns), 0.0f, 1.0f);
 	return share * share;
 }
 

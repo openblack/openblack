@@ -3839,11 +3839,19 @@ void GetPlayerAlly() // 398 GET_PLAYER_ALLY
 	Pushf(0.0f);
 }
 
-/// The player a script names: its 0 is the neutral player, the others count from 1
+/// The player a script names: its 0 is the player at this computer, the others count from 1
+PlayerNames ScriptPlayerName(int32_t scriptPlayer)
+{
+	if (scriptPlayer != 0)
+	{
+		return static_cast<PlayerNames>(scriptPlayer - 1);
+	}
+	return Locator::playerSystem::has_value() ? Locator::playerSystem::value().GetLocalPlayer() : PlayerNames::PLAYER_ONE;
+}
+
 ecs::components::Player* ScriptPlayer(float number)
 {
-	const auto scriptPlayer = static_cast<int32_t>(number);
-	const auto name = scriptPlayer == 0 ? PlayerNames::NEUTRAL : static_cast<PlayerNames>(scriptPlayer - 1);
+	const auto name = ScriptPlayerName(static_cast<int32_t>(number));
 	if (!Locator::playerSystem::has_value())
 	{
 		return nullptr;
@@ -4203,9 +4211,7 @@ void PosValidForCreature() // 441 POS_VALID_FOR_CREATURE
 void GetTimeSinceObjectAttacked() // 442 GET_TIME_SINCE_OBJECT_ATTACKED
 {
 	const auto town = static_cast<entt::entity>(Pop().uintVal);
-	const auto scriptPlayer = static_cast<int32_t>(Popf());
-	// A script's player 0 is the neutral player, the others count from 1
-	const auto player = scriptPlayer == 0 ? PlayerNames::NEUTRAL : static_cast<PlayerNames>(scriptPlayer - 1);
+	const auto player = ScriptPlayerName(static_cast<int32_t>(Popf()));
 	auto& registry = Locator::entitiesRegistry::value();
 	const auto* aggression = registry.Valid(town) ? registry.TryGet<const ecs::components::TownAggression>(town) : nullptr;
 	const auto index = static_cast<size_t>(player);

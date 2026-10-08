@@ -21,13 +21,13 @@ using namespace openblack::ecs::components;
 void villager_memory::StorePreviousState(LivingAction& action)
 {
 	auto& living = Locator::livingActionSystem::value();
-	// The state it is in, or the one it is walking to
-	auto state = living.VillagerGetState(action, LivingAction::Index::Final);
-	if (state == VillagerStates::InvalidState)
-	{
-		state = living.VillagerGetState(action, LivingAction::Index::Top);
-	}
-	const auto& info = Locator::infoConstants::value().villagerStateTable.at(static_cast<size_t>(state));
+	// The state it has settled in: the one it is in when that state is an end in itself, else the one it is heading for
+	const auto& table = Locator::infoConstants::value().villagerStateTable;
+	const auto top = living.VillagerGetState(action, LivingAction::Index::Top);
+	auto state = table.at(static_cast<size_t>(top)).isFinalState != 0
+	                 ? top
+	                 : living.VillagerGetState(action, LivingAction::Index::Final);
+	const auto& info = table.at(static_cast<size_t>(state));
 	if (info.keepsPreviousState != 0 || info.isReactionState != 0)
 	{
 		state = living.VillagerGetState(action, LivingAction::Index::Previous);

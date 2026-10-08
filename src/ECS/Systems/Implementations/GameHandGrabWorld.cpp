@@ -79,11 +79,11 @@ namespace
 constexpr float k_RootsHoleShare = 0.3f;
 
 /// The particles of a handful poured out of the hand: food and wood
-constexpr auto k_PourFood = static_cast<ParticleType>(113);
-constexpr auto k_PourWood = static_cast<ParticleType>(112);
+constexpr auto k_PourFood = ParticleType::FoodPutdown;
+constexpr auto k_PourWood = ParticleType::WoodPutdown;
 /// The particles of what is scooped streaming into the hand: food and wood
-constexpr auto k_ScoopFood = static_cast<ParticleType>(107);
-constexpr auto k_ScoopWood = static_cast<ParticleType>(110);
+constexpr auto k_ScoopFood = ParticleType::FoodPickup;
+constexpr auto k_ScoopWood = ParticleType::WoodPickup;
 /// The scooping sound of the in-game bank, for food and for wood, played each game turn at a pitch rising with the scoop
 constexpr uint32_t k_ScoopSample = 44;
 constexpr uint32_t k_ScoopWoodSample = 98;
@@ -378,6 +378,24 @@ void GameHandGrabWorld::RemovePotReaction(entt::entity pot)
 	if (reaction != Reaction::None)
 	{
 		Locator::reactionSystem::value().RemoveFrom(pot, reaction);
+	}
+}
+
+void GameHandGrabWorld::SetUpPotReaction(entt::entity pot, PlayerNames player)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* data = registry.TryGet<const Pot>(pot);
+	const auto* transform = registry.TryGet<const Transform>(pot);
+	const auto* info = Info();
+	if (data == nullptr || transform == nullptr || info == nullptr || !Locator::reactionSystem::has_value())
+	{
+		return;
+	}
+	auto& reactions = Locator::reactionSystem::value();
+	const auto reaction = info->pot.at(static_cast<size_t>(data->type)).associatedReaction;
+	if (reaction != Reaction::None && !reactions.HasReaction(pot))
+	{
+		reactions.Create({.initiator = pot, .type = reaction, .player = player, .position = transform->position});
 	}
 }
 

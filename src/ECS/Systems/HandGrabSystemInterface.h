@@ -38,6 +38,8 @@ public:
 		/// The line through the cursor
 		glm::vec3 rayOrigin {0.0f};
 		glm::vec3 rayDirection {0.0f};
+		/// Where the camera is: the pull measures its plane from it
+		glm::vec3 camera {0.0f};
 		/// The point picked on the land under the cursor, none over nothing
 		std::optional<glm::vec3> cursorGround;
 		/// The hand's size against its standard

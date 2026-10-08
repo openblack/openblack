@@ -113,6 +113,8 @@ public:
 	virtual void LeaveRootsHole(entt::entity tree) = 0;
 	/// A pot taken stops calling the people to it
 	virtual void RemovePotReaction(entt::entity pot) = 0;
+	/// A pot let go over the land calls the people to it again, when it calls nobody yet, for the player letting it go
+	virtual void SetUpPotReaction(entt::entity pot, PlayerNames player) = 0;
 	/// Where a thing is drawn, its scaled axes and its origin
 	struct Pose
 	{

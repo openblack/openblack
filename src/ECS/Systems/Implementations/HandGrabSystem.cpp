@@ -267,7 +267,8 @@ bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t
 	// Something in flight isn't pulled: it is caught once the button has been held a while. Anything else is pulled at,
 	// until it comes free.
 	grab->pulling = !_world->IsFlying(*object);
-	grab->waits = false;
+	// The first frame of the pull never pulls
+	grab->waits = true;
 	return true;
 }
 
@@ -286,6 +287,8 @@ std::optional<entt::entity> HandGrabSystem::Release(uint32_t nowMs, uint32_t tur
 		const auto object = grab->object;
 		const bool tap = hand_grab::ElapsedMs(nowMs, grab->pressMs, turn, grab->pressTurn) <= hand_grab::k_GrabWaitMs;
 		Empty(*grab);
+		// It still becomes the thing last let go, which a flying thing's twist then finds
+		grab->released = object;
 		return tap && Exists(object) ? std::optional(object) : std::nullopt;
 	}
 	case HandGrab::State::ReadyToThrow:
@@ -437,14 +440,15 @@ void HandGrabSystem::StartPull(HandGrab& grab, const Frame& frame)
 	const auto object = grab.object;
 	const auto pose = _world->PoseOf(object);
 	hand_grab::Tug tug {.axes = pose.axes, .base = pose.origin};
-	// The pull works in the plane of the land under the thing, at the height where the line from the camera to its base
-	// is as far down as the hand is along the line to the hand
+	// The pull works in the plane of the land under the thing, at the height the hand's drop below the camera reaches
+	// when scaled from the hand's distance across the ground to the base's. The hand is where the cursor puts it.
 	grab.pullPlaneNormal = _world->LandNormalAt(pose.origin);
-	const float toBase = glm::distance(frame.rayOrigin, pose.origin);
-	const float toHand = glm::distance(frame.rayOrigin, frame.target);
+	const auto across = [](glm::vec3 a, glm::vec3 b) { return glm::length(glm::vec2(a.x - b.x, a.z - b.z)); };
+	const float toBase = across(frame.camera, pose.origin);
+	const float toHand = across(frame.camera, frame.target);
 	grab.pullPlanePoint = pose.origin;
 	grab.pullPlanePoint.y =
-	    toHand > 0.0f ? frame.rayOrigin.y - (toBase / toHand) * (frame.rayOrigin.y - frame.target.y) : pose.origin.y;
+	    toHand > 0.0f ? frame.camera.y - (toBase / toHand) * (frame.camera.y - frame.target.y) : pose.origin.y;
 	const auto hold = HoldOfObject(object);
 	grab.holdDistance = hand_grab::HoldDistance(hold.loweringMultiplier, _world->SizeOf(object).height, _handSize);
 	grab.stretch.Reset(1.0f);
@@ -497,7 +501,7 @@ glm::vec3 HandGrabSystem::Pull(HandGrab& grab, const Frame& frame)
 	}
 	// How far up it the hand grips it, as the hand measures it every frame
 	grab.holdDistance = HoldOfObject(object).loweringMultiplier * size.height;
-	return hand_grab::TugHandPoint(tug, grab.holdDistance, leans ? grab.stretch.GetValue() : 1.0f);
+	return hand_grab::TugHandPoint(tug, grab.holdDistance, grab.stretch.GetValue());
 }
 
 void HandGrabSystem::Take(HandGrab& grab, entt::entity object, bool fromTheWorld)
@@ -612,6 +616,11 @@ void HandGrabSystem::LetGo(HandGrab& grab, glm::vec3 velocity, bool forced)
 		}
 	}
 	const auto player = _world->HandPlayer();
+	if (!forced && registry.AllOf<Pot>(object))
+	{
+		// Let go over the land, a pot calls the people to it again before it is poured or thrown
+		_world->SetUpPotReaction(object, player);
+	}
 	// A pot let go slowly is poured out where it is, onto what takes it or into a pile
 	if (registry.AllOf<Pot>(object) && hand_grab::PotPours(velocity))
 	{
@@ -662,8 +671,16 @@ glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 	}
 
 	// The twist of what it let go, once the hand has moved on a little
-	if (grab->releaseSpinMs.has_value() && grab->state != HandGrab::State::Holding &&
-	    grab->state != HandGrab::State::ReadyToThrow)
+	if (grab->state == HandGrab::State::Grabbing)
+	{
+		// While it pulls a thing the twist waits; while it waits to catch a flying one the twist is made ready again
+		if (!grab->pulling)
+		{
+			grab->releaseSpinMs = static_cast<int32_t>(hand_grab::k_ReleaseSpinDelayMs);
+		}
+	}
+	else if (grab->releaseSpinMs.has_value() && grab->state != HandGrab::State::Holding &&
+	         grab->state != HandGrab::State::ReadyToThrow)
 	{
 		switch (hand_grab::CountDown(*grab->releaseSpinMs, frame.gameMs))
 		{
@@ -733,6 +750,8 @@ glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 	grab->releaseSpinMs = static_cast<int32_t>(hand_grab::k_ReleaseSpinDelayMs);
 	grab->lastTarget = frame.target;
 	auto target = frame.target + glm::vec3(0.0f, grab->rise, 0.0f);
+	// The game time spent holding is counted whether the spring is on or not, scooping too
+	grab->spring.Count(frame.gameMs);
 	if (grab->scoopSource != entt::null && Exists(grab->scoopSource))
 	{
 		// Scooping, the hand stays where it began, over the land by the height of what it scoops from
@@ -741,8 +760,6 @@ glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 		grab->lastTarget = target;
 		return target;
 	}
-	// The game time spent holding is counted whether the spring is on or not
-	grab->spring.Count(frame.gameMs);
 	if (grab->springOn)
 	{
 		grab->spring.Step(target);
