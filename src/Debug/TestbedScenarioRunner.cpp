@@ -1330,6 +1330,12 @@ void Runner::Give(const Command& command)
 	case Kind::PressKey:
 	case Kind::HandTakeFireBall:
 	case Kind::SetAlignment:
+	// The mouse commands are given before a creature is looked for
+	case Kind::PointerTo:
+	case Kind::PointerPress:
+	case Kind::PointerRelease:
+	case Kind::PointerSweep:
+	case Kind::WheelTurn:
 		break;
 	case Kind::SetDesire:
 	case Kind::SetPhase:

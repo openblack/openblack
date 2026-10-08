@@ -84,7 +84,8 @@ std::string EmitterSoundName(const AudioEmitter& emitter)
 }
 
 /// How an emitter is described in the log: its entity, its sound, 2D or where it is
-std::string DescribeEmitter(entt::entity entity, const AudioEmitter& emitter)
+// Only the debug and trace logging uses it, which release builds leave out
+[[maybe_unused]] std::string DescribeEmitter(entt::entity entity, const AudioEmitter& emitter)
 {
 	return fmt::format("{} {} {}{}", static_cast<uint32_t>(entity), emitter.spatial ? "3D" : "2D", EmitterSoundName(emitter),
 	                   emitter.spatial

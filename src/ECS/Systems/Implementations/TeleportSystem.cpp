@@ -111,18 +111,6 @@ std::optional<PlayerNames> PlayerOf(entt::entity living)
 	return std::nullopt;
 }
 
-/// How far a stone's reaction reaches, from the reaction table
-float ReactionReach()
-{
-	if (!Locator::infoConstants::has_value())
-	{
-		return teleport::k_StoneRadius;
-	}
-	const auto& table = Locator::infoConstants::value().reaction;
-	const auto index = static_cast<size_t>(Reaction::ReactToTeleport);
-	return index < table.size() ? table.at(index).maxReactionDistance : teleport::k_StoneRadius;
-}
-
 /// A villager walking somewhere, and where
 std::optional<glm::vec3> VillagerWalkingTo(entt::entity villager)
 {

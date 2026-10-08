@@ -50,7 +50,8 @@
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
-namespace flock = openblack::magic::flock;
+// Not "flock": on Linux that is also a function from <sys/file.h>
+namespace flock_rules = openblack::magic::flock;
 
 namespace
 {
@@ -644,7 +645,7 @@ void AnimalSystem::SendWolf(entt::entity wolf, glm::vec2 start, glm::vec2 destin
 		return;
 	}
 	run->finalDestination = destination;
-	run->corridor = flock::MakeCorridor(start, destination, halfWidth);
+	run->corridor = flock_rules::MakeCorridor(start, destination, halfWidth);
 	RunToFinalDestination(wolf, *animal);
 }
 
@@ -654,7 +655,7 @@ void AnimalSystem::RunToFinalDestination(entt::entity wolf, Animal& animal)
 	const float scale = EntityRegistry().Get<const Transform>(wolf).scale.x;
 	// Its kind's run times its scale, a tenth faster, to a whole speed state: the only speed a spell wolf takes
 	const auto state = static_cast<double>(scale) * static_cast<double>(SpeedStateOf(InfoOf(animal.type), k_WolfRunSpeed)) *
-	                   static_cast<double>(flock::k_WolfRunFactor);
+	                   static_cast<double>(flock_rules::k_WolfRunFactor);
 	animal.move.speed = static_cast<uint16_t>(std::clamp(static_cast<int32_t>(state), 0, 0xFFFF));
 	SetupMoveTo(animal, run.finalDestination, 0.0f, AnimalState::SetDying);
 }
@@ -731,7 +732,7 @@ void AnimalSystem::WolfMoveToPos(entt::entity entity, Animal& animal)
 		ReactToFoodNeeds(entity, animal);
 	}
 	// Near where it was sent, it fades away
-	if (flock::WolfArrived(Metres(animal.move.position), run.finalDestination))
+	if (flock_rules::WolfArrived(Metres(animal.move.position), run.finalDestination))
 	{
 		StartFading(entity);
 	}
@@ -751,7 +752,7 @@ void AnimalSystem::ReactToFoodNeeds(entt::entity entity, Animal& animal)
 		const bool dying =
 		    registry.AllOf<Villager>(run.prey) && action != nullptr &&
 		    action->states[static_cast<size_t>(LivingAction::Index::Top)] == static_cast<uint8_t>(VillagerStates::Dying);
-		const bool valid = !dying && transform.position.y - Ground(Xz(transform.position)) <= flock::k_PreyMaxHeight &&
+		const bool valid = !dying && transform.position.y - Ground(Xz(transform.position)) <= flock_rules::k_PreyMaxHeight &&
 		                   glm::distance(Metres(animal.move.position), Xz(transform.position)) < info.huntingDistance;
 		if (valid)
 		{
@@ -830,7 +831,7 @@ bool AnimalSystem::IsHuntingTargetValid(entt::entity wolf, const Animal& animal,
 		return false;
 	}
 	const auto point = Xz(registry.Get<const Transform>(prey).position);
-	return flock::IsOnCorridor(run.corridor, point, Metres(animal.move.position)) &&
+	return flock_rules::IsOnCorridor(run.corridor, point, Metres(animal.move.position)) &&
 	       animals::OutsideTurningCircles(Metres(animal.move.position), animal.move.angle, animal.move.speed,
 	                                      TurnAngleOf(animal), point);
 }
@@ -903,7 +904,7 @@ void AnimalSystem::Pounce(entt::entity wolf, Animal& animal)
 		return;
 	}
 	if (glm::distance(Metres(animal.move.position), Xz(registry.Get<const Transform>(run.prey).position)) <=
-	    flock::k_PounceReach)
+	    flock_rules::k_PounceReach)
 	{
 		BringDown(wolf, run.prey);
 	}
@@ -927,7 +928,7 @@ void AnimalSystem::BringDown(entt::entity wolf, entt::entity prey)
 	int fallTurns = 0;
 	if (auto* villager = registry.TryGet<Villager>(prey))
 	{
-		villager->health = static_cast<uint32_t>(std::lround(flock::k_DownedLife * 100.0f));
+		villager->health = static_cast<uint32_t>(std::lround(flock_rules::k_DownedLife * 100.0f));
 		if (auto* wallHug = registry.TryGet<WallHug>(prey))
 		{
 			wallHug->goal = Xz(registry.Get<const Transform>(prey).position);
@@ -937,18 +938,19 @@ void AnimalSystem::BringDown(entt::entity wolf, entt::entity prey)
 			Locator::livingActionSystem::value().VillagerSetState(*action, LivingAction::Index::Top, VillagerStates::Downed,
 			                                                      true);
 		}
-		fallTurns = flock::TurnsToPlay(PlayTimeOf(k_VillagerAttacked), k_TurnMilliseconds);
+		fallTurns = flock_rules::TurnsToPlay(PlayTimeOf(k_VillagerAttacked), k_TurnMilliseconds);
 	}
 	else if (auto* other = registry.TryGet<Animal>(prey))
 	{
 		SetTopState(*other, AnimalState::Downed);
-		fallTurns = flock::TurnsToPlay(PlayTimeOf(other->animation), k_TurnMilliseconds);
+		fallTurns = flock_rules::TurnsToPlay(PlayTimeOf(other->animation), k_TurnMilliseconds);
 	}
 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Animals: #{} brought down by wolf #{}", static_cast<uint32_t>(prey),
 	                    static_cast<uint32_t>(wolf));
-	registry.AssignOrReplace<BeingEaten>(
-	    prey,
-	    BeingEaten {.hunter = wolf, .turns = 0, .eatenFrom = k_FallStartsAfter + fallTurns, .left = flock::k_BeingEatenTurns});
+	registry.AssignOrReplace<BeingEaten>(prey, BeingEaten {.hunter = wolf,
+	                                                       .turns = 0,
+	                                                       .eatenFrom = k_FallStartsAfter + fallTurns,
+	                                                       .left = flock_rules::k_BeingEatenTurns});
 }
 
 void AnimalSystem::FinishPouncing(entt::entity wolf, Animal& animal, entt::entity prey)
@@ -964,7 +966,7 @@ void AnimalSystem::FinishPouncing(entt::entity wolf, Animal& animal, entt::entit
 	const glm::vec3 prey3(preyPoint.x, preyTransform.position.y - Ground(preyPoint), preyPoint.y);
 	const auto wolfPoint = Metres(animal.move.position);
 	const glm::vec3 wolf3(wolfPoint.x, animal.height, wolfPoint.y);
-	const auto goal = flock::EatingPosition(prey3, wolf3, registry.Get<const Transform>(wolf).scale.x);
+	const auto goal = flock_rules::EatingPosition(prey3, wolf3, registry.Get<const Transform>(wolf).scale.x);
 	SetupMoveTo(animal, {goal.x, goal.z}, 0.0f, AnimalState::StartToEat);
 	run.food = prey;
 }
@@ -989,8 +991,8 @@ entt::entity AnimalSystem::FindPrey(entt::entity wolf, const Animal& animal)
 	auto& registry = EntityRegistry();
 	auto& run = registry.Get<SpellWolf>(wolf);
 	// What lives in each map cell
-	std::map<std::pair<int32_t, int32_t>, std::vector<std::pair<entt::entity, flock::PreyFacts>>> cells;
-	const auto add = [&](entt::entity entity, const Transform& transform, flock::PreyFacts facts) {
+	std::map<std::pair<int32_t, int32_t>, std::vector<std::pair<entt::entity, flock_rules::PreyFacts>>> cells;
+	const auto add = [&](entt::entity entity, const Transform& transform, flock_rules::PreyFacts facts) {
 		const auto cell = map_coords::CellOf(Xz(transform.position));
 		facts.heightAboveLand = transform.position.y - Ground(Xz(transform.position));
 		cells[{cell.x, cell.y}].emplace_back(entity, facts);
@@ -1017,7 +1019,7 @@ entt::entity AnimalSystem::FindPrey(entt::entity wolf, const Animal& animal)
 			for (auto [entity, facts] : found->second)
 			{
 				facts.onCorridor = IsHuntingTargetValid(wolf, animal, entity);
-				if (!flock::IsPrey(facts))
+				if (!flock_rules::IsPrey(facts))
 				{
 					continue;
 				}
@@ -1025,7 +1027,7 @@ entt::entity AnimalSystem::FindPrey(entt::entity wolf, const Animal& animal)
 				// enough to take instead
 				const auto preyPoint = Xz(registry.Get<const Transform>(entity).position);
 				if (run.remembered.has_value() &&
-				    !flock::CloserThanRemembered(animal.move.position, Fixed(preyPoint), Fixed(*run.remembered)))
+				    !flock_rules::CloserThanRemembered(animal.move.position, Fixed(preyPoint), Fixed(*run.remembered)))
 				{
 					continue;
 				}
@@ -1084,8 +1086,8 @@ void AnimalSystem::StartFading(entt::entity animal)
 	// From full, at rest, to nothing over its fade's turns
 	if (auto* spellAnimal = EntityRegistry().TryGet<SpellAnimal>(animal); spellAnimal != nullptr && !spellAnimal->Fading())
 	{
-		spellAnimal->fade = animals::Zoomer(flock::k_FullAlpha);
-		spellAnimal->fade->SetTarget(0.0f, 0.0f, static_cast<float>(flock::k_FadeTurns) * k_TurnSeconds);
+		spellAnimal->fade = animals::Zoomer(flock_rules::k_FullAlpha);
+		spellAnimal->fade->SetTarget(0.0f, 0.0f, static_cast<float>(flock_rules::k_FadeTurns) * k_TurnSeconds);
 	}
 }
 

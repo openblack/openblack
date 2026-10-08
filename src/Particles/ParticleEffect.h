@@ -291,8 +291,8 @@ public:
 	[[nodiscard]] virtual std::optional<entt::entity> TakeArcs() { return std::nullopt; }
 	/// Points of an object's model where it stands now, picked by the random function from a part of it: count of them,
 	/// none once it has gone
-	[[nodiscard]] virtual std::vector<SurfacePoint> SurfacePoints(entt::entity /*object*/, size_t /*count*/,
-	                                                              const std::function<int32_t(int32_t)>& /*random*/) const
+	[[nodiscard]] virtual std::vector<particles::SurfacePoint>
+	SurfacePoints(entt::entity /*object*/, size_t /*count*/, const std::function<int32_t(int32_t)>& /*random*/) const
 	{
 		return {};
 	}

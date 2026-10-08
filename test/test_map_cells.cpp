@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <cmath>
+
 #include <vector>
 
 #include <gtest/gtest.h>

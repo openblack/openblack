@@ -555,7 +555,7 @@ TEST_F(ParticleMiracleTest, ArcsCrawlOverWhatABoltStrikesAgainAfterEachSearch)
 	}
 	EXPECT_GE(world.arcsQueued.size(), 2u);
 	EXPECT_LE(world.arcsQueued.size(), 3u);
-	EXPECT_TRUE(std::ranges::all_of(world.arcsQueued, [tree](entt::entity object) { return object == tree; }));
+	EXPECT_TRUE(std::ranges::all_of(world.arcsQueued, [&](entt::entity object) { return object == tree; }));
 }
 
 TEST_F(ParticleMiracleTest, ABoltThatIsNoLongerCastStrikesNothing)
