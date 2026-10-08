@@ -24,6 +24,7 @@
 #include "ECS/Components/SpellSeed.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
+#include "ECS/Systems/HandGrabSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
@@ -180,6 +181,16 @@ gesture::HandContext GestureSystem::ContextOf(const Frame& frame)
 			                                           .powerUp = seed->powerUp,
 			                                           .canPowerUp = seed->hasIcon};
 			context.inInfluence = Locator::magicSystem::value().IsHandInInfluence();
+		}
+	}
+	// A thing other than a seed in the hand, which a scribble in the player's influence shakes out
+	if (!seedEntity.has_value() && Locator::handGrabSystem::has_value())
+	{
+		const auto& hand = Locator::handGrabSystem::value();
+		context.holdingObject = hand.GetHeld().has_value();
+		if (context.holdingObject)
+		{
+			context.inInfluence = hand.IsInInfluence();
 		}
 	}
 	// A circle is remembered for the seed it was drawn for
@@ -383,6 +394,13 @@ void GestureSystem::Act(const gesture::Request& request, const gesture::Match& m
 		if (leashes != nullptr)
 		{
 			leashes->Shake(frame.player);
+		}
+		break;
+	case Purpose::ShakeOffHeld:
+		// The hand lets go of it where it is, never planted again
+		if (Locator::handGrabSystem::has_value())
+		{
+			Locator::handGrabSystem::value().ForceDrop();
 		}
 		break;
 	case Purpose::LeashGesture:

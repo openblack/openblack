@@ -106,13 +106,13 @@ float living::AnimalLandingHeading(const glm::mat3& axes)
 	return WrapHeading(HeadingOf(axes[2]) + k_Pi);
 }
 
-AnimId living::VillagerThrownClip(bool alive, bool inVortex)
+AnimId living::VillagerThrownClip(bool alive, bool flungFromArrivalVortex)
 {
 	if (!alive)
 	{
 		return AnimId::PThrownDead;
 	}
-	return inVortex ? AnimId::PThrownVortex : AnimId::PThrown;
+	return flungFromArrivalVortex ? AnimId::PThrownVortex : AnimId::PThrown;
 }
 
 AnimId living::VillagerLandedClip(LandingPose pose, bool carrying)

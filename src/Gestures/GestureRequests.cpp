@@ -26,6 +26,8 @@ std::string_view gesture::Name(Purpose purpose)
 		return "drop the seed";
 	case Purpose::ShakeOffLeash:
 		return "shake the leash off";
+	case Purpose::ShakeOffHeld:
+		return "shake off what is held";
 	case Purpose::LeashGesture:
 		return "leash";
 	case Purpose::PickLeash:
@@ -42,6 +44,7 @@ bool gesture::ShowsRecognition(Purpose purpose)
 	{
 	case Purpose::DropSeed:
 	case Purpose::ShakeOffLeash:
+	case Purpose::ShakeOffHeld:
 	case Purpose::ClosePicker:
 		return false;
 	case Purpose::SizeCircle:
@@ -132,7 +135,15 @@ std::vector<Request> gesture::Requests(const HandContext& context)
 
 	if (!poweringUp)
 	{
-		if (!seed.has_value())
+		if (!seed.has_value() && context.holdingObject)
+		{
+			// A thing in the hand is shaken out of it, only in the player's influence
+			if (context.inInfluence)
+			{
+				requests.push_back({.gesture = GestureType::Scribble, .purpose = Purpose::ShakeOffHeld});
+			}
+		}
+		else if (!seed.has_value())
 		{
 			// The empty hand shakes off the leash it holds; one tied to something stays
 			if (context.creature.has_value() && context.creature->leashed && !context.creature->tied)

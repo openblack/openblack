@@ -259,7 +259,7 @@ void AddDamageFrom(PlayerNames owner, PlayerNames from, float damage)
 
 /// What a miracle does to an object it takes the last of the life from: a creature that can die faints and one that
 /// can't has all its life back, anything else is destroyed as its kind is
-void DestroyedByEffect(entt::entity entity)
+void DestroyedByEffect(entt::entity entity, const ecs::world_objects::EffectDeath& death)
 {
 	auto& registry = EntityRegistry();
 	if (const auto* creature = registry.TryGet<const Creature>(entity))
@@ -274,7 +274,7 @@ void DestroyedByEffect(entt::entity entity)
 		}
 		return;
 	}
-	ecs::world_objects::DestroyedByEffect(entity);
+	ecs::world_objects::DestroyedByEffect(entity, death);
 }
 
 /// The alignment of whoever an effect comes from, which damps how far it moves
@@ -516,7 +516,8 @@ void GameMagicWorld::Apply(const magic::EffectValues& values, std::span<const ma
 		{
 			SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Magic: a miracle took the last of {}'s life",
 			                    entt::to_integral(outcome.entity));
-			DestroyedByEffect(outcome.entity);
+			DestroyedByEffect(outcome.entity, {.killer = source.playerless ? std::nullopt : std::optional(source.player),
+			                                   .weight = outcome.lifeBefore.value_or(0.0f)});
 		}
 	}
 	if (alignment == 0.0f)

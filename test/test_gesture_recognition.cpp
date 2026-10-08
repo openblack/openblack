@@ -272,6 +272,20 @@ TEST(GestureRequests, OutOfInfluenceOnlyASeedBeingPoweredUpIsScribbledAway)
 	EXPECT_EQ(requests[0].purpose, Purpose::DropSeed);
 }
 
+TEST(GestureRequests, AThingInTheHandIsShakenOutOnlyInInfluence)
+{
+	HandContext context;
+	context.holdingObject = true;
+	// A leash in the hand isn't shaken off while the hand holds a thing: the thing is
+	context.creature = HandContext::Creature {.leashed = true};
+	auto requests = Requests(context);
+	ASSERT_EQ(requests.size(), 1u);
+	EXPECT_EQ(requests[0], (Request {.gesture = GestureType::Scribble, .purpose = Purpose::ShakeOffHeld}));
+	EXPECT_FALSE(ShowsRecognition(Purpose::ShakeOffHeld));
+	context.inInfluence = false;
+	EXPECT_TRUE(Requests(context).empty());
+}
+
 TEST(GestureRequests, ACircleIsWaitedForWhetherOrNotTheSeedIsReadyOrCast)
 {
 	HandContext context;

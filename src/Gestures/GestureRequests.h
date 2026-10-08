@@ -42,6 +42,8 @@ enum class Purpose : uint8_t
 	DropSeed,
 	/// A scribble with the leash held in the empty hand: the leash comes off
 	ShakeOffLeash,
+	/// A scribble with a thing in the hand, in the player's influence: the hand lets go of it where it is
+	ShakeOffHeld,
 	/// The leash gesture: the leash goes on, and the leash picker opens when the creature knows more than one
 	LeashGesture,
 	/// In the leash picker, a leash's gesture: the creature's leash changes to it
@@ -100,6 +102,8 @@ struct HandContext
 	bool circleRemembered {false};
 	/// The Action button is held: a storm or a shield is readied, and sized while it is held
 	bool actionHeld {false};
+	/// The hand holds a thing that isn't a miracle's seed
+	bool holdingObject {false};
 
 	/// The player's creature
 	struct Creature

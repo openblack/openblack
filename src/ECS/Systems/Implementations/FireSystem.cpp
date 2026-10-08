@@ -33,6 +33,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/AnimatedStatic.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/Feature.h"
@@ -40,11 +41,13 @@
 #include "ECS/Components/Fire.h"
 #include "ECS/Components/Flowers.h"
 #include "ECS/Components/Forest.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/MagicFireBall.h"
 #include "ECS/Components/MagicForest.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/MorphWithTerrain.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/StoragePit.h"
@@ -188,17 +191,18 @@ const lnd::LNDCell* CellAt(const glm::vec3& point)
 	return Locator::terrainSystem::value().FindCell(glm::u16vec2(glm::floor(glm::vec2(point.x, point.z) / k_CellSize)));
 }
 
-bool IsHeld(entt::entity /*object*/)
+/// Whether something is in a hand: it neither joins a blaze it heats nor spreads its own fire about the land
+bool IsHeld(entt::entity object)
 {
-	// The hand doesn't pick up objects yet; only the creatures it holds, which don't burn while held
-	return false;
+	return Entities().AllOf<InHand>(object);
 }
 
-/// Whether an object is on the map: a fireball never is, nor is something held. (Something flung through the air also
-/// leaves the map, but nothing flies freely here yet.)
+/// Whether an object is on the map: a fireball never is, nor is something held, flung through the air or carried by a
+/// tornado, all of which are out of the map's cells
 bool IsInMap(entt::entity object)
 {
-	return !Entities().AllOf<MagicFireBall>(object) && !IsHeld(object);
+	const auto& registry = Entities();
+	return !registry.AnyOf<MagicFireBall, InHand, InPhysics, CarriedByTornado>(object);
 }
 
 /// Whether an object takes a burn at all: a pot only with something in it, a field only with food to burn
@@ -1048,7 +1052,11 @@ void FireSystem::Process(entt::entity object)
 			{
 				// Burnt down: a building stands with no life, a villager dies, anything else goes
 				SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Fire: object {} burnt down", entt::to_integral(object));
-				world_objects::DestroyedByEffect(object);
+				// A villager burnt to death is put down to whoever lit the fire, weighing nothing with its town
+				world_objects::DestroyedByEffect(object, world_objects::EffectDeath {
+				                                             .killer = lit.hasPlayer ? std::optional(lit.player) : std::nullopt,
+				                                             .weight = 0.0f,
+				                                         });
 				if (!registry.Valid(object) || !registry.AllOf<Fire>(object))
 				{
 					std::erase(_fires, object);

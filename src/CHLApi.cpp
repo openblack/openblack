@@ -41,6 +41,7 @@
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Indestructible.h"
+#include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Player.h"
@@ -48,6 +49,7 @@
 #include "ECS/Components/TownAggression.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
+#include "ECS/PhysicsEntry.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
@@ -55,6 +57,7 @@
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/LeashSystemInterface.h"
+#include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
@@ -66,6 +69,7 @@
 #include "Locator.h"
 #include "Magic/MagicTables.h"
 #include "Magic/ScriptCast.h"
+#include "Physics/Body.h"
 #include "ScriptHeaders/ScriptEnums.h"
 
 namespace openblack::chlapi
@@ -389,13 +393,53 @@ void SetScriptUlong() // 020 SET_SCRIPT_ULONG
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
+/// Whether something is drowning, as the scripts ask: a villager while it is in its drowning state, anything else
+/// while it is in the physics with its body's centre under the sea's level
+bool IsDrowning(entt::entity object)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(object))
+	{
+		return false;
+	}
+	if (registry.AllOf<ecs::components::Villager>(object))
+	{
+		const auto* action = registry.TryGet<const ecs::components::LivingAction>(object);
+		return action != nullptr && Locator::livingActionSystem::has_value() &&
+		       Locator::livingActionSystem::value().VillagerGetState(*action, ecs::components::LivingAction::Index::Top) ==
+		           VillagerStates::Drowning;
+	}
+	if (!registry.AllOf<ecs::components::InPhysics>(object) || !Locator::dynamicsSystem::has_value())
+	{
+		return false;
+	}
+	const auto* entry = Locator::dynamicsSystem::value().Find(object);
+	return entry != nullptr && entry->body != nullptr && entry->body->Centre().y < 0.0f;
+}
+
 void GetProperty() // 021 GET_PROPERTY
 {
-	// const auto object = Pop().uintVal;
-	// const auto prop = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
-	Pushi(0);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto prop = static_cast<script::ObjectPropertyType>(Pop().intVal);
+	switch (prop)
+	{
+	case script::ObjectPropertyType::Flying:
+		// In the physics, thrown, dropped or knocked and not yet at rest
+		{
+			auto& registry = Locator::entitiesRegistry::value();
+			Pushb(registry.Valid(object) && registry.AllOf<ecs::components::InPhysics>(object));
+			return;
+		}
+	case script::ObjectPropertyType::Drowning:
+		Pushb(IsDrowning(object));
+		return;
+	default:
+		// TODO(Daniels118): the other properties
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() property {} not implemented.", __func__,
+		                    static_cast<int>(prop));
+		Pushi(0);
+		return;
+	}
 }
 
 void SetProperty() // 022 SET_PROPERTY

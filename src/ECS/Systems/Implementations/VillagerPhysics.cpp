@@ -15,7 +15,6 @@
 
 #include "3D/LandIslandInterface.h"
 #include "Common/GameRandom.h"
-#include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
@@ -170,10 +169,10 @@ bool villager_physics::StartFlying(entt::entity villager)
 			return false;
 		}
 	}
-	// It flies dead, carried round a vortex, or thrown
+	// It flies dead or thrown. Only a vortex bringing people from another land flings them out with the vortex clip;
+	// openblack has no such vortex yet, and a tornado's passengers are simply thrown.
 	registry.AssignOrReplace<VillagerClip>(
-	    villager, VillagerClip {.clip = living::VillagerThrownClip(world_objects::LifeOf(villager) > 0.0f,
-	                                                               registry.AllOf<CarriedByTornado>(villager))});
+	    villager, VillagerClip {.clip = living::VillagerThrownClip(world_objects::LifeOf(villager) > 0.0f, false)});
 	return true;
 }
 

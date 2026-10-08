@@ -58,8 +58,9 @@ inline constexpr float k_LyingLean = 0.5f;
 /// An angle brought into the game's range of headings
 [[nodiscard]] float WrapHeading(float radians);
 
-/// The clip a villager plays while it flies: dead, carried by a vortex, or thrown
-[[nodiscard]] AnimId VillagerThrownClip(bool alive, bool inVortex);
+/// The clip a villager plays while it flies: dead, flung out of an arriving vortex between lands, or thrown. A villager
+/// a tornado carries is just thrown.
+[[nodiscard]] AnimId VillagerThrownClip(bool alive, bool flungFromArrivalVortex);
 /// The clip a villager plays as it lands, by its pose, and whether it carries something on its feet
 [[nodiscard]] AnimId VillagerLandedClip(LandingPose pose, bool carrying);
 

@@ -356,7 +356,7 @@ void world_objects::LeaveGhost(entt::entity object)
 	registry.Assign<DestructionGhost>(ghost, DestructionGhost {.mesh = mesh->id, .model = model});
 }
 
-void world_objects::DestroyedByEffect(entt::entity object)
+void world_objects::DestroyedByEffect(entt::entity object, std::optional<EffectDeath> death)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	if (!registry.Valid(object) || IsCreature(object))
@@ -372,7 +372,13 @@ void world_objects::DestroyedByEffect(entt::entity object)
 	}
 	if (registry.AllOf<Villager>(object))
 	{
-		villager_fire::DieByEffect(object);
+		// Any effect's death counts as killed by a spell, put down to the effect's player
+		villager_fire::DieByEffect(object, death.has_value() ? std::optional(villager_fire::DeathCause {
+		                                                           .reason = DeathReason::Spell,
+		                                                           .killer = death->killer,
+		                                                           .weight = death->weight,
+		                                                       })
+		                                                     : std::nullopt);
 		return;
 	}
 	// An animal falls dead rather than vanishing; a miracle's fades out

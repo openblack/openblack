@@ -72,6 +72,8 @@ public:
 	[[nodiscard]] virtual std::optional<entt::entity> GetHeld() const = 0;
 	/// Whether the hand is taking, holding or about to throw a thing, so that other uses of the button leave it be
 	[[nodiscard]] virtual bool IsBusy() const = 0;
+	/// Whether the hand's point on the land is in its player's influence
+	[[nodiscard]] virtual bool IsInInfluence() const = 0;
 	/// How what it holds hangs: its hold, how far below the hand its model hangs, and how far it spreads out of the hand
 	struct HeldPose
 	{

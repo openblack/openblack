@@ -69,7 +69,15 @@ void LeaveGhost(entt::entity object);
 /// What an effect such as fire does to an object it has burnt down: a building flickers out as a ghost of itself and
 /// goes, leaving no ruin; a field loses its crop and its fire; a villager dies; anything else goes from the world. A
 /// creature is never destroyed.
-void DestroyedByEffect(entt::entity object);
+/// Who an effect's death is put down to: the player behind the effect (none for nobody) and how much the death weighs with
+/// the victim's town, which is the life the effect took
+struct EffectDeath
+{
+	std::optional<PlayerNames> killer;
+	float weight {0.0f};
+};
+/// As above; a villager's death is then remembered as killed by an effect, put down to the effect's player
+void DestroyedByEffect(entt::entity object, std::optional<EffectDeath> death = std::nullopt);
 
 /// The player an object belongs to, whom a fire a script lights on it is put down to: a creature's owner; a villager's,
 /// a building's or a field's town's owner; a magic tree's caster. A villager or field without a town, a tree and a dead
