@@ -64,6 +64,11 @@ public:
 		return std::chrono::milliseconds(_frameGameMs);
 	}
 
+	[[nodiscard]] std::chrono::milliseconds GetFrameRealTime() const override
+	{
+		return std::chrono::milliseconds(_frameRealMs);
+	}
+
 	void SetPaused(bool paused) override;
 	[[nodiscard]] bool IsPaused() const override { return _paused; }
 	void SetSpeed(float speed) override;
@@ -74,6 +79,9 @@ private:
 	void ResetTimerToTurn();
 
 	TickSource _ticks;
+	/// The wall clock's whole milliseconds at the last frame, and the frame's real time
+	uint32_t _lastFrameTicks {0};
+	uint32_t _frameRealMs {1};
 	std::chrono::time_point<std::chrono::steady_clock> _start;
 	std::chrono::milliseconds _elapsedTime {0};
 

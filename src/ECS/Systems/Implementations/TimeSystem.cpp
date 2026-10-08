@@ -87,12 +87,18 @@ TimeSystem::TimeSystem(TickSource ticks)
 void TimeSystem::Start()
 {
 	_start = std::chrono::steady_clock::now();
+	_lastFrameTicks = _ticks();
 }
 
 void TimeSystem::Update()
 {
 	auto now = std::chrono::steady_clock::now();
 	_elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - _start);
+	// The frame's real time in whole milliseconds, never none
+	const auto ticks = _ticks();
+	const auto step = static_cast<int32_t>(ticks - _lastFrameTicks);
+	_frameRealMs = step > 0 ? static_cast<uint32_t>(step) : 1u;
+	_lastFrameTicks = ticks;
 }
 
 std::chrono::milliseconds TimeSystem::GetElapsedTime() const

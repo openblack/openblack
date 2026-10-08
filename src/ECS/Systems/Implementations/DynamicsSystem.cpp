@@ -75,6 +75,11 @@ void DynamicsSystem::AddRigidBody(btRigidBody* object)
 	_world->addRigidBody(object);
 }
 
+void DynamicsSystem::RemoveRigidBody(btRigidBody* object)
+{
+	_world->removeRigidBody(object);
+}
+
 void DynamicsSystem::RegisterRigidBodies()
 {
 	auto& registry = Locator::entitiesRegistry::value();

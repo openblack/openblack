@@ -120,6 +120,7 @@ public:
 	void Reset() override {}
 	void Update(std::chrono::microseconds& dt) override {}
 	void AddRigidBody(btRigidBody* object) override {}
+	void RemoveRigidBody(btRigidBody* object) override {}
 	void RegisterRigidBodies() override {}
 	void RegisterIslandRigidBodies(openblack::LandIslandInterface& island) override {}
 	void UpdatePhysicsTransforms() override {}

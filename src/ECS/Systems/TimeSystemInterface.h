@@ -49,6 +49,9 @@ public:
 	[[nodiscard]] virtual float GetTurnFraction() const = 0;
 	/// The game time of the frame, in whole milliseconds: none while paused, and quicker or slower with the game's speed
 	[[nodiscard]] virtual std::chrono::milliseconds GetFrameGameTime() const = 0;
+	/// The real time of the frame in whole milliseconds, the wall clock's whole milliseconds now less those at the last
+	/// frame, at least 1: what the hand and the camera step by
+	[[nodiscard]] virtual std::chrono::milliseconds GetFrameRealTime() const = 0;
 
 	/// Pausing stops the game clock; unpausing starts it again from where it stopped
 	virtual void SetPaused(bool paused) = 0;
@@ -57,5 +60,13 @@ public:
 	virtual void SetSpeed(float speed) = 0;
 	[[nodiscard]] virtual float GetSpeed() const = 0;
 };
+
+/// What the hand and the camera step by in a frame: the frame's real time, except while a script holds the widescreen
+/// for a cut scene, when they keep to the game's time
+[[nodiscard]] constexpr std::chrono::milliseconds CameraStep(std::chrono::milliseconds realTime,
+                                                             std::chrono::milliseconds gameTime, bool scriptWidescreen)
+{
+	return scriptWidescreen ? gameTime : realTime;
+}
 
 } // namespace openblack::ecs::systems

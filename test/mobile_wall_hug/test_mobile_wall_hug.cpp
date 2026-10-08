@@ -207,7 +207,7 @@ protected:
 	{
 		auto& map = Locator::entitiesMap::value();
 		auto& registry = Locator::entitiesRegistry::value();
-		map.Rebuild();
+		map.Sync();
 		registry.Each<ecs::components::WallHug>([&registry, this](entt::entity entity, ecs::components::WallHug& wallHug) {
 			using namespace openblack::ecs::components;
 			registry.Assign<MoveStateLinearTag>(entity);

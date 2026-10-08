@@ -150,3 +150,27 @@ TEST(GameClock, TheFrameClockFollowsTheTurn)
 	EXPECT_EQ(clock.time.GetFrameGameTime().count(), 40);
 	EXPECT_FLOAT_EQ(clock.time.GetTurnFraction(), 0.0f);
 }
+
+TEST(GameClock, TheFrameRealTimeIsWholeMillisecondsOfTheWallClockAndNeverNone)
+{
+	Clock clock;
+	clock.time.Start();
+	clock.now += 16;
+	clock.time.Update();
+	EXPECT_EQ(clock.time.GetFrameRealTime().count(), 16);
+	// A frame within the same millisecond still takes one
+	clock.time.Update();
+	EXPECT_EQ(clock.time.GetFrameRealTime().count(), 1);
+	// Pausing the game doesn't stop it
+	clock.time.StartGameClock(true);
+	clock.now += 33;
+	clock.time.Update();
+	EXPECT_EQ(clock.time.GetFrameRealTime().count(), 33);
+}
+
+TEST(GameClock, TheHandAndCameraStepByRealTimeExceptInAScriptsCutScene)
+{
+	using namespace std::chrono_literals;
+	EXPECT_EQ(openblack::ecs::systems::CameraStep(17ms, 0ms, false), 17ms);
+	EXPECT_EQ(openblack::ecs::systems::CameraStep(17ms, 20ms, true), 20ms);
+}

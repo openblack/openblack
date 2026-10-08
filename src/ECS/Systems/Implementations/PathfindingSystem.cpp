@@ -12,9 +12,11 @@
 #include "PathfindingSystem.h"
 
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 #include <entt/entity/entity.hpp>
+#include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
@@ -112,11 +114,44 @@ std::array<ecs::MapInterface::CellId, 9> GetNeighboringCells(const glm::vec2& po
 	};
 }
 
+/// The walkers' obstacles in a cell, by their bounding circles
+const std::unordered_set<entt::entity>& ObstaclesIn(const ecs::Registry& registry, const MapInterface::CellId& cell)
+{
+	static const std::unordered_set<entt::entity> k_None;
+	const auto& obstacles = registry.Context().wallHugObstacles;
+	const auto found = obstacles.find(static_cast<uint32_t>(cell.x + cell.y * MapInterface::k_GridSize.x));
+	return found != obstacles.end() ? found->second : k_None;
+}
+
+/// Files every fixed thing in the cells whose middles its bounding circle (a unit wider) takes in
+void FileObstacles(ecs::Registry& registry)
+{
+	auto& obstacles = registry.Context().wallHugObstacles;
+	obstacles.clear();
+	registry.Each<const Fixed, const Transform>(
+	    [&obstacles](entt::entity entity, const Fixed& fixed, const Transform& transform) {
+		    // TODO(bwrsandman): This is only in the case of a square bb underling the bounding circle (x/z) <= 1.4
+		    const float radius = fixed.boundingRadius * glm::compMax(transform.scale) + 1.0f;
+		    const auto min = MapInterface::GetGridCell(fixed.boundingCenter - radius);
+		    const auto max = MapInterface::GetGridCell(fixed.boundingCenter + radius);
+		    for (uint16_t x = min.x; x < max.x + 1; ++x)
+		    {
+			    for (uint16_t y = min.y; y < max.y + 1; ++y)
+			    {
+				    const auto cellId = MapInterface::CellId(x, y);
+				    if (glm::distance2(MapInterface::GetCellCenter(cellId), fixed.boundingCenter) < radius * radius)
+				    {
+					    obstacles[static_cast<uint32_t>(cellId.x + cellId.y * MapInterface::k_GridSize.x)].insert(entity);
+				    }
+			    }
+		    }
+	    });
+}
+
 /// Iterate between all adjacent grids and find closest object that the ray (step) intersects with (circle)
 /// If that object is in front (and we are not in it) and less than 256 steps away, set as target and store steps
 bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm::vec2& step)
 {
-	const auto& map = Locator::entitiesMap::value();
 	auto& registry = Locator::entitiesRegistry::value();
 
 	// Reference will be updated or removed
@@ -127,7 +162,7 @@ bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm:
 	for (const auto& c : GetNeighboringCells(pos + step))
 	{
 		// TODO(bwrsandman): Skip if out of bounds or in water
-		const auto& fixed = map.GetFixedInGridCell(c);
+		const auto& fixed = ObstaclesIn(registry, c);
 		if (!fixed.empty())
 		{
 			auto iter = std::find_if(fixed.cbegin(), fixed.cend(), [&registry](const auto& f) {
@@ -189,7 +224,6 @@ bool LinearScanForObstacle(entt::entity entity, const glm::vec2& pos, const glm:
 bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transform, WallHug& wallHug)
 {
 	auto& registry = Locator::entitiesRegistry::value();
-	const auto& map = Locator::entitiesMap::value();
 	auto& reference = registry.Get<WallHugObjectReference>(entity);
 
 	const uint32_t numAttempts = 5;
@@ -214,7 +248,7 @@ bool OrbitScanForObstacle(entt::entity entity, bool clockwise, Transform& transf
 
 		for (const auto& c : GetNeighboringCells(glm::xz(transform.position)))
 		{ // TODO(bwrsandman): Skip if out of bounds or in water
-			const auto& e = map.GetFixedInGridCell(c);
+			const auto& e = ObstaclesIn(registry, c);
 			if (!e.empty())
 			{
 				auto iter = std::find_if(e.cbegin(), e.cend(), [&registry, &reference, &obstacleFixed](const auto& f) {
@@ -395,6 +429,7 @@ void ApplyStepGoal(ecs::Registry& registry, Exclude... exclude)
 void PathfindingSystem::Update()
 {
 	auto& registry = Locator::entitiesRegistry::value();
+	FileObstacles(registry);
 
 	// 1.  ARRIVED:
 	//         If AreWeThere is false, set to STEP_THROUGH (and it will trigger following steps)

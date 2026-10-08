@@ -15,31 +15,66 @@
 
 #include <cstdint>
 
+#include <optional>
 #include <vector>
 
+#include <entt/entity/registry.hpp>
+#include <entt/signal/sigh.hpp>
+
 #include "Map.h"
+#include "MapCells.h"
 
 namespace openblack::ecs
 {
+class Registry;
 
+/// The map's cells, filled as things are made and emptied as they go, through the registry's signals: nothing is
+/// rebuilt from the whole registry. Things made since the last look are filed, in the order they were made, before any
+/// search of a cell, and once a turn whatever can move is checked for a new cell.
 class MapProduction final: public MapInterface
 {
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const CellId& cellId) const override;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetFixedInGridCell(const glm::vec3& pos) const override;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const CellId& cellId) const override;
-	[[nodiscard]] const std::unordered_set<entt::entity>& GetMobileInGridCell(const glm::vec3& pos) const override;
+public:
+	MapProduction();
+	~MapProduction() override;
+	MapProduction(const MapProduction&) = delete;
+	MapProduction& operator=(const MapProduction&) = delete;
+	MapProduction(MapProduction&&) = delete;
+	MapProduction& operator=(MapProduction&&) = delete;
 
-	void Rebuild() override;
+	[[nodiscard]] std::span<const entt::entity> GetFixedInGridCell(const CellId& cellId) const override;
+	[[nodiscard]] std::span<const entt::entity> GetFixedInGridCell(const glm::vec3& pos) const override;
+	[[nodiscard]] std::span<const entt::entity> GetMobileInGridCell(const CellId& cellId) const override;
+	[[nodiscard]] std::span<const entt::entity> GetMobileInGridCell(const glm::vec3& pos) const override;
+	[[nodiscard]] std::vector<entt::entity> GetAllInCell(glm::ivec2 cell) const override;
+
+	void Sync() override;
+	void Refile(entt::entity entity) override;
 
 private:
-	void Clear() override;
-	void Build() override;
+	/// How a thing goes into the cells, by what it is; none for what isn't on the map
+	struct Kind
+	{
+		map_cells::Placement placement;
+		bool coversOutline;
+		bool moves;
+	};
+	[[nodiscard]] static std::optional<Kind> KindOf(const Registry& registry, entt::entity entity);
 
-	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _fixedGrid;
-	std::array<std::unordered_set<entt::entity>, k_GridSize.x * k_GridSize.y> _mobileGrid;
-	/// The cells with anything in them, the only ones there is anything to clear in: most of the grid is empty
-	std::vector<uint32_t> _occupiedFixed;
-	std::vector<uint32_t> _occupiedMobile;
+	void OnMade(entt::registry& registry, entt::entity entity);
+	void OnGone(entt::registry& registry, entt::entity entity);
+	void OnResidentGone(entt::registry& registry, entt::entity entity);
+
+	/// Files the things made since the last look, in the order they were made
+	void FileMade() const;
+	void File(entt::entity entity, const Kind& kind) const;
+	void TakeOut(entt::entity entity) const;
+	[[nodiscard]] std::vector<uint32_t> CellsFor(entt::entity entity, const Kind& kind) const;
+
+	Registry* _registry {nullptr};
+	std::vector<entt::connection> _connections;
+	/// The cells are filled lazily by the searches, which are const
+	mutable map_cells::CellLists _lists;
+	mutable std::vector<entt::entity> _made;
 };
 
 } // namespace openblack::ecs

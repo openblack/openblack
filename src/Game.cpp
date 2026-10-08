@@ -643,8 +643,8 @@ bool Game::GameLogicLoop() noexcept
 	clock.StartTurn();
 	ProcessHandToolTipTurn();
 
-	// Build Map Grid Acceleration Structure
-	Locator::entitiesMap::value().Rebuild();
+	// What moved since the last turn goes into its new map cell
+	Locator::entitiesMap::value().Sync();
 
 	auto& profiler = Locator::profiler::value();
 
@@ -1949,8 +1949,8 @@ bool Game::Run() noexcept
 		return false;
 	}
 
-	// Initialize the Acceleration Structure
-	Locator::entitiesMap::value().Rebuild();
+	// Everything the map made goes into the map's cells, in the order it was made
+	Locator::entitiesMap::value().Sync();
 
 	if (Locator::windowing::has_value())
 	{
