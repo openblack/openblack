@@ -1304,6 +1304,20 @@ bool AnimalSystem::IsAvailableForReaction(entt::entity entity) const
 	}
 }
 
+bool AnimalSystem::SetupFleeFromObject(entt::entity entity, entt::entity object)
+{
+	auto& registry = EntityRegistry();
+	auto* animal = registry.TryGet<Animal>(entity);
+	if (animal == nullptr || !registry.Valid(object) || !registry.AllOf<Transform>(object))
+	{
+		return false;
+	}
+	animal->fleeing = object;
+	animal->fleeReaction = Reaction::ReactToFire;
+	SetState(*animal, AnimalState::FleeingFromObject);
+	return true;
+}
+
 bool AnimalSystem::SetupReactToFlyingObject(entt::entity entity, entt::entity object, float speed)
 {
 	auto& registry = EntityRegistry();
@@ -1320,6 +1334,7 @@ bool AnimalSystem::SetupReactToFlyingObject(entt::entity entity, entt::entity ob
 		return false;
 	}
 	animal->fleeing = object;
+	animal->fleeReaction = Reaction::ReactToFlyingObject;
 	SetState(*animal, AnimalState::FleeingFromObject);
 	return true;
 }
@@ -1348,7 +1363,7 @@ bool AnimalSystem::Flee(entt::entity entity, Animal& animal)
 	}
 	auto& registry = EntityRegistry();
 	const auto* at = registry.Valid(animal.fleeing) ? registry.TryGet<const Transform>(animal.fleeing) : nullptr;
-	const auto& info = Locator::infoConstants::value().reaction.at(static_cast<size_t>(Reaction::ReactToFlyingObject));
+	const auto& info = Locator::infoConstants::value().reaction.at(static_cast<size_t>(animal.fleeReaction));
 	// With nothing left to flee it decides again
 	if (at == nullptr)
 	{

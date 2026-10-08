@@ -81,6 +81,11 @@ public:
 	[[nodiscard]] virtual bool IsAvailableForReaction([[maybe_unused]] entt::entity animal) const { return false; }
 	/// An animal takes up the reaction to a thing flying at a speed: it flees when the thing is nearer than it flies in
 	/// two seconds, remembering it; otherwise it takes no notice. Whether it took it up.
+	/// An animal flees from an object with no test, as it flees a fire: false when it can't
+	virtual bool SetupFleeFromObject([[maybe_unused]] entt::entity animal, [[maybe_unused]] entt::entity object)
+	{
+		return false;
+	}
 	virtual bool SetupReactToFlyingObject([[maybe_unused]] entt::entity animal, [[maybe_unused]] entt::entity object,
 	                                      [[maybe_unused]] float speed)
 	{

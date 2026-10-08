@@ -76,6 +76,8 @@ struct Animal
 	entt::entity flock {entt::null};
 	/// The thing it flees, none when fleeing nothing
 	entt::entity fleeing {entt::null};
+	/// The kind of reaction it flees: the reaction's own table row says how far it runs from the thing
+	Reaction fleeReaction {Reaction::ReactToFlyingObject};
 	AnimalState state {AnimalState::DecideWhatToDo};
 	/// The state it goes into once it gets where it is going, and once its clip has played while it waits
 	AnimalState finalState {AnimalState::DecideWhatToDo};

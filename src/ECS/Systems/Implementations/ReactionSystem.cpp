@@ -123,16 +123,16 @@ const GLivingInfo* LivingInfoOf(const ecs::Registry& registry, entt::entity enti
 }
 
 /// Whether a reaction reaches a kind of living thing: villagers and creatures every kind; animals, so far, only things
-/// flying at them
-// TODO(animals): the reactions animals take up beside flying things (fire, predators and the others whose priority the
-// animal doesn't zero) belong to the animals' own behaviour, which openblack doesn't run yet
+/// flying at them and fires, both of which they flee
+// TODO(animals): the other reactions animals take up (predators and the others whose priority the animal doesn't zero)
+// belong to the animals' own behaviour, which openblack doesn't run yet
 bool Reaches(const ecs::Registry& registry, entt::entity entity, Reaction type)
 {
 	if (registry.AnyOf<Villager, Creature>(entity))
 	{
 		return true;
 	}
-	return type == Reaction::ReactToFlyingObject && registry.AllOf<Animal>(entity);
+	return (type == Reaction::ReactToFlyingObject || type == Reaction::ReactToFire) && registry.AllOf<Animal>(entity);
 }
 
 /// Whether a kind of living thing reacts to a kind of reaction at all, by its table's flags in the reactions' order
@@ -542,14 +542,18 @@ void ReactionSystem::Start(Active& reaction, entt::entity living, LivingReaction
 			return;
 		}
 	}
-	// An animal takes up a flying thing's reaction only when the thing is near enough to flee
+	// An animal flees a fire at once, and takes up a flying thing's reaction only when the thing is near enough to flee
 	if (registry.AllOf<Animal>(living))
 	{
 		const auto* entry =
 		    Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().Find(source.initiator) : nullptr;
-		if (source.type != Reaction::ReactToFlyingObject || entry == nullptr || entry->body == nullptr ||
-		    !Locator::animalSystem::has_value() ||
-		    !Locator::animalSystem::value().SetupReactToFlyingObject(living, source.initiator, entry->body->Speed()))
+		const bool flees =
+		    Locator::animalSystem::has_value() &&
+		    ((source.type == Reaction::ReactToFire &&
+		      Locator::animalSystem::value().SetupFleeFromObject(living, source.initiator)) ||
+		     (source.type == Reaction::ReactToFlyingObject && entry != nullptr && entry->body != nullptr &&
+		      Locator::animalSystem::value().SetupReactToFlyingObject(living, source.initiator, entry->body->Speed())));
+		if (!flees)
 		{
 			return;
 		}

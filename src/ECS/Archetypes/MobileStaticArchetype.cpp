@@ -16,6 +16,7 @@
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/ParticleSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/ResourceManager.h"
@@ -40,6 +41,13 @@ entt::entity MobileStaticArchetype::Create(const glm::vec3& position, MobileStat
 	registry.Assign<MobileStatic>(entity, type);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
+
+	// A bonfire's flames are a spot visual on it that burns for as long as it stands; it is no fire, so it never spreads,
+	// hurts or heats what is held over it
+	if (type == MobileStaticInfo::Bonfire && Locator::particleSystem::has_value())
+	{
+		Locator::particleSystem::value().StartSpotVisual(SpotVisualType::Bonfire, position + offset, -1, entity, 1.0f);
+	}
 
 	return entity;
 }

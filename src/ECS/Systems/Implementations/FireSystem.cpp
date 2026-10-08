@@ -59,9 +59,11 @@
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/VillagerDeath.h"
 #include "ECS/Map.h"
+#include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
+#include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
 #include "ECS/WorldObjects.h"
@@ -261,8 +263,8 @@ const graphics::L3DMesh* MeshOf(entt::entity object)
 	return meshes.Contains(mesh->id) ? &*meshes.Handle(mesh->id) : nullptr;
 }
 
-/// A random point of a random triangle of the model's first detail, in its own frame; a random bone's place for a model
-/// moved by bones. A tree's flames keep to its middle half.
+/// A random point of a random triangle of the model's first detail, in its own frame; a random bone's place, as the
+/// bones are posed now, for a model moved by bones. A tree's flames keep to its middle half.
 std::optional<glm::vec3> RandomPointOn(entt::entity object)
 {
 	const auto* mesh = MeshOf(object);
@@ -273,9 +275,9 @@ std::optional<glm::vec3> RandomPointOn(entt::entity object)
 	auto& random = Locator::gameRandom::value();
 	if (mesh->IsBoned() && !mesh->GetBoneMatrices().empty())
 	{
-		const auto& bones = mesh->GetBoneMatrices();
+		const auto bones = ecs::posed_model::BonesOf(Entities(), object, *mesh);
 		const auto bone = random.LocalRand(static_cast<int32_t>(bones.size()));
-		return glm::vec3(bones.at(std::min<size_t>(bone, bones.size() - 1))[3]);
+		return glm::vec3(bones[std::min<size_t>(static_cast<size_t>(bone), bones.size() - 1)][3]);
 	}
 	size_t triangles = 0;
 	const auto firstDetail = [](const graphics::L3DSubMesh& subMesh) { return (subMesh.GetFlags().lodMask & 1u) != 0; };
@@ -1433,6 +1435,23 @@ void FireSystem::Delete(entt::entity object)
 			                                         .type = Reaction::ReactToWood,
 			                                         .player = world_objects::PlayerOf(object).value_or(PlayerNames::NEUTRAL),
 			                                         .position = transform->position});
+		}
+	}
+	// A pot that stops burning calls its people again, when it holds something and is not one of a store's piles
+	if (const auto* pot = registry.TryGet<const Pot>(object);
+	    pot != nullptr && pot->amount > 0 && Locator::reactionSystem::has_value() && Locator::infoConstants::has_value())
+	{
+		const bool inStore =
+		    Locator::resourceStoreSystem::has_value() && Locator::resourceStoreSystem::value().StoreOf(object).has_value();
+		const auto reaction = Locator::infoConstants::value().pot.at(static_cast<size_t>(pot->type)).associatedReaction;
+		const auto* transform = registry.TryGet<const Transform>(object);
+		auto& reactions = Locator::reactionSystem::value();
+		if (!inStore && reaction != Reaction::None && transform != nullptr && !reactions.HasReaction(object))
+		{
+			reactions.Create({.initiator = object,
+			                  .type = reaction,
+			                  .player = world_objects::PlayerOf(object).value_or(PlayerNames::NEUTRAL),
+			                  .position = transform->position});
 		}
 	}
 	// A magic tree that stops burning draws its caster's people again
