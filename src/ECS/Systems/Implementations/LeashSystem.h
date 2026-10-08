@@ -49,6 +49,7 @@ public:
 	[[nodiscard]] bool FreeOfHome(entt::entity creature) const override;
 	[[nodiscard]] bool IsLeashed(entt::entity creature) const override;
 	[[nodiscard]] std::optional<entt::entity> TiedTo(entt::entity creature) const override;
+	[[nodiscard]] std::optional<glm::vec3> HolderPoint(entt::entity creature) const override;
 	[[nodiscard]] LeashType TypeOf(entt::entity creature) const override;
 	[[nodiscard]] std::optional<entt::entity> PlayersCreature(PlayerNames player) const override;
 	void PlacePosts(PlayerNames owner, const std::array<glm::vec3, 3>& points) override;

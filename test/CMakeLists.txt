@@ -168,6 +168,7 @@ openblack_setup_and_add_test(
 )
 openblack_setup_and_add_test(test_creature_skin test_creature_skin.cpp)
 openblack_setup_and_add_test(test_creature_hair test_creature_hair.cpp)
+openblack_setup_and_add_test(test_creature_sway test_creature_sway.cpp)
 openblack_setup_and_add_test(test_creature_tattoo test_creature_tattoo.cpp)
 openblack_setup_and_add_test(test_creature_marks test_creature_marks.cpp)
 openblack_setup_and_add_test(test_vertex_blend test_vertex_blend.cpp)

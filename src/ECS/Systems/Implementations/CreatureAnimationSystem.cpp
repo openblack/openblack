@@ -15,24 +15,30 @@
 
 #include <algorithm>
 #include <chrono>
+#include <tuple>
 
 #include <glm/gtx/transform.hpp>
 
 #include "3D/CreatureBody.h"
 #include "3D/L3DMesh.h"
+#include "3D/LandIslandInterface.h"
 #include "Creature/CreatureAnimation.h"
 #include "Creature/CreatureEyes.h"
 #include "Creature/CreatureLayers.h"
 #include "Creature/CreatureLook.h"
 #include "Creature/CreatureMorph.h"
 #include "Creature/CreatureRig.h"
+#include "Creature/CreatureSway.h"
 #include "ECS/Archetypes/CreatureArchetype.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/CreatureObjectAction.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/LeashSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "Locator.h"
+#include "Physics/LivingRules.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -51,6 +57,51 @@ constexpr glm::vec3 k_MeshBack {0.0f, 0.0f, 1.0f};
 constexpr float k_HeadAcceleration = 4.0f;
 /// The head is turned when more than this far round, in radians
 constexpr float k_LookSettled = 1e-4f;
+
+/// How heavy a creature is, by its size and how fat and strong its body is drawn
+float MassOf(const Creature& creature, const CreatureMorph* morph)
+{
+	return physics::living::CreatureMass(creature.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
+	                                     morph != nullptr ? morph->drawn.weakStrong : 0.0f);
+}
+
+float LandHeightAt(glm::vec3 point)
+{
+	return Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(point.x, point.z))
+	                                           : 0.0f;
+}
+
+/// Striking with a destroying blow, the body doesn't sway
+bool StrikingToDestroy(const ecs::Registry& registry, entt::entity creature)
+{
+	const auto* action = registry.TryGet<const CreatureObjectAction>(creature);
+	return action != nullptr && action->kind == creature_object_actions::Kind::Destroy &&
+	       action->phase == CreatureObjectAction::Phase::Playing;
+}
+
+/// Where a bone of the creature is in the world, as posed last
+std::optional<glm::vec3> PosedBonePoint(const CreatureAnimation& animation, const Transform& transform, uint32_t bone)
+{
+	if (bone >= animation.boneMatrices.size())
+	{
+		return std::nullopt;
+	}
+	const auto placement = creature::PlacementMatrix(transform.position, transform.rotation, transform.scale);
+	return glm::vec3(creature::PosedBone(bone, animation.boneMatrices, placement)[3]);
+}
+
+/// The sway kicked at a point, by the force over the creature's last frame
+void Kick(const ecs::Registry& registry, entt::entity entity, CreatureAnimation& animation, glm::vec3 force, glm::vec3 point)
+{
+	if (StrikingToDestroy(registry, entity))
+	{
+		return;
+	}
+	const auto& creature = registry.Get<const Creature>(entity);
+	creature_sway::Kick(animation.sway, force, point.y - LandHeightAt(point),
+	                    creature_sway::k_UpperHeightPerSize * creature.size,
+	                    MassOf(creature, registry.TryGet<const CreatureMorph>(entity)));
+}
 
 creature_morph::Morph TargetMorph(const Creature& creature, const CreatureMorph& morph)
 {
@@ -218,6 +269,37 @@ void AddLook(std::vector<skeletal_animation::Pose>& poses, const Animation* look
 	                             animation.skeleton, mirror);
 }
 
+/// The swaying body leaning on top of the pose: for the lower body then the upper, its offset across the creature's own
+/// axes picks how far through the sideways and the front to back lean to draw, each relative to its middle frame
+void AddSway(std::vector<skeletal_animation::Pose>& poses, const CreatureAnimation& animation, const Transform& transform,
+             const auto& animationOf)
+{
+	if (!animation.sway.active)
+	{
+		return;
+	}
+	const auto side = glm::normalize(transform.rotation[0]);
+	const auto front = glm::normalize(transform.rotation[2]);
+	const auto lean = [&](uint32_t clip, float amount) {
+		if (std::abs(amount) <= creature_sway::k_DrawnLean)
+		{
+			return;
+		}
+		if (const auto* played = animationOf(clip))
+		{
+			skeletal_animation::AddLayer(poses, *played, creature_sway::LeanTime(amount, played->duration),
+			                             (played->frames.size() - 1) / 2, animation.skeleton);
+		}
+	};
+	for (const auto& [offset, sideClip, frontClip] :
+	     {std::tuple {animation.sway.lowerOffset, creature_sway::k_LowerSide, creature_sway::k_LowerFrontBack},
+	      std::tuple {animation.sway.upperOffset, creature_sway::k_UpperSide, creature_sway::k_UpperFrontBack}})
+	{
+		lean(sideClip, glm::dot(offset, side));
+		lean(frontClip, glm::dot(offset, front));
+	}
+}
+
 /// The body posed for this frame: its action or breathing, or its slots blended, then the head turned, the face and
 /// any gesture on top
 void PoseBody(CreatureAnimation& animation, const CreatureRig& rig, const creature_morph::Morph& morph,
@@ -292,6 +374,8 @@ void PoseBody(CreatureAnimation& animation, const CreatureRig& rig, const creatu
 	    poses,
 	    animationOf(sitting ? creature_layers::animations::k_SitLookRightLeft : creature_layers::animations::k_LookRightLeft),
 	    mirror.empty() ? animation.yaw.angle : -animation.yaw.angle, creature_layers::k_YawLimit, animation, mirror);
+	// The sway leans the body between the head's turning and the face
+	AddSway(poses, animation, transform, animationOf);
 	// The face and gestures, relative to their first frames
 	if (animation.face.current.has_value())
 	{
@@ -394,6 +478,25 @@ void CreatureAnimationSystem::Update(std::chrono::duration<float, std::milli> ga
 		    animation.breathPhase =
 		        creature_animation::AdvanceBreath(animation.breathPhase, seconds * scale, animation.breathPeriod);
 
+		    // The body sways from what kicked it, and while the leash drags it, it leans away from the pull
+		    animation.sway.frameSeconds = seconds;
+		    auto push = glm::vec3(0.0f);
+		    if (animation.sway.leashDrag > creature_sway::k_LeashPulling)
+		    {
+			    const auto holder = Locator::leashSystem::has_value()
+			                            ? Locator::leashSystem::value().HolderPoint(entity).value_or(transform.position)
+			                            : transform.position;
+			    const auto force =
+			        creature_sway::LeashForce(transform.position, holder, MassOf(creature, &morph), animation.sway.leashDrag);
+			    const auto head = rig != nullptr && rig->actionPoints.has_value()
+			                          ? PosedBonePoint(animation, transform, rig->actionPoints->head)
+			                          : std::nullopt;
+			    Kick(registry, entity, animation, force, head.value_or(transform.position));
+			    push = force * creature_sway::k_LeashLean;
+			    animation.sway.leashDrag = creature_sway::FadeLeashDrag(animation.sway.leashDrag);
+		    }
+		    creature_sway::Step(animation.sway, push, animation.sway.frameSeconds, MassOf(creature, &morph));
+
 		    if (rig != nullptr)
 		    {
 			    PoseBody(animation, *rig, morph.drawn, transform, creature.size, gameTime.count() * scale, seconds * scale);
@@ -467,4 +570,14 @@ std::optional<float> CreatureAnimationSystem::AnimationDuration(entt::entity cre
 {
 	const auto* played = PosedAnimationOf(creature, animation);
 	return played != nullptr ? std::optional(static_cast<float>(played->duration)) : std::nullopt;
+}
+
+void CreatureAnimationSystem::KickSway(entt::entity creature, glm::vec3 force, glm::vec3 point)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	if (auto* animation = registry.TryGet<CreatureAnimation>(creature);
+	    animation != nullptr && registry.AllOf<Creature>(creature))
+	{
+		Kick(registry, creature, *animation, force, point);
+	}
 }

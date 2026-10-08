@@ -42,6 +42,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/BuildingDamageSystemInterface.h"
+#include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/Implementations/VillagerPhysics.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -134,15 +135,22 @@ bool IsToy(entt::entity object)
 
 /// A creature struck by a thrown thing (not a toy) is hurt a hundredth of how hard it was struck for its weight, its
 /// own player's blow makes it think less of the player, and every blow makes it angry and afraid
-void HurtCreature(DynamicsSystemInterface& dynamics, entt::entity creature, const ImpactInfo& impact)
+void HurtCreature(DynamicsSystemInterface& dynamics, const PhysicsEntry& entry, const ImpactInfo& impact)
 {
 	auto& registry = Entities();
+	const auto creature = entry.entity;
 	if (impact.hitBy == entt::null || !registry.Valid(impact.hitBy) || IsToy(impact.hitBy))
 	{
 		return;
 	}
-	// TODO(physics): a blow sways the creature's upper or lower body; openblack's creature keeps no body sway yet. A
-	// creature a script controls isn't hurt by its own player's blows; openblack's scripts don't control creatures yet
+	// The turn's force on its body sways it where the striking thing is
+	if (const auto* hitter = dynamics.Find(impact.hitBy);
+	    hitter != nullptr && hitter->body != nullptr && Locator::creatureAnimationSystem::has_value())
+	{
+		Locator::creatureAnimationSystem::value().KickSway(creature, entry.forceSum, hitter->body->Centre());
+	}
+	// TODO(physics): a creature a script controls isn't hurt by its own player's blows; openblack's scripts don't control
+	// creatures yet
 	const auto& body = registry.Get<const Creature>(creature);
 	const auto* morph = registry.TryGet<const CreatureMorph>(creature);
 	const float mass = living::CreatureMass(body.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
@@ -399,7 +407,7 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	}
 	if (registry.AllOf<Creature>(object))
 	{
-		HurtCreature(dynamics, object, impact);
+		HurtCreature(dynamics, entry, impact);
 		return;
 	}
 	if (const auto* shield = registry.TryGet<const MagicShield>(object);
