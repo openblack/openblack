@@ -169,7 +169,8 @@ public:
 		return PotFacts {.potType = handful ? PotType::Pot : PotType::PileFood,
 		                 .resource = ResourceType::Food,
 		                 .handful = PotInfo::HandFood,
-		                 .amount = data->amount};
+		                 .amount = data->amount,
+		                 .poisoned = data->poisoned};
 	}
 	[[nodiscard]] hand_grab::ScoopFacts ScoopFactsOf(PotInfo) const override
 	{
@@ -186,11 +187,11 @@ public:
 		}
 		return taken;
 	}
-	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) override
+	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned) override
 	{
 		const auto handful = registry.Create();
 		registry.Assign<Transform>(handful, position, glm::mat3(1.0f), glm::vec3(1.0f));
-		registry.Assign<Pot>(handful, Pot {.amount = amount, .maxAmount = 20000, .type = type});
+		registry.Assign<Pot>(handful, Pot {.amount = amount, .maxAmount = 20000, .type = type, .poisoned = poisoned});
 		sizes[handful] = {.radius = 0.5f, .height = 1.0f};
 		return handful;
 	}
@@ -204,7 +205,7 @@ public:
 	void PlayScoopSound(ResourceType, glm::vec3, float ramp) override { scoopSounds.push_back(ramp); }
 	[[nodiscard]] float LandHeightAt(glm::vec3) const override { return 0.0f; }
 	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType) const override { return stores.contains(store); }
-	uint32_t AddToStore(entt::entity store, ResourceType, uint32_t amount) override
+	uint32_t AddToStore(entt::entity store, ResourceType, uint32_t amount, bool /*poisoned*/) override
 	{
 		stored[store] += amount;
 		return amount;
@@ -219,7 +220,10 @@ public:
 		registry.Destroy(object);
 		return true;
 	}
-	void PourAt(ResourceType, glm::vec3, uint32_t amount, PlayerNames) override { pouredAmounts.push_back(amount); }
+	void PourAt(ResourceType, glm::vec3, uint32_t amount, PlayerNames, bool /*poisoned*/) override
+	{
+		pouredAmounts.push_back(amount);
+	}
 	void UseUp(entt::entity object) override
 	{
 		usedUp.push_back(object);
@@ -506,6 +510,33 @@ TEST_F(HandGrabSystemWithWorld, WhatIsHeldIsHeatedEachTurnAndDroppedOnceGone)
 	world->registry.Destroy(rock);
 	system->ProcessTurn();
 	EXPECT_FALSE(system->IsBusy());
+}
+
+TEST_F(HandGrabSystemWithWorld, WhatIsHeldOutsideTheInfluenceIsNotHeated)
+{
+	const auto rock = world->AddRock({0.0f, 0.0f, 0.0f});
+	world->underCursor = rock;
+	Press();
+	for (int i = 0; i < 20 && !system->GetHeld().has_value(); ++i)
+	{
+		Frame(10);
+	}
+	world->influence = false;
+	system->ProcessTurn();
+	EXPECT_TRUE(world->heated.empty());
+}
+
+TEST_F(HandGrabSystemWithWorld, AHandfulScoopedFromAPoisonedPileIsPoisoned)
+{
+	const auto pile = world->registry.Create();
+	world->registry.Assign<Transform>(pile, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->registry.Assign<Pot>(pile, Pot {.amount = 1000, .maxAmount = 2000, .type = PotInfo::FoodPile, .poisoned = true});
+	world->sizes[pile] = {.radius = 2.0f, .height = 3.0f};
+	world->underCursor = pile;
+	EXPECT_TRUE(Press());
+	const auto handful = system->GetHeld();
+	ASSERT_TRUE(handful.has_value());
+	EXPECT_TRUE(world->registry.Get<const Pot>(*handful).poisoned);
 }
 
 TEST_F(HandGrabSystemWithWorld, APileIsScoopedIntoAHandfulThatGrowsWhileTheButtonIsHeld)

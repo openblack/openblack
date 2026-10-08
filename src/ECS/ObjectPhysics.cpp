@@ -321,9 +321,8 @@ entt::entity object_physics::EndPot(systems::DynamicsSystemInterface& dynamics, 
 	// On the land it spills into the stores and piles round it, or makes a pile, and flickers out
 	auto& stores = Locator::resourceStoreSystem::value();
 	const auto resource = stores.ResourceOf(pot);
-	// TODO(stores): a poisoned handful spills poisoned food; openblack keeps no poisoned pots
 	stores.PourAt(resource.type, position, resource.amount, false,
-	              entry != nullptr ? entry->player.value_or(PlayerNames::NEUTRAL) : PlayerNames::NEUTRAL);
+	              entry != nullptr ? entry->player.value_or(PlayerNames::NEUTRAL) : PlayerNames::NEUTRAL, resource.poisoned);
 	world_objects::LeaveGhost(pot);
 	world_objects::Remove(pot);
 	return pot;

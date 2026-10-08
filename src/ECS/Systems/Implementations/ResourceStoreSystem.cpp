@@ -279,7 +279,9 @@ ResourceStoreSystemInterface::ObjectResource ResourceStoreSystem::ResourceOf(ent
 			return {};
 		}
 		const auto food = info.mobileObject.at(static_cast<size_t>(mobile->type)).foodValue;
-		return {ResourceType::Food, food > 0.0f ? static_cast<uint32_t>(food) : 0u};
+		// Of the mushrooms only the toadstool is poisoned
+		return {ResourceType::Food, food > 0.0f ? static_cast<uint32_t>(food) : 0u,
+		        mobile->type == MobileObjectInfo::Toadstool};
 	}
 	if (const auto* animal = registry.TryGet<const Animal>(object))
 	{
@@ -288,7 +290,7 @@ ResourceStoreSystemInterface::ObjectResource ResourceStoreSystem::ResourceOf(ent
 	}
 	if (const auto* pot = registry.TryGet<const Pot>(object))
 	{
-		return {PotInfoOf(pot->type).resourceType, pot->amount};
+		return {PotInfoOf(pot->type).resourceType, pot->amount, pot->poisoned};
 	}
 	return {};
 }
@@ -328,7 +330,7 @@ bool ResourceStoreSystem::IsStore(entt::entity store, ResourceType type) const
 	return false;
 }
 
-uint32_t ResourceStoreSystem::AddToPile(entt::entity pile, ResourceType type, uint32_t amount)
+uint32_t ResourceStoreSystem::AddToPile(entt::entity pile, ResourceType type, uint32_t amount, bool poisoned)
 {
 	auto& registry = Entities();
 	auto* pot = registry.TryGet<Pot>(pile);
@@ -343,10 +345,12 @@ uint32_t ResourceStoreSystem::AddToPile(entt::entity pile, ResourceType type, ui
 	}
 	const auto taken = piles::AmountTaken(pot->amount, amount, pot->maxAmount, piles::IsCapped(info.nextPotForResource));
 	pot->amount += taken;
+	// A poisoned gift poisons the pile, which stays poisoned whatever is added after
+	pot->poisoned = pot->poisoned || poisoned;
 	return taken;
 }
 
-uint32_t ResourceStoreSystem::FillPit(entt::entity store, ResourceType type, uint32_t amount)
+uint32_t ResourceStoreSystem::FillPit(entt::entity store, ResourceType type, uint32_t amount, bool poisoned)
 {
 	auto& registry = Entities();
 	auto* abode = registry.TryGet<Abode>(store);
@@ -363,7 +367,7 @@ uint32_t ResourceStoreSystem::FillPit(entt::entity store, ResourceType type, uin
 		const auto pile = StorePile(store, pit->foodPile, abodeInfo.potForResourceFood, pit->woodPiles.size());
 		if (pile != entt::null && left > 0)
 		{
-			left -= AddToPile(pile, type, left);
+			left -= AddToPile(pile, type, left, poisoned);
 		}
 	}
 	else
@@ -377,7 +381,7 @@ uint32_t ResourceStoreSystem::FillPit(entt::entity store, ResourceType type, uin
 			const auto pile = StorePile(store, pit->woodPiles.at(place), potType, place);
 			if (pile != entt::null)
 			{
-				left -= AddToPile(pile, type, left);
+				left -= AddToPile(pile, type, left, poisoned);
 			}
 		}
 	}
@@ -385,21 +389,20 @@ uint32_t ResourceStoreSystem::FillPit(entt::entity store, ResourceType type, uin
 }
 
 uint32_t ResourceStoreSystem::AddToStore(entt::entity store, ResourceType type, uint32_t amount,
-                                         std::optional<PlayerNames> giver, bool /*poisoned*/)
+                                         std::optional<PlayerNames> giver, bool poisoned)
 {
 	auto& registry = Entities();
 	// A store's pile passes what it is given to its store
 	if (const auto structure = registry.AllOf<Pot>(store) ? StoreOf(store) : std::nullopt)
 	{
-		return AddToStore(*structure, type, amount, giver, false);
+		return AddToStore(*structure, type, amount, giver, poisoned);
 	}
 	auto* abode = registry.TryGet<Abode>(store);
 	if (abode == nullptr || !registry.AllOf<StoragePit>(store) || (type != ResourceType::Food && type != ResourceType::Wood))
 	{
 		return 0;
 	}
-	// TODO(stores): a poisoned gift poisons the pile it goes into; openblack has no poison on piles yet
-	const auto added = FillPit(store, type, amount);
+	const auto added = FillPit(store, type, amount, poisoned);
 	const auto town = TownOf(store);
 	if (!giver.has_value() || town == entt::null)
 	{
@@ -564,7 +567,7 @@ bool ResourceStoreSystem::TakeObject(entt::entity store, entt::entity object, st
 	}
 	// TODO(stores): a thing thrown into a storage pit by the local player shows the help for giving; openblack has no
 	// help system yet
-	const auto added = AddToStore(store, resource.type, resource.amount, giver, false);
+	const auto added = AddToStore(store, resource.type, resource.amount, giver, resource.poisoned);
 	const auto* transform = registry.TryGet<const Transform>(object);
 	const auto at = transform != nullptr ? transform->position : glm::vec3(0.0f);
 	// TODO(stores): the advisor's resource-drop sound for the local player; openblack has no advisor yet
@@ -589,7 +592,8 @@ bool ResourceStoreSystem::TakeObject(entt::entity store, entt::entity object, st
 	return true;
 }
 
-bool ResourceStoreSystem::PourAt(ResourceType type, glm::vec3 point, uint32_t amount, bool speedUp, PlayerNames player)
+bool ResourceStoreSystem::PourAt(ResourceType type, glm::vec3 point, uint32_t amount, bool speedUp, PlayerNames player,
+                                 bool poisoned)
 {
 	if (amount == 0 || (type != ResourceType::Food && type != ResourceType::Wood) || !InMap(point))
 	{
@@ -632,7 +636,7 @@ bool ResourceStoreSystem::PourAt(ResourceType type, glm::vec3 point, uint32_t am
 			{
 				if (near(entity, piles::k_StoreReachMultiplier))
 				{
-					left -= AddToStore(entity, type, left, giver, false);
+					left -= AddToStore(entity, type, left, giver, poisoned);
 				}
 			}
 			else if (const auto* pot = registry.TryGet<const Pot>(entity);
@@ -640,7 +644,7 @@ bool ResourceStoreSystem::PourAt(ResourceType type, glm::vec3 point, uint32_t am
 			{
 				if (near(entity, piles::k_PotReachMultiplier))
 				{
-					left -= AddToPile(entity, type, left);
+					left -= AddToPile(entity, type, left, poisoned);
 				}
 			}
 		}
@@ -661,6 +665,7 @@ bool ResourceStoreSystem::PourAt(ResourceType type, glm::vec3 point, uint32_t am
 	registry.Get<Transform>(created).scale =
 	    glm::vec3(type == ResourceType::Food ? piles::k_MagicFoodScale : piles::k_MagicWoodScale);
 	registry.Assign<MagicPile>(created, type, player);
+	registry.Get<Pot>(created).poisoned = poisoned;
 	Thud(type, left, point);
 	// A power-up's food speeds up the people who take from the new pile, and sparkles over it for as long as it lasts
 	auto& pile = registry.Get<ResourcePile>(created);

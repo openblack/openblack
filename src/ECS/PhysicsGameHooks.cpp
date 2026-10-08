@@ -413,7 +413,7 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 				if (const auto* other = registry.TryGet<const Pot>(hitter);
 				    other != nullptr && stores.ResourceOf(hitter).type == resource.type)
 				{
-					stores.AddToPile(hitter, resource.type, resource.amount);
+					stores.AddToPile(hitter, resource.type, resource.amount, resource.poisoned);
 					world_objects::LeaveGhost(object);
 					world_objects::Remove(object);
 					return;

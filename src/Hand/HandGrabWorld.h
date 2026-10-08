@@ -142,6 +142,8 @@ public:
 		/// The handful the hand scoops out of it
 		PotInfo handful {PotInfo::HandFood};
 		uint32_t amount {0};
+		/// Its food is poisoned, and poisons what it is given to
+		bool poisoned {false};
 	};
 	[[nodiscard]] virtual std::optional<PotFacts> PotFactsOf(entt::entity pot) const = 0;
 	/// What a field has for the hand to scoop: its food, and whether its crop is ripe (a ripe crop gives half)
@@ -159,8 +161,8 @@ public:
 	/// Some of what a pile holds is taken out of it: no more than it has. The pile goes once it has nothing left, unless
 	/// it is a store's. What was taken.
 	virtual uint32_t TakeFromPile(entt::entity pile, uint32_t amount) = 0;
-	/// A handful the hand holds is made, holding so much, where the hand is
-	[[nodiscard]] virtual entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) = 0;
+	/// A handful the hand holds is made, holding so much, where the hand is; poisoned when scooped from poison
+	[[nodiscard]] virtual entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned) = 0;
 	/// The stream of what is scooped flowing from its source into the hand starts, and stops; its effect
 	[[nodiscard]] virtual std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) = 0;
 	virtual void StopScoopStream(uint32_t stream) = 0;
@@ -172,11 +174,11 @@ public:
 	/// Whether something stores a resource, as a village store stores food and wood
 	[[nodiscard]] virtual bool StoresResource(entt::entity store, ResourceType resource) const = 0;
 	/// A store takes what it will of some resource; what it took
-	virtual uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount) = 0;
+	virtual uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount, bool poisoned) = 0;
 	/// A store takes a thing whole, for the resource it is worth, and the thing goes; whether it took it
 	virtual bool TakeIntoStore(entt::entity store, entt::entity object) = 0;
 	/// Some resource poured onto a point: to the stores and piles of it about the point, or a new pile
-	virtual void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player) = 0;
+	virtual void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player, bool poisoned) = 0;
 	/// A thing is used up: a ghost of it flickers out where it was, and it goes
 	virtual void UseUp(entt::entity object) = 0;
 	/// It goes into the physics from the hand, put down or thrown

@@ -22,5 +22,5 @@ using namespace openblack::ecs::systems;
 bool GameMagicWorld::AddResource(ResourceType type, glm::vec3 point, uint32_t amount, bool speedUp, PlayerNames player)
 {
 	return Locator::resourceStoreSystem::has_value() &&
-	       Locator::resourceStoreSystem::value().PourAt(type, point, amount, speedUp, player);
+	       Locator::resourceStoreSystem::value().PourAt(type, point, amount, speedUp, player, false);
 }

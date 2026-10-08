@@ -364,7 +364,7 @@ bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 	const auto sourcePosition = _world->PoseOf(source).origin;
 	_world->TakeFromPile(source, first);
 	const auto hand = _world->PoseOf(_world->Hand()).origin;
-	const auto handful = _world->MakeHandful(facts->handful, hand, first);
+	const auto handful = _world->MakeHandful(facts->handful, hand, first, facts->poisoned);
 	if (!Exists(handful))
 	{
 		return false;
@@ -402,7 +402,7 @@ bool HandGrabSystem::StartFieldScoop(HandGrab& grab, entt::entity field, const F
 	}
 	_world->TakeFromField(field, first);
 	const auto hand = _world->PoseOf(_world->Hand()).origin;
-	const auto handful = _world->MakeHandful(PotInfo::HandFood, hand, first);
+	const auto handful = _world->MakeHandful(PotInfo::HandFood, hand, first, false);
 	if (!Exists(handful))
 	{
 		return false;
@@ -528,11 +528,11 @@ bool HandGrabSystem::ApplyTo(HandGrab& grab, entt::entity target)
 	}
 	if (_world->StoresResource(target, pot->resource))
 	{
-		_world->AddToStore(target, pot->resource, pot->amount);
+		_world->AddToStore(target, pot->resource, pot->amount, pot->poisoned);
 	}
 	else if (const auto other = _world->PotFactsOf(target); other.has_value() && other->resource == pot->resource)
 	{
-		_world->PourAt(pot->resource, _world->PoseOf(_world->Hand()).origin, pot->amount, _world->HandPlayer());
+		_world->PourAt(pot->resource, _world->PoseOf(_world->Hand()).origin, pot->amount, _world->HandPlayer(), pot->poisoned);
 	}
 	else
 	{
@@ -950,8 +950,11 @@ void HandGrabSystem::ProcessTurn()
 	}
 	// The hold is asked again, as what is held may have changed
 	grab->hold = HoldOfObject(grab->object);
-	// What is held over a fire catches from it
-	_world->HeatHeld(grab->object);
+	// What is held over a fire catches from it, inside the holder's influence only
+	if (_world->InInfluence(_world->HandPlayer(), _world->PoseOf(grab->object).origin))
+	{
+		_world->HeatHeld(grab->object);
+	}
 }
 
 void HandGrabSystem::ForceDrop()

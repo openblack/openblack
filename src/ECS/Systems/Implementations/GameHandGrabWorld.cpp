@@ -90,6 +90,7 @@ constexpr float k_RootsHoleShare = 0.3f;
 /// The particles of a handful poured out of the hand: food and wood
 constexpr auto k_PourFood = ParticleType::FoodPutdown;
 constexpr auto k_PourWood = ParticleType::WoodPutdown;
+constexpr auto k_PourPoisonedFood = ParticleType::FoodPutdownPoisoned;
 /// The particles of what is scooped streaming into the hand: food and wood
 constexpr auto k_ScoopFood = ParticleType::FoodPickup;
 constexpr auto k_ScoopWood = ParticleType::WoodPickup;
@@ -487,12 +488,14 @@ std::optional<uint32_t> GameHandGrabWorld::PourPot(entt::entity pot, PlayerNames
 	std::optional<uint32_t> pour;
 	if (Locator::particleSystem::has_value() && player == HandPlayer())
 	{
-		// TODO(hand): a poisoned handful pours poisoned food, particles 111 (openblack keeps no poisoned pots)
-		const auto particles = facts->resource == ResourceType::Wood ? k_PourWood : k_PourFood;
+		// A poisoned handful pours its own poisoned food
+		const auto particles = facts->resource == ResourceType::Wood ? k_PourWood
+		                       : facts->poisoned                     ? k_PourPoisonedFood
+		                                                             : k_PourFood;
 		pour = Locator::particleSystem::value().Start(particles, hand, 1.0f);
 	}
 	// What it holds goes to the stores and piles of it about the point, or makes a pile there; in the water it is lost
-	PourAt(facts->resource, hand, facts->amount, player);
+	PourAt(facts->resource, hand, facts->amount, player, facts->poisoned);
 	UseUp(pot);
 	return pour;
 }
@@ -510,7 +513,8 @@ std::optional<hand_grab::HandGrabWorldInterface::PotFacts> GameHandGrabWorld::Po
 	return PotFacts {.potType = kind.potType,
 	                 .resource = kind.resourceType,
 	                 .handful = kind.resourceType == ResourceType::Wood ? PotInfo::HandWood : PotInfo::HandFood,
-	                 .amount = data->amount};
+	                 .amount = data->amount,
+	                 .poisoned = data->poisoned};
 }
 
 hand_grab::ScoopFacts GameHandGrabWorld::ScoopFactsOf(PotInfo handful) const
@@ -571,9 +575,13 @@ void GameHandGrabWorld::TakeFromField(entt::entity field, uint32_t amount)
 	// TODO(fields): the game also marks two of the town's flags when a field is emptied; their meaning isn't known
 }
 
-entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount)
+entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned)
 {
 	const auto handful = archetypes::PotArchetype::Create(position, 0.0f, type, static_cast<int32_t>(amount));
+	if (auto* pot = Locator::entitiesRegistry::value().TryGet<Pot>(handful))
+	{
+		pot->poisoned = poisoned;
+	}
 	ResizePot(handful);
 	return handful;
 }
@@ -646,10 +654,10 @@ bool GameHandGrabWorld::StoresResource(entt::entity store, ResourceType resource
 	return Locator::resourceStoreSystem::has_value() && Locator::resourceStoreSystem::value().IsStore(store, resource);
 }
 
-uint32_t GameHandGrabWorld::AddToStore(entt::entity store, ResourceType resource, uint32_t amount)
+uint32_t GameHandGrabWorld::AddToStore(entt::entity store, ResourceType resource, uint32_t amount, bool poisoned)
 {
 	return Locator::resourceStoreSystem::has_value()
-	           ? Locator::resourceStoreSystem::value().AddToStore(store, resource, amount, HandPlayer(), false)
+	           ? Locator::resourceStoreSystem::value().AddToStore(store, resource, amount, HandPlayer(), poisoned)
 	           : 0;
 }
 
@@ -664,11 +672,11 @@ bool GameHandGrabWorld::TakeIntoStore(entt::entity store, entt::entity object)
 	       Locator::resourceStoreSystem::value().TakeObject(store, object, HandPlayer());
 }
 
-void GameHandGrabWorld::PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player)
+void GameHandGrabWorld::PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player, bool poisoned)
 {
 	if (Locator::resourceStoreSystem::has_value())
 	{
-		Locator::resourceStoreSystem::value().PourAt(resource, point, amount, false, player);
+		Locator::resourceStoreSystem::value().PourAt(resource, point, amount, false, player, poisoned);
 	}
 }
 
