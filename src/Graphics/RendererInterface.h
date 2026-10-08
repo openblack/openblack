@@ -152,6 +152,12 @@ public:
 		bool innerWalls {false};
 		/// Only the submeshes of this status are drawn, in place of those of status 0: a building's scaffold
 		std::optional<uint32_t> onlyStatus;
+		/// Where a building's model is cut, in its own space: its inner walls and the cap over them are drawn only for a
+		/// primitive with a whole triangle below it
+		std::optional<float> modelCutHeight;
+		/// In place of its triangles, each primitive draws the cap over its walls where they are cut, unlit in three
+		/// quarters of the object's colour
+		bool cap {false};
 		/// An object's own colour and alpha, as the game gives some objects: the sun shades the colour (0 to 255) in place
 		/// of the land's light where it stands, and every primitive's alpha is its texture's times the alpha (0 to 1).
 		/// Less than whole, the primitives that would be drawn opaque blend by it.

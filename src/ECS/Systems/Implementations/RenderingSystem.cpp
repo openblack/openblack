@@ -468,6 +468,9 @@ void RenderingSystem::UploadPartialBuilds()
 		    .morphWithTerrain = registry.AllOf<MorphWithTerrain>(entity),
 		    .instance = static_cast<uint32_t>(_renderContext.partialBuildInstances.size()),
 		    .modelCut = build.modelCut,
+		    .capHeight = build.modelCut.has_value() && transform.scale.y != 0.0f
+		                     ? std::optional((*build.modelCut - transform.position.y) / transform.scale.y)
+		                     : std::nullopt,
 		    .scaffoldStatus = build.scaffoldShown ? scaffold : std::nullopt,
 		    .scaffoldCut = build.scaffoldCut,
 		};

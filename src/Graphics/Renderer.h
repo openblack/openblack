@@ -14,6 +14,7 @@
 #include <array>
 #include <chrono>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -30,6 +31,7 @@
 #include "3D/SkyDome.h"
 #include "Graphics/CreatureShadow.h"
 #include "Graphics/HandShadow.h"
+#include "Graphics/PartialBuildCap.h"
 #include "Graphics/RenderPass.h"
 #include "Graphics/RendererInterface.h"
 #include "Particles/ParticleDrawFrame.h"
@@ -258,6 +260,23 @@ private:
 	/// Draws a submesh, with a texture in place of its skins when given one
 	void DrawSubMesh(const L3DMesh& mesh, const L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc, bool preserveState,
 	                 const TextureHandle* texture = nullptr, glm::vec3 glow = glm::vec3(0.0f)) const;
+	/// What a primitive cut at a height in its model's own space shows: whether it has a whole triangle below the cut,
+	/// and the cap over its cut walls. Made once for each cut.
+	struct Cap
+	{
+		bool wholeBelow {false};
+		std::vector<partial_build_cap::CapVertex> vertices;
+	};
+	struct CapPrimitive
+	{
+		const void* key;
+		uint32_t indicesOffset;
+		uint32_t indicesCount;
+		bool twoSided;
+	};
+	[[nodiscard]] const Cap& CapOf(const L3DSubMesh& subMesh, const CapPrimitive& primitive, float height) const;
+	/// Binds a cap's corners as the vertices of the next draw; false when there is no room for them this frame
+	[[nodiscard]] static bool BindCap(const std::vector<partial_build_cap::CapVertex>& cap);
 	void DrawPass(const DrawSceneDesc& desc) const;
 	/// The beams of the temple's spot lights and the light its windows shed, which the game draws in its
 	/// rooms but not in the reflection of the main room
@@ -314,6 +333,8 @@ private:
 	/// x: how much a fully covered texel darkens, y: where along the light the shadow starts
 	mutable std::array<glm::vec4, CreatureShadow::k_MaxShadows> _creatureShadowParameters {};
 	mutable uint8_t _creatureShadowCount {0};
+	/// The caps over the broken buildings' cut walls, by primitive and cut height; made afresh when a cut moves
+	mutable std::map<std::pair<const void*, float>, Cap> _caps;
 	/// The land's light this frame, and the 256 by 1 texture the terrain reads it from
 	mutable std::unique_ptr<LandLightTable> _landLightTable;
 	/// The sea's ripple step, 0 to 15, moving on each frame the sea's rows are drawn while the game's time goes on

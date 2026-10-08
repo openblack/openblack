@@ -23,6 +23,7 @@
 #include <imgui_user.h>
 
 #include "Common/FileDialog.h"
+#include "ECS/Systems/ScriptObjectsSystemInterface.h"
 #include "Editor/EditorOutline.h"
 #include "Editor/EditorStyle.h"
 #include "Editor/Scripts/Decompiler.h"
@@ -192,9 +193,11 @@ void ScriptsPanel::DrawLoading(lhvm::LHVM& vm) noexcept
 		{
 		case file_dialog::Status::Chosen:
 			file_dialog::RememberPath(k_ProgramFolderKey, outcome.path.parent_path());
-			// The machine reads it as the game reads its own program, stopping every task first
+			// The machine reads it as the game reads its own program, stopping every task first. As when the game restarts
+			// its scripts, the old program's objects are let go first: what it made goes, the rest goes back to the game
 			try
 			{
+				Locator::scriptObjects::value().Reset();
 				_loadMessage = vm.LoadBinary(outcome.path) == EXIT_SUCCESS
 				                   ? fmt::format("Loaded {}", outcome.path.filename().string())
 				                   : fmt::format("Couldn't read {}", outcome.path.filename().string());
@@ -219,6 +222,7 @@ void ScriptsPanel::DrawLoading(lhvm::LHVM& vm) noexcept
 		const auto path = fileSystem.GetPath<filesystem::Path::Quests>() / "challenge.chl";
 		try
 		{
+			Locator::scriptObjects::value().Reset();
 			_loadMessage = fileSystem.Exists(path) && vm.LoadBinary(fileSystem.ReadAll(path)) == EXIT_SUCCESS
 			                   ? "Loaded the game's challenge.chl"
 			                   : "Couldn't read the game's challenge.chl";

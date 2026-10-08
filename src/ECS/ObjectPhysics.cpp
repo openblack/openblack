@@ -281,15 +281,11 @@ entt::entity BecomeDeadTree(const PhysicsEntry* entry, entt::entity tree)
 	}
 	// A dead tree made from a tree always has a player, the neutral one when no one threw it, and calls people as theirs
 	CallForWood(dead, entry != nullptr && entry->player.has_value() ? *entry->player : PlayerNames::NEUTRAL);
-	// A script holding the tree holds the dead tree in its place
+	// A script holding the tree holds the dead tree in its place. Only the place moves: the dead tree is neither in a
+	// script nor controlled by one until a script next refers to it
 	if (registry.AllOf<InScript>(tree) && Locator::scriptObjects::has_value())
 	{
 		Locator::scriptObjects::value().Replace(tree, dead);
-		registry.AssignOrReplace<InScript>(dead);
-		if (registry.AllOf<ScriptControlled>(tree))
-		{
-			registry.AssignOrReplace<ScriptControlled>(dead);
-		}
 	}
 	world_objects::Remove(tree);
 	return dead;

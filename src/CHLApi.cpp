@@ -2095,6 +2095,8 @@ void SpellAtThing() // 195 SPELL_AT_THING
 		Pusho(0);
 		return;
 	}
+	// The miracle is the script's own making, which it controls from its first reference
+	RegisterCreated(entity);
 	Pusho(static_cast<uint32_t>(entity));
 }
 
@@ -2124,6 +2126,8 @@ void SpellAtPos() // 196 SPELL_AT_POS
 		Pusho(0);
 		return;
 	}
+	// The miracle is the script's own making, which it controls from its first reference
+	RegisterCreated(entity);
 	Pusho(static_cast<uint32_t>(entity));
 }
 
@@ -2311,42 +2315,47 @@ void StopAllGames() // 213 STOP_ALL_GAMES
 
 void AttachToGame() // 214 ATTACH_TO_GAME
 {
-	// const auto unk2 = Pop().intVal;
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
+	// The team, the football pitch and the villager joining it; the native takes control of both objects
+	[[maybe_unused]] const auto team = Pop().intVal;
+	[[maybe_unused]] const auto pitch = PopObject();
+	[[maybe_unused]] const auto villager = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void DetachFromGame() // 215 DETACH_FROM_GAME
 {
-	// const auto unk2 = Pop().intVal;
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
+	// A value the game ignores, the football pitch and the villager leaving it; the native takes control of both objects
+	[[maybe_unused]] const auto unused = Pop().intVal;
+	[[maybe_unused]] const auto pitch = PopObject();
+	[[maybe_unused]] const auto villager = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void DetachUndefinedFromGame() // 216 DETACH_UNDEFINED_FROM_GAME
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
+	// A value and the football pitch, of which the native takes control
+	[[maybe_unused]] const auto value = Pop().intVal;
+	[[maybe_unused]] const auto pitch = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void SetOnlyForScripts() // 217 SET_ONLY_FOR_SCRIPTS
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
+	// The football pitch, of which the native takes control, then whether only the scripts play on it
+	[[maybe_unused]] const auto pitch = PopObject();
+	[[maybe_unused]] const auto onlyForScripts = Pop().intVal;
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }
 
 void StartMatchWithReferee() // 218 START_MATCH_WITH_REFEREE
 {
-	// const auto unk1 = Pop().intVal;
-	// const auto unk0 = Pop().intVal;
+	// The football pitch and the villager refereeing; the native takes control of both
+	[[maybe_unused]] const auto pitch = PopObject();
+	[[maybe_unused]] const auto referee = PopObject();
 	// TODO(Daniels118): implement this
 	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
 }

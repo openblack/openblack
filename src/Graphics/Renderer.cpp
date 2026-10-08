@@ -707,10 +707,77 @@ const Renderer::MeshUniforms& Renderer::MeshUniformsOf(const ShaderProgram& prog
 
 namespace
 {
-/// How far a building's inner walls stand in from its outer ones: less for a two-sided material
+/// How far a building's inner walls stand in from its outer ones, in the model's own units: less for a two-sided
+/// material
 constexpr float k_InnerWallTwoSided = 0.2f;
 constexpr float k_InnerWall = 0.35f;
+
+[[nodiscard]] float InsetOf(bool twoSided)
+{
+	return twoSided ? k_InnerWallTwoSided : k_InnerWall;
+}
+
+/// The most caps kept at once: past it they are all made afresh as they are needed
+constexpr size_t k_MostCaps = 512;
 } // namespace
+
+const Renderer::Cap& Renderer::CapOf(const L3DSubMesh& subMesh, const CapPrimitive& primitive, float height) const
+{
+	const auto key = std::make_pair(primitive.key, height);
+	if (const auto found = _caps.find(key); found != _caps.end())
+	{
+		return found->second;
+	}
+	if (_caps.size() >= k_MostCaps)
+	{
+		_caps.clear();
+	}
+	const auto& surface = subMesh.GetSurface();
+	std::span<const uint16_t> indices(surface.indices);
+	const auto first = std::min<size_t>(primitive.indicesOffset, indices.size());
+	indices = indices.subspan(first, std::min<size_t>(primitive.indicesCount, indices.size() - first));
+	Cap cap {
+	    .wholeBelow = partial_build_cap::HasWholeTriangleBelow(surface.positions, indices, height),
+	    .vertices = partial_build_cap::Build(surface.positions, surface.uvs, surface.normals, indices, height,
+	                                         InsetOf(primitive.twoSided)),
+	};
+	return _caps.emplace(key, std::move(cap)).first->second;
+}
+
+bool Renderer::BindCap(const std::vector<partial_build_cap::CapVertex>& cap)
+{
+	// Laid out as a model's own vertices, each moved by the model's matrix alone
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		glm::vec3 normal;
+		std::array<int16_t, 4> indices;
+	};
+	static_assert(sizeof(Vertex) == 8 * sizeof(float) + 4 * sizeof(int16_t));
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Int16, false, true)
+	    .end();
+	const auto count = static_cast<uint32_t>(cap.size());
+	if (bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+	{
+		return false;
+	}
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+	auto* vertices = reinterpret_cast<Vertex*>(buffer.data);
+	for (size_t i = 0; i < cap.size(); ++i)
+	{
+		// The first matrix, no partner to blend with
+		vertices[i] = {.position = cap[i].position, .uv = cap[i].uv, .normal = cap[i].normal, .indices = {0, -1, 0, 0}};
+	}
+	bgfx::setVertexBuffer(0, &buffer);
+	return true;
+}
 
 void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSubMesh& subMesh, const L3DMeshSubmitDesc& desc,
                            bool preserveState, const TextureHandle* subMeshTexture, glm::vec3 glow) const
@@ -738,7 +805,9 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 	// The game draws the submeshes with a lightmap through it and the others as they are
 	const auto lightmapSkinID = subMesh.GetLightmapSkinID();
 	const Texture2D* lightmap = lightmapSkinID.has_value() ? GetTexture(*lightmapSkinID, skins) : nullptr;
-	const auto* program = desc.lightmapProgram != nullptr && lightmap != nullptr ? desc.lightmapProgram : desc.program;
+	// A cap has no lightmap coordinates of its own
+	const auto* program =
+	    desc.lightmapProgram != nullptr && lightmap != nullptr && !desc.cap ? desc.lightmapProgram : desc.program;
 	if (desc.onlyJoints && !subMesh.GetJoint().has_value())
 	{
 		return;
@@ -815,8 +884,27 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 		// of its own
 		// nor inner walls, whose inset each primitive's material decides
 		const bool primitivePreserveState = !materialBlending && subMeshTexture == nullptr && desc.subMeshGlows.empty() &&
-		                                    !desc.innerWalls && texture != nullptr && texture == nextTexture &&
+		                                    !desc.innerWalls && !desc.cap && texture != nullptr && texture == nextTexture &&
 		                                    (preserveState || hasNext);
+
+		// A cut building's inner walls and cap belong only to a primitive with a whole triangle below the cut, and a cap
+		// is drawn from geometry of its own, which a primitive not cut has none of
+		const std::vector<partial_build_cap::CapVertex>* cap = nullptr;
+		if ((desc.innerWalls || desc.cap) && desc.modelCutHeight.has_value())
+		{
+			const auto& made = CapOf(subMesh,
+			                         {.key = &prim,
+			                          .indicesOffset = prim.indicesOffset,
+			                          .indicesCount = prim.indicesCount,
+			                          .twoSided = prim.twoSided},
+			                         *desc.modelCutHeight);
+			if (!made.wholeBelow || (desc.cap && made.vertices.empty()))
+			{
+				lastPreserveState = false;
+				continue;
+			}
+			cap = desc.cap ? &made.vertices : nullptr;
+		}
 
 		uint32_t skip = Mesh::SkipState::SkipNone;
 		if (!lastPreserveState)
@@ -862,13 +950,16 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			}
 			if (has(MeshUniform::KeepBelow))
 			{
-				const glm::vec4 u_keepBelow {desc.cutAbove.has_value() ? 1.0f : 0.0f, desc.cutAbove.value_or(0.0f), 0.0f, 0.0f};
+				// The cap lies on the cut itself, so it isn't cut
+				const bool keepBelow = desc.cutAbove.has_value() && cap == nullptr;
+				const glm::vec4 u_keepBelow {keepBelow ? 1.0f : 0.0f, desc.cutAbove.value_or(0.0f), 0.0f, 0.0f};
 				setUniform(MeshUniform::KeepBelow, &u_keepBelow);
 			}
 			if (has(MeshUniform::Inset))
 			{
-				const glm::vec4 u_inset {desc.innerWalls ? (prim.twoSided ? k_InnerWallTwoSided : k_InnerWall) : 0.0f, 0.0f,
-				                         0.0f, 0.0f};
+				// y: 1 for the cap, which is set in already and drawn unlit
+				const glm::vec4 u_inset {desc.innerWalls ? InsetOf(prim.twoSided) : 0.0f, cap != nullptr ? 1.0f : 0.0f, 0.0f,
+				                         0.0f};
 				setUniform(MeshUniform::Inset, &u_inset);
 			}
 			if (has(MeshUniform::SeaClip))
@@ -1014,11 +1105,19 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				bgfx::setInstanceDataBuffer(toBgfx(desc.instanceDesc->GetRawHandle()), desc.instanceDesc->GetStart(),
 				                            desc.instanceDesc->GetCount());
 			}
-			if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
+			if (cap != nullptr)
+			{
+				if (!BindCap(*cap))
+				{
+					lastPreserveState = false;
+					continue;
+				}
+			}
+			else if (subMesh.GetMesh().IsIndexed() && (skip & Mesh::SkipState::SkipIndexBuffer) == 0)
 			{
 				subMesh.GetMesh().GetIndexBuffer().Bind(prim.indicesCount, prim.indicesOffset);
 			}
-			if ((skip & Mesh::SkipState::SkipVertexBuffer) == 0)
+			if (cap == nullptr && (skip & Mesh::SkipState::SkipVertexBuffer) == 0)
 			{
 				subMesh.GetMesh().GetVertexBuffer().Bind();
 				if (desc.morphTargets != nullptr && _morphStreamLayouts)
@@ -4588,12 +4687,14 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				const auto drawPart = [&](uint32_t instance, std::optional<float> cut, std::optional<uint32_t> status,
 				                          bool innerWalls) {
 					submitDesc.cutAbove = cut;
+					submitDesc.modelCutHeight = status.has_value() || build.morphWithTerrain ? std::nullopt : build.capHeight;
 					submitDesc.twoSided = true;
 					submitDesc.innerWalls = innerWalls;
 					submitDesc.onlyStatus = status;
 					drawInstances(build.meshId, placers, false, instance, 1, nullptr, nullptr,
 					              renderCtx.partialBuildInstanceBuffer);
 					submitDesc.cutAbove.reset();
+					submitDesc.modelCutHeight.reset();
 					submitDesc.twoSided = false;
 					submitDesc.innerWalls = false;
 					submitDesc.onlyStatus.reset();
@@ -4602,6 +4703,15 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				{
 					drawPart(build.instance, build.modelCut, std::nullopt, false);
 					drawPart(build.instance, build.modelCut, std::nullopt, true);
+					// Then the cap over the cut walls, joining the outer to the inner
+					// TODO(physics): the game caps a model that follows the land too, the land under each of its corners
+					// moving its cut; openblack caps only the rest
+					if (!build.morphWithTerrain)
+					{
+						submitDesc.cap = true;
+						drawPart(build.instance, build.modelCut, std::nullopt, false);
+						submitDesc.cap = false;
+					}
 				}
 				if (build.scaffoldStatus.has_value())
 				{

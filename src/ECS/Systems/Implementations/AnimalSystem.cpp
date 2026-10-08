@@ -1308,10 +1308,11 @@ bool AnimalSystem::SetupFleeFromObject(entt::entity entity, entt::entity object)
 {
 	auto& registry = EntityRegistry();
 	auto* animal = registry.TryGet<Animal>(entity);
-	if (animal == nullptr || !registry.Valid(object) || !registry.AllOf<Transform>(object))
+	if (animal == nullptr)
 	{
 		return false;
 	}
+	// It takes up the flee whatever the object; with the object gone its next step gives the flee up
 	animal->fleeing = object;
 	animal->fleeReaction = Reaction::ReactToFire;
 	SetState(*animal, AnimalState::FleeingFromObject);

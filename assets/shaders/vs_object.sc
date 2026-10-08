@@ -32,7 +32,8 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 // Pushes the mesh back by a fraction of its depth, towards the far plane at 0: the temple's rooms other than the one the
 // player is in, which overlap it at the doorways
 uniform vec4 u_depthBias;
-// x: how far each vertex is moved in across the ground along its normal, for a building's inner walls; 0 for none
+// x: how far each vertex is moved in across the ground along its normal, for a building's inner walls; 0 for none.
+// y: 1 for the cap over its cut walls, drawn unlit
 uniform vec4 u_inset;
 // Slides the texture across the mesh, as the game does the creature's waterfall
 uniform vec4 u_uvOffset;
@@ -210,6 +211,11 @@ void main()
 		v_color0 = vec4(colour / 255.0f, 1.0f);
 	}
 #endif // USE_LIGHTMAP
+	// The cap over a cut building's walls is unlit, in three quarters of the object's colour in whole steps
+	if (u_inset.y > 0.5f)
+	{
+		v_color0 = vec4(floor(colour * 3.0f / 4.0f) / 255.0f, 1.0f);
+	}
 	// A house's window is drawn in the grey of its light, unlit, at night while someone is home, and not at all otherwise
 	bool hidden = false;
 #ifdef USE_INSTANCING

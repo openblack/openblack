@@ -150,6 +150,8 @@ struct RenderContext
 		bool morphWithTerrain {false};
 		uint32_t instance {0};
 		std::optional<float> modelCut;
+		/// The model's cut in its own space, where the cap over its walls is laid
+		std::optional<float> capHeight;
 		/// The scaffold: its submeshes' status, its instance (sunk as it rises), and its cut
 		std::optional<uint32_t> scaffoldStatus;
 		uint32_t scaffoldInstance {0};
