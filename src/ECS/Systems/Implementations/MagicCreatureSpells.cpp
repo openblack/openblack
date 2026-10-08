@@ -291,7 +291,12 @@ void MagicSystem::ApplyCreatureSpell(entt::entity entity, const creature_spells:
 	auto* mind = registry.TryGet<CreatureMindState>(entity);
 	auto* desires = mind != nullptr && mind->desires.has_value() ? &*mind->desires : nullptr;
 	auto* animation = registry.TryGet<CreatureAnimation>(entity);
-	const auto desire = effect.desire.has_value() ? std::optional(static_cast<Desire>(*effect.desire)) : std::nullopt;
+	// Set apart from its declaration: GCC on ARM otherwise takes the optional for possibly uninitialised
+	std::optional<Desire> desire = std::nullopt;
+	if (effect.desire.has_value())
+	{
+		desire = static_cast<Desire>(*effect.desire);
+	}
 	auto* minds = Locator::creatureMindSystem::has_value() ? &Locator::creatureMindSystem::value() : nullptr;
 	auto* leash = Locator::leashSystem::has_value() ? &Locator::leashSystem::value() : nullptr;
 	const bool mood = event.spell == Spell::Nice || event.spell == Spell::Nasty || event.spell == Spell::Itchy;
