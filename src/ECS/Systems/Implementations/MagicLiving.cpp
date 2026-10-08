@@ -18,22 +18,29 @@
 #include <entt/entity/entity.hpp>
 
 #include "3D/CreatureBody.h"
+#include "3D/L3DMesh.h"
 #include "3D/MapCoords.h"
+#include "Common/GameRandom.h"
 #include "Creature/CreatureDesires.h"
 #include "Creature/CreatureMarks.h"
+#include "Creature/CreatureRig.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
+#include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureFight.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
+#include "ECS/Components/CreatureSkin.h"
 #include "ECS/Components/Fire.h"
+#include "ECS/Components/Mesh.h"
 #include "ECS/Components/MiracleImpression.h"
 #include "ECS/Components/Poisoned.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Map.h"
+#include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
@@ -43,6 +50,7 @@
 #include "Locator.h"
 #include "Magic/HealTargets.h"
 #include "Magic/MapSpiral.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -273,23 +281,104 @@ void ChangeOpinion(entt::entity entity, const magic::EffectValues& values, const
 	}
 }
 
-/// Hurt by a miracle out of a fight, a creature is frightened and angered by it, unless its own player cast it
-void FrightenedAndAngered(entt::entity entity, float damage, const magic::EffectSource& source)
+/// The line from where a blow or burn came to the creature's groin marks its skin where it first meets the body: a
+/// cut, deep for a hard blow, or a burn's scar, further along its row the harder it was
+void Scar(entt::entity entity, glm::vec3 from, glm::vec3 groin, uint8_t kind, float harm)
 {
 	auto& registry = EntityRegistry();
-	const auto* creature = registry.TryGet<const Creature>(entity);
-	auto* mind = registry.TryGet<CreatureMindState>(entity);
-	// Only a player applying the effect themselves spares their own creature this; a thing that strikes it never does
-	if (creature == nullptr || mind == nullptr || !mind->desires.has_value() ||
-	    (!source.appliedBy.has_value() && source.player == creature->owner))
+	const auto direction = groin - from;
+	if (!(glm::dot(direction, direction) > creature_marks::scar::k_LeastReachSquared) || !Locator::gameRandom::has_value() ||
+	    !Locator::resources::has_value() || !Locator::creatureSkinSystem::has_value())
 	{
 		return;
 	}
-	const float amount = std::clamp(damage, 0.0f, 1.0f);
-	creature_desires::ChangeSource(*mind->desires, creature_desires::sources::k_FearFromDamage, amount);
-	creature_desires::ChangeSource(*mind->desires, creature_desires::sources::k_AngerFromDamage, amount);
-	// TODO(raffclar): the cut or scar it leaves where it struck needs the point on the body's skin a point in the world
-	// falls on
+	const auto column = creature_marks::scar::Column(Locator::gameRandom::value().GameRand(5), harm);
+	const auto* mesh = registry.TryGet<const Mesh>(entity);
+	const auto* transform = registry.TryGet<const Transform>(entity);
+	auto& meshes = Locator::resources::value().GetMeshes();
+	if (mesh == nullptr || transform == nullptr || !meshes.Contains(mesh->id))
+	{
+		return;
+	}
+	const auto placement = creature::PlacementMatrix(transform->position, transform->rotation, transform->scale);
+	const auto hit = ecs::posed_model::NearestSkinHit(registry, entity, *meshes.Handle(mesh->id), placement, from,
+	                                                  glm::normalize(direction));
+	if (!hit.has_value() || !hit->skin.has_value())
+	{
+		return;
+	}
+	const auto texel = creature_marks::scar::TexelAt(hit->uvs, hit->hit.s, hit->hit.t);
+	Locator::creatureSkinSystem::value().AddWound(
+	    entity,
+	    {.u = texel.x, .v = texel.y, .skin = static_cast<uint8_t>(*hit->skin), .age = 0, .type = kind, .column = column});
+}
+
+/// Hurt by an effect out of a fight, a creature is frightened and angered by it, unless its own player applied it, and
+/// it is cut where a crushing effect came from, or now and then scarred by a burning one, about its groin
+void CutAndScarred(entt::entity entity, float damage, const magic::EffectValues& values, const magic::EffectSource& source)
+{
+	auto& registry = EntityRegistry();
+	const auto* creature = registry.TryGet<const Creature>(entity);
+	if (creature == nullptr)
+	{
+		return;
+	}
+	const float harm = std::clamp(damage, 0.0f, 1.0f);
+	// Only a player applying the effect themselves spares their own creature this; a thing that strikes it never does
+	auto* mind = registry.TryGet<CreatureMindState>(entity);
+	if (mind != nullptr && mind->desires.has_value() && (source.appliedBy.has_value() || source.player != creature->owner))
+	{
+		creature_desires::ChangeSource(*mind->desires, creature_desires::sources::k_FearFromDamage, harm);
+		creature_desires::ChangeSource(*mind->desires, creature_desires::sources::k_AngerFromDamage, harm);
+	}
+	if (!(harm > 0.0f) || !Locator::gameRandom::has_value())
+	{
+		return;
+	}
+	const auto* animation = registry.TryGet<const CreatureAnimation>(entity);
+	const auto* transform = registry.TryGet<const Transform>(entity);
+	const auto& rigs = Locator::resources::value().GetCreatureRigs();
+	const auto rigId = creature::GetRigId(creature->species);
+	if (animation == nullptr || transform == nullptr || !rigs.Contains(rigId) || !rigs.Handle(rigId)->actionPoints.has_value())
+	{
+		return;
+	}
+	const auto bone = rigs.Handle(rigId)->actionPoints->groin;
+	if (bone >= animation->boneMatrices.size())
+	{
+		return;
+	}
+	const auto placement = creature::PlacementMatrix(transform->position, transform->rotation, transform->scale);
+	const auto groin = glm::vec3(creature::PosedBone(bone, animation->boneMatrices, placement)[3]);
+	const float reach = creature->size * creature_marks::scar::k_BurnReachPerSize;
+	auto& random = Locator::gameRandom::value();
+	if (values[magic::EffectKind::Burn] < values[magic::EffectKind::Crush])
+	{
+		// A crush comes from the thing that applied it, where it stands
+		// TODO(physics): a miracle's crush has no point recorded in openblack's effects, so only blows mark
+		if (!source.appliedBy.has_value() || !registry.Valid(*source.appliedBy))
+		{
+			return;
+		}
+		const auto* at = registry.TryGet<const Transform>(*source.appliedBy);
+		if (at == nullptr)
+		{
+			return;
+		}
+		Scar(entity, at->position, groin, creature_marks::scar::BlowKind(harm), harm);
+		return;
+	}
+	const auto kind = creature_marks::scar::BurnKind(random.GameRand(3));
+	const auto* marks = registry.TryGet<const CreatureMarks>(entity);
+	if (random.GameRand(creature_marks::scar::BurnChance(marks != nullptr ? marks->marks.wounds.size() : 0)) != 0)
+	{
+		return;
+	}
+	auto from = groin;
+	from.x += random.GameFloatRand(reach * 0.25f) - reach * 0.125f;
+	from.y += random.GameFloatRand(reach) - reach * 0.5f;
+	from.z += random.GameFloatRand(reach * 0.25f) - reach * 0.125f;
+	Scar(entity, from, groin, kind, harm);
 }
 } // namespace
 
@@ -319,7 +408,7 @@ bool magic_living::TakesEffectItsOwnWay(entt::entity entity, const magic::Effect
 	}
 	if (!inDuel)
 	{
-		FrightenedAndAngered(entity, damage, source);
+		CutAndScarred(entity, damage, values, source);
 		return false;
 	}
 	// A thing striking a fighting creature in the physics is neither a blow of the fight nor taken from its life; as

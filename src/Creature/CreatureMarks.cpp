@@ -142,3 +142,33 @@ void creature_marks::PaintBlood(std::span<uint16_t> skin, const Mark& blood)
 	auto& target = skin[(static_cast<size_t>(blood.v) * k_SkinSize) + blood.u];
 	target = BlendTexel(target, BloodColour(blood.age), k_BloodAlpha);
 }
+
+uint8_t creature_marks::scar::BlowKind(float harm)
+{
+	return harm < 0.5f ? k_Cut : k_DeepCut;
+}
+
+uint8_t creature_marks::scar::Column(uint32_t drawOfFive, float harm)
+{
+	const int32_t column = static_cast<int32_t>(drawOfFive) - 2 - static_cast<int32_t>(harm * 7.0f - 7.0f);
+	return static_cast<uint8_t>(std::clamp(column, 0, 7));
+}
+
+uint8_t creature_marks::scar::BurnKind(uint32_t drawOfThree)
+{
+	return drawOfThree != 0 ? k_Cut : k_Burn;
+}
+
+uint32_t creature_marks::scar::BurnChance(size_t wounds)
+{
+	return static_cast<uint32_t>(static_cast<float>(wounds) * (1.0f / 1024.0f) * 140.0f + 10.0f);
+}
+
+glm::u8vec2 creature_marks::scar::TexelAt(const std::array<glm::vec2, 3>& uvs, float s, float t)
+{
+	const auto uv = uvs[0] + s * (uvs[1] - uvs[0]) + t * (uvs[2] - uvs[0]);
+	const auto texel = [](float coordinate) {
+		return static_cast<uint8_t>(std::clamp(static_cast<int32_t>(coordinate * 256.0f), 0, 255));
+	};
+	return {texel(uv.x), texel(uv.y)};
+}

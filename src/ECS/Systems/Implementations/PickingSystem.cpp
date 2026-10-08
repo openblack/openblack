@@ -35,6 +35,7 @@
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/VillagerPose.h"
+#include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/WorldObjects.h"
@@ -68,104 +69,6 @@ std::optional<land_line::CellHeights> CornersOf(int32_t x, int32_t z)
 float HeightAt(glm::vec2 point)
 {
 	return Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(point) : 0.0f;
-}
-
-/// The bones a model is posed by as it is drawn: an animal by its clip, a creature by its animations, anything else in
-/// the pose its model rests in
-std::span<const glm::mat4> BonesOf(const ecs::Registry& registry, entt::entity entity, const graphics::L3DMesh& mesh)
-{
-	const auto& rest = mesh.GetBoneMatrices();
-	if (const auto* pose = registry.TryGet<const AnimalPose>(entity); pose != nullptr && pose->bones.size() == rest.size())
-	{
-		return pose->bones;
-	}
-	if (const auto* pose = registry.TryGet<const VillagerPose>(entity); pose != nullptr && pose->bones.size() == rest.size())
-	{
-		return pose->bones;
-	}
-	if (const auto* animation = registry.TryGet<const CreatureAnimation>(entity);
-	    animation != nullptr && animation->boneMatrices.size() == rest.size())
-	{
-		return animation->boneMatrices;
-	}
-	return rest;
-}
-
-/// The corners of a submesh in the world as it is drawn: posed by its bones, a creature's body blended from its
-/// meshes, and a model following the land moved up and down with it
-void Place(const ecs::Registry& registry, entt::entity entity, const graphics::L3DMesh& mesh, size_t index,
-           const glm::mat4& model, std::vector<glm::vec3>& corners)
-{
-	const auto& subMesh = *mesh.GetSubMeshes()[index];
-	const auto& geometry = subMesh.GetBodyGeometry();
-	corners.clear();
-	corners.reserve(geometry.positions.size());
-
-	// A creature's body is its base mesh moved towards the meshes of how evil or good, thin or fat and weak or strong
-	// it is drawn
-	std::array<const graphics::L3DSubMesh*, 3> morphs {};
-	const creature_morph::Morph* morph = nullptr;
-	if (const auto* creature = registry.TryGet<const Creature>(entity))
-	{
-		if (const auto* shape = registry.TryGet<const CreatureMorph>(entity))
-		{
-			auto& meshes = Locator::resources::value().GetMeshes();
-			const auto ids = creature_morph::MeshesOf(creature->species, shape->drawn,
-			                                          [&meshes](entt::id_type id) { return meshes.Contains(id); });
-			const auto subMeshOf = [&meshes, index](entt::id_type id) -> const graphics::L3DSubMesh* {
-				const auto& subs = meshes.Handle(id)->GetSubMeshes();
-				return index < subs.size() ? subs[index].get() : nullptr;
-			};
-			morphs = {subMeshOf(ids.evilGood), subMeshOf(ids.thinFat), subMeshOf(ids.weakStrong)};
-			morph = &shape->drawn;
-		}
-	}
-	const auto bones = BonesOf(registry, entity, mesh);
-	const bool followsLand = registry.AllOf<MorphWithTerrain>(entity);
-	const glm::vec3 origin(model[3]);
-	const glm::vec3 up(model[1]);
-	const float scale = glm::length(glm::vec3(model[0]));
-	for (size_t i = 0; i < geometry.positions.size(); ++i)
-	{
-		auto position = geometry.positions[i];
-		if (morph != nullptr)
-		{
-			const auto partner = [&](const graphics::L3DSubMesh* other) {
-				const auto& positions = other != nullptr ? other->GetBodyGeometry().positions : geometry.positions;
-				return i < positions.size() ? positions[i] : geometry.positions[i];
-			};
-			position = creature_morph::Blend(position, partner(morphs[0]), partner(morphs[1]), partner(morphs[2]), *morph);
-		}
-		glm::vec4 local(position, 1.0f);
-		if (i < geometry.bones.size() && geometry.bones[i] != graphics::L3DSubMesh::k_NoBone &&
-		    geometry.bones[i] < bones.size())
-		{
-			local = bones[geometry.bones[i]] * local;
-		}
-		auto world = glm::vec3(model * local);
-		if (followsLand)
-		{
-			// Each corner moves along the model's up by how much higher the land is under it than under its origin
-			const float rise = HeightAt({world.x, world.z}) - HeightAt({origin.x, origin.z});
-			if (up.x == 0.0f && up.z == 0.0f)
-			{
-				world.y += rise;
-			}
-			else
-			{
-				world += up * (rise / scale);
-			}
-		}
-		corners.push_back(world);
-	}
-}
-
-/// Whether the submesh is drawn at the level of detail and stage the model is drawn at: the nearest level of detail and
-/// the first stage, as openblack draws every model
-bool Drawn(const graphics::L3DSubMesh& subMesh)
-{
-	const auto flags = subMesh.GetFlags();
-	return (flags.lodMask & 1) != 0 && flags.status == 0;
 }
 
 } // namespace
@@ -353,11 +256,11 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 		for (size_t s = 0; s < mesh->GetSubMeshes().size() && !distance.has_value(); ++s)
 		{
 			const auto& subMesh = *mesh->GetSubMeshes()[s];
-			if (!Drawn(subMesh))
+			if (!ecs::posed_model::IsDrawn(subMesh))
 			{
 				continue;
 			}
-			Place(registry, entity, *mesh, s, model, _placed);
+			ecs::posed_model::Place(registry, entity, *mesh, s, model, _placed);
 			const auto& geometry = subMesh.GetBodyGeometry();
 			_corners.clear();
 			for (size_t c = 0; c < _placed.size(); ++c)
@@ -462,7 +365,7 @@ std::optional<screen_pick::MeshHit> PickingSystem::FeelModel(entt::entity object
 			continue;
 		}
 		std::vector<glm::vec3> placed;
-		Place(registry, object, *mesh, s, found->model, placed);
+		ecs::posed_model::Place(registry, object, *mesh, s, found->model, placed);
 		const auto hit = screen_pick::NearestIntersection(placed, mesh->GetSubMeshes()[s]->GetBodyGeometry().indices, origin,
 		                                                  direction, false);
 		if (hit.has_value() && (!nearest.has_value() || hit->distance < nearest->distance))

@@ -170,3 +170,33 @@ TEST(CreatureMarks, SkinsArePaintedTattoosThenWoundsThenBlood)
 	Compose(out, base, variant, 0, {.skinIndex = 0, .tattoos = tattoos, .sites = sites, .marks = marks, .art = nullptr});
 	EXPECT_EQ(at(128, 128), 0x0000);
 }
+
+TEST(CreatureScars, AHardBlowCutsDeepAndFurtherAlongItsRow)
+{
+	using namespace openblack::creature_marks::scar;
+	EXPECT_EQ(BlowKind(0.49f), k_Cut);
+	EXPECT_EQ(BlowKind(0.5f), k_DeepCut);
+	// The weakest blow lands further back in the row, the hardest from the draw alone
+	EXPECT_EQ(Column(0, 0.0f), 5);
+	EXPECT_EQ(Column(4, 0.0f), 7);
+	EXPECT_EQ(Column(0, 1.0f), 0);
+	EXPECT_EQ(Column(4, 1.0f), 2);
+}
+
+TEST(CreatureScars, ABurnScarsOneTimeInThreeAndMoreRarelyOnAMarkedBody)
+{
+	using namespace openblack::creature_marks::scar;
+	EXPECT_EQ(BurnKind(0), k_Burn);
+	EXPECT_EQ(BurnKind(1), k_Cut);
+	EXPECT_EQ(BurnChance(0), 10u);
+	EXPECT_EQ(BurnChance(1024), 150u);
+	EXPECT_EQ(BurnChance(512), 80u);
+}
+
+TEST(CreatureScars, TheTexelIsTheTrianglesTextureAtThePoint)
+{
+	using namespace openblack::creature_marks::scar;
+	const std::array<glm::vec2, 3> uvs {glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(0.0f, 0.5f)};
+	EXPECT_EQ(TexelAt(uvs, 0.5f, 0.5f), glm::u8vec2(128, 64));
+	EXPECT_EQ(TexelAt(uvs, 1.5f, 0.0f), glm::u8vec2(255, 0));
+}

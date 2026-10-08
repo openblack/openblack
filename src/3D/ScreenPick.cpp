@@ -447,7 +447,29 @@ std::optional<MeshHit> NearestIntersection(std::span<const glm::vec3> corners, s
 		{
 			continue;
 		}
-		nearest = MeshHit {.point = point, .normal = facing <= 0.0f ? -normal : normal, .distance = distance};
+		// Where on the triangle, along its sides from the first corner
+		const auto side1 = v1 - v0;
+		const auto side2 = v2 - v0;
+		const auto offset = point - v0;
+		const float d11 = glm::dot(side1, side1);
+		const float d12 = glm::dot(side1, side2);
+		const float d22 = glm::dot(side2, side2);
+		const float denominator = d11 * d22 - d12 * d12;
+		float s = 0.0f;
+		float u = 0.0f;
+		if (denominator != 0.0f)
+		{
+			const float o1 = glm::dot(offset, side1);
+			const float o2 = glm::dot(offset, side2);
+			s = (d22 * o1 - d12 * o2) / denominator;
+			u = (d11 * o2 - d12 * o1) / denominator;
+		}
+		nearest = MeshHit {.point = point,
+		                   .normal = facing <= 0.0f ? -normal : normal,
+		                   .distance = distance,
+		                   .firstIndex = static_cast<uint32_t>(t),
+		                   .s = s,
+		                   .t = u};
 	}
 	return nearest;
 }

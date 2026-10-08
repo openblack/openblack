@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <glm/gtc/type_precision.hpp>
+#include <glm/vec2.hpp>
 
 /// The marks fights and fire leave on a creature's skin: wounds and burns, each a small picture from an atlas of
 /// damage that starts fresh and fades towards an old scar as it ages, and trails of blood, a texel at a time, darkening
@@ -64,6 +65,32 @@ struct Marks
 
 /// A mark added to a list, in place of the oldest when the list is full
 void Add(std::vector<Mark>& marks, const Mark& mark);
+
+/// What a blow or a burn cuts or scars into the skin, aimed at the groin from where it came
+namespace scar
+{
+/// A burn marks from a point within this many times the creature's size about its groin, up and down, and a quarter of
+/// it across
+constexpr float k_BurnReachPerSize = 15.0f;
+/// A mark is only made when where it came from is further from the groin than this, squared
+constexpr float k_LeastReachSquared = 0.01f;
+/// The kinds of wound a blow and a burn leave
+constexpr uint8_t k_Cut = 0;
+constexpr uint8_t k_DeepCut = 1;
+constexpr uint8_t k_Burn = 6;
+
+/// A blow of at least half the creature's harm cuts deep
+[[nodiscard]] uint8_t BlowKind(float harm);
+/// The wound's column in its row, from a draw of five: the harder the blow, the further along, 0 to 7
+[[nodiscard]] uint8_t Column(uint32_t drawOfFive, float harm);
+/// A burn scars as a burn only when a draw of three comes up 0, else it cuts
+[[nodiscard]] uint8_t BurnKind(uint32_t drawOfThree);
+/// A burn marks only when a draw of this many comes up 0: the more wounds the creature has already, the rarer
+[[nodiscard]] uint32_t BurnChance(size_t wounds);
+/// The texel of a skin 256 wide at a point on a triangle, s along its first side and t along its third, from its corners'
+/// texture coordinates
+[[nodiscard]] glm::u8vec2 TexelAt(const std::array<glm::vec2, 3>& uvs, float s, float t);
+} // namespace scar
 
 /// The marks healed by some counts: every k_CountsPerStep they age a step, and those as old as their kind lasts go.
 /// Whether they aged, so the skin is to be painted again.

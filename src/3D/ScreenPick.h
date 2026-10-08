@@ -139,6 +139,11 @@ struct MeshHit
 	glm::vec3 point;
 	glm::vec3 normal;
 	float distance;
+	/// The triangle met, by its first index, and where on it: the point is its first corner plus s of the way along its
+	/// first side and t along its third
+	uint32_t firstIndex {0};
+	float s {0.0f};
+	float t {0.0f};
 };
 /// The triangles are three corners each in the world. Faces nearly side-on to the line (normal and line at less than
 /// 0.005 of a right angle's cosine) are passed by; only hits ahead of the start count unless behind is allowed.

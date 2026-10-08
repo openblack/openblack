@@ -286,6 +286,10 @@ TEST(ScreenPick, ALineFeelsTheNearestTriangleAndItsNormalAlongTheLine)
 	EXPECT_NEAR(hit->point.y, 2.0f, 1e-5f);
 	EXPECT_NEAR(hit->distance, 8.0f, 1e-5f);
 	EXPECT_GT(hit->normal.y * -1.0f, 0.0f);
+	// The upper triangle, a quarter along its first side and half along its third
+	EXPECT_EQ(hit->firstIndex, 3u);
+	EXPECT_NEAR(hit->s, 0.25f, 1e-5f);
+	EXPECT_NEAR(hit->t, 0.5f, 1e-5f);
 	// A line along the faces' plane meets neither
 	EXPECT_FALSE(
 	    screen_pick::NearestIntersection(corners, indices, {-5.0f, 2.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, false).has_value());
