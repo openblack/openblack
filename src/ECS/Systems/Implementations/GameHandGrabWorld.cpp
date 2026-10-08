@@ -58,6 +58,7 @@
 #include "ECS/Systems/PickingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
+#include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "Hand/HandGrabRules.h"
@@ -513,33 +514,13 @@ hand_grab::ScoopFacts GameHandGrabWorld::ScoopFactsOf(PotInfo handful) const
 
 uint32_t GameHandGrabWorld::TakeFromPile(entt::entity pile, uint32_t amount)
 {
-	auto& registry = Locator::entitiesRegistry::value();
-	auto* pot = registry.TryGet<Pot>(pile);
-	if (pot == nullptr)
+	const auto facts = PotFactsOf(pile);
+	if (!facts.has_value() || !Locator::resourceStoreSystem::has_value())
 	{
 		return 0;
 	}
-	const auto taken = std::min(amount, pot->amount);
-	pot->amount -= taken;
-	// A store's pile stays, its store counting what it lost; any other goes once it has nothing left
-	entt::entity store = entt::null;
-	registry.Each<const StoragePit>([pile, &store](entt::entity pit, const StoragePit& data) {
-		if (data.foodPile == pile || std::ranges::find(data.woodPiles, pile) != data.woodPiles.end())
-		{
-			store = pit;
-		}
-	});
-	if (auto* abode = store != entt::null ? registry.TryGet<Abode>(store) : nullptr)
-	{
-		const auto facts = PotFactsOf(pile);
-		auto& counted = facts.has_value() && facts->resource == ResourceType::Wood ? abode->woodAmount : abode->foodAmount;
-		counted -= std::min(counted, taken);
-	}
-	else if (pot->amount == 0)
-	{
-		world_objects::Remove(pile);
-	}
-	return taken;
+	// Taking from a town's store counts against its owner, and is remembered of the hand's player
+	return Locator::resourceStoreSystem::value().TakeFromPile(pile, facts->resource, amount, HandPlayer());
 }
 
 entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount)
@@ -585,21 +566,28 @@ float GameHandGrabWorld::LandHeightAt(glm::vec3 point) const
 
 bool GameHandGrabWorld::StoresResource(entt::entity store, ResourceType resource) const
 {
-	// A storage pit stores any resource
-	return (resource == ResourceType::Food || resource == ResourceType::Wood) &&
-	       Locator::entitiesRegistry::value().AllOf<StoragePit, Abode>(store);
+	return Locator::resourceStoreSystem::has_value() && Locator::resourceStoreSystem::value().IsStore(store, resource);
 }
 
 uint32_t GameHandGrabWorld::AddToStore(entt::entity store, ResourceType resource, uint32_t amount)
 {
-	// TODO(hand): the player's creature may copy the giving, and the advisor says the resource was dropped
-	return _resources.StoreResource(store, resource, amount);
+	return Locator::resourceStoreSystem::has_value()
+	           ? Locator::resourceStoreSystem::value().AddToStore(store, resource, amount, HandPlayer(), false)
+	           : 0;
+}
+
+bool GameHandGrabWorld::TakeIntoStore(entt::entity store, entt::entity object)
+{
+	return Locator::resourceStoreSystem::has_value() &&
+	       Locator::resourceStoreSystem::value().TakeObject(store, object, HandPlayer());
 }
 
 void GameHandGrabWorld::PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player)
 {
-	// TODO(hand): the player's creature may copy the giving to each store, and the advisor says the resource was dropped
-	_resources.AddResource(resource, point, amount, false, player);
+	if (Locator::resourceStoreSystem::has_value())
+	{
+		Locator::resourceStoreSystem::value().PourAt(resource, point, amount, false, player);
+	}
 }
 
 void GameHandGrabWorld::UseUp(entt::entity object)

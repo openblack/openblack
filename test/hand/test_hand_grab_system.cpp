@@ -188,6 +188,16 @@ public:
 		stored[store] += amount;
 		return amount;
 	}
+	bool TakeIntoStore(entt::entity store, entt::entity object) override
+	{
+		if (!stores.contains(store))
+		{
+			return false;
+		}
+		takenWhole.emplace_back(store, object);
+		registry.Destroy(object);
+		return true;
+	}
 	void PourAt(ResourceType, glm::vec3, uint32_t amount, PlayerNames) override { pouredAmounts.push_back(amount); }
 	void UseUp(entt::entity object) override
 	{
@@ -224,6 +234,7 @@ public:
 	std::vector<entt::entity> holes;
 	std::vector<entt::entity> poured;
 	std::vector<entt::entity> potReactionsSetUp;
+	std::vector<std::pair<entt::entity, entt::entity>> takenWhole;
 	std::vector<std::pair<entt::entity, glm::vec3>> released;
 	std::vector<std::pair<entt::entity, glm::vec3>> twists;
 	uint32_t streams {0};
@@ -515,4 +526,54 @@ TEST_F(HandGrabSystemWithWorld, AHandfulPressedOntoAStoreGoesIntoIt)
 	EXPECT_EQ(world->stored[store], 25u);
 	EXPECT_EQ(world->usedUp, std::vector<entt::entity> {handful});
 	EXPECT_TRUE(world->released.empty());
+}
+
+TEST_F(HandGrabSystemWithWorld, ATreePressedOntoAStoreGoesIntoItWhole)
+{
+	const auto tree = world->AddTree({0.0f, 0.0f, 0.0f}, 10.0f);
+	world->underCursor = tree;
+	Press();
+	for (int i = 0; i < 40 && !system->GetHeld().has_value(); ++i)
+	{
+		Frame(10);
+	}
+	ASSERT_TRUE(system->GetHeld().has_value());
+	Release();
+	const auto store = world->registry.Create();
+	world->stores.insert(store);
+	world->underCursor = store;
+	EXPECT_TRUE(Press());
+	ASSERT_EQ(world->takenWhole.size(), 1u);
+	EXPECT_EQ(world->takenWhole.front().first, store);
+	EXPECT_EQ(world->takenWhole.front().second, tree);
+	EXPECT_FALSE(system->GetHeld().has_value());
+}
+
+TEST_F(HandGrabSystemWithWorld, APotLetGoOverTheLandCallsThePeopleAgain)
+{
+	const auto pile = world->registry.Create();
+	world->registry.Assign<Transform>(pile, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->registry.Assign<Pot>(pile, Pot {.amount = 100, .maxAmount = 2000, .type = PotInfo::FoodPile});
+	world->underCursor = pile;
+	Press();
+	Release();
+	const auto handful = *system->GetHeld();
+	world->underCursor.reset();
+	// Made ready and let go slowly, it is poured, having called the people to it first
+	Press();
+	Frame(10);
+	Release();
+	EXPECT_EQ(world->potReactionsSetUp, std::vector<entt::entity> {handful});
+}
+
+TEST_F(HandGrabSystemWithWorld, AThingLetGoBeforeItIsTakenIsStillTheLastLetGo)
+{
+	const auto rock = world->AddRock({0.0f, 0.0f, 0.0f});
+	world->underCursor = rock;
+	Press();
+	// The first frame of the pull never pulls, so the rock is still being taken
+	Frame(200);
+	EXPECT_FALSE(system->GetHeld().has_value());
+	Release();
+	EXPECT_EQ(world->registry.Get<const HandGrab>(world->hand).released, rock);
 }

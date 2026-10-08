@@ -158,6 +158,8 @@ public:
 	[[nodiscard]] virtual bool StoresResource(entt::entity store, ResourceType resource) const = 0;
 	/// A store takes what it will of some resource; what it took
 	virtual uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount) = 0;
+	/// A store takes a thing whole, for the resource it is worth, and the thing goes; whether it took it
+	virtual bool TakeIntoStore(entt::entity store, entt::entity object) = 0;
 	/// Some resource poured onto a point: to the stores and piles of it about the point, or a new pile
 	virtual void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player) = 0;
 	/// A thing is used up: a ghost of it flickers out where it was, and it goes

@@ -14,7 +14,6 @@
 #endif
 
 #include "Hand/HandGrabWorld.h"
-#include "MagicSystem.h"
 
 namespace openblack::ecs::systems
 {
@@ -73,6 +72,7 @@ public:
 	[[nodiscard]] float LandHeightAt(glm::vec3 point) const override;
 	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType resource) const override;
 	uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount) override;
+	bool TakeIntoStore(entt::entity store, entt::entity object) override;
 	void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player) override;
 	void UseUp(entt::entity object) override;
 	FromHandResult LetGoFromHand(entt::entity object, const FromHand& release) override;
@@ -83,7 +83,6 @@ public:
 
 private:
 	/// The piles and stores what is poured out of a pot goes into, as the miracles' food and wood do
-	GameMagicWorld _resources;
 };
 
 } // namespace openblack::ecs::systems

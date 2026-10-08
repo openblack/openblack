@@ -11,11 +11,16 @@
 
 #include "3D/MapCoords.h"
 #include "ECS/Components/Animal.h"
+#include "ECS/Components/DeadTree.h"
 #include "ECS/Components/LivingAction.h"
+#include "ECS/Components/Mobile.h"
+#include "ECS/Components/Pot.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
+#include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "Locator.h"
@@ -96,5 +101,42 @@ void PhysicsGameHooks::StartFlyingFromHand([[maybe_unused]] DynamicsSystemInterf
 	if (Locator::entitiesRegistry::value().AllOf<Villager>(entry.entity))
 	{
 		StartFlying(entry.entity);
+	}
+}
+
+void PhysicsGameHooks::ReactToImpact([[maybe_unused]] DynamicsSystemInterface& dynamics, PhysicsEntry& entry,
+                                     const ImpactInfo& impact)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto object = entry.entity;
+	const auto hitter = impact.hitBy;
+	if (hitter == entt::null || !registry.Valid(hitter) || !registry.Valid(object) ||
+	    !Locator::resourceStoreSystem::has_value())
+	{
+		return;
+	}
+	// A thing that is a resource and meets a store of it goes into the store: trees, dead trees and fences as wood,
+	// mushrooms and animals as food, a pot or pile as what it holds, which a pile of the same also takes
+	auto& stores = Locator::resourceStoreSystem::value();
+	const auto resource = stores.ResourceOf(object);
+	if (resource.type == ResourceType::None)
+	{
+		return;
+	}
+	// TODO(stores): a fence a script made indestructible stays out of stores; openblack has no indestructible flag yet
+	if (stores.IsStore(hitter, resource.type))
+	{
+		stores.TakeObject(hitter, object, impact.player);
+		return;
+	}
+	if (registry.AllOf<Pot>(object))
+	{
+		if (const auto* other = registry.TryGet<const Pot>(hitter);
+		    other != nullptr && stores.ResourceOf(hitter).type == resource.type)
+		{
+			stores.AddToPile(hitter, resource.type, resource.amount);
+			world_objects::LeaveGhost(object);
+			world_objects::Remove(object);
+		}
 	}
 }

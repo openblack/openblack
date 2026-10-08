@@ -74,6 +74,7 @@
 #include "ECS/Systems/Implementations/RainSystem.h"
 #include "ECS/Systems/Implementations/ReactionSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
+#include "ECS/Systems/Implementations/ResourceStoreSystem.h"
 #include "ECS/Systems/Implementations/SnowSystem.h"
 #include "ECS/Systems/Implementations/SnowfallSystem.h"
 #include "ECS/Systems/Implementations/SoundTagSystem.h"
@@ -153,6 +154,7 @@ using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RainSystem;
 using openblack::ecs::systems::ReactionSystem;
 using openblack::ecs::systems::RenderingSystem;
+using openblack::ecs::systems::ResourceStoreSystem;
 using openblack::ecs::systems::SnowfallSystem;
 using openblack::ecs::systems::SnowSystem;
 using openblack::ecs::systems::SoundTagSystem;
@@ -296,6 +298,7 @@ void InitializeLevelWith(const LandSource& land)
 	Locator::dynamicsSystem::value().SetClassHooks(std::make_unique<openblack::ecs::PhysicsGameHooks>());
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
 	Locator::townSystem::emplace<TownSystem>();
+	Locator::resourceStoreSystem::emplace<ResourceStoreSystem>();
 	Locator::weatherSystem::emplace<WeatherSystem>();
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	// Where creatures can walk is sorted anew for each land
@@ -348,6 +351,7 @@ void openblack::ShutDownServices()
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();
 	Locator::townSystem::reset();
+	Locator::resourceStoreSystem::reset();
 	Locator::weatherSystem::reset();
 	Locator::handGrabSystem::reset();
 	Locator::handSystem::reset();

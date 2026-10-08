@@ -415,7 +415,14 @@ bool HandGrabSystem::ApplyTo(HandGrab& grab, entt::entity target)
 	const auto pot = _world->PotFactsOf(held);
 	if (!pot.has_value())
 	{
-		return false;
+		// A tree, a dead tree, a fence, a mushroom or an animal goes whole into a store of what it is worth
+		// TODO(stores): onto a worship totem, a teleport, a gate's plinth or a scaffold; openblack has none of those yet
+		if (!_world->TakeIntoStore(target, held))
+		{
+			return false;
+		}
+		Empty(grab);
+		return true;
 	}
 	if (_world->StoresResource(target, pot->resource))
 	{

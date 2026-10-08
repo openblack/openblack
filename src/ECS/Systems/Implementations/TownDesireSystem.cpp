@@ -213,6 +213,30 @@ float TownDesireSystem::GetRawDesire(entt::entity town, TownDesireInfo desire) c
 	return townDesire != nullptr && Valid(desire) ? town_desire::GetRawDesire(*townDesire, Index(desire)) : 0.0f;
 }
 
+float TownDesireSystem::RecomputeDesire(entt::entity town, TownDesireInfo desire)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* townDesire = registry.TryGet<TownDesire>(town);
+	const auto* data = registry.TryGet<const Town>(town);
+	const auto* tribe = registry.TryGet<const Tribe>(town);
+	if (townDesire == nullptr || data == nullptr || tribe == nullptr || !Valid(desire))
+	{
+		return 0.0f;
+	}
+	const auto& info = Locator::infoConstants::value();
+	const auto& farmer = info.villager.at(10);
+	const auto inputs = GatherInputs(town, *data, *tribe);
+	const town_desire::DesireContext context {
+	    .desire = *townDesire,
+	    .in = inputs,
+	    .town = info.town,
+	    .info = info.townDesire,
+	    .farmerMaxFood = farmer.maxFoodCarried,
+	    .farmerMaxWood = farmer.maxWoodCarried,
+	};
+	return town_desire::CallDesireFunction(*townDesire, context, Index(desire));
+}
+
 TownDesireInfo TownDesireSystem::GetMostWanted(entt::entity town) const
 {
 	const auto* townDesire = Locator::entitiesRegistry::value().TryGet<const TownDesire>(town);

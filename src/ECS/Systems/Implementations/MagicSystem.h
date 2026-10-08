@@ -66,18 +66,11 @@ public:
 	bool AddResource(ResourceType type, glm::vec3 point, uint32_t amount, bool speedUp, PlayerNames player) override;
 	[[nodiscard]] bool CanBeDestroyedBySpell(entt::entity object) const override;
 
-	/// What a store takes of food or wood given to it, as a storage pit takes it into its piles
-	uint32_t StoreResource(entt::entity store, ResourceType type, uint32_t given) { return AddToStore(store, type, given); }
-
 	/// Once a game turn: the flames burn down, and the objects are filed by their cells afresh when next asked for
 	void ProcessTurn();
 	void Reset();
 
 private:
-	/// Whether a point is in the water, as off the land is (MagicResources.cpp)
-	[[nodiscard]] bool IsWater(glm::vec3 point) const;
-	/// What a storage pit takes into its piles of food or wood that is poured by it
-	uint32_t AddToStore(entt::entity store, ResourceType type, uint32_t given);
 	/// The objects an effect may reach in a square of the map's cells, as the cells keep them
 	[[nodiscard]] std::vector<magic::EffectReceiver> ReceiversIn(const magic::CellRange& cells);
 	/// What an effect did to the objects it reached: their lives, the flames, the alignment of whoever it came from, and
