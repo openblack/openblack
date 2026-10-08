@@ -2608,6 +2608,12 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 		                   path.generic_string(), fotPath.generic_string());
 	}
 
+	// With the land laid out, each town gathers the lone trees about it into its scenic forest
+	if (Locator::forestSystem::has_value())
+	{
+		Locator::forestSystem::value().MakeScenicForests();
+	}
+
 	StartNewLand();
 	return true;
 }

@@ -50,6 +50,10 @@ public:
 	/// land's own forests, never one the forest miracles' forests are numbered with
 	[[nodiscard]] virtual uint32_t NewLandForestId() const = 0;
 
+	/// Once the land is laid out: each town gathers the lone trees about it, out to a little beyond the reach of its
+	/// forests, into a forest of its own (taking a tree from another town's such forest when it stands nearer this town)
+	virtual void MakeScenicForests() = 0;
+
 	/// Once a game turn, after the miracles: the forests grow or wither
 	virtual void ProcessTurn() = 0;
 	/// A new land: no forests

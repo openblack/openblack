@@ -26,6 +26,7 @@ public:
 	[[nodiscard]] bool HasTrees(entt::entity spell) const override;
 	std::optional<entt::entity> AddTreeNear(entt::entity tree) override;
 	[[nodiscard]] uint32_t NewLandForestId() const override;
+	void MakeScenicForests() override;
 	void ProcessTurn() override;
 	void Reset() override;
 

@@ -122,6 +122,31 @@ bool OfTown(const Registry& registry, entt::entity thing)
 	return found;
 }
 
+/// The scenic forest of a thing's town, when it belongs to a town that has one
+std::optional<uint32_t> TownScenicForest(const Registry& registry, entt::entity thing)
+{
+	std::optional<int64_t> townId;
+	if (const auto* abode = registry.TryGet<const Abode>(thing))
+	{
+		townId = abode->townId;
+	}
+	else if (const auto* field = registry.TryGet<const Field>(thing))
+	{
+		townId = field->town;
+	}
+	std::optional<uint32_t> forest;
+	if (townId.has_value())
+	{
+		registry.Each<const Town>([&forest, townId](entt::entity, const Town& town) {
+			if (static_cast<int64_t>(town.id) == *townId)
+			{
+				forest = town.scenicForest;
+			}
+		});
+	}
+	return forest;
+}
+
 /// The tree takes root again: a white puff of smoke at its foot, then it finds a forest to join among what stands round it
 void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInterface& land)
 {
@@ -160,10 +185,10 @@ void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInter
 				const float edge = gutils::GetDistanceInMetres(map_coords::FromMetres({at.x, at.z}), own) -
 				                   world_objects::SizeOf(thing).radius;
 				const auto* member = registry.AllOf<Tree>(thing) ? registry.TryGet<const ForestMember>(thing) : nullptr;
-				// TODO(towns): a town's own forests; openblack's towns keep none, so near a town the tree joins none
+				// Near a town it joins the town's scenic forest, if the town has one
 				if (!search.Meet({.edgeDistance = edge,
 				                  .ofTown = OfTown(registry, thing),
-				                  .townForest = std::nullopt,
+				                  .townForest = TownScenicForest(registry, thing),
 				                  .forest = member != nullptr ? std::optional(member->forest) : std::nullopt}))
 				{
 					break;

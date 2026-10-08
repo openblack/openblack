@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <numbers>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 #include <LNDFile.h>
@@ -46,6 +47,7 @@
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Map.h"
@@ -67,6 +69,8 @@ namespace forest = openblack::magic::forest;
 
 namespace
 {
+/// A town's scenic forest reaches this much further than its forests
+constexpr float k_ScenicForestBeyond = 10.0f;
 constexpr float k_TwoPi = 2.0f * std::numbers::pi_v<float>;
 /// Positions are kept in 1/6553.6 of a metre, as the map keeps them: the spiral's points are cut down to that
 constexpr float k_MapUnitsPerMetre = 6553.6f;
@@ -485,6 +489,47 @@ uint32_t ForestSystem::NewLandForestId() const
 		}
 	});
 	return highest + 1;
+}
+
+void ForestSystem::MakeScenicForests()
+{
+	if (!Locator::infoConstants::has_value())
+	{
+		return;
+	}
+	auto& registry = EntityRegistry();
+	const float reach = Locator::infoConstants::value().town.maxDistanceForTownForest + k_ScenicForestBeyond;
+	// Each town's own centre, where its scenic forest is reckoned from
+	std::unordered_map<uint32_t, glm::vec2> centres;
+	registry.Each<Town, const Transform>([&](entt::entity, Town& town, const Transform& transform) {
+		const glm::vec2 centre {transform.position.x, transform.position.z};
+		const auto centreCell = glm::vec2(map_coords::CellOf(centre));
+		std::optional<uint32_t> forest = town.scenicForest;
+		registry.Each<const Tree, const Transform>([&](entt::entity tree, const Tree&, const Transform& at) {
+			const glm::vec2 point {at.position.x, at.position.z};
+			// The cells are walked out from the centre for as far as the reach goes
+			if (glm::distance(glm::vec2(map_coords::CellOf(point)), centreCell) * map_coords::k_CellSize > reach)
+			{
+				return;
+			}
+			if (const auto* member = registry.TryGet<const ForestMember>(tree))
+			{
+				// In another town's scenic forest, it comes to this one only when it stands nearer this town
+				const auto other = centres.find(member->forest);
+				if (other == centres.end() || glm::distance(other->second, point) <= glm::distance(centre, point))
+				{
+					return;
+				}
+			}
+			if (!forest.has_value())
+			{
+				forest = NewLandForestId();
+				centres[*forest] = centre;
+			}
+			registry.AssignOrReplace<ForestMember>(tree, ForestMember {.forest = *forest});
+		});
+		town.scenicForest = forest;
+	});
 }
 
 void ForestSystem::Reset()

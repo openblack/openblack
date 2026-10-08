@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -31,6 +32,8 @@ struct Town
 	uint32_t injured {0};
 	/// What its people's deaths came to, by the player put down for each (by player number) and what killed them
 	std::array<std::array<float, static_cast<size_t>(DeathReason::_COUNT)>, 8> deathsByKiller {};
+	/// The forest of the lone trees about it, made as the land is laid out; a tree replanted near the town joins it
+	std::optional<uint32_t> scenicForest;
 };
 
 } // namespace openblack::ecs::components
