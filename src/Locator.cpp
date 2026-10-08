@@ -63,6 +63,7 @@
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
 #include "ECS/Systems/Implementations/MagicShieldSystem.h"
 #include "ECS/Systems/Implementations/MagicSystem.h"
+#include "ECS/Systems/Implementations/MiracleFxSystem.h"
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/ParticleSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
@@ -139,6 +140,7 @@ using openblack::ecs::systems::LeashSystem;
 using openblack::ecs::systems::LivingActionSystem;
 using openblack::ecs::systems::MagicShieldSystem;
 using openblack::ecs::systems::MagicSystem;
+using openblack::ecs::systems::MiracleFxSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::ParticleSystem;
 using openblack::ecs::systems::PathfindingSystem;
@@ -265,6 +267,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::gestureEvents::reset(static_cast<GestureEventsInterface*>(&Locator::gestureSystem::value()),
 	                              [](GestureEventsInterface* /*unowned*/) {});
 	Locator::magicSystem::emplace<MagicSystem>();
+	Locator::miracleFxSystem::emplace<MiracleFxSystem>();
 	Locator::fireSystem::emplace<ecs::systems::FireSystem>();
 	Locator::explosionSystem::emplace<ecs::systems::ExplosionSystem>();
 	return true;

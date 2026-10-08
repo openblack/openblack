@@ -126,10 +126,10 @@ public:
 		bool gesturing {false};
 	};
 	/// A recognised gesture's trail to show on the land, in the effect every trail shows in, which runs all the time
-	virtual void AddGestureTrail(std::shared_ptr<particles::GestureTrail> /*trail*/) {}
+	virtual void AddGestureTrail(std::shared_ptr<particles::GestureTrail> trail) = 0;
 	/// Once a frame, by the frame's game time (none while the game is paused): the trails' sheets of light move on, and
 	/// the chain behind the hand steps
-	virtual void UpdateFrame(float /*gameSeconds*/, const HandFrame& /*hand*/) {}
+	virtual void UpdateFrame(float gameSeconds, const HandFrame& hand) = 0;
 	/// The effect stops making particles and fades out as its file has it, or goes at once
 	virtual void CloseDown(EffectId id) = 0;
 	virtual void Delete(EffectId id) = 0;

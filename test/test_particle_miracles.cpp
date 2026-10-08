@@ -80,6 +80,7 @@ public:
 		}
 		return found;
 	}
+	void QueueArcs(entt::entity object) override { arcsQueued.push_back(object); }
 	void AddShield(const std::shared_ptr<ShieldSphere>& shield) override { shields.push_back(shield); }
 	[[nodiscard]] std::shared_ptr<ShieldSphere> FindShield(glm::vec3 point, float margin) const override
 	{
@@ -102,6 +103,23 @@ public:
 			}
 		}
 		return nullptr;
+	}
+
+	[[nodiscard]] std::optional<glm::vec3> ObjectPosition(entt::entity object) const override
+	{
+		const auto found = objects.find(object);
+		return found != objects.end() ? std::optional(found->second) : std::nullopt;
+	}
+	[[nodiscard]] SurfacePoint RandomSurfacePoint(entt::entity object, Effect& effect) const override
+	{
+		const auto found = objects.find(object);
+		if (found == objects.end())
+		{
+			return {};
+		}
+		// A model one high over its place, a point picked on its top
+		return {.kind = SurfacePoint::Kind::Point,
+		        .position = found->second + glm::vec3(effect.Random(1.0f), 1.0f, effect.Random(1.0f))};
 	}
 
 	std::map<entt::entity, glm::vec3> objects;
@@ -514,6 +532,32 @@ TEST_F(ParticleMiracleTest, ABoltGivenTargetsStrikesWhereTheyStandWithinItsRadiu
 	EXPECT_TRUE(world.arcsQueued.empty());
 }
 
+TEST_F(ParticleMiracleTest, ArcsCrawlOverWhatABoltStrikesAgainAfterEachSearch)
+{
+	const auto tree = static_cast<entt::entity>(1);
+	world.candidates = {{.object = tree, .position = {0.0f, 0.0f, 20.0f}, .height = 10.0f, .arcs = true}};
+	auto bolt = Make(Header("1 0 0") + Object("ParticleChainCreator", "Joint", k_Chain) +
+	                 Object("UR_Lightning", "Bolt",
+	                        "PROPERTY Group INTEGER 0\nPROPERTY PCreator PERSIS_PNTR Joint\nPROPERTY ForkGroup INTEGER 1\n"
+	                        "PROPERTY MinLightningObjects INTEGER 1\nPROPERTY MaxJointsPerFork INTEGER 6\n"
+	                        "PROPERTY DefaultSearchRadius FLOAT 50\nPROPERTY SplitAngle FLOAT 0.785\n"));
+	bolt->SetProcessInfo({.handPosition = {0.0f, 15.0f, 0.0f}, .cameraForward = {0.0f, 0.0f, 1.0f}, .enabled = true});
+	// Not in the first 0.2 seconds after a search
+	for (int step = 0; step < 2; ++step)
+	{
+		bolt->Step(k_Step);
+	}
+	EXPECT_TRUE(world.arcsQueued.empty());
+	// Struck every step, it is queued once for each search, about every second
+	for (int step = 2; step < 32; ++step)
+	{
+		bolt->Step(k_Step);
+	}
+	EXPECT_GE(world.arcsQueued.size(), 2u);
+	EXPECT_LE(world.arcsQueued.size(), 3u);
+	EXPECT_TRUE(std::ranges::all_of(world.arcsQueued, [tree](entt::entity object) { return object == tree; }));
+}
+
 TEST_F(ParticleMiracleTest, ABoltThatIsNoLongerCastStrikesNothing)
 {
 	world.candidates = {{.object = static_cast<entt::entity>(1), .position = {0.0f, 0.0f, 20.0f}, .height = 10.0f}};
@@ -578,4 +622,40 @@ TEST_F(ParticleMiracleTest, AnAtomsSoundIsLetGoWhenTheAtomGoes)
 		effect->Step(k_Step);
 	}
 	EXPECT_EQ(world.sounds[0]->atom, nullptr);
+}
+
+TEST_F(ParticleMiracleTest, SparklesComeOffTheModelOfTheObjectTheEffectIsGiven)
+{
+	const auto pile = static_cast<entt::entity>(7);
+	world.objects[pile] = {10.0f, 0.0f, 20.0f};
+	auto effect =
+	    Make(Header() + Object("ParticleSpriteCreator", "Grain", k_Point) +
+	         Object("CreateRule_GameObjectRef", "Anchor", "PROPERTY Group INTEGER 0\nPROPERTY NextGroups ARRAY SIZE 1 1\n") +
+	         Object("ER_EmitFromParentAtom", "Sparkles",
+	                "PROPERTY Group INTEGER 1\nPROPERTY PCreator PERSIS_PNTR Grain\nPROPERTY MaxAtoms INTEGER 15\n"
+	                "PROPERTY AtomAgeZeroSize FLOAT 1.7\nPROPERTY DoScaling BOOL 0\nPROPERTY EmitOnlyAboveLandscape BOOL 1\n"));
+	effect->AddTarget(pile);
+	for (int i = 0; i < 10; ++i)
+	{
+		effect->Step(k_Step);
+	}
+	// The unseen anchor and, at fifteen over 1.7 seconds, nearly nine owed after a second, let out until none is owed
+	EXPECT_EQ(effect->AtomCount(), 1u + 9u);
+	std::vector<Effect::DrawAtom> drawn;
+	effect->Collect(1.0f, drawn);
+	ASSERT_FALSE(drawn.empty());
+	for (const auto& sparkle : drawn)
+	{
+		EXPECT_NEAR(sparkle.position.y, 1.0f, k_Epsilon);
+		EXPECT_GE(sparkle.position.x, 10.0f);
+		EXPECT_LE(sparkle.position.x, 11.0f);
+	}
+	// Once the object goes the anchor stays where it was, and points at it on the ground are not above the land: the
+	// sparkles die out and no more come
+	world.objects.clear();
+	for (int i = 0; i < 25; ++i)
+	{
+		effect->Step(k_Step);
+	}
+	EXPECT_EQ(effect->AtomCount(), 1u);
 }
