@@ -61,7 +61,7 @@ public:
 	[[nodiscard]] glm::mat3 UnstretchedAxes(entt::entity object, const glm::mat3& axes) const override;
 
 	[[nodiscard]] std::optional<Pose> ReleasePose(entt::entity object, bool alignToSlope) override;
-	void PourPot(entt::entity pot, PlayerNames player) override;
+	std::optional<uint32_t> PourPot(entt::entity pot, PlayerNames player) override;
 	[[nodiscard]] std::optional<PotFacts> PotFactsOf(entt::entity pot) const override;
 	[[nodiscard]] hand_grab::ScoopFacts ScoopFactsOf(PotInfo handful) const override;
 	uint32_t TakeFromPile(entt::entity pile, uint32_t amount) override;
@@ -70,6 +70,7 @@ public:
 	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) override;
 	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) override;
 	void StopScoopStream(uint32_t stream) override;
+	void MoveScoopStream(uint32_t stream, glm::vec3 hand) override;
 	void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) override;
 	[[nodiscard]] float LandHeightAt(glm::vec3 point) const override;
 	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType resource) const override;

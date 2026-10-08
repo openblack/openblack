@@ -97,6 +97,17 @@ struct HandGrab
 	entt::entity released {entt::null};
 	std::optional<int32_t> releaseSpinMs;
 
+	/// The pour of a handful let go slowly, and how long it has poured for: it ends after three quarters of a second
+	std::optional<uint32_t> pourEffect;
+	float pourSeconds {0.0f};
+	/// How long the stream of a scoop has flowed for: it ends after a minute
+	float scoopStreamSeconds {0.0f};
+
+	/// The hand's size last frame, which sets how far up a pulled thing it grips, and the point it picked on the land
+	/// then, none over nothing
+	float handSize {1.0f};
+	std::optional<glm::vec3> handPoint;
+
 	/// What it last picked up and last dropped, while they still exist
 	entt::entity lastPickedUp {entt::null};
 	entt::entity lastDropped {entt::null};

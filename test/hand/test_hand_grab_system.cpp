@@ -137,7 +137,11 @@ public:
 		return result;
 	}
 	[[nodiscard]] std::optional<Pose> ReleasePose(entt::entity, bool) override { return std::nullopt; }
-	void PourPot(entt::entity pot, PlayerNames) override { poured.push_back(pot); }
+	std::optional<uint32_t> PourPot(entt::entity pot, PlayerNames) override
+	{
+		poured.push_back(pot);
+		return ++streams;
+	}
 	[[nodiscard]] std::optional<FieldFacts> FieldFactsOf(entt::entity field) const override
 	{
 		const auto found = fields.find(field);
@@ -190,6 +194,7 @@ public:
 		return streams;
 	}
 	void StopScoopStream(uint32_t stream) override { stopped.push_back(stream); }
+	void MoveScoopStream(uint32_t, glm::vec3 hand) override { streamPoints.push_back(hand); }
 	void PlayScoopSound(ResourceType, glm::vec3, float ramp) override { scoopSounds.push_back(ramp); }
 	[[nodiscard]] float LandHeightAt(glm::vec3) const override { return 0.0f; }
 	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType) const override { return stores.contains(store); }
@@ -250,6 +255,7 @@ public:
 	std::vector<std::pair<entt::entity, glm::vec3>> twists;
 	uint32_t streams {0};
 	std::vector<uint32_t> stopped;
+	std::vector<glm::vec3> streamPoints;
 	std::vector<float> scoopSounds;
 	std::set<entt::entity> stores;
 	std::map<entt::entity, uint32_t> stored;
@@ -603,4 +609,27 @@ TEST_F(HandGrabSystemWithWorld, ARipeFieldGivesHalfOfEachScoop)
 	EXPECT_EQ(world->fields[field].food, 988u);
 	system->ProcessTurn();
 	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 16u);
+}
+
+TEST_F(HandGrabSystemWithWorld, AScoopsStreamFollowsTheHandAndAPourEndsAfterThreeQuartersOfASecond)
+{
+	const auto pile = world->registry.Create();
+	world->registry.Assign<Transform>(pile, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->registry.Assign<Pot>(pile, Pot {.amount = 1000, .maxAmount = 2000, .type = PotInfo::FoodPile});
+	world->underCursor = pile;
+	EXPECT_TRUE(Press());
+	Frame(10);
+	EXPECT_FALSE(world->streamPoints.empty());
+	Release();
+	world->underCursor.reset();
+	// Made ready and let go slowly, the handful pours, and the pour stops after 0.75 s
+	Press();
+	Frame(10);
+	Release();
+	ASSERT_EQ(world->poured.size(), 1u);
+	const auto stoppedBefore = world->stopped.size();
+	Frame(700);
+	EXPECT_EQ(world->stopped.size(), stoppedBefore);
+	Frame(100);
+	EXPECT_EQ(world->stopped.size(), stoppedBefore + 1);
 }

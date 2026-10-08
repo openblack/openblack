@@ -91,10 +91,6 @@ private:
 	[[nodiscard]] bool HandInInfluence() const;
 
 	std::unique_ptr<hand_grab::HandGrabWorldInterface> _world;
-	/// The hand's size last frame, which sets how far up a pulled thing it grips
-	float _handSize {1.0f};
-	/// The point the hand picks on the land, last frame; none over nothing
-	std::optional<glm::vec3> _handPoint;
 };
 
 } // namespace openblack::ecs::systems

@@ -196,7 +196,8 @@ hand_grab::Holdable HandGrabSystem::HoldableOf(entt::entity object) const
 
 bool HandGrabSystem::HandInInfluence() const
 {
-	return _handPoint.has_value() && _world->InInfluence(_world->HandPlayer(), *_handPoint);
+	const auto* grab = _world->Entities().TryGet<const HandGrab>(_world->Hand());
+	return grab != nullptr && grab->handPoint.has_value() && _world->InInfluence(_world->HandPlayer(), *grab->handPoint);
 }
 
 bool HandGrabSystem::MayTake(entt::entity object) const
@@ -295,7 +296,7 @@ std::optional<entt::entity> HandGrabSystem::Release(uint32_t nowMs, uint32_t tur
 	{
 		// Let go with its point on the land off the map or out of the player's influence, the hand keeps hold and its
 		// spring lets go of it
-		if (!_handPoint.has_value() || !_world->InBounds(*_handPoint) || !HandInInfluence())
+		if (!grab->handPoint.has_value() || !_world->InBounds(*grab->handPoint) || !HandInInfluence())
 		{
 			grab->state = HandGrab::State::Holding;
 			grab->springOn = false;
@@ -358,6 +359,7 @@ bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 	grab.scoopTurns = 0;
 	grab.scoopAnchor = hand;
 	// What is scooped streams from the source into the hand
+	grab.scoopStreamSeconds = 0.0f;
 	grab.scoopStream = _world->StartScoopStream(facts->resource, sourcePosition);
 	return true;
 }
@@ -394,6 +396,7 @@ bool HandGrabSystem::StartFieldScoop(HandGrab& grab, entt::entity field, const F
 	grab.scoopSource = field;
 	grab.scoopTurns = 0;
 	grab.scoopAnchor = hand;
+	grab.scoopStreamSeconds = 0.0f;
 	grab.scoopStream = _world->StartScoopStream(ResourceType::Food, _world->PoseOf(field).origin);
 	return true;
 }
@@ -535,7 +538,7 @@ void HandGrabSystem::StartPull(HandGrab& grab, const Frame& frame)
 	grab.pullPlanePoint.y =
 	    toHand > 0.0f ? frame.camera.y - (toBase / toHand) * (frame.camera.y - frame.target.y) : pose.origin.y;
 	const auto hold = HoldOfObject(object);
-	grab.holdDistance = hand_grab::HoldDistance(hold.loweringMultiplier, _world->SizeOf(object).height, _handSize);
+	grab.holdDistance = hand_grab::HoldDistance(hold.loweringMultiplier, _world->SizeOf(object).height, grab.handSize);
 	grab.stretch.Reset(1.0f);
 	grab.tug = tug;
 }
@@ -709,7 +712,11 @@ void HandGrabSystem::LetGo(HandGrab& grab, glm::vec3 velocity, bool forced)
 	// A pot let go slowly is poured out where it is, onto what takes it or into a pile
 	if (registry.AllOf<Pot>(object) && hand_grab::PotPours(velocity))
 	{
-		_world->PourPot(object, player);
+		if (const auto pour = _world->PourPot(object, player))
+		{
+			grab.pourEffect = pour;
+			grab.pourSeconds = 0.0f;
+		}
 		registry.SetDirty();
 		return;
 	}
@@ -747,12 +754,36 @@ void HandGrabSystem::Empty(HandGrab& grab)
 
 glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 {
-	_handSize = frame.handSize;
-	_handPoint = frame.cursorGround;
 	auto* grab = Grab();
 	if (grab == nullptr)
 	{
 		return frame.target;
+	}
+	grab->handSize = frame.handSize;
+	grab->handPoint = frame.cursorGround;
+	// A pour lasts three quarters of a second of the game's time
+	if (grab->pourEffect.has_value())
+	{
+		grab->pourSeconds += static_cast<float>(frame.gameMs) * 0.001f;
+		if (grab->pourSeconds > hand_grab::k_PourSeconds)
+		{
+			_world->StopScoopStream(*grab->pourEffect);
+			grab->pourEffect.reset();
+		}
+	}
+	// A scoop's stream flows into the hand where it now is, for at most a minute
+	if (grab->scoopStream.has_value())
+	{
+		grab->scoopStreamSeconds += static_cast<float>(frame.gameMs) * 0.001f;
+		if (grab->scoopStreamSeconds > hand_grab::k_ScoopStreamSeconds)
+		{
+			_world->StopScoopStream(*grab->scoopStream);
+			grab->scoopStream.reset();
+		}
+		else
+		{
+			_world->MoveScoopStream(*grab->scoopStream, _world->PoseOf(_world->Hand()).origin);
+		}
 	}
 
 	// The twist of what it let go, once the hand has moved on a little

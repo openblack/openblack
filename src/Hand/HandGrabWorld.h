@@ -130,7 +130,7 @@ public:
 	[[nodiscard]] virtual std::optional<Pose> ReleasePose(entt::entity object, bool alignToSlope) = 0;
 	/// A pot let go slowly is poured out where it is: what it holds goes to what takes it there or into a pile, and the
 	/// pot goes
-	virtual void PourPot(entt::entity pot, PlayerNames player) = 0;
+	virtual std::optional<uint32_t> PourPot(entt::entity pot, PlayerNames player) = 0;
 
 	/// What a pile or pot holds, and what its handful's table says of scooping it
 	struct PotFacts
@@ -160,6 +160,8 @@ public:
 	/// The stream of what is scooped flowing from its source into the hand starts, and stops; its effect
 	[[nodiscard]] virtual std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) = 0;
 	virtual void StopScoopStream(uint32_t stream) = 0;
+	/// The stream flows to where the hand now is
+	virtual void MoveScoopStream(uint32_t stream, glm::vec3 hand) = 0;
 	/// The scooping sound of a game turn, rising as the scoop ramps up
 	virtual void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) = 0;
 	[[nodiscard]] virtual float LandHeightAt(glm::vec3 point) const = 0;

@@ -53,6 +53,9 @@ inline constexpr float k_FastReleaseSpeedSquared = 1.0f;
 
 /// After a throw the hand's motion gives what it threw a twist: this long after letting go...
 inline constexpr uint32_t k_ReleaseSpinDelayMs = 180;
+/// A handful poured out of the hand pours for three quarters of a second; a scoop's stream flows for at most a minute
+inline constexpr float k_PourSeconds = 0.75f;
+inline constexpr float k_ScoopStreamSeconds = 60.0f;
 /// ...by this much times its mass and speed, for one game turn
 inline constexpr float k_ReleaseSpinFactor = 1.6f;
 

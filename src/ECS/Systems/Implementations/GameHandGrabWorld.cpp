@@ -462,24 +462,26 @@ std::optional<hand_grab::HandGrabWorldInterface::Pose> GameHandGrabWorld::Releas
 	return Pose {.axes = UnstretchedAxes(object, pose->first), .origin = pose->second};
 }
 
-void GameHandGrabWorld::PourPot(entt::entity pot, PlayerNames player)
+std::optional<uint32_t> GameHandGrabWorld::PourPot(entt::entity pot, PlayerNames player)
 {
 	const auto facts = PotFactsOf(pot);
 	if (!facts.has_value())
 	{
-		return;
+		return std::nullopt;
 	}
 	// It pours out of the hand where the hand is
 	const auto hand = PoseOf(Hand()).origin;
+	std::optional<uint32_t> pour;
 	if (Locator::particleSystem::has_value() && player == HandPlayer())
 	{
 		// TODO(hand): a poisoned handful pours poisoned food, particles 111 (openblack keeps no poisoned pots)
 		const auto particles = facts->resource == ResourceType::Wood ? k_PourWood : k_PourFood;
-		Locator::particleSystem::value().Start(particles, hand, 1.0f);
+		pour = Locator::particleSystem::value().Start(particles, hand, 1.0f);
 	}
 	// What it holds goes to the stores and piles of it about the point, or makes a pile there; in the water it is lost
 	PourAt(facts->resource, hand, facts->amount, player);
 	UseUp(pot);
+	return pour;
 }
 
 std::optional<hand_grab::HandGrabWorldInterface::PotFacts> GameHandGrabWorld::PotFactsOf(entt::entity pot) const
@@ -576,6 +578,14 @@ void GameHandGrabWorld::StopScoopStream(uint32_t stream)
 	if (Locator::particleSystem::has_value())
 	{
 		Locator::particleSystem::value().CloseDown(stream);
+	}
+}
+
+void GameHandGrabWorld::MoveScoopStream(uint32_t stream, glm::vec3 hand)
+{
+	if (Locator::particleSystem::has_value())
+	{
+		Locator::particleSystem::value().SetOrigin(stream, hand);
 	}
 }
 
