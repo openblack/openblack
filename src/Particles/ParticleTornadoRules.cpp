@@ -335,7 +335,7 @@ private:
 			}
 			else
 			{
-				std::erase_if(flying.atoms, [atom](const auto& owned) { return owned.get() == atom; });
+				std::erase_if(flying.atoms, [&](const auto& owned) { return owned.get() == atom; });
 			}
 		}
 	}
