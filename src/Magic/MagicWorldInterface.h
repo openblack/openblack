@@ -38,6 +38,9 @@ struct EffectSource
 	/// The effect comes from no player at all, as a fall nobody caused: no player's alignment moves and nobody is
 	/// remembered for the harm
 	bool playerless {false};
+	/// The effect is a thing striking a creature in the physics: a creature fighting takes it neither as a blow of the
+	/// fight nor out of its life
+	bool blow {false};
 };
 
 /// A drop of the water miracle's rain

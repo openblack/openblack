@@ -279,7 +279,9 @@ void FrightenedAndAngered(entt::entity entity, float damage, const magic::Effect
 	auto& registry = EntityRegistry();
 	const auto* creature = registry.TryGet<const Creature>(entity);
 	auto* mind = registry.TryGet<CreatureMindState>(entity);
-	if (creature == nullptr || mind == nullptr || !mind->desires.has_value() || source.player == creature->owner)
+	// Only a player applying the effect themselves spares their own creature this; a thing that strikes it never does
+	if (creature == nullptr || mind == nullptr || !mind->desires.has_value() ||
+	    (!source.appliedBy.has_value() && source.player == creature->owner))
 	{
 		return;
 	}
@@ -319,6 +321,11 @@ bool magic_living::TakesEffectItsOwnWay(entt::entity entity, const magic::Effect
 	{
 		FrightenedAndAngered(entity, damage, source);
 		return false;
+	}
+	// A thing striking a fighting creature in the physics is neither a blow of the fight nor taken from its life
+	if (source.blow)
+	{
+		return true;
 	}
 	// In a fight it takes the miracle as a blow: blocking, a tenth of it; it reels, a heal gives back the health it fights
 	// with, and harm takes it, which can knock it out. Its life is untouched.

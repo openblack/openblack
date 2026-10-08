@@ -98,6 +98,7 @@ magic::EffectSource BlowSource(entt::entity hitter, std::optional<PlayerNames> p
 	    .casterCreature = validHitter && registry.AllOf<Creature>(hitter) ? hitter : entt::null,
 	    .appliedBy = validHitter ? hitter : entt::null,
 	    .playerless = !player.has_value(),
+	    .blow = true,
 	};
 }
 
