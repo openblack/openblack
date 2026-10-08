@@ -103,6 +103,10 @@ TEST(ClipSounds, ASoundsRouteFollowsTheGamesRules)
 	EXPECT_EQ(RouteOf({.soundType = 1, .clip = k_ThrownClip, .isVillager = true, .turnsInState = 15}).outcome, Outcome::Skip);
 	EXPECT_EQ(RouteOf({.soundType = 1, .clip = k_ThrownVortexClip, .isVillager = true, .turnsInState = 10}).outcome,
 	          Outcome::Skip);
+	// Anything else playing a thrown clip makes no sound with it
+	EXPECT_EQ(RouteOf({.soundType = 3, .clip = k_ThrownClip, .isVillager = false, .turnsInState = 0}).outcome, Outcome::Skip);
+	EXPECT_EQ(RouteOf({.soundType = 3, .clip = k_ThrownVortexClip, .isVillager = false, .turnsInState = 0}).outcome,
+	          Outcome::Skip);
 	// Inside the temple only sounds played another way than the ordinary one are heard
 	EXPECT_EQ(RouteOf({.soundType = 3, .mode = 0, .insideTemple = true}).outcome, Outcome::Skip);
 	EXPECT_EQ(RouteOf({.soundType = 3, .mode = 1, .insideTemple = true}).outcome, Outcome::Play);

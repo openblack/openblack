@@ -77,14 +77,14 @@ void creature_scars::MarkAlong(entt::entity creature, glm::vec3 from, glm::vec3 
 	const auto placement = creature::PlacementMatrix(transform->position, transform->rotation, transform->scale);
 	const auto hit = posed_model::NearestSkinHit(registry, creature, *meshes.Handle(mesh->id), placement, from,
 	                                             glm::normalize(groin - from));
-	if (!hit.has_value() || !hit->skin.has_value())
+	if (!hit.has_value())
 	{
 		return;
 	}
 	const auto texel = creature_marks::scar::TexelAt(hit->uvs, hit->hit.s, hit->hit.t);
 	Locator::creatureSkinSystem::value().AddWound(
 	    creature,
-	    {.u = texel.x, .v = texel.y, .skin = static_cast<uint8_t>(*hit->skin), .age = 0, .type = kind, .column = column});
+	    {.u = texel.x, .v = texel.y, .skin = static_cast<uint8_t>(hit->skin & 3u), .age = 0, .type = kind, .column = column});
 }
 
 void creature_scars::BurnOnCatching(entt::entity creature)

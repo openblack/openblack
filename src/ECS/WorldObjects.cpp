@@ -80,10 +80,9 @@ bool IsBuiltBuildingOfATown(const Registry& registry, entt::entity object)
 	{
 		return false;
 	}
-	bool townStands = false;
-	registry.Each<const Town>(
-	    [&townStands, abode](entt::entity, const Town& town) { townStands = townStands || town.id == abode->townId; });
-	return townStands;
+	const auto& towns = registry.Context().towns;
+	const auto town = towns.find(abode->townId);
+	return town != towns.end() && registry.Valid(town->second) && registry.AllOf<Town>(town->second);
 }
 
 /// A villager's health out of this is its life
@@ -306,14 +305,14 @@ float world_objects::ReduceLife(entt::entity object, float damage)
 		villager->health = static_cast<uint32_t>(std::ceil(life.life * k_VillagerHealthScale));
 		CountInjury(object, before, life.life);
 	}
-	if (registry.AllOf<Abode>(object) && damage > 0.0f)
+	if (registry.AllOf<Abode>(object) && life.life < 1.0f)
 	{
-		// Its people come out of a building that is being hurt
+		// Its people come out of a building left under its full life, however little it lost
 		EmptyBuilding(object);
 	}
 	// A built building of a town left under its full life gets a site for its repair, which starts from a little less
-	// than the life it is left with
-	if (life.life < 1.0f && damage > 0.0f && IsBuiltBuildingOfATown(registry, object))
+	// than the life it is left with, whatever took it there
+	if (life.life < 1.0f && IsBuiltBuildingOfATown(registry, object))
 	{
 		registry.AssignOrReplace<RepairSite>(object, RepairSite {.startLife = physics::damage::RepairStartLife(life.life)});
 	}
@@ -393,7 +392,7 @@ void world_objects::LeaveGhost(entt::entity object)
 	registry.Assign<DestructionGhost>(ghost, DestructionGhost {.mesh = mesh->id, .model = model});
 }
 
-void world_objects::DestroyedByEffect(entt::entity object, std::optional<EffectDeath> death)
+void world_objects::DestroyedByEffect(entt::entity object, const EffectDeath& death)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	if (!registry.Valid(object) || IsCreature(object))
@@ -410,12 +409,7 @@ void world_objects::DestroyedByEffect(entt::entity object, std::optional<EffectD
 	if (registry.AllOf<Villager>(object))
 	{
 		// Any effect's death counts as killed by a spell, put down to the effect's player
-		villager_fire::DieByEffect(object, death.has_value() ? std::optional(villager_fire::DeathCause {
-		                                                           .reason = DeathReason::Spell,
-		                                                           .killer = death->killer,
-		                                                           .weight = death->weight,
-		                                                       })
-		                                                     : std::nullopt);
+		villager_fire::DieByEffect(object, villager_fire::SpellDeath(death.killer, death.weight));
 		return;
 	}
 	// An animal falls dead rather than vanishing; a miracle's fades out

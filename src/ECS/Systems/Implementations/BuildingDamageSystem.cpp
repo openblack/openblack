@@ -658,7 +658,8 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 			return;
 		}
 	}
-	ApplyBreakage(building, hitter, impact.player, false);
+	// The harm is put down to the player of the thing that struck, not the building's own
+	ApplyBreakage(building, hitter, hitterEntry->player, false);
 }
 
 void BuildingDamageSystem::Smash(entt::entity building, entt::entity creature, float creatureSize)

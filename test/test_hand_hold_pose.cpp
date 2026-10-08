@@ -157,3 +157,13 @@ TEST(HandHoldPose, TakingASeedFadesTheDrawnHandOverThirteenHundredths)
 	EXPECT_FLOAT_EQ(later.x, 13.0f);
 	EXPECT_FALSE(fade.Fading());
 }
+
+TEST(HandHoldPose, PullingAThingHeldAboveOpensTheHandByTheHandsHeightAlone)
+{
+	using openblack::magic::hand_hold::TugTimeMs;
+	// A reach of the hand's own height closes the pull's pose fully, while holding it is not yet closed
+	EXPECT_EQ(TugTimeMs(HoldType::Above, k_HoldAboveMs, 3.2f, 1.0f), 0u);
+	EXPECT_GT(HoldTimeMs(HoldType::Above, k_HoldAboveMs, 3.2f, 1.0f), 0u);
+	// Every other hold pulls as it holds
+	EXPECT_EQ(TugTimeMs(HoldType::Side, k_HoldSideMs, 0.8f, 1.0f), HoldTimeMs(HoldType::Side, k_HoldSideMs, 0.8f, 1.0f));
+}

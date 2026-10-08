@@ -61,6 +61,7 @@ public:
 	void SetBlockedActions(BindableActionMap actions) final { _blocked = actions; }
 	void AllowCursorFreeze(bool allowed) final;
 	void PinCursor(bool pinned) final;
+	[[nodiscard]] glm::ivec2 GetCursorImagePosition() const final;
 	[[nodiscard]] bool IsCursorFrozen() const final;
 
 	void Frame() final;

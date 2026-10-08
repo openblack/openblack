@@ -51,6 +51,8 @@ public:
 	[[nodiscard]] bool CanDestroy(entt::entity target) const override;
 
 private:
+	/// Catches made to wait while a creature's body acted out something else start once it is free
+	void StartPendingCatches();
 	/// Starts an action on the creature in place of any it was doing, or records why it can't
 	bool Start(entt::entity creature, components::CreatureObjectAction action);
 	/// Lets go of the held object, which flies off with a velocity

@@ -67,7 +67,18 @@ Blend Weigh(glm::vec3 thing, const std::array<glm::vec3, 4>& hands, float modelS
 	};
 	const bool clamped = keep(height) | keep(side);
 	return {.weights = {(1.0f - height) * (1.0f - side), (1.0f - height) * side, height * (1.0f - side), height * side},
-	        .clamped = clamped};
+	        .clamped = clamped,
+	        .height = height};
+}
+
+Blend WeighWithout(float lastHeight)
+{
+	const float height = std::clamp(lastHeight, k_LeastWeight, k_MostWeight);
+	constexpr float k_Middle = 0.5f;
+	return {.weights = {(1.0f - height) * (1.0f - k_Middle), (1.0f - height) * k_Middle, height * (1.0f - k_Middle),
+	                    height * k_Middle},
+	        .clamped = height != lastHeight,
+	        .height = height};
 }
 
 Ready ReadyToCatch(glm::vec3 thing, glm::vec3 velocity, const std::array<glm::vec3, 4>& hands, float modelScale,

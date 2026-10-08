@@ -91,6 +91,17 @@ uint32_t hand_hold::HoldTimeMs(HoldType hold, uint32_t durationMs, float reach, 
 	return 0;
 }
 
+uint32_t hand_hold::TugTimeMs(HoldType hold, uint32_t durationMs, float reach, float handSize)
+{
+	if (hold != HoldType::Above)
+	{
+		return HoldTimeMs(hold, durationMs, reach, handSize);
+	}
+	// The pull scales the reach and the hand's height alike, so the share is the reach against the hand's height
+	const float share = std::min(reach / (k_StandardHandHeight * handSize), 1.0f);
+	return static_cast<uint32_t>(static_cast<float>(durationMs) * 0.5f * (1.0f - share));
+}
+
 float hand_hold::SeedHang(HoldType hold, float lowering, float height)
 {
 	switch (hold)

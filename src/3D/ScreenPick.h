@@ -149,5 +149,11 @@ struct MeshHit
 /// 0.005 of a right angle's cosine) are passed by; only hits ahead of the start count unless behind is allowed.
 [[nodiscard]] std::optional<MeshHit> NearestIntersection(std::span<const glm::vec3> corners, std::span<const uint16_t> indices,
                                                          glm::vec3 origin, glm::vec3 direction, bool behindAllowed);
+/// The same line test as a mark is laid on a creature's skin: where on the triangle is worked out across x and y alone,
+/// and a triangle counts only when that works out within it. One whose sides are too nearly upright to work it out, or
+/// where it falls outside, takes no mark and hides none behind it
+[[nodiscard]] std::optional<MeshHit> NearestSkinIntersection(std::span<const glm::vec3> corners,
+                                                             std::span<const uint16_t> indices, glm::vec3 origin,
+                                                             glm::vec3 direction);
 
 } // namespace openblack::screen_pick

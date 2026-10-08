@@ -260,6 +260,11 @@ float living::MapDistance(glm::vec3 from, glm::vec3 to)
 	return glm::distance(glm::vec2(from.x, from.z), glm::vec2(to.x, to.z));
 }
 
+bool living::ShelterSeesFlyer(glm::vec3 shield, float radius, glm::vec3 flyer)
+{
+	return MapDistance(shield, flyer) < radius;
+}
+
 bool living::FlyingAt(glm::vec3 living, glm::vec3 object, glm::vec3 velocity)
 {
 	constexpr float k_Coming = 0.8f;

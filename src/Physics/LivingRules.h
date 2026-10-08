@@ -132,6 +132,9 @@ enum class FlyingObjectResponse : uint8_t
 /// A dancing villager only notices a flying thing coming at it: the thing's heading and the way from it to the villager
 /// within about 37 degrees of each other
 [[nodiscard]] bool FlyingAt(glm::vec3 living, glm::vec3 object, glm::vec3 velocity);
+/// A villager sheltering under a magic shield notices a flying thing only while it is strictly inside the shield's
+/// radius, measured across the map from the shield
+[[nodiscard]] bool ShelterSeesFlyer(glm::vec3 shield, float radius, glm::vec3 flyer);
 /// A thing in the physics is still really in the air while it moves faster than this, in metres a second
 inline constexpr float k_AirborneSpeed = 3.0f;
 /// or while the bottom of its round reach is this far over the land under its middle

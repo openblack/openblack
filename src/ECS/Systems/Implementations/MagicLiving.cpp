@@ -328,25 +328,12 @@ void CutAndScarred(entt::entity entity, float damage, const magic::EffectValues&
 	auto& random = Locator::gameRandom::value();
 	if (values[magic::EffectKind::Burn] < values[magic::EffectKind::Crush])
 	{
-		// A crush comes from where the thing that struck stands. Only a blow gives the effect a place: a miracle's crush
+		// A crush comes from the centre of the body that struck. Only a blow gives the effect a place: a miracle's crush
 		// comes from the corner of the map, at the land's height there.
-		if (!source.appliedBy.has_value())
-		{
-			const float cornerHeight =
-			    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(0.0f)) : 0.0f;
-			Scar(entity, glm::vec3(0.0f, cornerHeight, 0.0f), groin, creature_marks::scar::BlowKind(harm), harm);
-			return;
-		}
-		if (!registry.Valid(*source.appliedBy))
-		{
-			return;
-		}
-		const auto* at = registry.TryGet<const Transform>(*source.appliedBy);
-		if (at == nullptr)
-		{
-			return;
-		}
-		Scar(entity, at->position, groin, creature_marks::scar::BlowKind(harm), harm);
+		const float cornerHeight =
+		    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(0.0f)) : 0.0f;
+		const auto from = source.point.value_or(glm::vec3(0.0f, cornerHeight, 0.0f));
+		Scar(entity, from, groin, creature_marks::scar::BlowKind(harm), harm);
 		return;
 	}
 	const auto kind = creature_marks::scar::BurnKind(random.GameRand(3));

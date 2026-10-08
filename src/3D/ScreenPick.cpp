@@ -474,4 +474,85 @@ std::optional<MeshHit> NearestIntersection(std::span<const glm::vec3> corners, s
 	return nearest;
 }
 
+std::optional<MeshHit> NearestSkinIntersection(std::span<const glm::vec3> corners, std::span<const uint16_t> indices,
+                                               glm::vec3 origin, glm::vec3 direction)
+{
+	constexpr float k_SideOn = 0.005f;
+	std::optional<MeshHit> nearest;
+	for (size_t i = 0; i + 2 < indices.size(); i += 3)
+	{
+		if (indices[i] >= corners.size() || indices[i + 1] >= corners.size() || indices[i + 2] >= corners.size())
+		{
+			continue;
+		}
+		const auto& v0 = corners[indices[i]];
+		const auto& v1 = corners[indices[i + 1]];
+		const auto& v2 = corners[indices[i + 2]];
+		auto normal = glm::cross(v1 - v0, v2 - v0);
+		if (normal != glm::vec3(0.0f))
+		{
+			normal *= 1.0f / std::sqrt(glm::dot(normal, normal));
+		}
+		const float facing = glm::dot(direction, normal);
+		if (!(facing < -k_SideOn || facing > k_SideOn))
+		{
+			continue;
+		}
+		const float distance = (glm::dot(v0, normal) - glm::dot(origin, normal)) / facing;
+		if (!(distance > 0.0f))
+		{
+			continue;
+		}
+		const auto point = distance * direction + origin;
+		const int positive = static_cast<int>(glm::dot(glm::cross(v0 - v2, point - v2), normal) > 0.0f) +
+		                     static_cast<int>(glm::dot(glm::cross(v2 - v1, point - v1), normal) > 0.0f) +
+		                     static_cast<int>(glm::dot(glm::cross(v1 - v0, point - v0), normal) > 0.0f);
+		if ((positive != 0 && positive != 3) || (nearest.has_value() && !(distance < nearest->distance)))
+		{
+			continue;
+		}
+		// Where on the triangle along its first and third sides, solved across x and y alone
+		const auto side1 = v1 - v0;
+		const auto side2 = v2 - v0;
+		const auto offset = point - v0;
+		float s = 0.0f;
+		float t = 0.0f;
+		if (std::abs(side2.x) <= k_SideOn)
+		{
+			if (!(std::abs(side1.x) > k_SideOn))
+			{
+				continue;
+			}
+			const float across = side2.y - side1.y * side2.x / side1.x;
+			if (!(std::abs(across) > k_SideOn))
+			{
+				continue;
+			}
+			t = (offset.y - offset.x * side1.y / side1.x) / across;
+			s = (offset.x - t * side2.x) / side1.x;
+		}
+		else
+		{
+			const float across = side1.y - side2.y * side1.x / side2.x;
+			if (!(std::abs(across) > k_SideOn))
+			{
+				continue;
+			}
+			s = (offset.y - offset.x * side2.y / side2.x) / across;
+			t = (offset.x - side1.x * s) / side2.x;
+		}
+		if (!(s >= 0.0f && s <= 1.0f && t >= 0.0f && t <= 1.0f))
+		{
+			continue;
+		}
+		nearest = MeshHit {.point = point,
+		                   .normal = facing <= 0.0f ? -normal : normal,
+		                   .distance = distance,
+		                   .firstIndex = static_cast<uint32_t>(i),
+		                   .s = s,
+		                   .t = t};
+	}
+	return nearest;
+}
+
 } // namespace openblack::screen_pick

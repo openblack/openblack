@@ -70,18 +70,16 @@ clip_sounds::SoundRoute clip_sounds::RouteOf(const SoundSource& source)
 		route.bank = Bank::Banter;
 		route.fromHome = source.action == k_HomeBanter;
 	}
-	else if (source.isVillager)
+	// The thrown clips sound only for a villager, and only early in its flight
+	else if ((source.clip == k_ThrownClip && (!source.isVillager || source.turnsInState >= k_ThrownSoundTurns)) ||
+	         (source.clip == k_ThrownVortexClip && (!source.isVillager || source.turnsInState >= k_ThrownVortexSoundTurns)))
 	{
-		// A thrown person screams only early in its flight
-		if ((source.clip == k_ThrownClip && source.turnsInState >= k_ThrownSoundTurns) ||
-		    (source.clip == k_ThrownVortexClip && source.turnsInState >= k_ThrownVortexSoundTurns))
-		{
-			return {.outcome = Outcome::Skip};
-		}
+		return {.outcome = Outcome::Skip};
 	}
 	// Sounds played the ordinary way are not heard inside the temple
 	// TODO(audio): they are also kept quiet while the help system or the widescreen control holds the view, in some
-	// interface modes and, under a script's flag, outside two of the banks; openblack has none of those yet
+	// interface modes and, under a script's flag, outside two of the banks; and a villager's first-kind sound outside a
+	// script silences the rest of its clip while the help system holds the view. openblack has none of those yet
 	if (source.mode == 0 && source.insideTemple)
 	{
 		return {.outcome = Outcome::Skip};

@@ -111,12 +111,22 @@ magic::EffectSource BlowSource(entt::entity hitter, std::optional<PlayerNames> p
 {
 	auto& registry = Entities();
 	const bool validHitter = hitter != entt::null && registry.Valid(hitter);
+	// The blow comes from the centre of the striking thing's body
+	std::optional<glm::vec3> point;
+	if (validHitter && Locator::dynamicsSystem::has_value())
+	{
+		if (const auto* entry = Locator::dynamicsSystem::value().Find(hitter); entry != nullptr && entry->body != nullptr)
+		{
+			point = entry->body->Centre();
+		}
+	}
 	return {
 	    .player = player.value_or(PlayerNames::NEUTRAL),
 	    .casterCreature = validHitter && registry.AllOf<Creature>(hitter) ? hitter : entt::null,
 	    .appliedBy = validHitter ? hitter : entt::null,
 	    .playerless = !player.has_value(),
 	    .blow = true,
+	    .point = point,
 	};
 }
 
@@ -484,7 +494,7 @@ void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntr
 		{
 			continue;
 		}
-		const auto* points = registry.Valid(creature) ? RigPointsOf(body) : nullptr;
+		const auto* points = RigPointsOf(body);
 		const auto stepMs = animations.AnimationDuration(creature, creature_catch::k_CatchStep);
 		const auto stepTravel = animations.AnimationTravel(creature, creature_catch::k_CatchStep);
 		if (points == nullptr || !stepMs.has_value() || !stepTravel.has_value())

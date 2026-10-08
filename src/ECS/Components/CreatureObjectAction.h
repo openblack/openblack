@@ -75,6 +75,8 @@ struct CreatureObjectAction
 	};
 	std::array<glm::vec3, 4> catchHands {};
 	Catching catching {Catching::Ready};
+	/// How high the thing was against the hand at the last frame it was still in the physics
+	float catchHeight {0.5f};
 	/// Why it gave up, when it did
 	std::string failure;
 };
@@ -96,6 +98,19 @@ struct CreatureHeldObject
 	glm::mat3 rotation {1.0f};
 	/// Where its middle is from where it stands, in its own space at the world's scale, so it is held by its middle
 	glm::vec3 middle {0.0f};
+};
+
+/// A catch the creature is to make once what its body is doing is over
+struct PendingCatch
+{
+	entt::entity object {entt::null};
+};
+
+/// Where the creature's hand closes in each catching animation, in the model's units: measured at its first catch and
+/// never again, whatever its shape becomes
+struct CatchHands
+{
+	std::array<glm::vec3, 4> hands {};
 };
 
 /// On something a creature holds: which creature

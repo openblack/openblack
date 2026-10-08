@@ -62,7 +62,9 @@
 #include "ECS/Map.h"
 #include "ECS/PosedModel.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
+#include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
@@ -194,10 +196,27 @@ const lnd::LNDCell* CellAt(const glm::vec3& point)
 	return Locator::terrainSystem::value().FindCell(glm::u16vec2(glm::floor(glm::vec2(point.x, point.z) / k_CellSize)));
 }
 
-/// Whether something is in a hand: it neither joins a blaze it heats nor spreads its own fire about the land
+/// Whether something is in a hand: it never joins a blaze it heats
 bool IsHeld(entt::entity object)
 {
 	return Entities().AllOf<InHand>(object);
+}
+
+/// Whether a burning thing spreads its fire about the land: anything on the map does, and a thing in the hand only where
+/// the player holding it has influence
+bool SpreadsFrom(entt::entity object, const glm::vec3& position)
+{
+	if (!IsHeld(object))
+	{
+		return true;
+	}
+	if (!Locator::influenceSystem::has_value() || !Locator::playerSystem::has_value())
+	{
+		return false;
+	}
+	// The hands on the screen are the local player's
+	const auto holder = Locator::playerSystem::value().GetLocalPlayer();
+	return Locator::influenceSystem::value().PlayerInfluence(holder, position) > 0.0f;
 }
 
 /// Whether an object is on the map: a fireball never is, nor is something held, flung through the air or carried by a
@@ -1074,7 +1093,7 @@ void FireSystem::Process(entt::entity object)
 	auto& burning = registry.Get<Fire>(object);
 	const float life = world_objects::LifeOf(object);
 	const float fraction = fire::FireFraction(burning.state.temperature, *material, life);
-	if (map_coords::InBounds(position) && !IsHeld(object))
+	if (map_coords::InBounds(position) && SpreadsFrom(object, position))
 	{
 		Spread(object, fire::FireRadius(*material, fraction));
 		if (!registry.Valid(object) || !registry.AllOf<Fire>(object))
@@ -1103,8 +1122,9 @@ void FireSystem::Process(entt::entity object)
 			}
 		}
 	}
-	// The living react to something hot; not to a burning villager, which runs about itself
-	if (Locator::reactionSystem::has_value() && !IsHeld(object))
+	// The living react to something hot; not to a burning villager, which runs about itself, nor to a burning thing in the
+	// hand or flying through the air
+	if (Locator::reactionSystem::has_value() && !registry.AnyOf<InHand, InPhysics>(object))
 	{
 		// One reaction for as long as it stays hot, never made again should it end sooner; once it cools, every fire
 		// reaction it started goes, and any to it burning in the hand

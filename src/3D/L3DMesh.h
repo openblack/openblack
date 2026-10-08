@@ -180,7 +180,6 @@ private:
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<SkinId> _skinOrder;
-	/// A model made while the game runs is drawn with another's skins
 	/// A model made at run time draws with the skins of the model it was made from, which the resource cache keeps for the
 	/// level's life, as long as the made model's
 	const L3DMesh* _skinSource {nullptr};

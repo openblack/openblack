@@ -172,8 +172,10 @@ uint32_t creature_marks::scar::BurnChance(size_t wounds)
 glm::u8vec2 creature_marks::scar::TexelAt(const std::array<glm::vec2, 3>& uvs, float s, float t)
 {
 	const auto uv = uvs[0] + s * (uvs[1] - uvs[0]) + t * (uvs[2] - uvs[0]);
+	// Truncated, then kept as an unsigned byte: anything below nothing wraps round to the top and is held there
 	const auto texel = [](float coordinate) {
-		return static_cast<uint8_t>(std::clamp(static_cast<int32_t>(coordinate * 256.0f), 0, 255));
+		const auto unsignedTexel = static_cast<uint32_t>(static_cast<int32_t>(coordinate * 256.0f));
+		return static_cast<uint8_t>(unsignedTexel > 254u ? 255u : unsignedTexel);
 	};
 	return {texel(uv.x), texel(uv.y)};
 }

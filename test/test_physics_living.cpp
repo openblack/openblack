@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include "ECS/Systems/Implementations/VillagerFire.h"
 #include "Physics/LivingRules.h"
 
 using namespace openblack;
@@ -234,4 +235,28 @@ TEST(PhysicsLiving, ADancerNoticesOnlyWhatFliesAtIt)
 	EXPECT_TRUE(FlyingAt(villager, object, glm::vec3(-1.0f, 0.0f, 0.7f)));
 	EXPECT_FALSE(FlyingAt(villager, object, glm::vec3(-1.0f, 0.0f, 0.8f)));
 	EXPECT_FALSE(FlyingAt(villager, object, glm::vec3(5.0f, 0.0f, 0.0f)));
+}
+
+TEST(PhysicsLiving, AShelteredVillagerSeesOnlyWhatFliesInsideItsShield)
+{
+	using openblack::physics::living::ShelterSeesFlyer;
+	const glm::vec3 shield(0.0f, 0.0f, 0.0f);
+	// Heights don't count, only the way across the map
+	EXPECT_TRUE(ShelterSeesFlyer(shield, 20.0f, glm::vec3(10.0f, 50.0f, 0.0f)));
+	// At the radius or beyond it the flyer is outside
+	EXPECT_FALSE(ShelterSeesFlyer(shield, 20.0f, glm::vec3(20.0f, 0.0f, 0.0f)));
+	EXPECT_FALSE(ShelterSeesFlyer(shield, 20.0f, glm::vec3(0.0f, 0.0f, 30.0f)));
+}
+
+TEST(PhysicsLiving, AnEffectsDeathIsASpellsPutDownToItsPlayer)
+{
+	using openblack::ecs::villager_fire::SpellDeath;
+	const auto miracle = SpellDeath(openblack::PlayerNames::PLAYER_TWO, 0.4f);
+	EXPECT_EQ(miracle.reason, openblack::DeathReason::Spell);
+	EXPECT_EQ(miracle.killer, openblack::PlayerNames::PLAYER_TWO);
+	EXPECT_FLOAT_EQ(miracle.weight, 0.4f);
+	// A fire nobody lit weighs nothing and is put down to nobody
+	const auto fire = SpellDeath(std::nullopt, 0.0f);
+	EXPECT_FALSE(fire.killer.has_value());
+	EXPECT_FLOAT_EQ(fire.weight, 0.0f);
 }

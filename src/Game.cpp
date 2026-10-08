@@ -1716,7 +1716,7 @@ bool Game::Update() noexcept
 			{
 				const float handSize = HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), _handPosition));
 				_handAnimation->UpdateHeld(deltaTime, *pullCycle,
-				                           magic::hand_hold::HoldTimeMs(pull->hold, pullClip->duration, pull->reach, handSize),
+				                           magic::hand_hold::TugTimeMs(pull->hold, pullClip->duration, pull->reach, handSize),
 				                           _mousePosition);
 			}
 			else if (!holdingSeed)

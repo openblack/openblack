@@ -208,4 +208,8 @@ TEST(CreatureScars, TheTexelIsTheTrianglesTextureAtThePoint)
 	const std::array<glm::vec2, 3> uvs {glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(0.0f, 0.5f)};
 	EXPECT_EQ(TexelAt(uvs, 0.5f, 0.5f), glm::u8vec2(128, 64));
 	EXPECT_EQ(TexelAt(uvs, 1.5f, 0.0f), glm::u8vec2(255, 0));
+	// A point off the texture's near edge wraps round to its far edge
+	EXPECT_EQ(TexelAt(uvs, -0.5f, 0.0f), glm::u8vec2(255, 0));
+	// Only exactly nothing stays at nothing
+	EXPECT_EQ(TexelAt(uvs, -0.001f, 0.0f), glm::u8vec2(0, 0));
 }

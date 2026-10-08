@@ -49,6 +49,7 @@
 #include "ECS/Components/Tree.h"
 #include "ECS/CreatureSight.h"
 #include "ECS/Map.h"
+#include "ECS/NearestSearch.h"
 #include "ECS/PhysicsEntry.h"
 #include "ECS/PhysicsGround.h"
 #include "ECS/Registry.h"
@@ -544,10 +545,7 @@ entt::entity object_physics::FellTree(systems::DynamicsSystemInterface& dynamics
 
 namespace
 {
-/// The nearest thing of a kind within a reach of a point, as the game finds one: the cells in a spiral out from the
-/// point's own, at least three by three of them and as many as twice the reach covers; a thing counts when it is
-/// strictly within the reach and strictly nearer than the nearest so far, so the first met wins a tie; and once one is
-/// found the walk ends at the first cell farther than half as far again as it, and ten more
+/// The nearest thing of a kind within a reach of a point, as the game finds one (nearest_search::FindNearest)
 template <typename Kind>
 entt::entity FindNearest(const map_coords::MapCoords& from, float reach, entt::entity except, Kind isKind)
 {
@@ -557,41 +555,21 @@ entt::entity FindNearest(const map_coords::MapCoords& from, float reach, entt::e
 	}
 	const auto& map = Locator::entitiesMap::value();
 	auto& registry = Entities();
-	auto side = static_cast<int32_t>(std::ceil((reach + reach) / map_coords::k_CellSize));
-	side = std::max(side, 3);
-	int32_t cells = side * side;
-	entt::entity nearest = entt::null;
-	float best = 0.0f;
-	auto coords = from;
-	map_coords::Spiral spiral;
-	while (cells != 0 && (nearest == entt::null || gutils::GetDistanceInMetres(from, coords) <= best * 1.5f + 10.0f))
-	{
-		if (const glm::ivec2 cell = map_coords::Cell(coords); map_coords::InBounds(cell))
+	return nearest_search::FindNearest(from, reach, [&](glm::ivec2 cell) {
+		std::vector<nearest_search::Candidate> found;
+		for (const auto thing : map.GetAllInCell(cell))
 		{
-			for (const auto thing : map.GetAllInCell(cell))
+			if (thing == except || !registry.Valid(thing) || !isKind(thing))
 			{
-				if (thing == except || !registry.Valid(thing) || !isKind(thing))
-				{
-					continue;
-				}
-				const auto* place = registry.TryGet<const Transform>(thing);
-				if (place == nullptr)
-				{
-					continue;
-				}
-				const float distance =
-				    gutils::GetDistanceInMetres(from, map_coords::FromMetres({place->position.x, place->position.z}));
-				if (distance < reach && (distance < best || nearest == entt::null))
-				{
-					nearest = thing;
-					best = distance;
-				}
+				continue;
+			}
+			if (const auto* place = registry.TryGet<const Transform>(thing))
+			{
+				found.push_back({.entity = thing, .at = map_coords::FromMetres({place->position.x, place->position.z})});
 			}
 		}
-		--cells;
-		map_coords::AddCells(coords, spiral.Next());
-	}
-	return nearest;
+		return found;
+	});
 }
 } // namespace
 

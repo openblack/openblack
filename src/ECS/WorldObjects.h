@@ -77,7 +77,7 @@ struct EffectDeath
 	float weight {0.0f};
 };
 /// As above; a villager's death is then remembered as killed by an effect, put down to the effect's player
-void DestroyedByEffect(entt::entity object, std::optional<EffectDeath> death = std::nullopt);
+void DestroyedByEffect(entt::entity object, const EffectDeath& death);
 
 /// The player an object belongs to, whom a fire a script lights on it is put down to: a creature's owner; a villager's,
 /// a building's or a field's town's owner; a magic tree's caster. A villager or field without a town, a tree and a dead

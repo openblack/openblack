@@ -58,6 +58,9 @@ struct HoldFrame
 /// radius), with the hand at a size: held above, the hand closes as the reach grows; at the side it opens; a miracle
 /// not yet ready takes the middle of the rest pose
 [[nodiscard]] uint32_t HoldTimeMs(HoldType hold, uint32_t durationMs, float reach, float handSize);
+/// The same moment while the hand pulls a thing free: a thing held above opens the hand by its reach against the hand's
+/// own height alone; every other hold opens it as when holding
+[[nodiscard]] uint32_t TugTimeMs(HoldType hold, uint32_t durationMs, float reach, float handSize);
 
 /// How far below the hand point a seed's model hangs: its hold lowering times its height for a seed held above or at
 /// the side, nothing for a miracle not yet ready (or one that shows no model)

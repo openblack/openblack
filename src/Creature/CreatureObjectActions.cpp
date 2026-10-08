@@ -53,9 +53,9 @@ Hands creature_object_actions::HandsFor(Kind kind)
 		return Hands::Holding;
 	case Kind::PickUp:
 	case Kind::Destroy:
-	case Kind::Catch:
 		return Hands::Empty;
 	case Kind::Point:
+	case Kind::Catch:
 		return Hands::Either;
 	}
 	return Hands::Either;

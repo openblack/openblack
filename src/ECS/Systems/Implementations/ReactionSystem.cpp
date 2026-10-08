@@ -392,7 +392,7 @@ uint32_t ReactionSystem::PriorityTo(const Active& reaction, entt::entity living,
 			    registry.Valid(shelter->shield) ? registry.TryGet<const MagicShield>(shelter->shield) : nullptr;
 			const auto* where = registry.Valid(shelter->shield) ? registry.TryGet<const Transform>(shelter->shield) : nullptr;
 			if (shield == nullptr || where == nullptr ||
-			    !(physics::living::MapDistance(where->position, reaction.source.position) < shield->radius))
+			    !physics::living::ShelterSeesFlyer(where->position, shield->radius, reaction.source.position))
 			{
 				return 0;
 			}
@@ -450,12 +450,13 @@ void ReactionSystem::SpreadInCell(Active& reaction, const std::vector<entt::enti
 	for (const auto entity : mobiles)
 	{
 		// The shields' villagers react to the shields' own reactions through the shields, and while they do, to nothing
-		// else
+		// else but what flies inside the shield, which their priority weighs
 		// TODO(raffclar): the game weighs another reaction against a villager's shield reaction as against any other
 		if (!registry.Valid(entity) || !registry.AllOf<Transform>(entity) || entity == reaction.source.initiator ||
 		    !Reaches(registry, entity, reaction.source.type) ||
 		    (registry.AllOf<Villager>(entity) &&
-		     (ShieldKind(reaction.source.type) || registry.AllOf<VillagerShieldReaction>(entity))) ||
+		     (ShieldKind(reaction.source.type) ||
+		      (registry.AllOf<VillagerShieldReaction>(entity) && reaction.source.type != Reaction::ReactToFlyingObject))) ||
 		    !Available(registry, entity, reaction.source.type))
 		{
 			continue;

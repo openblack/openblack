@@ -129,6 +129,8 @@ TEST(CameraShake, OnlyTheNearestCountsAtFullStrengthWithinItsRadiusFallingOverIt
 	};
 	EXPECT_FLOAT_EQ(camera_shake::Amplitude(shakes, {150.0f, 0.0f, 0.0f}), 1.0f);
 	EXPECT_FLOAT_EQ(camera_shake::Amplitude(shakes, {250.0f, 0.0f, 0.0f}), 0.0f);
+	// Exactly at the radius is outside it
+	EXPECT_FLOAT_EQ(camera_shake::Amplitude(shakes, {-200.0f, 0.0f, 0.0f}), 0.0f);
 	camera_shake::Advance(shakes, 350.0f);
 	EXPECT_NEAR(camera_shake::Amplitude(shakes, glm::vec3(0.0f)), 0.5f, k_Epsilon);
 	camera_shake::Advance(shakes, 400.0f);

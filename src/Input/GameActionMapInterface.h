@@ -185,9 +185,12 @@ public:
 	virtual void AllowCursorFreeze([[maybe_unused]] bool allowed) {}
 	/// The cursor is held still while the mouse turns the camera, and the pointer's position isn't followed
 	[[nodiscard]] virtual bool IsCursorFrozen() const { return false; }
-	/// The cursor is pinned where it is, as the hand scoops, and is free again once let go: it then follows the pointer
-	/// from wherever that has gone
+	/// The cursor's image is pinned where it is as the hand scoops, and is free again once let go. Only the drawn image
+	/// stays: the pointer the hand, the gestures and the camera follow keeps moving with the mouse
 	virtual void PinCursor([[maybe_unused]] bool pinned) {}
+	/// Where the cursor's image is drawn: where it was pinned, else at the pointer. openblack draws the hand as the cursor
+	/// and no separate image
+	[[nodiscard]] virtual glm::ivec2 GetCursorImagePosition() const { return glm::ivec2(GetMousePosition()); }
 
 	virtual void Frame() = 0;
 	virtual void ProcessEvent(const SDL_Event& event) = 0;

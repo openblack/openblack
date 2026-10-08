@@ -46,7 +46,8 @@ float camera_shake::Amplitude(std::span<const Shake> shakes, const glm::vec3& ca
 {
 	const Shake* nearest = Nearest(shakes, camera);
 	const float best = nearest != nullptr ? glm::distance(nearest->position, camera) : 0.0f;
-	if (nearest == nullptr || best > nearest->radius || nearest->milliseconds <= 0.0f)
+	// Only a camera strictly inside the shake's radius shakes
+	if (nearest == nullptr || best >= nearest->radius || nearest->milliseconds <= 0.0f)
 	{
 		return 0.0f;
 	}

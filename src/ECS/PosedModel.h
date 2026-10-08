@@ -59,7 +59,9 @@ struct SkinHit
 {
 	screen_pick::MeshHit hit;
 	std::array<glm::vec2, 3> uvs;
-	std::optional<uint32_t> skin;
+	/// Which of the model's skins: the last of them that the first submesh's primitive of the same place uses, the
+	/// first skin when none does
+	uint32_t skin {0};
 };
 [[nodiscard]] std::optional<SkinHit> NearestSkinHit(const ecs::Registry& registry, entt::entity entity,
                                                     const graphics::L3DMesh& mesh, const glm::mat4& model, glm::vec3 origin,

@@ -149,7 +149,7 @@ std::optional<posed_model::SkinHit> posed_model::NearestSkinHit(const ecs::Regis
 		}
 		Place(registry, entity, mesh, s, model, placed);
 		const auto& geometry = subMesh.GetBodyGeometry();
-		const auto hit = screen_pick::NearestIntersection(placed, geometry.indices, origin, direction, false);
+		const auto hit = screen_pick::NearestSkinIntersection(placed, geometry.indices, origin, direction);
 		if (!hit.has_value() || (nearest.has_value() && !(hit->distance < nearest->hit.distance)))
 		{
 			continue;
@@ -158,19 +158,25 @@ std::optional<posed_model::SkinHit> posed_model::NearestSkinHit(const ecs::Regis
 			const auto index = geometry.indices[hit->firstIndex + corner];
 			return index < geometry.uvs.size() ? geometry.uvs[index] : glm::vec2(0.0f);
 		};
-		// The skin of the primitive the triangle belongs to, counted among the model's skins
-		std::optional<uint32_t> skin;
-		for (const auto& primitive : subMesh.GetPrimitives())
+		// The skin is looked up by the place of the triangle's primitive in its submesh, but among the first submesh's
+		// primitives (the same for a creature, whose nearest body is its first submesh), counted among the model's skins
+		// from the last that matches
+		uint32_t skin = 0;
+		const auto& primitives = subMesh.GetPrimitives();
+		const auto within = std::ranges::find_if(primitives, [&hit](const auto& primitive) {
+			return hit->firstIndex >= primitive.indicesOffset &&
+			       hit->firstIndex < primitive.indicesOffset + primitive.indicesCount;
+		});
+		const auto& firstPrimitives = mesh.GetSubMeshes().front()->GetPrimitives();
+		if (const auto place = static_cast<size_t>(std::distance(primitives.begin(), within));
+		    within != primitives.end() && place < firstPrimitives.size())
 		{
-			if (hit->firstIndex >= primitive.indicesOffset &&
-			    hit->firstIndex < primitive.indicesOffset + primitive.indicesCount)
+			for (size_t k = 0; k < skinOrder.size(); ++k)
 			{
-				const auto found = std::ranges::find(skinOrder, primitive.skinID);
-				if (found != skinOrder.end())
+				if (skinOrder[k] == firstPrimitives[place].skinID)
 				{
-					skin = static_cast<uint32_t>(std::distance(skinOrder.begin(), found));
+					skin = static_cast<uint32_t>(k);
 				}
-				break;
 			}
 		}
 		nearest = SkinHit {.hit = *hit, .uvs = {uvAt(0), uvAt(1), uvAt(2)}, .skin = skin};

@@ -445,7 +445,7 @@ void SetScriptUlong() // 020 SET_SCRIPT_ULONG
 
 /// Whether something is drowning, as the scripts ask: a villager while it is in its drowning state, anything else
 /// while it is in the physics with its body's centre under the sea's level
-bool IsDrowning(entt::entity object)
+static bool IsDrowning(entt::entity object)
 {
 	auto& registry = Locator::entitiesRegistry::value();
 	if (!registry.Valid(object))
@@ -469,7 +469,7 @@ bool IsDrowning(entt::entity object)
 
 void GetProperty() // 021 GET_PROPERTY
 {
-	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const auto object = PopObject();
 	const auto prop = static_cast<script::ObjectPropertyType>(Pop().intVal);
 	switch (prop)
 	{

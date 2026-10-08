@@ -36,6 +36,8 @@ struct TownArea
 	void Add(glm::vec2 at, float radius);
 	/// The middle of the box, the town's centre
 	[[nodiscard]] glm::vec2 Centre() const;
+	/// Whether nothing has widened the box yet
+	[[nodiscard]] bool Empty() const { return min.x > max.x; }
 };
 
 /// The cells walked out from a town's centre, a spiral of single steps beginning at the centre itself, until a step

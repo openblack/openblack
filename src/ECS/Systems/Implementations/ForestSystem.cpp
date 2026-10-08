@@ -711,6 +711,11 @@ void ForestSystem::MakeScenicForests()
 				area.Add({at.position.x, at.position.z}, ecs::world_objects::SizeOf(thing).radius);
 			}
 		});
+		// A town with neither buildings nor fields has its centre far off the land, where the walk meets no tree
+		if (area.Empty())
+		{
+			return;
+		}
 		const auto centre = area.Centre();
 		std::optional<uint32_t> forest = town.scenicForest;
 		for (const auto& coords : ecs::scenic_forest::Walk(map_coords::FromMetres(centre), reach))

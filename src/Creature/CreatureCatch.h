@@ -13,6 +13,7 @@
 #include <cstdint>
 
 #include <array>
+#include <numbers>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -37,7 +38,7 @@ constexpr float k_LeastSpeedSquared = 1.0f;
 constexpr float k_MostSeconds = 5.0f;
 constexpr float k_LeastSpare = 0.05f;
 /// The creature turns to face the thing first when it is more than this far round, in radians
-constexpr float k_TurnAngle = 0.2618f;
+constexpr float k_TurnAngle = std::numbers::pi_v<float> / 12.0f;
 /// How far the blend may lean past the four animations' own reaches before the catch misses
 constexpr float k_LeastWeight = -0.2f;
 constexpr float k_MostWeight = 1.2f;
@@ -70,10 +71,14 @@ struct Blend
 {
 	std::array<float, 4> weights;
 	bool clamped;
+	/// How high the thing was, as kept within the limits
+	float height {0.5f};
 };
 /// The thing's place against the creature, in its own axes at the world's scale; the hand's place in each catching
 /// animation at the moment it closes, in the model's units; the model's scale
 [[nodiscard]] Blend Weigh(glm::vec3 thing, const std::array<glm::vec3, 4>& hands, float modelScale, bool mirrored);
+/// The blend once the thing has left the air: the side goes back to the middle, and the height stays as it was last
+[[nodiscard]] Blend WeighWithout(float lastHeight);
 
 /// Ready to catch, the creature waits for the thing, steps across to it when it will pass out of reach, catches it when
 /// it arrives at the moment the hand would close, or gives up when it is behind or too late
