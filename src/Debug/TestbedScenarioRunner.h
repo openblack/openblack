@@ -129,6 +129,8 @@ private:
 	std::string GiveObjectCommand(entt::entity creature, const Command& command);
 	std::string GiveHandCommand(entt::entity creature, const Command& command);
 	std::string GiveLeashCommand(entt::entity creature, const Command& command);
+	/// The commands of the player's hand alone: a seed put in it, a gesture drawn with it
+	std::string GivePlayerCommand(const Command& command);
 	/// The hand goes over a fireball in flight to take hold of it; what came of that
 	std::string HandTakeFireBall();
 	/// Once the hand is over the fireball, it taps it, or presses the action button with a seed in it

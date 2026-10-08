@@ -574,6 +574,8 @@ void AddTornadoScenarios(std::vector<Scenario>& all);
 /// The shield and forest miracles: what each shield stops and what it costs, the forest on each ground, growing and
 /// withering
 void AddShieldForestScenarios(std::vector<Scenario>& all);
+/// Whether a command is the player's alone, given whether or not the scenario has creatures
+[[nodiscard]] bool NeedsNoCreature(Command::Kind kind);
 /// The player's hand moving over the land, dragging it and turning and zooming the camera
 void AddHandNavigationScenarios(std::vector<Scenario>& all);
 /// The scenarios of how the hand looks for its player's alignment

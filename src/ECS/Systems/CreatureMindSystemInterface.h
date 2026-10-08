@@ -61,7 +61,7 @@ public:
 	/// Only that player's own creature, the one it leads on the leash, may copy it; with no player given, any creature
 	/// may (for the debug tools).
 	virtual void PlayerDid(size_t deed, const glm::vec3& point, std::optional<entt::entity> object,
-	                       std::optional<PlayerNames> player = std::nullopt) = 0;
+	                       std::optional<PlayerNames> player) = 0;
 	/// The game's tables the minds use, once the game's data is loaded
 	[[nodiscard]] virtual const creature_mind_tables::Tables* GetTables() = 0;
 

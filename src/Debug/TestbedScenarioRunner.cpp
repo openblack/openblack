@@ -896,6 +896,50 @@ std::string Runner::GiveLeashCommand(entt::entity creature, const Command& comma
 	}
 }
 
+std::string Runner::GivePlayerCommand(const Command& command)
+{
+	switch (command.kind)
+	{
+	case Kind::HoldSeed:
+	{
+		if (!Locator::magicSystem::has_value())
+		{
+			return "no miracles";
+		}
+		auto& magic = Locator::magicSystem::value();
+		magic.DiscardHeldSeed();
+		const auto seed = static_cast<SpellSeedType>(command.value);
+		const auto given = magic.GiveSeedToHand(command.player, seed, magic::k_BasePowerUpLevel, 1.0f);
+		return given != entt::null ? fmt::format("seed {} in the hand", command.value) : "the hand isn't free";
+	}
+	case Kind::DrawGesture:
+		return DrawGesture(static_cast<GestureType>(command.value));
+	case Kind::PressKey:
+		if (!Locator::gameActionSystem::has_value())
+		{
+			return "no keys";
+		}
+		Locator::gameActionSystem::value().QueuePress(static_cast<input::BindableActionMap>(command.value));
+		return {};
+	case Kind::SummonSeed:
+	{
+		if (!Locator::magicSystem::has_value())
+		{
+			return "no miracles";
+		}
+		auto& magic = Locator::magicSystem::value();
+		magic.DiscardHeldSeed();
+		const auto seed = static_cast<SpellSeedType>(command.value);
+		const auto given = magic.SummonSeed(command.player, seed, magic::k_BasePowerUpLevel);
+		return given != entt::null ? fmt::format("seed {} summoned to the hand", command.value) : "the hand isn't free";
+	}
+	case Kind::HandTakeFireBall:
+		return HandTakeFireBall();
+	default:
+		return {};
+	}
+}
+
 std::string Runner::HandTakeFireBall()
 {
 	if (!Locator::magicSystem::has_value())
@@ -1107,6 +1151,13 @@ bool Runner::IsFree(size_t creature) const
 
 void Runner::Give(const Command& command)
 {
+	if (command.kind == Kind::HoldSeed || command.kind == Kind::DrawGesture || command.kind == Kind::SummonSeed ||
+	    command.kind == Kind::PressKey || command.kind == Kind::HandTakeFireBall)
+	{
+		const auto result = GivePlayerCommand(command);
+		Log(fmt::format("{:.1f}s: {}{}{}", _seconds, Name(command.kind), result.empty() ? "" : ": ", result));
+		return;
+	}
 	if (IsPointerCommand(command.kind))
 	{
 		const auto result = GivePointerCommand(command);
@@ -1273,6 +1324,11 @@ void Runner::Give(const Command& command)
 		result = GiveCreatureModeCommand(*entity, command);
 		break;
 	case Kind::SetHour:
+	case Kind::HoldSeed:
+	case Kind::DrawGesture:
+	case Kind::SummonSeed:
+	case Kind::PressKey:
+	case Kind::HandTakeFireBall:
 	case Kind::SetAlignment:
 		break;
 	case Kind::SetDesire:
