@@ -52,8 +52,8 @@ float ReduceLife(entt::entity object, float damage);
 [[nodiscard]] bool IsBuilding(entt::entity object);
 /// Whether a miracle may destroy an object, as the blast's wave shatters what it reaches and the tornado carries off
 /// what it picks up. Not a creature, a field, the temple, a teleport stone, a totem or a one-off spell seed, nor a pot
-/// with nothing in it. (Nor, in the game, something a script made indestructible, or held while the advisors speak:
-/// neither is kept here yet.)
+/// with nothing in it, nor something a script made indestructible. (Nor, in the game, something a script holds while the
+/// advisors speak: openblack has no advisors' hold yet.)
 [[nodiscard]] bool CanBeDestroyedBySpell(entt::entity object);
 [[nodiscard]] bool IsVillager(entt::entity object);
 [[nodiscard]] bool IsCreature(entt::entity object);
@@ -77,6 +77,9 @@ void DestroyedByEffect(entt::entity object);
 /// fire credits no more than nobody.
 [[nodiscard]] std::optional<PlayerNames> PlayerOf(entt::entity object);
 
+/// A villager's life went from one value to another: its town counts one more of its people injured when it falls under
+/// seven tenths, one fewer when it rises back over
+void CountInjury(entt::entity villager, float before, float after);
 /// Harm done to a town's villager or building is an attack on its town by whoever did it
 void AttackTown(entt::entity object, float damage, PlayerNames aggressor);
 

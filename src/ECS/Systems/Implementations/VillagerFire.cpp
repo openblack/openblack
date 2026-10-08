@@ -33,6 +33,7 @@
 #include "ECS/Components/LivingReaction.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Physics.h"
+#include "ECS/Components/Player.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -43,6 +44,7 @@
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/VillagerClips.h"
 #include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "Fire/ViaPoint.h"
@@ -57,6 +59,7 @@ using namespace openblack::ecs::components;
 namespace villager_fire = openblack::ecs::villager_fire;
 namespace villager_home = openblack::ecs::villager_home;
 namespace world_objects = openblack::ecs::world_objects;
+namespace villager_clips = openblack::ecs::villager_clips;
 
 namespace
 {
@@ -265,29 +268,10 @@ bool LookAtObject(entt::entity villager, entt::entity object)
 	return false;
 }
 
-/// An animation's length in milliseconds, none for one not loaded
-std::optional<float> AnimationMilliseconds(AnimId id)
-{
-	if (!Locator::resources::has_value())
-	{
-		return std::nullopt;
-	}
-	auto& animations = Locator::resources::value().GetAnimations();
-	const auto key = static_cast<entt::id_type>(id);
-	if (!animations.Contains(key))
-	{
-		return std::nullopt;
-	}
-	return static_cast<float>(animations.Handle(key)->GetDuration());
-}
-
 /// Whether the state's animation has played through as many times since the villager went into it
 bool IsReadyForNewAnimation(const LivingAction& action, AnimId animation, uint32_t times)
 {
-	constexpr auto k_TurnMilliseconds = std::chrono::milliseconds(ecs::systems::TimeSystemInterface::k_TurnDuration).count();
-	const auto length = AnimationMilliseconds(animation).value_or(0.0f);
-	return static_cast<float>(action.turnsSinceStateChange) * static_cast<float>(k_TurnMilliseconds) >=
-	       length * static_cast<float>(times);
+	return villager_clips::ClipPlayed(action, animation, times);
 }
 
 bool IsFireFightingState(VillagerStates state)
@@ -991,20 +975,51 @@ entt::entity villager_fire::FireOf(entt::entity villager)
 	return state != nullptr ? state->fire : entt::null;
 }
 
+using villager_clips::IsOnWater;
+
 namespace
 {
-bool IsOnWater(const glm::vec3& point)
+/// The town and the players remember a death and who it is put down to: the town by killer and cause, the victim's
+/// player one more of its people lost, the killer one more killed, and one more sacrificed for a sacrifice
+void RememberDeath(entt::entity villager, const villager_fire::DeathCause& cause)
 {
-	if (!Locator::terrainSystem::has_value() || point.x < 0.0f || point.z < 0.0f)
+	auto& registry = Entities();
+	const auto killer = cause.killer.value_or(PlayerNames::NEUTRAL);
+	const auto& person = registry.Get<const Villager>(villager);
+	auto* town = registry.Valid(person.town) ? registry.TryGet<Town>(person.town) : nullptr;
+	if (town != nullptr)
 	{
-		return false;
+		const auto killerIndex = static_cast<size_t>(killer);
+		const auto reasonIndex = static_cast<size_t>(cause.reason);
+		if (killerIndex < town->deathsByKiller.size() && reasonIndex < town->deathsByKiller.at(killerIndex).size())
+		{
+			town->deathsByKiller.at(killerIndex).at(reasonIndex) += cause.weight;
+		}
+		const auto owner = town->owner;
+		registry.Each<Player>([owner, killer](entt::entity, Player& player) {
+			if (player.name == owner)
+			{
+				++player.villagersLost;
+			}
+			if (player.name == killer)
+			{
+				++player.villagersKilled;
+			}
+		});
 	}
-	const auto* cell = Locator::terrainSystem::value().FindCell(glm::u16vec2(glm::floor(glm::vec2(point.x, point.z) / 10.0f)));
-	return cell != nullptr && cell->properties.hasWater != 0;
+	if (cause.reason == DeathReason::Sacrifice)
+	{
+		registry.Each<Player>([killer](entt::entity, Player& player) {
+			if (player.name == killer)
+			{
+				++player.sacrifices;
+			}
+		});
+	}
 }
 } // namespace
 
-void villager_fire::DieByEffect(entt::entity villager)
+void villager_fire::DieByEffect(entt::entity villager, std::optional<DeathCause> cause)
 {
 	auto& registry = Entities();
 	auto* action = registry.TryGet<LivingAction>(villager);
@@ -1016,13 +1031,22 @@ void villager_fire::DieByEffect(entt::entity villager)
 	// It dies: no life left, falling, then lying dead as long as its town has no graveyard to take it to
 	if (auto* person = registry.TryGet<Villager>(villager))
 	{
+		world_objects::CountInjury(villager, world_objects::LifeOf(villager), 0.0f);
 		person->health = 0;
 	}
 	if (auto* life = registry.TryGet<ObjectLife>(villager))
 	{
 		life->life = 0.0f;
 	}
-	registry.Assign<VillagerDeath>(villager, VillagerDeath {.turnsLeft = k_CorpseTurnsWithoutGraveyard});
+	registry.Assign<VillagerDeath>(villager, VillagerDeath {
+	                                             .turnsLeft = k_CorpseTurnsWithoutGraveyard,
+	                                             .reason = cause.has_value() ? std::optional(cause->reason) : std::nullopt,
+	                                             .killer = cause.has_value() ? cause->killer : std::nullopt,
+	                                         });
+	if (cause.has_value())
+	{
+		RememberDeath(villager, *cause);
+	}
 	villager_home::LeaveHome(villager);
 	SetTopState(*action, VillagerStates::Dying);
 	// The people round it react to the death

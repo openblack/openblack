@@ -80,9 +80,6 @@ struct VillagerStateTableEntry
 	std::function<bool(LivingAction&)> validate = nullptr;
 };
 
-/// A villager held in a hand or flying does nothing of its own: the hand and the physics move it
-static const VillagerStateTableEntry k_MovedByOthersEntry = {};
-
 static const VillagerStateTableEntry k_TodoEntry = {
     .state = [](LivingAction& action) -> uint32_t {
 	    SPDLOG_LOGGER_WARN(spdlog::get("ai"), "Villager #{}: TODO: Unimplemented state function: {}",
@@ -172,6 +169,7 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* FLYING */
     VillagerStateTableEntry {
         .state = &villager_physics::Flying,
+        .exitState = &villager_physics::ExitFlying,
     },
     /* LANDED */
     VillagerStateTableEntry {
@@ -204,7 +202,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* GOTO_WOOD_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_WOOD_REACTION */ k_TodoEntry,
     /* WAIT_FOR_ANIMATION */ k_TodoEntry,
-    /* IN_HAND */ k_MovedByOthersEntry,
+    /* IN_HAND */
+    VillagerStateTableEntry {
+        .exitState = &villager_physics::ExitInHand,
+    },
     /* GOTO_PICKUP_BALL_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_PICKUP_BALL_REACTION */ k_TodoEntry,
     /* MOVE_IN_FLOCK */ k_TodoEntry,

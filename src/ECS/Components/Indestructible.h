@@ -9,24 +9,13 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <optional>
-
-#include "Enums.h"
-
 namespace openblack::ecs::components
 {
 
-/// A villager that has died: the turns it lies dead before it goes, and whether its flesh has gone yet, leaving the
-/// skeleton
-struct VillagerDeath
+/// A script made the object indestructible: a villager never finishes drowning, a fence stays out of stores, the
+/// miracles that destroy things spare it, and the hand can't give it to a store or an altar
+struct Indestructible
 {
-	uint32_t turnsLeft {0};
-	bool skeleton {false};
-	/// What killed it, and the player put down for it, when its death says
-	std::optional<DeathReason> reason;
-	std::optional<PlayerNames> killer;
 };
 
 } // namespace openblack::ecs::components

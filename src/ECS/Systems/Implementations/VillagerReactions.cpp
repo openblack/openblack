@@ -435,6 +435,11 @@ uint32_t villager_reactions::Fleeing(LivingAction& action)
 	return 0;
 }
 
+void villager_reactions::LookAt(entt::entity villager, const glm::vec3& point)
+{
+	TurnTowards(villager, point);
+}
+
 uint32_t villager_reactions::Watching(LivingAction& action)
 {
 	auto& registry = EntityRegistry();

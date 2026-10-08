@@ -137,3 +137,48 @@ TEST(PhysicsLiving, PeopleRunFromWhatComesFastAndPointAtTheRest)
 	EXPECT_EQ(PointingClip(true, 1, 1), AnimId::PStand);
 	EXPECT_EQ(PointingClip(false, 2, 2), AnimId::PTalkingAndPointing);
 }
+
+TEST(PhysicsLiving, FlyingThingsAreMeasuredAcrossTheMap)
+{
+	// A thing high overhead is as near as the ground under it
+	EXPECT_FLOAT_EQ(MapDistance({0.0f, 0.0f, 0.0f}, {3.0f, 100.0f, 4.0f}), 5.0f);
+}
+
+TEST(PhysicsLiving, AThingIsStillInTheAirWhileFastOrAboveTheLand)
+{
+	EXPECT_TRUE(IsActuallyInTheAir(3.1f, 1.0f, 1.0f, 0.0f));
+	EXPECT_FALSE(IsActuallyInTheAir(3.0f, 1.0f, 1.0f, 0.1f));
+	// Its middle less the land, plus its reach, must be over a fifth of a metre
+	EXPECT_TRUE(IsActuallyInTheAir(0.0f, 10.0f, 9.0f, 0.0f));
+	EXPECT_FALSE(IsActuallyInTheAir(0.0f, 10.0f, 10.0f, 0.2f));
+	EXPECT_TRUE(IsActuallyInTheAir(0.0f, 10.0f, 10.0f, 0.25f));
+}
+
+TEST(PhysicsLiving, TownsCountTheirInjuredAcrossSevenTenths)
+{
+	EXPECT_EQ(InjuredChange(0.8f, 0.6f), 1);
+	EXPECT_EQ(InjuredChange(0.6f, 0.8f), -1);
+	EXPECT_EQ(InjuredChange(0.6f, 0.5f), 0);
+	// Landing on the mark either way changes nothing
+	EXPECT_EQ(InjuredChange(0.8f, 0.7f), 0);
+	EXPECT_EQ(InjuredChange(0.7f, 0.6f), 0);
+}
+
+TEST(PhysicsLiving, LandedAnimalsMoveTheirFlocksHomeByKind)
+{
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Cow, false), LandedLair::WhereItLanded);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Lion, true), LandedLair::WhereItLanded);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Lion, false), LandedLair::Unchanged);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::SpellWolf, false), LandedLair::Unchanged);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Tiger, true), LandedLair::ForestOfItsKind);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Tiger, false), LandedLair::Unchanged);
+	EXPECT_EQ(LairOnLanding(AnimalInfo::Wolf, false), LandedLair::ForestOfItsKind);
+}
+
+TEST(PhysicsLiving, AHeadingStandsAThingUpright)
+{
+	const auto axes = HeadingAxes(k_Pi * 0.5f);
+	EXPECT_NEAR(axes[0].z, 1.0f, 1e-6f);
+	EXPECT_NEAR(axes[1].y, 1.0f, 1e-6f);
+	EXPECT_NEAR(axes[2].x, -1.0f, 1e-6f);
+}

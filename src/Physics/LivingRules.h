@@ -51,6 +51,8 @@ inline constexpr float k_LyingLean = 0.5f;
 [[nodiscard]] float VillagerLandingHeading(LandingPose pose, const glm::mat3& axes);
 /// An animal stands up facing opposite its body's current forward axis
 [[nodiscard]] float AnimalLandingHeading(const glm::mat3& axes);
+/// The body axes of a living thing standing upright with a heading: side, up and forward columns
+[[nodiscard]] glm::mat3 HeadingAxes(float heading);
 /// The heading of a direction across the land, as the game measures it from an axis
 [[nodiscard]] float HeadingOf(glm::vec3 axis);
 /// An angle brought into the game's range of headings
@@ -73,6 +75,20 @@ struct AnimalClips
 [[nodiscard]] AnimalClips ClipsOf(AnimalInfo kind);
 /// The landing clip of an animal kind in a pose
 [[nodiscard]] std::optional<AnimId> AnimalLandedClip(AnimalInfo kind, LandingPose pose);
+
+/// Where a landed animal's flock makes its home, by kind
+enum class LandedLair : uint8_t
+{
+	/// Where the animal came down
+	WhereItLanded,
+	/// It stays where it was
+	Unchanged,
+	/// The flock picks a forest to live by (tigers' and wolves' own rules)
+	ForestOfItsKind,
+};
+/// Most animals' flocks move their home to where the animal landed; lions, leopards and the wolf miracle's wolves only
+/// when it is the flock's leader; tigers and wolves pick a forest
+[[nodiscard]] LandedLair LairOnLanding(AnimalInfo kind, bool leader);
 
 /// A knock harder than this many times a living thing's own weight hurts it
 inline constexpr float k_HurtingKnock = 2.0f;
@@ -110,6 +126,21 @@ enum class FlyingObjectResponse : uint8_t
 	Point,
 };
 [[nodiscard]] FlyingObjectResponse RespondToFlyingObject(float distance, float speed);
+/// How far a living thing is from a flying thing for that choice: across the map, heights left out
+[[nodiscard]] float MapDistance(glm::vec3 from, glm::vec3 to);
+/// A thing in the physics is still really in the air while it moves faster than this, in metres a second
+inline constexpr float k_AirborneSpeed = 3.0f;
+/// or while the bottom of its round reach is this far over the land under its middle
+inline constexpr float k_AirborneHeight = 0.2f;
+/// Whether a thing in the physics is still really in the air: fast, or its middle more than a little above the land
+/// less its reach
+[[nodiscard]] bool IsActuallyInTheAir(float speed, float centreHeight, float landHeight, float radius);
+
+/// A villager is counted among its town's injured while its life is below this
+inline constexpr float k_InjuredLife = 0.7f;
+/// How a villager's life changing moves its town's count of injured people: one more when it falls from above the mark
+/// to below it, one fewer when it rises from below to above, and no change when it is at the mark either side
+[[nodiscard]] int InjuredChange(float before, float after);
 /// Whether an animal flees a flying thing: the same nearness; otherwise it takes no notice
 [[nodiscard]] bool AnimalFleesFlyingObject(float distance, float speed);
 /// The clip a villager points with: a woman or child is scared stiff one time in three (first roll of three is 0),

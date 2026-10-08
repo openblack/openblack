@@ -130,6 +130,10 @@ public:
 	{
 		return _world.ApplyEffect(object, values, {.player = player});
 	}
+	bool ApplyEffectToObject(entt::entity object, const magic::EffectValues& values, const magic::EffectSource& source) override
+	{
+		return _world.ApplyEffect(object, values, source);
+	}
 	[[nodiscard]] bool CanCastAt(MagicType type, PlayerNames player, glm::vec3 point) override;
 	bool SpellEvent(entt::entity spell, const particles::SpellEventInfo& event) override;
 	void PayForSpell(entt::entity spell, float cost) override;

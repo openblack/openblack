@@ -14,6 +14,9 @@
 #include <algorithm>
 #include <numbers>
 
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
+
 #include "Body.h"
 
 using namespace openblack;
@@ -54,6 +57,12 @@ LandingPose living::AnimalLandingPose(float sideUp)
 		return LandingPose::Back;
 	}
 	return LandingPose::Feet;
+}
+
+glm::mat3 living::HeadingAxes(float heading)
+{
+	return {glm::vec3(std::cos(heading), 0.0f, std::sin(heading)), glm::vec3(0.0f, 1.0f, 0.0f),
+	        glm::vec3(-std::sin(heading), 0.0f, std::cos(heading))};
 }
 
 float living::HeadingOf(glm::vec3 axis)
@@ -226,6 +235,46 @@ DrowningStep living::StepDrowning(uint16_t left, bool indestructible)
 FlyingObjectResponse living::RespondToFlyingObject(float distance, float speed)
 {
 	return distance < k_RunSeconds * speed ? FlyingObjectResponse::Run : FlyingObjectResponse::Point;
+}
+
+living::LandedLair living::LairOnLanding(AnimalInfo kind, bool leader)
+{
+	switch (kind)
+	{
+	case AnimalInfo::Lion:
+	case AnimalInfo::Leopard:
+	case AnimalInfo::SpellWolf:
+		return leader ? LandedLair::WhereItLanded : LandedLair::Unchanged;
+	case AnimalInfo::Tiger:
+		return leader ? LandedLair::ForestOfItsKind : LandedLair::Unchanged;
+	case AnimalInfo::Wolf:
+		return LandedLair::ForestOfItsKind;
+	default:
+		return LandedLair::WhereItLanded;
+	}
+}
+
+float living::MapDistance(glm::vec3 from, glm::vec3 to)
+{
+	return glm::distance(glm::vec2(from.x, from.z), glm::vec2(to.x, to.z));
+}
+
+bool living::IsActuallyInTheAir(float speed, float centreHeight, float landHeight, float radius)
+{
+	return speed > k_AirborneSpeed || centreHeight - landHeight + radius > k_AirborneHeight;
+}
+
+int living::InjuredChange(float before, float after)
+{
+	if (before > k_InjuredLife && after < k_InjuredLife)
+	{
+		return 1;
+	}
+	if (before < k_InjuredLife && after > k_InjuredLife)
+	{
+		return -1;
+	}
+	return 0;
 }
 
 bool living::AnimalFleesFlyingObject(float distance, float speed)

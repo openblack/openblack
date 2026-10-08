@@ -39,11 +39,14 @@
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/HandGrab.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Player.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/TownAggression.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
@@ -2950,10 +2953,37 @@ void AddSpotVisualTargetObject() // 297 ADD_SPOT_VISUAL_TARGET_OBJECT
 
 void SetIndestructable() // 298 SET_INDESTRUCTABLE
 {
-	// const auto object = Pop().uintVal;
-	// const auto indestructible = static_cast<bool>(Pop().intVal);
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto object = static_cast<entt::entity>(Pop().uintVal);
+	const bool indestructible = (Pop().uintVal & 1u) != 0;
+	auto& registry = Locator::entitiesRegistry::value();
+	if (!registry.Valid(object))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "SET_INDESTRUCTABLE: thing not valid");
+		return;
+	}
+	const auto mark = [&registry, indestructible](entt::entity thing) {
+		if (indestructible)
+		{
+			registry.AssignOrReplace<ecs::components::Indestructible>(thing);
+		}
+		else
+		{
+			registry.Remove<ecs::components::Indestructible>(thing);
+		}
+	};
+	// A town is marked through every villager of it; anything else itself
+	if (registry.AllOf<ecs::components::Town>(object))
+	{
+		registry.Each<const ecs::components::Villager>(
+		    [&mark, object](entt::entity villager, const ecs::components::Villager& person) {
+			    if (person.town == object)
+			    {
+				    mark(villager);
+			    }
+		    });
+		return;
+	}
+	mark(object);
 }
 
 void SetGraphicsClipping() // 299 SET_GRAPHICS_CLIPPING

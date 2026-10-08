@@ -24,6 +24,11 @@
 #include "Magic/SpellRules.h"
 #include "Particles/ParticleSpellLink.h"
 
+namespace openblack::magic
+{
+struct EffectSource;
+} // namespace openblack::magic
+
 namespace openblack::ecs::systems
 {
 
@@ -155,6 +160,12 @@ public:
 	/// An effect on one object that no miracle is behind, such as the crush of a blow, from a player: what its defence
 	/// lets through, as any effect does. Whether the object has life to take it.
 	virtual bool ApplyEffectToObject(entt::entity /*object*/, const magic::EffectValues& /*values*/, PlayerNames /*player*/)
+	{
+		return false;
+	}
+	/// The same from a source that says what applied the effect, and whether any player is behind it
+	virtual bool ApplyEffectToObject(entt::entity /*object*/, const magic::EffectValues& /*values*/,
+	                                 const magic::EffectSource& /*source*/)
 	{
 		return false;
 	}

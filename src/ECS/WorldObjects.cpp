@@ -29,6 +29,7 @@
 #include "ECS/Components/Fire.h"
 #include "ECS/Components/Flowers.h"
 #include "ECS/Components/Forest.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/MagicFireBall.h"
 #include "ECS/Components/MagicForest.h"
@@ -56,6 +57,7 @@
 #include "ECS/TownAggression.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Physics/LivingRules.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -271,6 +273,7 @@ float world_objects::ReduceLife(entt::entity object, float damage)
 	if (auto* villager = registry.TryGet<Villager>(object))
 	{
 		villager->health = static_cast<uint32_t>(std::ceil(life.life * k_VillagerHealthScale));
+		CountInjury(object, before, life.life);
 	}
 	if (registry.AllOf<Abode>(object) && damage > 0.0f)
 	{
@@ -289,7 +292,9 @@ bool world_objects::CanBeDestroyedBySpell(entt::entity object)
 {
 	const auto& registry = Locator::entitiesRegistry::value();
 	const auto can = [&registry, object] {
-		if (!registry.Valid(object) || registry.AnyOf<Creature, Field, Temple, TeleportStone, OneOffSpellSeed>(object))
+		// Nor anything a script made indestructible
+		if (!registry.Valid(object) ||
+		    registry.AnyOf<Creature, Field, Temple, TeleportStone, OneOffSpellSeed, Indestructible>(object))
 		{
 			return false;
 		}
@@ -473,6 +478,30 @@ void world_objects::AttackTown(entt::entity object, float damage, PlayerNames ag
 	const bool owner = registry.Get<const Town>(town).owner == aggressor;
 	const uint32_t turn = Locator::time::has_value() ? static_cast<uint32_t>(Locator::time::value().GetTurn()) : 0;
 	ecs::town_aggression::Attacked(aggression->record, aggressor, owner, amount, info.town.firstTimeDamageDoneAddition, turn);
+}
+
+void world_objects::CountInjury(entt::entity villager, float before, float after)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* person = registry.TryGet<const Villager>(villager);
+	if (person == nullptr || !registry.Valid(person->town))
+	{
+		return;
+	}
+	auto* town = registry.TryGet<Town>(person->town);
+	if (town == nullptr)
+	{
+		return;
+	}
+	const int change = physics::living::InjuredChange(before, after);
+	if (change > 0)
+	{
+		++town->injured;
+	}
+	else if (change < 0 && town->injured > 0)
+	{
+		--town->injured;
+	}
 }
 
 float world_objects::IncreaseLife(entt::entity object, float amount)

@@ -629,6 +629,18 @@ void ReactionSystem::ProcessTurn()
 	{
 		ShutDown(id);
 	}
+	// A reaction to a flying thing is where the thing is now
+	for (auto& reaction : _reactions)
+	{
+		if (reaction.source.type != Reaction::ReactToFlyingObject || !registry.Valid(reaction.source.initiator))
+		{
+			continue;
+		}
+		if (const auto* transform = registry.TryGet<const Transform>(reaction.source.initiator))
+		{
+			reaction.source.position = transform->position;
+		}
+	}
 	// One reaction a turn, in turn, grows, ends once its time is up, or is spread again
 	if (!_reactions.empty())
 	{

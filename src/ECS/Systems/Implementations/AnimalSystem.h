@@ -37,6 +37,7 @@ public:
 	void SetFlockCentre(entt::entity flock, glm::vec2 centre) override;
 	void KillByEffect(entt::entity animal, glm::vec3 position) override;
 	void SetDying(entt::entity animal) override;
+	void IntoHand(entt::entity animal) override;
 	[[nodiscard]] entt::entity LeaderOf(entt::entity flock) const override;
 	[[nodiscard]] std::vector<entt::entity> MembersOf(entt::entity flock) const override;
 	[[nodiscard]] glm::vec2 GoalOf(entt::entity animal) const override;

@@ -44,8 +44,10 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Physics/LivingRules.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
 #include "VillagerFire.h"
@@ -927,6 +929,20 @@ void AnimalSystem::Pounce(entt::entity wolf, Animal& animal)
 	}
 }
 
+void AnimalSystem::IntoHand(entt::entity animal)
+{
+	auto* data = EntityRegistry().TryGet<Animal>(animal);
+	if (data == nullptr)
+	{
+		return;
+	}
+	if (const auto clip = physics::living::ClipsOf(data->type).inHand)
+	{
+		data->animation = *clip;
+		data->clipPlace = 0;
+	}
+}
+
 void AnimalSystem::BringDown(entt::entity wolf, entt::entity prey)
 {
 	auto& registry = EntityRegistry();
@@ -934,7 +950,9 @@ void AnimalSystem::BringDown(entt::entity wolf, entt::entity prey)
 	int fallTurns = 0;
 	if (auto* villager = registry.TryGet<Villager>(prey))
 	{
+		const float before = ecs::world_objects::LifeOf(prey);
 		villager->health = static_cast<uint32_t>(std::lround(flock_rules::k_DownedLife * 100.0f));
+		ecs::world_objects::CountInjury(prey, before, flock_rules::k_DownedLife);
 		if (auto* wallHug = registry.TryGet<WallHug>(prey))
 		{
 			wallHug->goal = Xz(registry.Get<const Transform>(prey).position);

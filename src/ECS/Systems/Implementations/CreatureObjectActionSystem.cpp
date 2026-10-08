@@ -33,6 +33,7 @@
 #include "Creature/CreatureRig.h"
 #include "Creature/CreatureThrow.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureNeeds.h"
@@ -47,6 +48,7 @@
 #include "ECS/Components/WallHug.h"
 #include "ECS/ObjectPhysics.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
@@ -55,6 +57,7 @@
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
+#include "VillagerPhysics.h"
 
 using namespace openblack;
 using namespace openblack::ecs::systems;
@@ -1010,6 +1013,15 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 			if (Locator::dynamicsSystem::has_value() && Locator::dynamicsSystem::value().IsFlying(object))
 			{
 				Locator::dynamicsSystem::value().RemoveObject(object, false, true);
+				// What its landing set, the creature's hand overrides: a person or animal is held
+				if (registry.AllOf<Villager>(object))
+				{
+					villager_physics::IntoHand(object);
+				}
+				else if (registry.AllOf<Animal>(object) && Locator::animalSystem::has_value())
+				{
+					Locator::animalSystem::value().IntoHand(object);
+				}
 			}
 			if (registry.AllOf<Villager>(object))
 			{

@@ -15,16 +15,9 @@
 
 #include "3D/AllMeshes.h"
 #include "Enums.h"
-#include "Physics/LivingRules.h"
 
 namespace openblack::ecs::components
 {
-
-/// How a villager or animal came down from its last flight, which its landing clip follows
-struct LivingLanding
-{
-	physics::living::LandingPose pose {physics::living::LandingPose::None};
-};
 
 /// The clip a villager's state chose for it, where the state picks its own rather than its table's
 struct VillagerClip

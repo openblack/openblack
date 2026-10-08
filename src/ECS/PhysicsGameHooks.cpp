@@ -24,6 +24,7 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/HandGrab.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingPhysics.h"
 #include "ECS/Components/MagicShield.h"
@@ -45,6 +46,7 @@
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
+#include "Magic/MagicWorldInterface.h"
 #include "Magic/SpellRules.h"
 #include "Physics/Body.h"
 #include "Physics/LivingRules.h"
@@ -85,8 +87,22 @@ bool TakesBlows(entt::entity villager)
 	           VillagerStates::GoAndHideInNearbyBuilding;
 }
 
-/// A villager or animal knocked harder than twice its weight is crushed by the blow, through its defences, put down
-/// to the thrower's player
+/// Where a blow's crush comes from: the thing that struck (none for a fall onto the land), and the player whose throw
+/// it was, if any. A creature that struck takes the blow's alignment as its own.
+magic::EffectSource BlowSource(entt::entity hitter, std::optional<PlayerNames> player)
+{
+	auto& registry = Entities();
+	const bool validHitter = hitter != entt::null && registry.Valid(hitter);
+	return {
+	    .player = player.value_or(PlayerNames::NEUTRAL),
+	    .casterCreature = validHitter && registry.AllOf<Creature>(hitter) ? hitter : entt::null,
+	    .appliedBy = validHitter ? hitter : entt::null,
+	    .playerless = !player.has_value(),
+	};
+}
+
+/// A villager or animal knocked harder than twice its weight is crushed by the blow, through its defences, applied by
+/// what struck it and put down to the thrower's player
 void HurtLiving(entt::entity living, const ImpactInfo& impact)
 {
 	const auto crush = living::LivingCrush(impact.g);
@@ -98,7 +114,7 @@ void HurtLiving(entt::entity living, const ImpactInfo& impact)
 	{
 		return;
 	}
-	Locator::magicSystem::value().ApplyEffectToObject(living, CrushOf(*crush), impact.player.value_or(PlayerNames::NEUTRAL));
+	Locator::magicSystem::value().ApplyEffectToObject(living, CrushOf(*crush), BlowSource(impact.hitBy, impact.player));
 }
 
 /// Whether a thing is a toy, which strikes a creature without hurting it
@@ -112,7 +128,7 @@ bool IsToy(entt::entity object)
 
 /// A creature struck by a thrown thing (not a toy) is hurt a hundredth of how hard it was struck for its weight, its
 /// own player's blow makes it think less of the player, and every blow makes it angry and afraid
-void HurtCreature(entt::entity creature, const ImpactInfo& impact)
+void HurtCreature(DynamicsSystemInterface& dynamics, entt::entity creature, const ImpactInfo& impact)
 {
 	auto& registry = Entities();
 	if (impact.hitBy == entt::null || !registry.Valid(impact.hitBy) || IsToy(impact.hitBy))
@@ -130,10 +146,13 @@ void HurtCreature(entt::entity creature, const ImpactInfo& impact)
 	{
 		return;
 	}
+	// The crush is the striking thing's, put down to the player whose throw it was; the creature's own credit only
+	// decides whether its player struck it
 	if (Locator::magicSystem::has_value() && Locator::infoConstants::has_value())
 	{
-		Locator::magicSystem::value().ApplyEffectToObject(creature, CrushOf(*crush),
-		                                                  impact.player.value_or(PlayerNames::NEUTRAL));
+		const auto* hitter = dynamics.Find(impact.hitBy);
+		const auto hitterPlayer = hitter != nullptr ? hitter->player : std::nullopt;
+		Locator::magicSystem::value().ApplyEffectToObject(creature, CrushOf(*crush), BlowSource(impact.hitBy, hitterPlayer));
 	}
 	if (!Locator::creatureMindSystem::has_value())
 	{
@@ -181,14 +200,11 @@ void LandAnimal(PhysicsEntry* entry, entt::entity entity)
 	{
 		pose = living::AnimalLandingPose(entry->body->TurnStartAxes()[0].y);
 		const float heading = living::AnimalLandingHeading(entry->body->Axes());
-		const glm::mat3 axes(glm::vec3(std::cos(heading), 0.0f, std::sin(heading)), glm::vec3(0.0f, 1.0f, 0.0f),
-		                     glm::vec3(-std::sin(heading), 0.0f, std::cos(heading)));
-		transform->rotation = physics::QuarterTurned(axes);
+		transform->rotation = physics::QuarterTurned(living::HeadingAxes(heading));
 		// Its heading across the land as the animals keep it, from the way it is drawn
 		const auto side = transform->rotation[0];
 		animal->heading = std::atan2(-side.x, side.z);
 	}
-	registry.AssignOrReplace<LivingLanding>(entity, LivingLanding {.pose = pose});
 	// It goes on from where it came down, on the land
 	if (Locator::terrainSystem::has_value())
 	{
@@ -217,16 +233,30 @@ void LandAnimal(PhysicsEntry* entry, entt::entity entity)
 		}
 		return;
 	}
+	// Its flock's home moves by its kind's rule
 	if (registry.Valid(animal->flock) && Locator::animalSystem::has_value())
 	{
-		Locator::animalSystem::value().SetFlockCentre(animal->flock, glm::vec2(position.x, position.z));
+		auto& animals = Locator::animalSystem::value();
+		switch (living::LairOnLanding(animal->type, animals.LeaderOf(animal->flock) == entity))
+		{
+		case living::LandedLair::WhereItLanded:
+			animals.SetFlockCentre(animal->flock, glm::vec2(position.x, position.z));
+			break;
+		case living::LandedLair::ForestOfItsKind:
+			// TODO(physics): tigers and wolves choose a forest by drinking water and distance; that choice is not
+			// ported, so their flock's home stays
+		case living::LandedLair::Unchanged:
+			break;
+		}
 	}
+	// It plays its landing clip through, kept still, then decides what to do; a kind with none waits on its current clip
 	if (const auto clip = living::AnimalLandedClip(animal->type, pose))
 	{
 		animal->animation = *clip;
 		animal->clipPlace = 0;
 	}
-	animal->state = AnimalState::DecideWhatToDo;
+	animal->afterClip = AnimalState::DecideWhatToDo;
+	animal->state = AnimalState::WaitForClip;
 	animal->turnsInState = 0;
 }
 
@@ -265,8 +295,13 @@ PhysicsStarted PhysicsGameHooks::InitialisePhysics(DynamicsSystemInterface& dyna
 	{
 		DropCarriedResource(dynamics, object, start.velocity);
 	}
+	// A villager takes to the air first; a state it can't leave keeps it on the ground, and its body is not started
+	if (Entities().AllOf<Villager>(object) && !villager_physics::StartFlying(object))
+	{
+		return {};
+	}
 	const auto started = PhysicsClassHooks::InitialisePhysics(dynamics, object, start);
-	if (started.started)
+	if (started.started && !Entities().AllOf<Villager>(object))
 	{
 		StartFlying(object);
 	}
@@ -314,6 +349,11 @@ bool PhysicsGameHooks::HasSunk(DynamicsSystemInterface& dynamics, PhysicsEntry& 
 	}
 	if (registry.AllOf<Animal>(entry.entity))
 	{
+		// Something already going from the world hasn't sunk
+		if (!registry.Valid(entry.entity))
+		{
+			return false;
+		}
 		// The player who dropped it may teach their creature to throw things in the sea; it dies and is gone
 		if (const auto dropper = villager_physics::DropperOf(entry.entity);
 		    dropper.has_value() && Locator::creatureMindSystem::has_value())
@@ -350,7 +390,7 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	}
 	if (registry.AllOf<Creature>(object))
 	{
-		HurtCreature(object, impact);
+		HurtCreature(dynamics, object, impact);
 		return;
 	}
 	if (const auto* shield = registry.TryGet<const MagicShield>(object);
@@ -365,13 +405,13 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	{
 		auto& stores = Locator::resourceStoreSystem::value();
 		const auto resource = stores.ResourceOf(object);
-		if (resource.type != ResourceType::None)
+		// A fence a script made indestructible stays out of stores
+		if (resource.type != ResourceType::None && !registry.AllOf<MobileStatic, Indestructible>(object))
 		{
-			// TODO(stores): a fence a script made indestructible stays out of stores; openblack has no indestructible
-			// flag yet
-			if (stores.IsStore(hitter, resource.type))
+			// An animal the store won't take is hurt by the blow as any other
+			if (stores.IsStore(hitter, resource.type) &&
+			    (stores.TakeObject(hitter, object, impact.player) || !registry.AllOf<Animal>(object)))
 			{
-				stores.TakeObject(hitter, object, impact.player);
 				return;
 			}
 			if (registry.AllOf<Pot>(object))

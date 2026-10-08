@@ -38,6 +38,8 @@ void Start(entt::entity villager, Reaction type, components::LivingReaction& sta
 /// A villager stops reacting; when asked, it goes back to what it was doing
 void Stop(entt::entity villager, components::LivingReaction& state, bool resetState);
 
+/// A villager turns towards a point, a step a turn, as one watching something does
+void LookAt(entt::entity villager, const glm::vec3& point);
 /// The states of fleeing, and of watching (after fleeing, or a nice miracle)
 uint32_t Fleeing(components::LivingAction& action);
 uint32_t Watching(components::LivingAction& action);

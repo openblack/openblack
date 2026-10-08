@@ -472,14 +472,18 @@ void GameMagicWorld::Apply(const magic::EffectValues& values, std::span<const ma
 		}
 		magic_living::AfterEffect(outcome.entity, values, source);
 		alignment += outcome.alignmentChange;
-		// Harm done to a town's people or buildings counts as an attack on the town by whoever did it
-		if (outcome.aggression)
+		// What applied the effect, when no miracle did: none for a fall onto the land
+		const bool appliedByNothing =
+		    source.appliedBy.has_value() && (*source.appliedBy == entt::null || !PositionOf(*source.appliedBy).has_value());
+		// Harm done to a town's people or buildings counts as an attack on the town by whoever did it, when something
+		// applied it
+		if (outcome.aggression && !appliedByNothing)
 		{
 			ecs::world_objects::AttackTown(outcome.entity, outcome.damaged + outcome.burnt, source.player);
 		}
 		// A player's miracle, not a creature's, is remembered against them by the player whose object it harmed
 		const auto owner = ecs::world_objects::PlayerOf(outcome.entity);
-		if (!byCreature && owner.has_value())
+		if (!byCreature && !source.playerless && owner.has_value())
 		{
 			AddDamageFrom(*owner, source.player, outcome.damaged + outcome.burnt);
 		}
@@ -488,7 +492,10 @@ void GameMagicWorld::Apply(const magic::EffectValues& values, std::span<const ma
 		if (outcome.crushed && Locator::reactionSystem::has_value() &&
 		    !Locator::reactionSystem::value().HasReaction(outcome.entity))
 		{
-			const auto initiator = byCreature ? source.casterCreature : outcome.entity;
+			// What applied a blow is what the people react to, when it stands somewhere; else the thing crushed
+			const auto initiator = byCreature                                          ? source.casterCreature
+			                       : source.appliedBy.has_value() && !appliedByNothing ? *source.appliedBy
+			                                                                           : outcome.entity;
 			if (const auto position = PositionOf(initiator))
 			{
 				Locator::reactionSystem::value().Create({.initiator = initiator,
@@ -521,7 +528,7 @@ void GameMagicWorld::Apply(const magic::EffectValues& values, std::span<const ma
 	{
 		registry.Get<Creature>(source.casterCreature).pendingAlignment += alignment;
 	}
-	else if (source.player != PlayerNames::NEUTRAL && Locator::alignmentSystem::has_value())
+	else if (!source.playerless && source.player != PlayerNames::NEUTRAL && Locator::alignmentSystem::has_value())
 	{
 		Locator::alignmentSystem::value().AddPendingAlignment(source.player, alignment);
 	}

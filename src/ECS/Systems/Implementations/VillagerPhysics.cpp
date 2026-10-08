@@ -9,8 +9,6 @@
 
 #include "VillagerPhysics.h"
 
-#include <chrono>
-
 #include <LNDFile.h>
 #include <glm/geometric.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -19,9 +17,11 @@
 #include "Common/GameRandom.h"
 #include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/HandGrab.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingPhysics.h"
 #include "ECS/Components/LivingReaction.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/VillagerDeath.h"
@@ -34,6 +34,7 @@
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/VillagerClips.h"
 #include "ECS/VillagerMemory.h"
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
@@ -47,6 +48,8 @@
 using namespace openblack;
 using namespace openblack::ecs;
 using namespace openblack::ecs::components;
+using openblack::ecs::villager_clips::ClipPlayed;
+using openblack::ecs::villager_clips::IsOnWater;
 namespace living = openblack::physics::living;
 
 namespace
@@ -87,41 +90,6 @@ const GVillagerStateTableInfo* StateRowOf(VillagerStates state)
 	return index < table.size() ? &table.at(index) : nullptr;
 }
 
-/// A clip's length in milliseconds, none for one not loaded
-std::optional<float> ClipMilliseconds(AnimId clip)
-{
-	if (!Locator::resources::has_value())
-	{
-		return std::nullopt;
-	}
-	auto& animations = Locator::resources::value().GetAnimations();
-	const auto key = static_cast<entt::id_type>(clip);
-	if (!animations.Contains(key))
-	{
-		return std::nullopt;
-	}
-	return static_cast<float>(animations.Handle(key)->GetDuration());
-}
-
-/// Whether the clip has played through once since the villager went into its state
-bool ClipPlayed(const LivingAction& action, AnimId clip)
-{
-	constexpr auto k_TurnMilliseconds = std::chrono::milliseconds(ecs::systems::TimeSystemInterface::k_TurnDuration).count();
-	return static_cast<float>(action.turnsSinceStateChange) * static_cast<float>(k_TurnMilliseconds) >=
-	       ClipMilliseconds(clip).value_or(0.0f);
-}
-
-/// Whether the land under a point is water, the shallow shore included
-bool IsOnWater(glm::vec3 point)
-{
-	if (!Locator::terrainSystem::has_value() || point.x < 0.0f || point.z < 0.0f)
-	{
-		return false;
-	}
-	const auto* cell = Locator::terrainSystem::value().FindCell(glm::u16vec2(glm::floor(glm::vec2(point.x, point.z) / 10.0f)));
-	return cell != nullptr && cell->properties.hasWater != 0;
-}
-
 /// A villager stands facing a heading as the game counts it, drawn turned a quarter from its body
 void Face(entt::entity villager, float heading)
 {
@@ -130,15 +98,29 @@ void Face(entt::entity villager, float heading)
 	{
 		return;
 	}
-	const glm::mat3 body(glm::vec3(std::cos(heading), 0.0f, std::sin(heading)), glm::vec3(0.0f, 1.0f, 0.0f),
-	                     glm::vec3(-std::sin(heading), 0.0f, std::cos(heading)));
-	transform->rotation = physics::QuarterTurned(body);
+	transform->rotation = physics::QuarterTurned(living::HeadingAxes(heading));
 }
 
 bool IsDead(entt::entity villager)
 {
 	return Entities().AllOf<VillagerDeath>(villager);
 }
+
+/// A body that goes into the water starts dying again, lying its time without a graveyard from now
+void SinkDying(entt::entity villager, LivingAction& action)
+{
+	if (auto* death = Entities().TryGet<VillagerDeath>(villager))
+	{
+		if (const auto* info = InfoOf(villager))
+		{
+			death->turnsLeft = info->dyingTimeWithoutGraveyard;
+		}
+	}
+	SetTopState(action, VillagerStates::Dying);
+}
+
+/// The weight a drowning, or a death on landing in the water, has with the town against whoever caused it
+constexpr float k_DrowningDeathWeight = 0.01f;
 
 void PlayerDid(uint32_t deed, entt::entity object, PlayerNames player)
 {
@@ -166,28 +148,44 @@ std::optional<PlayerNames> villager_physics::DropperOf(entt::entity object)
 	return dropper;
 }
 
-void villager_physics::StartFlying(entt::entity villager)
+bool villager_physics::StartFlying(entt::entity villager)
 {
 	auto& registry = Entities();
 	auto* action = registry.TryGet<LivingAction>(villager);
 	if (action == nullptr || !Locator::livingActionSystem::has_value())
 	{
-		return;
+		return true;
 	}
 	const auto top = TopState(*action);
-	if (top == VillagerStates::Flying)
+	if (top != VillagerStates::Flying)
 	{
-		return;
+		if (top != VillagerStates::InHand)
+		{
+			villager_memory::StorePreviousState(*action);
+		}
+		SetTopState(*action, VillagerStates::Flying);
+		// A state it can't leave keeps it out of the air
+		if (TopState(*action) != VillagerStates::Flying)
+		{
+			return false;
+		}
 	}
-	if (top != VillagerStates::InHand)
-	{
-		villager_memory::StorePreviousState(*action);
-	}
-	SetTopState(*action, VillagerStates::Flying);
 	// It flies dead, carried round a vortex, or thrown
 	registry.AssignOrReplace<VillagerClip>(
 	    villager, VillagerClip {.clip = living::VillagerThrownClip(world_objects::LifeOf(villager) > 0.0f,
 	                                                               registry.AllOf<CarriedByTornado>(villager))});
+	return true;
+}
+
+void villager_physics::IntoHand(entt::entity villager)
+{
+	auto* action = Entities().TryGet<LivingAction>(villager);
+	if (action == nullptr || !Locator::livingActionSystem::has_value())
+	{
+		return;
+	}
+	villager_memory::StorePreviousState(*action);
+	SetTopState(*action, VillagerStates::InHand);
 }
 
 void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
@@ -215,7 +213,6 @@ void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
 			                                    feet ? 0.1f : 0.5f, transform->position);
 		}
 	}
-	registry.AssignOrReplace<LivingLanding>(villager, LivingLanding {.pose = pose});
 	// It stands on the land where it came down
 	if (Locator::terrainSystem::has_value())
 	{
@@ -231,12 +228,14 @@ void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
 			if (IsDead(villager))
 			{
 				// A body thrown into the water sinks dying
-				SetTopState(*action, VillagerStates::Dying);
+				SinkDying(villager, *action);
 			}
 			else
 			{
-				// TODO(physics): the death is put down to the thrower's player once deaths keep who caused them
-				villager_fire::DieByEffect(villager);
+				// Killed in the air, it drowns as it lands, put down to the thrower's player
+				villager_fire::DieByEffect(villager, villager_fire::DeathCause {.reason = DeathReason::PlayerInteractionDrown,
+				                                                                .killer = player,
+				                                                                .weight = k_DrowningDeathWeight});
 			}
 			return;
 		}
@@ -254,9 +253,9 @@ void villager_physics::Land(PhysicsEntry* entry, entt::entity villager)
 		}
 		else
 		{
-			// Killed in the air, it dies of the fall where it lands
-			// TODO(physics): the death is put down to the thrower's player once deaths keep who caused them
-			villager_fire::DieByEffect(villager);
+			// Killed in the air, it dies of the fall where it lands, put down to the thrower's player
+			villager_fire::DieByEffect(villager,
+			                           villager_fire::DeathCause {.reason = DeathReason::PlayerInteraction, .killer = player});
 		}
 		return;
 	}
@@ -275,7 +274,8 @@ bool villager_physics::Sink(PhysicsEntry& entry)
 {
 	auto& registry = Entities();
 	const auto villager = entry.entity;
-	auto* action = registry.TryGet<LivingAction>(villager);
+	// Something already going from the world hasn't sunk
+	auto* action = registry.Valid(villager) ? registry.TryGet<LivingAction>(villager) : nullptr;
 	if (action == nullptr || !Locator::livingActionSystem::has_value())
 	{
 		return false;
@@ -288,7 +288,7 @@ bool villager_physics::Sink(PhysicsEntry& entry)
 	const auto* info = InfoOf(villager);
 	if (IsDead(villager))
 	{
-		SetTopState(*action, VillagerStates::Dying);
+		SinkDying(villager, *action);
 		return true;
 	}
 	action->turnsUntilStateChange = info != nullptr ? info->drowningTime : 0;
@@ -307,17 +307,43 @@ bool villager_physics::TakesFlyingObjectReaction(entt::entity villager)
 	return top != VillagerStates::Flying && top != VillagerStates::Landed;
 }
 
+namespace
+{
+/// Where a flying thing is on the map now, which it is watched from
+std::optional<glm::vec3> WherePositioned(entt::entity object)
+{
+	const auto& registry = Entities();
+	const auto* transform = registry.Valid(object) ? registry.TryGet<const Transform>(object) : nullptr;
+	return transform != nullptr ? std::optional(transform->position) : std::nullopt;
+}
+
+/// Whether a thing in the physics is still really in the air
+bool ActuallyInTheAir(entt::entity object, const PhysicsEntry& entry)
+{
+	if (!Entities().AllOf<InPhysics>(object) || entry.body == nullptr)
+	{
+		return false;
+	}
+	const auto centre = entry.body->Centre();
+	const float land =
+	    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(glm::vec2(centre.x, centre.z)) : 0.0f;
+	return living::IsActuallyInTheAir(entry.body->Speed(), centre.y, land, entry.body->Radius());
+}
+} // namespace
+
 void villager_physics::SetupReactToFlyingObject(entt::entity villager, entt::entity object)
 {
 	auto& registry = Entities();
 	auto* action = registry.TryGet<LivingAction>(villager);
 	const auto* entry = Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().Find(object) : nullptr;
-	if (action == nullptr || entry == nullptr || entry->body == nullptr)
+	const auto there = WherePositioned(object);
+	if (action == nullptr || entry == nullptr || entry->body == nullptr || !there.has_value())
 	{
 		return;
 	}
+	// Measured across the map from the villager to where the thing is, against how far it flies in two seconds
 	const auto& here = registry.Get<const Transform>(villager).position;
-	const float distance = glm::distance(here, entry->body->Centre());
+	const float distance = living::MapDistance(here, *there);
 	registry.AssignOrReplace<WatchedFlyingObject>(villager, WatchedFlyingObject {.object = object});
 	if (living::RespondToFlyingObject(distance, entry->body->Speed()) == living::FlyingObjectResponse::Run)
 	{
@@ -345,13 +371,28 @@ uint32_t villager_physics::Flying([[maybe_unused]] LivingAction& action)
 	return 1;
 }
 
+bool villager_physics::ExitFlying([[maybe_unused]] LivingAction& action, VillagerStates next)
+{
+	// Only the hand, landing, death or the water take it out of the air
+	return next != VillagerStates::InHand && next != VillagerStates::Landed && next != VillagerStates::Dying &&
+	       next != VillagerStates::Dead && next != VillagerStates::Drowning;
+}
+
+bool villager_physics::ExitInHand([[maybe_unused]] LivingAction& action, VillagerStates next)
+{
+	// Only flying, landing, death or the water take it out of the hand
+	return next != VillagerStates::Flying && next != VillagerStates::Landed && next != VillagerStates::Dying &&
+	       next != VillagerStates::Dead && next != VillagerStates::Drowning;
+}
+
 uint32_t villager_physics::Landed(LivingAction& action)
 {
 	auto& registry = Entities();
 	const auto villager = registry.ToEntity(action);
-	// It stops calling others to it from the hand, plays its landing once, and decides what to do
+	// As it starts to get up it stops calling others to it from the hand; it plays its landing once, and decides what to
+	// do
 	// TODO(physics): a villager put down as a disciple goes to its job; openblack has no disciples yet
-	if (Locator::reactionSystem::has_value())
+	if (action.turnsSinceStateChange == 0 && Locator::reactionSystem::has_value())
 	{
 		Locator::reactionSystem::value().RemoveFrom(villager, Reaction::ReactToVillagerInHand);
 	}
@@ -368,14 +409,23 @@ uint32_t villager_physics::Drowning(LivingAction& action)
 {
 	auto& registry = Entities();
 	const auto villager = registry.ToEntity(action);
-	// TODO(physics): an indestructible villager never drowns; openblack has no indestructible flag yet
-	const auto step = living::StepDrowning(action.turnsUntilStateChange, false);
+	// An indestructible villager is held short of the end for ever
+	const auto step = living::StepDrowning(action.turnsUntilStateChange, registry.AllOf<Indestructible>(villager));
 	action.turnsUntilStateChange = step.left;
 	if (step.dies)
 	{
-		// TODO(physics): the drowning is put down to the dropper's player, else the last to interact, once deaths keep
-		// who caused them
-		villager_fire::DieByEffect(villager);
+		// It drowns, put down to the player whose hand dropped it, else the last player who did something to it
+		auto killer = DropperOf(villager);
+		if (!killer.has_value())
+		{
+			if (const auto* last = registry.TryGet<const LastInteractingPlayer>(villager))
+			{
+				killer = last->player;
+			}
+		}
+		villager_fire::DieByEffect(villager, villager_fire::DeathCause {.reason = DeathReason::PlayerInteractionDrown,
+		                                                                .killer = killer,
+		                                                                .weight = k_DrowningDeathWeight});
 	}
 	return 1;
 }
@@ -385,12 +435,27 @@ uint32_t villager_physics::PointAtFlyingObject(LivingAction& action)
 	auto& registry = Entities();
 	const auto villager = registry.ToEntity(action);
 	const auto* watched = registry.TryGet<const WatchedFlyingObject>(villager);
-	const auto* entry = watched != nullptr && Locator::dynamicsSystem::has_value()
-	                        ? Locator::dynamicsSystem::value().Find(watched->object)
-	                        : nullptr;
-	// Once it is no longer in the air, the villager stops reacting
-	if (entry == nullptr || !entry->IsFlying())
+	const auto object = watched != nullptr ? watched->object : entt::null;
+	const auto* entry =
+	    object != entt::null && Locator::dynamicsSystem::has_value() ? Locator::dynamicsSystem::value().Find(object) : nullptr;
+	const auto there = WherePositioned(object);
+	// With the thing out of the physics, nothing changes until its reaction ends
+	if (entry == nullptr || entry->body == nullptr || !there.has_value())
 	{
+		return 1;
+	}
+	// Too near, it runs; otherwise it looks at the thing, and once that is no longer really in the air it stops reacting
+	const auto& here = registry.Get<const Transform>(villager).position;
+	if (living::RespondToFlyingObject(living::MapDistance(here, *there), entry->body->Speed()) ==
+	    living::FlyingObjectResponse::Run)
+	{
+		SetTopState(action, VillagerStates::FleeingFromObjectReaction);
+		return 1;
+	}
+	systems::villager_reactions::LookAt(villager, *there);
+	if (!ActuallyInTheAir(object, *entry))
+	{
+		registry.Remove<WatchedFlyingObject>(villager);
 		if (auto* reaction = registry.TryGet<LivingReaction>(villager))
 		{
 			systems::villager_reactions::Stop(villager, *reaction, true);
@@ -399,13 +464,6 @@ uint32_t villager_physics::PointAtFlyingObject(LivingAction& action)
 		{
 			SetTopState(action, VillagerStates::DecideWhatToDo);
 		}
-		return 1;
-	}
-	const auto& here = registry.Get<const Transform>(villager).position;
-	if (living::RespondToFlyingObject(glm::distance(here, entry->body->Centre()), entry->body->Speed()) ==
-	    living::FlyingObjectResponse::Run)
-	{
-		SetTopState(action, VillagerStates::FleeingFromObjectReaction);
 	}
 	return 1;
 }

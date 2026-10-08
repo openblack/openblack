@@ -38,6 +38,7 @@
 #include "ECS/Systems/CreatureFightSystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
+#include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Magic/HealTargets.h"
@@ -128,9 +129,11 @@ void magic_living::SetLife(entt::entity entity, float life)
 	}
 	else if (auto* villager = registry.TryGet<Villager>(entity))
 	{
+		const float before = ecs::world_objects::LifeOf(entity);
 		auto* kept = registry.TryGet<ObjectLife>(entity);
 		(kept != nullptr ? *kept : registry.Assign<ObjectLife>(entity)).life = life;
 		villager->health = static_cast<uint32_t>(std::ceil(life * k_VillagerHealthScale));
+		ecs::world_objects::CountInjury(entity, before, life);
 	}
 	else if (auto* animal = registry.TryGet<Animal>(entity))
 	{

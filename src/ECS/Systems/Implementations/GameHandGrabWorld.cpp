@@ -33,14 +33,17 @@
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/HandGrab.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/MapCellResident.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Player.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Map.h"
 #include "ECS/ObjectPhysics.h"
@@ -72,6 +75,7 @@
 #include "Physics/LivingRules.h"
 #include "Resources/ResourceManager.h"
 #include "Resources/ResourcesInterface.h"
+#include "VillagerPhysics.h"
 
 using namespace openblack;
 using namespace openblack::ecs;
@@ -305,13 +309,7 @@ uint32_t GameHandGrabWorld::LocalRandom(uint32_t count)
 
 void GameHandGrabWorld::VillagerIntoHand(entt::entity villager)
 {
-	auto* action = Locator::entitiesRegistry::value().TryGet<LivingAction>(villager);
-	if (action == nullptr || !Locator::livingActionSystem::has_value())
-	{
-		return;
-	}
-	villager_memory::StorePreviousState(*action);
-	Locator::livingActionSystem::value().VillagerSetState(*action, LivingAction::Index::Top, VillagerStates::InHand, false);
+	villager_physics::IntoHand(villager);
 }
 
 void GameHandGrabWorld::AnimalIntoOwnFlock(entt::entity animal)
@@ -322,12 +320,8 @@ void GameHandGrabWorld::AnimalIntoOwnFlock(entt::entity animal)
 	{
 		return;
 	}
-	// In the hand it plays its kind's clip for being held, if its kind has one
-	if (const auto clip = physics::living::ClipsOf(data->type).inHand)
-	{
-		data->animation = *clip;
-		data->clipPlace = 0;
-	}
+	// In the hand it plays its kind's clip for being held
+	Locator::animalSystem::value().IntoHand(animal);
 	auto* flock = registry.TryGet<Flock>(data->flock);
 	if (flock == nullptr)
 	{
@@ -661,6 +655,11 @@ uint32_t GameHandGrabWorld::AddToStore(entt::entity store, ResourceType resource
 
 bool GameHandGrabWorld::TakeIntoStore(entt::entity store, entt::entity object)
 {
+	// An animal, a static such as a fence, or a tree a script made indestructible refuses to be given
+	if (Entities().AllOf<Indestructible>(object) && Entities().AnyOf<Animal, MobileStatic, Tree>(object))
+	{
+		return false;
+	}
 	return Locator::resourceStoreSystem::has_value() &&
 	       Locator::resourceStoreSystem::value().TakeObject(store, object, HandPlayer());
 }
