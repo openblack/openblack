@@ -55,7 +55,6 @@ public:
 	bool TapPost(entt::entity post) override;
 	bool PressKey(PlayerNames player, creature_leash::LeashKey key) override;
 	bool TapCreature(PlayerNames player, entt::entity creature) override;
-	bool TrackHand(PlayerNames player, glm::vec2 cursor, float seconds, bool handFree) override;
 	bool Shake(PlayerNames player) override;
 
 private:
@@ -75,8 +74,6 @@ private:
 	/// The two leash-tying sounds play in turn
 	bool _secondAttachSound {false};
 	std::optional<Refused> _lastRefusal;
-	/// Following the local player's cursor to tell when the hand is shaken
-	creature_leash::ShakeTracker _shake;
 };
 
 } // namespace openblack::ecs::systems

@@ -57,6 +57,8 @@ void testbed_dispensers::PlaceGrid(glm::vec2 middle)
 		if (dispenser != entt::null)
 		{
 			registry.Assign<ecs::components::TestbedDispenser>(dispenser);
+			// The testbed's grid starts with every globe there to take
+			magic.ChargeDispenser(dispenser);
 		}
 	}
 }

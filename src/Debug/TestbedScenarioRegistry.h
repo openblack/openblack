@@ -115,7 +115,9 @@ struct Environment
 	std::optional<bool> aprilFools;
 	/// The grid of every miracle's dispenser the testbed lays out in front of the camera stays, or is cleared away
 	bool dispenserGrid {true};
-	/// The player's alignment, from -1 (evil) to 1 (good), as it was when not given
+	/// The player's prayer power, for watching a maintained miracle run out of it; the testbed's plenty when not given
+	std::optional<float> prayer;
+	/// The player's alignment, -1 evil to 1 good, as the scenario starts; neutral when not given
 	std::optional<float> playerAlignment;
 	/// Where the cursor, and so the hand, is put, as a share of the window from its top left, until the mouse moves
 	std::optional<glm::vec2> cursor;
@@ -132,6 +134,8 @@ enum class Shot : uint8_t
 	Follow,
 	/// In front of one creature's face, looking at its head and eyes
 	Head,
+	/// From the framing's eye to the point it looks at, as low or high as they say
+	Placed,
 };
 [[nodiscard]] std::string_view Name(Shot shot);
 
@@ -145,6 +149,10 @@ struct Framing
 	std::vector<glm::vec2> include;
 	/// Further away for more than 1, closer for less
 	float distance {1.0f};
+	/// A placed shot's eye and the point it looks at: x east and z north from the middle of the map, y above the land
+	/// under each
+	glm::vec3 eye {0.0f};
+	glm::vec3 look {0.0f};
 };
 
 /// A creature's body as the scenario wants it; what is not given is as the creature's species starts
@@ -205,16 +213,40 @@ struct CreatureSetup
 	std::string_view mindFile;
 };
 
-/// Something put on the land for the creatures: an object, a tree, a feature such as a pillar of rock, a villager, or a
-/// pot or pile of food or wood
+/// Something put on the land for the creatures: an object, a tree, a feature such as a pillar of rock, a villager, a pot
+/// or pile of food or wood, a building or field of the scenario's town, which is made with the first of them, or an
+/// animal
 struct ObjectSetup
 {
-	std::variant<MobileObjectInfo, TreeInfo, FeatureInfo, VillagerInfo, PotInfo> type;
+	std::variant<MobileObjectInfo, TreeInfo, FeatureInfo, VillagerInfo, PotInfo, AbodeInfo, FieldTypeInfo, AnimalInfo> type;
 	glm::vec2 offset {0.0f};
 	float scale {1.0f};
 	float yawDegrees {0.0f};
 	/// How much a pot holds, which for food is what it is worth to eat: a meal for a grown up creature by default
 	int32_t amount {800};
+	/// A villager walks to this point, from the middle of the map, once the delay is up, and then back and forth between
+	/// it and where it started at the repeat
+	std::optional<glm::vec2> walkTo;
+	float walkAfterSeconds {1.0f};
+	std::optional<float> walkRepeatSeconds;
+	/// What a walking villager is to do once there: deciding afresh unless given. A villager walking to decide afresh takes
+	/// up no reaction on its way, as in the game
+	VillagerStates walkFinal {VillagerStates::DecideWhatToDo};
+	/// A villager belongs to the scenario's town of the player, rather than to none
+	bool joinTown {false};
+	/// A villager is put down on the nearest teleport stone after this many seconds, as the hand drops one, and jumps at
+	/// once to the stone nearest where it was walking
+	std::optional<float> dropOnStoneSeconds;
+	/// A villager sets off to worship at this point once the walk delay is up, going through its player's teleport
+	/// stones when the point is further than villagers walk to worship
+	std::optional<glm::vec2> worshipAt;
+	/// A villager's or animal's life, 0 (dead) to 1, full when not given
+	std::optional<float> life;
+	/// A tree belongs to the land's forest of this number, none for 0; and grows to this size, its scale when not given
+	uint32_t forest {0};
+	std::optional<float> fullSize;
+	/// A villager or animal that has eaten poison
+	bool poisoned {false};
 };
 
 /// A particle effect played on the land
@@ -243,6 +275,9 @@ struct DispenserSetup
 	glm::vec2 offset {0.0f};
 	/// Only the bubble, floating this high above the land, without its dispenser
 	std::optional<float> bubbleHeight;
+	/// A testbed set-up step: the dispenser starts with its period already counted and floats its globe at once, rather
+	/// than after its period as a dispenser put down in the game does
+	bool charged {true};
 };
 
 /// A miracle cast in the scenario, as if from a hand above the land
@@ -271,6 +306,23 @@ struct MiracleCast
 	std::optional<float> holdSeconds;
 	/// Seconds after which it is cast again, none for once
 	std::optional<float> repeatSeconds;
+	/// Cast through the hand as a player does, rather than straight at its point: a seed of it is put in the hand, the
+	/// action button pressed with the hand over its point (or creature), and let go after its hold, the hand moving by
+	/// its throw velocity meanwhile
+	bool byHand {false};
+	/// By hand, the seed comes from the player's worship, charged from their prayer power and ready after a moment, rather
+	/// than from a bubble
+	bool fromWorship {false};
+	/// By hand, a circle drawn round the point first, of this radius, for the storms and shields; none draws none
+	std::optional<float> circleRadius;
+	/// Cast straight at its point by this player, rather than the player's
+	PlayerNames player {PlayerNames::PLAYER_ONE};
+	/// By hand, the hand sweeps on at its throw velocity for this long after letting go, as a player sweeps a flock out
+	std::optional<float> sweepSeconds;
+	/// The caster's alignment, set as it is cast (a flying flock is bats for an evil caster, doves for a good one)
+	std::optional<float> casterAlignment;
+	/// By hand, the seed is held this many seconds before the button goes down, rather than just long enough to be ready
+	std::optional<float> holdBeforePress;
 };
 
 /// Something a creature is told to do, in turn with the scenario's other commands
@@ -340,8 +392,8 @@ struct Command
 		MakeLeashable,
 		HandTapLeash,
 		LeashKey,
-		/// The player shaking the hand: the cursor swept quickly back and forth through the same tracking the mouse goes
-		/// through, which takes off a leash held in the hand
+		/// The player shaking the leash off: a scribble drawn with the empty hand through the same gesture recogniser
+		/// the cursor goes through, which takes off a leash held in the hand
 		LeashShake,
 		/// Fighting the other creature; then, in the fight, a blow high, in the middle or low charged for a while, a
 		/// block, a step forward, back, right or left, the special move, and fighting by itself or not, as the player's
@@ -381,6 +433,24 @@ struct Command
 		OpenCreatureCave,
 		ApplyTattoo,
 		RemoveTattoo,
+		/// The player's hand is given a seed (value, by the game's seed number) as if from a bubble; a gesture (value, by
+		/// the game's gesture number) is drawn with the hand across the middle of the screen, through the same recogniser
+		/// the cursor goes through. Neither needs a creature.
+		HoldSeed,
+		DrawGesture,
+		/// The player's hand is given a seed (value) summoned from their worship, charged from their prayer power, which
+		/// can be powered up
+		SummonSeed,
+		/// The creature knows a miracle (value, by its magic type) as if it had learnt it; it is told to cast a miracle
+		/// (value) at the scenario's object, or at another creature (atCreature), going about it as by itself
+		KnowMiracle,
+		CastMiracle,
+		/// The player presses a key's action (value, the bindable action's flag) for one frame, as the options screen's
+		/// presses are made. Needs no creature
+		PressKey,
+		/// The player's hand takes hold of a fireball in flight, the hand straight over it: an empty hand taps it (catching
+		/// another player's), a hand with a seed presses the action button on it (a fire seed takes it in)
+		HandTakeFireBall,
 		/// The player's mouse, through the same input the real one goes through: the pointer put at a point on the
 		/// screen (point, as fractions of its width and height from the top left); a button (value: 1 left, 2 middle,
 		/// 3 right) pressed or let go; the mouse moved by point, as fractions of the screen, over some seconds
@@ -400,7 +470,8 @@ struct Command
 	PlayerNames player {PlayerNames::PLAYER_ONE};
 	/// Seconds after the last command before this one, counted once its creature is free when it waits for that
 	float delaySeconds {0.0f};
-	/// Waits until its creature has stopped moving and its body plays nothing, such as having arrived
+	/// Waits until its creature has stopped moving and its body plays nothing, such as having arrived; for a command
+	/// to the player's hand, until the hand has drawn the whole of the gesture it was drawing
 	bool waitUntilFree {false};
 	/// The point gone to, fled from or faced, from the middle of the map
 	glm::vec2 point {0.0f};
@@ -427,12 +498,22 @@ struct Command
 	float amount {1.0f};
 	/// The camera's keys are held with Ctrl rather than Shift
 	bool ctrl {false};
+	/// The creature a miracle is cast at, by its place in the scenario's creatures
+	std::optional<size_t> atCreature;
 	/// The player's alignment jumped to, from -1 (evil) to 1 (good)
 	float alignment {0.0f};
 };
 [[nodiscard]] std::string_view Name(Command::Kind kind);
 /// Whether a command is the player's mouse, which needs no creature
 [[nodiscard]] bool IsPointerCommand(Command::Kind kind);
+
+/// The player's hand held still over the land for the whole scenario, as a player holds it: from the middle of the map,
+/// and how high above the land
+struct HandHold
+{
+	glm::vec2 offset {0.0f};
+	float height {6.0f};
+};
 
 struct Scenario
 {
@@ -453,15 +534,46 @@ struct Scenario
 	std::vector<Command> commands;
 	/// After the last command, the commands go round again from this one
 	std::optional<size_t> repeatFrom;
+	/// The hand held still in view, rather than left wherever the mouse is
+	std::optional<HandHold> hand;
+	/// A testbed set-up step until worship sets it: the player's power multiplier for a tribe, put back to 1 when the
+	/// scenario stops
+	std::optional<std::pair<Tribe, float>> tribalPower;
 	/// A crowd spawned a batch a frame, after the creatures and objects above; the runner measures the frames once it
 	/// is all there
 	std::optional<Crowd> crowd;
+	/// Every miracle's position and the land's height under it are logged this often, in seconds
+	std::optional<float> logMiraclesEvery;
 };
 
 /// The miracles' scenarios, added to every scenario by the registry
 void AddMiracleScenarios(std::vector<Scenario>& all);
+/// The miracles' globes and dispensers close up, and the hand's miracle effects
+void AddGlobeScenarios(std::vector<Scenario>& all);
+/// The heal, the lightning bolt, the creature spells and how the living react to miracles
+void AddLifeLightScenarios(std::vector<Scenario>& all);
+/// The blasts, fire and water
+void AddBlastFireScenarios(std::vector<Scenario>& all);
+/// What the blast spares and does on a coast, the water over fields and forests and before the people watching a fire
+/// put out, and the hand catching a fireball or taking one into a fire seed
+void AddFirewaterScenarios(std::vector<Scenario>& all);
+/// Creatures casting miracles
+void AddCreatureCastingScenarios(std::vector<Scenario>& all);
 /// Creature Mode's and the Creature Cave's scenarios
 void AddCreatureModeScenarios(std::vector<Scenario>& all);
+/// The gestures drawn with the hand: sizing and powering up miracles, scribbles, and the leash's gestures
+void AddGestureScenarios(std::vector<Scenario>& all);
+/// The storm miracles: rain over a village, its fields and a fire, and the powered up storm's lightning
+void AddStormScenarios(std::vector<Scenario>& all);
+/// The flock miracles: doves, bats and wolves swept out by hand
+void AddFlockScenarios(std::vector<Scenario>& all);
+/// The teleport miracle: stones, villagers jumping between them
+void AddTeleportScenarios(std::vector<Scenario>& all);
+/// The tornado's scenarios: through a village and a wood, and meeting a creature
+void AddTornadoScenarios(std::vector<Scenario>& all);
+/// The shield and forest miracles: what each shield stops and what it costs, the forest on each ground, growing and
+/// withering
+void AddShieldForestScenarios(std::vector<Scenario>& all);
 /// The player's hand moving over the land, dragging it and turning and zooming the camera
 void AddHandNavigationScenarios(std::vector<Scenario>& all);
 /// The scenarios of how the hand looks for its player's alignment
@@ -524,10 +636,10 @@ struct Timeline
 	/// Every command has been given and none go round again
 	bool done {false};
 };
-/// The timeline some seconds on: the commands due now, in order. A command waiting for its creature to be free asks
-/// isFree; its delay only counts from when the creature first is.
+/// The timeline some seconds on: the commands due now, in order. A command waiting for its creature (or the hand) to
+/// be free asks isFree; its delay only counts from when it first is.
 [[nodiscard]] std::vector<size_t> Advance(Timeline& timeline, std::span<const Command> commands,
                                           std::optional<size_t> repeatFrom, float seconds,
-                                          const std::function<bool(size_t creature)>& isFree);
+                                          const std::function<bool(const Command& command)>& isFree);
 
 } // namespace openblack::testbed_scenarios

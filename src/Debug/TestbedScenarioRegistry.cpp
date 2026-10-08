@@ -62,6 +62,9 @@ constexpr size_t k_LastPhase = 13;
 constexpr size_t k_Skills = 6;
 constexpr size_t k_Miracles = 42;
 constexpr size_t k_Deeds = 46;
+/// The game's spell seeds, and its last gesture (the square wave)
+constexpr size_t k_SeedCount = 30;
+constexpr size_t k_LastGesture = 23;
 /// The seed of every benchmark's crowd, so that runs lay it out the same
 constexpr uint32_t k_BenchmarkSeed = 2026;
 /// The testbed's lake, from the middle of the map: the middle of its open water, half its width, and the width of the
@@ -1429,9 +1432,10 @@ void AddLeash(std::vector<Scenario>& all)
 	    .id = "leash.shake",
 	    .name = "Shake the leash off",
 	    .facet = Facet::Leash,
-	    .description = "Your tiger is clicked to put the leash on, and the hand is then shaken back and forth. Shake the "
-	                   "hand yourself (move the mouse quickly side to side with no button held) to try it.",
-	    .expected = "The rope goes on, and comes off once the hand is shaken; the readout says \"off\".",
+	    .description = "Your tiger is clicked to put the leash on, and a scribble is then drawn with the empty hand, as "
+	                   "the game shakes a leash off. Draw it yourself (move the mouse quickly side to side a few times, "
+	                   "no button held) to try it.",
+	    .expected = "The rope goes on, and comes off once the scribble is recognised; the log says so.",
 	    .framing = {.shot = Shot::Testbed},
 	    .creatures = {Content(CreatureType::Tiger, {0.0f, 50.0f})},
 	    .commands = {{.kind = Kind::HandTapLeash, .creature = 0, .delaySeconds = 1.0f},
@@ -2125,13 +2129,13 @@ std::string_view testbed_scenarios::Name(Weather weather)
 
 std::string_view testbed_scenarios::Name(Shot shot)
 {
-	constexpr std::array<std::string_view, 4> k_Names {"testbed", "overview", "follow", "head"};
+	constexpr std::array<std::string_view, 5> k_Names {"testbed", "overview", "follow", "head", "placed"};
 	return k_Names.at(static_cast<size_t>(shot));
 }
 
 std::string_view testbed_scenarios::Name(Command::Kind kind)
 {
-	constexpr std::array<std::string_view, 73> k_Names {
+	constexpr std::array<std::string_view, 80> k_Names {
 	    "walk to",
 	    "run to",
 	    "follow",
@@ -2199,6 +2203,13 @@ std::string_view testbed_scenarios::Name(Command::Kind kind)
 	    "press F5",
 	    "tattoo",
 	    "take tattoo off",
+	    "hold seed",
+	    "draw gesture",
+	    "summon seed",
+	    "know miracle",
+	    "cast miracle",
+	    "press key",
+	    "hand takes fireball",
 	    "pointer to",
 	    "press button",
 	    "let go of button",
@@ -2252,7 +2263,8 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 	if (scenario.creatures.empty() && scenario.particles.empty() && scenario.miracles.empty() && scenario.dispensers.empty() &&
 	    !environment.dispenserGrid && !scenario.crowd.has_value() && !environment.playerAlignment.has_value())
 	{
-		problems.emplace_back("no creatures, particles, miracles, dispensers, crowd or alignment for the hand");
+		problems.emplace_back(
+		    "no creatures, particles, miracles, dispensers, crowd, player's commands or alignment for the hand");
 	}
 	if ((environment.playerAlignment && !InRange(*environment.playerAlignment, -1.0f, 1.0f)) ||
 	    (environment.cursor && (!InRange(environment.cursor->x, 0.0f, 1.0f) || !InRange(environment.cursor->y, 0.0f, 1.0f))))
@@ -2420,7 +2432,11 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 		    (command.kind == Kind::SetPhase && command.value > k_LastPhase) ||
 		    (command.kind == Kind::ShowFeeling && command.value >= creature_face::k_CueCount) ||
 		    (command.kind == Kind::SeeSkill && command.value >= k_Skills) ||
-		    (command.kind == Kind::SeeMiracle && command.value >= k_Miracles) ||
+		    ((command.kind == Kind::SeeMiracle || command.kind == Kind::KnowMiracle || command.kind == Kind::CastMiracle) &&
+		     command.value >= k_Miracles) ||
+		    (command.kind == Kind::CastMiracle &&
+		     (command.atCreature.has_value() ? *command.atCreature >= scenario.creatures.size()
+		                                     : command.object >= scenario.objects.size())) ||
 		    (command.kind == Kind::PlayerDid && command.value >= k_Deeds) ||
 		    (command.kind == Kind::CameraKeys && (command.value >= 4 || command.amount <= 0.0f)) ||
 		    (command.kind == Kind::PointerTo &&
@@ -2539,7 +2555,7 @@ void testbed_scenarios::Apply(std::span<const DesireOverride> overrides, creatur
 
 std::vector<size_t> testbed_scenarios::Advance(Timeline& timeline, std::span<const Command> commands,
                                                std::optional<size_t> repeatFrom, float seconds,
-                                               const std::function<bool(size_t creature)>& isFree)
+                                               const std::function<bool(const Command& command)>& isFree)
 {
 	std::vector<size_t> due;
 	if (commands.empty() || timeline.next >= commands.size())
@@ -2558,7 +2574,7 @@ std::vector<size_t> testbed_scenarios::Advance(Timeline& timeline, std::span<con
 		const auto& command = commands[timeline.next];
 		if (command.waitUntilFree && !timeline.freed)
 		{
-			if (timeline.sinceGiven < k_SettleSeconds || !isFree(command.creature))
+			if (timeline.sinceGiven < k_SettleSeconds || !isFree(command))
 			{
 				// Its delay counts from when the creature is free
 				timeline.seconds = 0.0f;

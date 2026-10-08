@@ -49,11 +49,14 @@ void AddCasting(std::vector<Scenario>& all)
 	    .facet = Facet::Miracles,
 	    .description = "The testbed's grid of a dispenser for every miracle, the creature spells among them, in front "
 	                   "of the camera, each labelled with its miracle.",
-	    .expected = "Each dispenser floats a bubble with its seed spinning inside over a swirl of sparks. Tapping a bubble "
+	    .expected = "Each dispenser floats a bubble with its seed spinning inside over a swirl of sparks (the grid "
+	                "starts charged, a testbed set-up step). Tapping a bubble "
 	                "with the hand puts its miracle in the hand; pressing over the land casts it (heal, forest), letting "
-	                "go throws it (fireball, shield) or holding runs it (lightning, water, food, wood); a creature spell "
-	                "is pressed onto a creature. The right button drops it. A dispenser makes a new bubble 30 seconds "
-	                "after its last was taken.",
+	                "go throws it (fireball, flocks; storms and shields at a circle drawn) or holding runs it "
+	                "(lightning, water, food, wood); a creature spell "
+	                "is pressed onto a creature. The left button taps a bubble; the action button (the right) casts. A "
+	                "scribble or shake drops the seed. A dispenser makes a new bubble 30 seconds after its last was "
+	                "taken.",
 	    .framing = {.shot = Shot::Testbed},
 	    .creatures = {Subject({0.0f, 30.0f}, "for the creature spells")},
 	});
@@ -64,7 +67,8 @@ void AddCasting(std::vector<Scenario>& all)
 	    .facet = Facet::Miracles,
 	    .description = "A fireball thrown from a hand south of three trees, every eight seconds.",
 	    .expected = "The ball flies north in an arc trailing fire, bounces on the land among the trees and burns out; the "
-	                "trees it passes catch light and burn for ten seconds.",
+	                "trees it passes catch, flames licking at their lower branches, and burn on, spreading to their "
+	                "neighbours, charring as they burn down.",
 	    .environment = {.dispenserGrid = false},
 	    .framing = {.shot = Shot::Overview, .include = {{0.0f, -5.0f}, {0.0f, 55.0f}}},
 	    .objects = {{.type = TreeInfo::Oak, .offset = {-6.0f, 45.0f}},
@@ -85,7 +89,8 @@ void AddCasting(std::vector<Scenario>& all)
 	    .description = "A lightning bolt held from a hand south of a creature, looking north at it, for four seconds in "
 	                   "every eight.",
 	    .expected = "Forked bolts crackle from the hand to the creature and the ground about it, lighting the land where "
-	                "they strike, with thunder; the creature is burnt by each strike.",
+	                "they strike; the creature is burnt by each strike. The crackle stops soon after the bolt does (there "
+	                "is no thunder).",
 	    .environment = {.dispenserGrid = false},
 	    .framing = {.shot = Shot::Overview, .include = {{0.0f, 0.0f}, k_Spot}},
 	    .creatures = {Subject(k_Spot, "struck")},
@@ -137,7 +142,8 @@ void AddCasting(std::vector<Scenario>& all)
 	    .facet = Facet::Miracles,
 	    .description = "Trees set alight by a fireball, then rained on by the water miracle held over them.",
 	    .expected = "The fireball sets the trees burning; a rain cloud forms over them, its drops leave rings on the land "
-	                "and put the flames out.",
+	                "and cool the fires a little each, until the flames die down, steam hisses up and smoke rises as they "
+	                "go out. Villagers would come to watch.",
 	    .environment = {.dispenserGrid = false},
 	    .framing = {.shot = Shot::Overview, .include = {{0.0f, -5.0f}, {0.0f, 55.0f}}},
 	    .objects = {{.type = TreeInfo::Oak, .offset = {-4.0f, 45.0f}}, {.type = TreeInfo::Beech, .offset = {4.0f, 45.0f}}},
@@ -193,29 +199,42 @@ void AddCreatureSpells(std::vector<Scenario>& all)
 	};
 	constexpr std::array k_Spells {
 	    Spell {"miracles.creature_freeze", "Creature spell: freeze", MagicType::CreatureSpellFreeze,
-	           "Over two seconds the creature slows to a stop and takes an icy blue look; its mind stops too. It stays "
-	           "frozen for 25 seconds, then thaws over two."},
+	           "Two seconds after the cast the freezing sound plays on it and, over two more, the creature slows to a stop, "
+	           "darkening to an icy blue with a "
+	           "sheen of ice; it gives up what it was doing and its mind stops, learning nothing. It stays frozen for 25 "
+	           "seconds, then thaws over two."},
 	    Spell {"miracles.creature_small", "Creature spell: small", MagicType::CreatureSpellSmall,
-	           "Over four seconds the creature shrinks to five ninths of its size, stays small for 25 seconds, then grows "
-	           "back over four."},
+	           "Two seconds after the cast the shrinking sound plays on it and, over four, the creature shrinks to its "
+	           "smallest (a fifth of a grown creature's "
+	           "size), stays small for 25 seconds, then grows back over four."},
 	    Spell {"miracles.creature_big", "Creature spell: big (miracle grow)", MagicType::CreatureSpellBig,
-	           "Over four seconds the creature grows to 1.8 times its size, stays big for 25 seconds, then shrinks back "
-	           "over four."},
+	           "Two seconds after the cast the growing sound plays on it and, over four, the creature grows to its largest "
+	           "(2.4 times a grown creature's "
+	           "size), stays big for 25 seconds, then shrinks back over four."},
 	    Spell {"miracles.creature_weak", "Creature spell: weak", MagicType::CreatureSpellWeak,
-	           "Over four seconds the creature's body wastes to weak, stays so for 25 seconds, then builds back up."},
+	           "The shrinking sound plays on it as, over four seconds, the creature's body wastes to weak, stays so for 25 "
+	           "seconds, then builds back up."},
 	    Spell {"miracles.creature_strong", "Creature spell: strong", MagicType::CreatureSpellStrong,
-	           "Over four seconds the creature's body bulks up to fully strong, stays so for 25 seconds, then goes back."},
+	           "The growing sound plays on it as, over four seconds, the creature's body bulks up to fully strong, stays so "
+	           "for 25 seconds, then goes back."},
 	    Spell {"miracles.creature_invisible", "Creature spell: invisible", MagicType::CreatureSpellInvisible,
-	           "Over five seconds the creature fizzes out of sight, three quarters of it gone, for 25 seconds; then it "
-	           "fizzes back in over five."},
+	           "With the vanishing sound, over five seconds the creature dissolves through scrolling static until only a "
+	           "quarter of it shows, for 25 "
+	           "seconds; then it comes back over five. Bolts no longer go to it, and villagers pay it no heed."},
 	    Spell {"miracles.creature_nice", "Creature spell: nice", MagicType::CreatureSpellCompassion,
-	           "The creature wants to be kind above all else, and its alignment eases towards good over three seconds; "
-	           "after 25 seconds both go back and kindness is what it wants least."},
+	           "The compassion sound plays on it; the creature gives up what it was doing and wants to be kind above all else, "
+	           "every other want held down "
+	           "but making friends; on a leash, it becomes the compassion leash. Its alignment eases to fully good over "
+	           "three seconds; after 25 seconds it goes back, kindness is what it wants least and its other wants return."},
 	    Spell {"miracles.creature_nasty", "Creature spell: nasty", MagicType::CreatureSpellAngry,
-	           "The creature wants to be cruel above all else, and its alignment swings towards evil; after 25 seconds "
-	           "both go back and anger is what it wants least."},
+	           "The vanishing sound plays on it; the creature gives up what it was doing and wants to be cruel above all else, "
+	           "every other want held down; "
+	           "on a leash, it becomes the aggression leash. Its alignment swings to fully evil over a second; after 25 "
+	           "seconds it goes back, anger is what it wants least and its other wants return."},
 	    Spell {"miracles.creature_itchy", "Creature spell: itchy", MagicType::CreatureSpellItchy,
-	           "The creature wants nothing but to scratch for 25 seconds, and won't be led by a leash meanwhile."},
+	           "The itching sound starts on it and goes on, stopping only once the camera is 80 or more away; the creature "
+	           "gives up what it was doing and wants nothing but to scratch for 25 seconds; any leash on it "
+	           "comes off, every turn, and stays off."},
 	};
 	for (const auto& spell : k_Spells)
 	{

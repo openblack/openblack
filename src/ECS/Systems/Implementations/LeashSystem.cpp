@@ -482,16 +482,6 @@ bool LeashSystem::PressKey(PlayerNames player, leash::LeashKey key)
 	return Carry(player, *creature, leash::CommandFor(key, KeyStateOf(registry, *creature)));
 }
 
-bool LeashSystem::TrackHand(PlayerNames player, glm::vec2 cursor, float seconds, bool handFree)
-{
-	if (!handFree)
-	{
-		_shake = {};
-		return false;
-	}
-	return leash::TrackShake(_shake, cursor, seconds) && Shake(player);
-}
-
 bool LeashSystem::Shake(PlayerNames player)
 {
 	const auto creature = PlayersCreature(player);

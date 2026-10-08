@@ -38,7 +38,7 @@ Command Wait(size_t creature, float delay, bool untilFree)
 	return {.kind = Command::Kind::Stop, .creature = creature, .delaySeconds = delay, .waitUntilFree = untilFree};
 }
 
-const auto k_AlwaysFree = [](size_t) { return true; };
+const auto k_AlwaysFree = [](const Command& /*command*/) { return true; };
 } // namespace
 
 TEST(TestbedScenarios, IdsAreUniqueAndFindable)
@@ -533,8 +533,8 @@ TEST(TestbedScenarios, TimelineWaitsForTheCreatureToBeFree)
 	const std::vector<Command> commands {Wait(0, 0.0f, false), Wait(1, 1.0f, true)};
 	Timeline timeline;
 	bool free = false;
-	const auto isFree = [&free](size_t creature) {
-		EXPECT_EQ(creature, 1u);
+	const auto isFree = [&free](const Command& command) {
+		EXPECT_EQ(command.creature, 1u);
 		return free;
 	};
 	EXPECT_EQ(Advance(timeline, commands, std::nullopt, 0.1f, isFree), (std::vector<size_t> {0}));
