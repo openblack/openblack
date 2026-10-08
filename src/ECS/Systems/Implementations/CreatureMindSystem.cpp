@@ -1006,6 +1006,29 @@ bool CreatureMindSystem::SitDown(entt::entity creature)
 	return true;
 }
 
+void CreatureMindSystem::UpdateAttitudeFromFeedback(entt::entity creature, float feedback)
+{
+	auto* mind = Locator::entitiesRegistry::value().TryGet<CreatureMindState>(creature);
+	if (mind == nullptr)
+	{
+		return;
+	}
+	// Good feedback shows it its player wants compassion, bad anger, and it warms or cools to the player
+	creature_perceived_desires::Increase(
+	    mind->perceivedDesires, static_cast<size_t>(feedback > 0.0f ? Desire::Compassion : Desire::Anger), std::abs(feedback));
+	mind->attitudeToPlayer = creature_feedback::AttitudeAfter(mind->attitudeToPlayer, feedback);
+	mind->averageFeedback = creature_feedback::AverageAfter(mind->averageFeedback, feedback);
+}
+
+void CreatureMindSystem::ChangeDesireSource(entt::entity creature, uint32_t type, float amount)
+{
+	auto* mind = Locator::entitiesRegistry::value().TryGet<CreatureMindState>(creature);
+	if (mind != nullptr && mind->desires.has_value())
+	{
+		creature_desires::ChangeSource(*mind->desires, type, amount);
+	}
+}
+
 void CreatureMindSystem::ReceiveFeedback(entt::entity creature, float feedback)
 {
 	namespace sources = creature_desires::sources;
@@ -1027,11 +1050,7 @@ void CreatureMindSystem::ReceiveFeedback(entt::entity creature, float feedback)
 		}
 		return;
 	}
-	// A stroke shows it its player wants compassion, a slap anger
-	creature_perceived_desires::Increase(
-	    mind->perceivedDesires, static_cast<size_t>(feedback > 0.0f ? Desire::Compassion : Desire::Anger), std::abs(feedback));
-	mind->attitudeToPlayer = creature_feedback::AttitudeAfter(mind->attitudeToPlayer, feedback);
-	mind->averageFeedback = creature_feedback::AverageAfter(mind->averageFeedback, feedback);
+	UpdateAttitudeFromFeedback(creature, feedback);
 	mind->feedbackSeconds = 0.0f;
 	mind->feedbackWasStroke = feedback > 0.0f;
 	// Slapped, it stops whatever it was doing

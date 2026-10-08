@@ -49,6 +49,7 @@
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
+#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -679,7 +680,25 @@ void CreatureObjectActionSystem::Release(entt::entity creature, const glm::vec3&
 	{
 		transform->position = position;
 	}
-	registry.AssignOrReplace<Thrown>(object, Thrown {.velocity = velocity, .thrower = creature});
+	LetGo(creature, object, velocity);
+}
+
+void CreatureObjectActionSystem::LetGo(entt::entity creature, entt::entity object, const glm::vec3& velocity)
+{
+	if (!Locator::dynamicsSystem::has_value())
+	{
+		return;
+	}
+	// It leaves the hand into the physics as a god's hand lets things go, put down or thrown, turning a little about
+	// the up axis (the game's turning is the other way round from the physics' own), credited to the creature's player
+	constexpr glm::vec3 k_ReleaseTurn {0.0f, -1.0f, 0.0f};
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto* owner = registry.Valid(creature) ? registry.TryGet<const Creature>(creature) : nullptr;
+	Locator::dynamicsSystem::value().LetGoFromHand(object,
+	                                               {.velocity = velocity,
+	                                                .angularMomentum = k_ReleaseTurn,
+	                                                .player = owner != nullptr ? std::optional(owner->owner) : std::nullopt,
+	                                                .creature = registry.Valid(creature) ? creature : entt::null});
 }
 
 CreatureObjectActionSystem::State CreatureObjectActionSystem::GetState(entt::entity creature) const
@@ -794,7 +813,7 @@ void CreatureObjectActionSystem::ProcessTurn()
 	for (const auto entity : loose)
 	{
 		registry.Remove<HeldByCreature>(entity);
-		registry.AssignOrReplace<Thrown>(entity, Thrown {});
+		LetGo(entt::null, entity, glm::vec3(0.0f));
 	}
 	std::vector<entt::entity> emptyHanded;
 	registry.Each<const CreatureHeldObject>([&](entt::entity entity, const CreatureHeldObject& held) {
@@ -986,7 +1005,11 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 			                                  .rotation = glm::transpose(transform.rotation) * at.rotation,
 			                                  .middle = MiddleOf(registry, object)});
 			registry.AssignOrReplace<HeldByCreature>(object, HeldByCreature {.creature = creature});
-			registry.Remove<Thrown>(object);
+			// Taken out of the air, it leaves the physics without going back on the map
+			if (Locator::dynamicsSystem::has_value() && Locator::dynamicsSystem::value().IsFlying(object))
+			{
+				Locator::dynamicsSystem::value().RemoveObject(object, false, true);
+			}
 			if (registry.AllOf<Villager>(object))
 			{
 				StopWalking(registry, object);
@@ -1075,27 +1098,6 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 		    moved = true;
 	    });
 
-	// What was let go of flies until it comes to rest
-	std::vector<entt::entity> landed;
-	if (Locator::terrainSystem::has_value() && seconds > 0.0f)
-	{
-		const auto& land = Locator::terrainSystem::value();
-		registry.Each<Thrown, Transform>([&](entt::entity entity, Thrown& thrown, Transform& transform) {
-			const auto flight = creature_throw::Fly({.position = transform.position, .velocity = thrown.velocity}, seconds,
-			                                        land.GetHeightAt(glm::xz(transform.position)));
-			transform.position = flight.position;
-			thrown.velocity = flight.velocity;
-			moved = true;
-			if (flight.landed)
-			{
-				landed.push_back(entity);
-			}
-		});
-	}
-	for (const auto entity : landed)
-	{
-		registry.Remove<Thrown>(entity);
-	}
 	if (moved)
 	{
 		registry.SetDirty();

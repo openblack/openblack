@@ -63,29 +63,3 @@ glm::vec3 creature_throw::TossVelocity(const glm::vec3& handVelocity, bool mirro
 	}
 	return rotation * local;
 }
-
-Flight creature_throw::Fly(Flight flight, float seconds, float groundHeight)
-{
-	if (flight.landed || seconds <= 0.0f)
-	{
-		return flight;
-	}
-	// Exactly on its curve, however long the step
-	flight.position += (flight.velocity * seconds) + glm::vec3(0.0f, -0.5f * k_Gravity * seconds * seconds, 0.0f);
-	flight.velocity.y -= k_Gravity * seconds;
-	if (flight.position.y > groundHeight)
-	{
-		return flight;
-	}
-	flight.position.y = groundHeight;
-	if (-flight.velocity.y < k_RestSpeed)
-	{
-		flight.velocity = glm::vec3(0.0f);
-		flight.landed = true;
-		return flight;
-	}
-	flight.velocity.y = -flight.velocity.y * k_Bounce;
-	flight.velocity.x *= k_Slide;
-	flight.velocity.z *= k_Slide;
-	return flight;
-}

@@ -146,37 +146,12 @@ TEST(CreatureThrow, TheReleaseVelocityLandsOnTheTarget)
 	const auto velocity = creature_throw::ReleaseVelocity(target, release, seconds);
 	// Gravity's half g t squared is made up in the upward speed
 	EXPECT_NEAR(velocity.y, (target.y - release.y) / seconds + 0.5f * creature_throw::k_Gravity * seconds, k_Tolerance);
-	// Flown in uneven steps, it gets there exactly at that time
-	creature_throw::Flight flight {.position = release, .velocity = velocity};
-	float flown = 0.0f;
-	const std::array<float, 3> steps {0.016f, 0.033f, 0.05f};
-	for (size_t i = 0; flown + steps.at(i % steps.size()) < seconds; ++i)
-	{
-		flight = creature_throw::Fly(flight, steps.at(i % steps.size()), -1000.0f);
-		flown += steps.at(i % steps.size());
-	}
-	flight = creature_throw::Fly(flight, seconds - flown, -1000.0f);
-	EXPECT_NEAR(flight.position.x, target.x, 1e-3f);
-	EXPECT_NEAR(flight.position.y, target.y, 1e-3f);
-	EXPECT_NEAR(flight.position.z, target.z, 1e-3f);
-}
-
-TEST(CreatureThrow, ThingsBounceThenComeToRest)
-{
-	creature_throw::Flight flight {.position = glm::vec3(0.0f, 1.0f, 0.0f), .velocity = glm::vec3(4.0f, -20.0f, 0.0f)};
-	flight = creature_throw::Fly(flight, 0.1f, 0.0f);
-	EXPECT_FLOAT_EQ(flight.position.y, 0.0f);
-	EXPECT_GT(flight.velocity.y, 0.0f);
-	EXPECT_NEAR(flight.velocity.x, 4.0f * creature_throw::k_Slide, k_Tolerance);
-	EXPECT_FALSE(flight.landed);
-	for (int i = 0; i < 1000 && !flight.landed; ++i)
-	{
-		flight = creature_throw::Fly(flight, 0.02f, 0.0f);
-	}
-	EXPECT_TRUE(flight.landed);
-	EXPECT_EQ(flight.velocity, glm::vec3(0.0f));
-	const auto still = creature_throw::Fly(flight, 1.0f, 0.0f);
-	EXPECT_EQ(still.position, flight.position);
+	// Its curve reaches the target at that time
+	const auto reached =
+	    release + velocity * seconds + glm::vec3(0.0f, -0.5f * creature_throw::k_Gravity * seconds * seconds, 0.0f);
+	EXPECT_NEAR(reached.x, target.x, 1e-3f);
+	EXPECT_NEAR(reached.y, target.y, 1e-3f);
+	EXPECT_NEAR(reached.z, target.z, 1e-3f);
 }
 
 TEST(CreatureThrow, ItThrowsAtNothingTooClose)

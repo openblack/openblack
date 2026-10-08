@@ -97,6 +97,53 @@ void HurtLiving(entt::entity living, const ImpactInfo& impact)
 	Locator::magicSystem::value().ApplyEffectToObject(living, CrushOf(*crush), impact.player.value_or(PlayerNames::NEUTRAL));
 }
 
+/// Whether a thing is a toy, which strikes a creature without hurting it
+bool IsToy(entt::entity object)
+{
+	const auto* mobile = Entities().TryGet<const MobileStatic>(object);
+	return mobile != nullptr && Locator::infoConstants::has_value() &&
+	       physics_classes::IsToyModel(
+	           Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(mobile->type)).meshId);
+}
+
+/// A creature struck by a thrown thing (not a toy) is hurt a hundredth of how hard it was struck for its weight, its
+/// own player's blow makes it think less of the player, and every blow makes it angry and afraid
+void HurtCreature(entt::entity creature, const ImpactInfo& impact)
+{
+	auto& registry = Entities();
+	if (impact.hitBy == entt::null || !registry.Valid(impact.hitBy) || IsToy(impact.hitBy))
+	{
+		return;
+	}
+	// TODO(physics): a blow sways the creature's upper or lower body; openblack's creature keeps no body sway yet. A
+	// creature a script controls isn't hurt by its own player's blows; openblack's scripts don't control creatures yet
+	const auto& body = registry.Get<const Creature>(creature);
+	const auto* morph = registry.TryGet<const CreatureMorph>(creature);
+	const float mass = living::CreatureMass(body.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
+	                                        morph != nullptr ? morph->drawn.weakStrong : 0.0f);
+	const auto crush = living::CreatureCrush(impact.impact, mass);
+	if (!crush.has_value())
+	{
+		return;
+	}
+	if (Locator::magicSystem::has_value() && Locator::infoConstants::has_value())
+	{
+		Locator::magicSystem::value().ApplyEffectToObject(creature, CrushOf(*crush),
+		                                                  impact.player.value_or(PlayerNames::NEUTRAL));
+	}
+	if (!Locator::creatureMindSystem::has_value())
+	{
+		return;
+	}
+	auto& minds = Locator::creatureMindSystem::value();
+	if (impact.player.has_value() && *impact.player == body.owner)
+	{
+		minds.UpdateAttitudeFromFeedback(creature, -*crush);
+	}
+	minds.ChangeDesireSource(creature, creature_desires::sources::k_FearFromDamage, *crush);
+	minds.ChangeDesireSource(creature, creature_desires::sources::k_AngerFromDamage, *crush);
+}
+
 /// A physical shield struck by a thing that breaks buildings pays for the blow by its momentum
 void StrikeShield(DynamicsSystemInterface& dynamics, entt::entity shield, const ImpactInfo& impact)
 {
@@ -276,6 +323,11 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	const auto hitter = impact.hitBy;
 	if (!registry.Valid(object))
 	{
+		return;
+	}
+	if (registry.AllOf<Creature>(object))
+	{
+		HurtCreature(object, impact);
 		return;
 	}
 	if (const auto* shield = registry.TryGet<const MagicShield>(object);

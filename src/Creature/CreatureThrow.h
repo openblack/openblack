@@ -59,22 +59,4 @@ constexpr float k_HeightAtSizeOne = 15.0f;
 /// to the other side when tossed by the other hand and turned with the creature
 [[nodiscard]] glm::vec3 TossVelocity(const glm::vec3& handVelocity, bool mirrored, const glm::mat3& rotation, float share);
 
-/// Something flying through the air
-struct Flight
-{
-	glm::vec3 position;
-	glm::vec3 velocity;
-	/// Whether it has come to rest
-	bool landed {false};
-};
-
-/// Below this speed into the ground, something stops bouncing and comes to rest
-constexpr float k_RestSpeed = 2.0f;
-/// Bouncing, it keeps this share of its speed into the ground, and of its speed along it
-constexpr float k_Bounce = 0.3f;
-constexpr float k_Slide = 0.6f;
-
-/// Something some seconds further on its way, falling under gravity, bouncing off the ground at a height and coming to
-/// rest
-[[nodiscard]] Flight Fly(Flight flight, float seconds, float groundHeight);
 } // namespace openblack::creature_throw

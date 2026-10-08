@@ -85,14 +85,6 @@ struct HeldByCreature
 	entt::entity creature {entt::null};
 };
 
-/// Something flying through the air after a creature let go of it, until it comes to rest
-struct Thrown
-{
-	glm::vec3 velocity {0.0f};
-	/// Who threw it
-	entt::entity thrower {entt::null};
-};
-
 /// How the creature's town sees what it is doing, which its villagers react to, and for how long more it will once
 /// the creature stops
 struct CreatureTownAttitude

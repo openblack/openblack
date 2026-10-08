@@ -81,6 +81,11 @@ public:
 	/// stops what it was doing if slapped, warms or cools to the player, and shows its pleasure or sorrow next. Feedback
 	/// too slight to count only has it look at the player.
 	virtual void ReceiveFeedback(entt::entity creature, float feedback) = 0;
+	/// Feedback that only moves how the creature feels about its player (as being hit by what its player threw does):
+	/// it takes the player to want compassion or anger, and warms or cools to the player, from -1 to 1
+	virtual void UpdateAttitudeFromFeedback(entt::entity /*creature*/, float /*feedback*/) {}
+	/// Every source of a type in the creature's desires goes up or down by an amount
+	virtual void ChangeDesireSource(entt::entity /*creature*/, uint32_t /*type*/, float /*amount*/) {}
 	/// Plays an action at once, as stroking and slapping make it, unless the body is less than a share of the way through
 	/// what it plays; a face can be pulled with it. Returns whether it played.
 	virtual bool ForceAction(entt::entity creature, size_t animation, bool mirrored, std::optional<creature_face::Request> face,

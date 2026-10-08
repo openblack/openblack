@@ -51,6 +51,8 @@ public:
 	bool SitDown(entt::entity creature) override;
 	void StandUp(entt::entity creature) override;
 	void ReceiveFeedback(entt::entity creature, float feedback) override;
+	void UpdateAttitudeFromFeedback(entt::entity creature, float feedback) override;
+	void ChangeDesireSource(entt::entity creature, uint32_t type, float amount) override;
 	bool ForceAction(entt::entity creature, size_t animation, bool mirrored, std::optional<creature_face::Request> face,
 	                 float interruptsAfter) override;
 	bool Sleep(entt::entity creature) override;

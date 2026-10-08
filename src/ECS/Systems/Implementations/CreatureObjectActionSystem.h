@@ -54,6 +54,8 @@ private:
 	bool Start(entt::entity creature, components::CreatureObjectAction action);
 	/// Lets go of the held object, which flies off with a velocity
 	void Release(entt::entity creature, const glm::vec3& position, const glm::vec3& velocity);
+	/// A held thing goes into the physics as the creature lets it go
+	void LetGo(entt::entity creature, entt::entity object, const glm::vec3& velocity);
 };
 
 } // namespace openblack::ecs::systems
