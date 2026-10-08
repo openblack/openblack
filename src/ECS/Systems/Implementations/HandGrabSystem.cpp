@@ -682,7 +682,8 @@ void HandGrabSystem::Take(HandGrab& grab, entt::entity object, bool fromTheWorld
 		// A pot no longer calls people to it while it is held
 		_world->RemovePotReaction(object);
 	}
-	// TODO(hand): a static, a rock or a dead tree taken stops being its town's artefact (openblack has no artefacts)
+	// A static, a rock or a dead tree taken stops being its town's artefact
+	_world->ArtefactTaken(object, player);
 
 	// It is held at its own size
 	auto pose = _world->PoseOf(object);

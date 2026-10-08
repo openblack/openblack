@@ -115,3 +115,31 @@ TEST(PhysicsObjects, FallenRootsFadeAfterEighteenSecondsAndGoAfterTwenty)
 	EXPECT_FALSE(RootsGone(20.0f));
 	EXPECT_TRUE(RootsGone(20.01f));
 }
+
+TEST(PhysicsObjects, AFelledTreeFallsAwayFromItsFellerAtAFifthOfItsHeight)
+{
+	using namespace openblack::physics::objects;
+	// The feller stands to the south (lower z) of a tree 10 tall: it falls north, turning about the east-west axis
+	const auto north = FellingOf(10.0f, {0.0f, -5.0f});
+	EXPECT_NEAR(north.velocity.x, 0.0f, 1e-5f);
+	EXPECT_NEAR(north.velocity.z, -2.0f, 1e-5f);
+	EXPECT_NEAR(north.spin.x, 0.4f, 1e-5f);
+	EXPECT_NEAR(north.spin.z, 0.0f, 1e-5f);
+	// Felled from the west it falls east
+	const auto east = FellingOf(10.0f, {5.0f, 0.0f});
+	EXPECT_NEAR(east.velocity.x, 2.0f, 1e-5f);
+	EXPECT_NEAR(east.velocity.z, 0.0f, 1e-5f);
+	EXPECT_NEAR(east.spin.z, 0.4f, 1e-5f);
+	// From where it stands it has no heading
+	const auto still = FellingOf(10.0f, {0.0f, 0.0f});
+	EXPECT_NEAR(still.velocity.z, -2.0f, 1e-5f);
+}
+
+TEST(PhysicsObjects, AnArtefactImpressesOnlyAnotherTownAndOnlyWhenWorthMoreThanOne)
+{
+	using namespace openblack::physics::objects;
+	EXPECT_TRUE(ArtefactWillImpress(1.5f, false));
+	EXPECT_FALSE(ArtefactWillImpress(1.5f, true));
+	EXPECT_FALSE(ArtefactWillImpress(1.0f, false));
+	EXPECT_FALSE(ArtefactWillImpress(0.01f, false));
+}

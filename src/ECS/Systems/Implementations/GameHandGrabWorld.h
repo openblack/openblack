@@ -53,6 +53,7 @@ public:
 	[[nodiscard]] uint32_t LocalRandom(uint32_t count) override;
 	void VillagerIntoHand(entt::entity villager) override;
 	void AnimalIntoOwnFlock(entt::entity animal) override;
+	void ArtefactTaken(entt::entity object, PlayerNames player) override;
 	void TreeUprooted(PlayerNames player, entt::entity tree) override;
 	void LeaveRootsHole(entt::entity tree) override;
 	void RemovePotReaction(entt::entity pot) override;

@@ -313,6 +313,11 @@ void GameHandGrabWorld::VillagerIntoHand(entt::entity villager)
 	villager_physics::IntoHand(villager);
 }
 
+void GameHandGrabWorld::ArtefactTaken(entt::entity object, PlayerNames player)
+{
+	object_physics::ArtefactTaken(object, player);
+}
+
 void GameHandGrabWorld::AnimalIntoOwnFlock(entt::entity animal)
 {
 	auto& registry = Locator::entitiesRegistry::value();

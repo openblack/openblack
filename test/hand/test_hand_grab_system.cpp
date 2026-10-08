@@ -98,6 +98,7 @@ public:
 	void RemoveReactions(entt::entity, Reaction) override {}
 	void FireStartedMoving(entt::entity, bool) override {}
 	void HeatHeld(entt::entity object) override { heated.push_back(object); }
+	void ArtefactTaken(entt::entity object, PlayerNames) override { artefactsTaken.push_back(object); }
 	void PlaySample(uint32_t sample, glm::vec3) override { samples.push_back(sample); }
 	bool TapThing(entt::entity object, glm::vec3, PlayerNames) override
 	{
@@ -253,6 +254,7 @@ public:
 	std::vector<entt::entity> leftWorld;
 	std::vector<ReactionRequest> reactions;
 	std::vector<entt::entity> heated;
+	std::vector<entt::entity> artefactsTaken;
 	std::vector<uint32_t> samples;
 	std::vector<entt::entity> tapped;
 	std::vector<entt::entity> villagersInHand;
@@ -505,6 +507,8 @@ TEST_F(HandGrabSystemWithWorld, WhatIsHeldIsHeatedEachTurnAndDroppedOnceGone)
 	{
 		Frame(10);
 	}
+	// A rock taken stops being its town's artefact
+	EXPECT_EQ(world->artefactsTaken, std::vector<entt::entity> {rock});
 	system->ProcessTurn();
 	EXPECT_EQ(world->heated, std::vector<entt::entity> {rock});
 	world->registry.Destroy(rock);

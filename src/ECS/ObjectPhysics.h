@@ -58,6 +58,15 @@ void TapRock(systems::DynamicsSystemInterface& dynamics, entt::entity rock, glm:
              std::optional<PlayerNames> player);
 /// A creature's blow smashes a rock in two
 void SmashRock(systems::DynamicsSystemInterface& dynamics, entt::entity rock);
+/// A rock, static or dead tree comes to rest put down gently from a player's hand: the nearest building within reach
+/// makes it its town's artefact
+void ConsiderArtefact(const PhysicsEntry* entry, entt::entity object, bool insert);
+/// An artefact taken into a hand leaves its town, remembering who took it
+void ArtefactTaken(entt::entity object, PlayerNames player);
+/// A forester fells a tree: a dead tree of it, the neutral player's, falls away from the feller into the physics, and
+/// people are called to its wood; the tree itself is left for the feller to remove. The felled tree, none if it could
+/// not be made.
+entt::entity FellTree(systems::DynamicsSystemInterface& dynamics, entt::entity tree, entt::entity feller);
 
 } // namespace object_physics
 } // namespace openblack::ecs

@@ -40,6 +40,7 @@
 #include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
 #include "ECS/Components/Town.h"
+#include "ECS/Components/TownArtefact.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/CreatureSight.h"
@@ -293,6 +294,7 @@ entt::entity object_physics::EndTree(systems::DynamicsSystemInterface& dynamics,
 entt::entity object_physics::EndDeadTree(systems::DynamicsSystemInterface& dynamics, PhysicsEntry* entry, entt::entity deadTree,
                                          bool insert)
 {
+	ConsiderArtefact(entry, deadTree, insert);
 	const auto kept = dynamics.EndPhysicsAsObject(deadTree, insert, entry != nullptr);
 	if (kept == deadTree && Entities().Valid(deadTree))
 	{
@@ -460,4 +462,117 @@ void object_physics::SmashRock(systems::DynamicsSystemInterface& dynamics, entt:
 	const auto point = registry.Get<const Transform>(rock).position;
 	PlaySound(NextInTurn(k_CreatureRockSmashes, registry.Context().nextCreatureRockSmash), point);
 	SplitRock(dynamics, rock);
+}
+
+entt::entity object_physics::FellTree(systems::DynamicsSystemInterface& dynamics, entt::entity tree, entt::entity feller)
+{
+	auto& registry = Entities();
+	const auto* transform = registry.TryGet<const Transform>(tree);
+	const auto* feature = registry.TryGet<const Tree>(tree);
+	const auto* from = registry.TryGet<const Transform>(feller);
+	if (transform == nullptr || feature == nullptr || from == nullptr)
+	{
+		return entt::null;
+	}
+	const float height = world_objects::SizeOf(tree).height;
+	// A dead tree of the tree's kind and size, as it stands, the neutral player's
+	const auto felled = archetypes::DeadTreeArchetype::Create(transform->position, feature->type, 0.0f, transform->scale.x);
+	registry.Get<Transform>(felled).rotation = transform->rotation;
+	const auto fall = physics::objects::FellingOf(
+	    height, glm::vec2(transform->position.x - from->position.x, transform->position.z - from->position.z));
+	const auto started = dynamics.InitialisePhysics(felled, {.velocity = fall.velocity,
+	                                                         .spin = fall.spin,
+	                                                         .thrower = feller,
+	                                                         .player = std::nullopt,
+	                                                         .add = true,
+	                                                         .fromHand = false});
+	if (started.entry != nullptr)
+	{
+		// It is set on the land, turned to its slope, then raised clear of what is under it; villagers pass through it,
+		// and it sounds as it topples
+		dynamics.SettleOnLand(*started.entry, false, true);
+		started.entry->flags |= PhysicsEntry::k_PushedByLiving;
+		dynamics.RaiseClearOfWhatIsUnder(*started.entry);
+		started.entry->kind = PhysicsEntry::Kind::FelledTree;
+	}
+	CallForWood(felled, PlayerNames::NEUTRAL);
+	return felled;
+}
+
+void object_physics::ConsiderArtefact(const PhysicsEntry* entry, entt::entity object, bool insert)
+{
+	auto& registry = Entities();
+	// Only a gentle put-down from a hand, by a player who isn't neutral, of a thing worth making an artefact of
+	if (!insert || entry == nullptr || !entry->player.has_value() || *entry->player == PlayerNames::NEUTRAL ||
+	    !entry->Has(PhysicsEntry::k_FromHand) || !entry->Has(PhysicsEntry::k_Landed))
+	{
+		return;
+	}
+	const auto* info = world_objects::InfoOf(object);
+	const auto* transform = registry.TryGet<const Transform>(object);
+	if (info == nullptr || transform == nullptr || !(info->artifactMultiplier > 0.0f))
+	{
+		return;
+	}
+	// The nearest building within reach
+	const glm::vec2 at {transform->position.x, transform->position.z};
+	entt::entity nearest = entt::null;
+	float best = physics::objects::k_ArtefactReach;
+	registry.Each<const Abode, const Transform>([&](entt::entity abode, const Abode&, const Transform& place) {
+		const float distance = glm::distance(at, glm::vec2(place.position.x, place.position.z));
+		if (distance <= best)
+		{
+			best = distance;
+			nearest = abode;
+		}
+	});
+	if (nearest == entt::null)
+	{
+		return;
+	}
+	entt::entity town = entt::null;
+	const auto townId = registry.Get<const Abode>(nearest).townId;
+	registry.Each<const Town>([&town, townId](entt::entity entity, const Town& data) {
+		if (data.id == townId)
+		{
+			town = entity;
+		}
+	});
+	if (town == entt::null)
+	{
+		return;
+	}
+	const auto player = *entry->player;
+	// An artefact already made, worth enough, impresses another town: its people look at it
+	if (const auto* record = registry.TryGet<const TownArtefact>(object);
+	    record != nullptr && physics::objects::ArtefactWillImpress(record->value, record->town == town) &&
+	    Locator::reactionSystem::has_value())
+	{
+		Locator::reactionSystem::value().Create(
+		    {.initiator = object, .type = Reaction::LookAtObject, .player = player, .position = transform->position});
+	}
+	// It becomes the town's artefact, worth what it impresses villagers when it is new
+	if (auto* record = registry.TryGet<TownArtefact>(object))
+	{
+		record->town = town;
+	}
+	else
+	{
+		registry.Assign<TownArtefact>(object,
+		                              TownArtefact {.town = town, .player = player, .value = info->villagerImpressiveValue});
+	}
+	if (Locator::creatureMindSystem::has_value())
+	{
+		Locator::creatureMindSystem::value().PlayerDid(physics::objects::k_DeedMakeArtefact, transform->position, object,
+		                                               player);
+	}
+}
+
+void object_physics::ArtefactTaken(entt::entity object, PlayerNames player)
+{
+	if (auto* record = Entities().TryGet<TownArtefact>(object))
+	{
+		record->town = entt::null;
+		record->player = player;
+	}
 }

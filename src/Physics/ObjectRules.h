@@ -14,6 +14,8 @@
 #include <optional>
 
 #include <glm/mat3x3.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 /// The rules for trees and rocks as the physics lands and knocks them: whether a tree is planted again where it comes
 /// down or falls dead, which forest a planted tree joins, how hard knocks wear a rock away, and how a rock breaks in two.
@@ -131,5 +133,29 @@ inline constexpr float k_RootsFadePerSecond = 0.5f;
 [[nodiscard]] std::optional<uint8_t> RootsAlpha(float seconds);
 /// Whether the roots have gone
 [[nodiscard]] bool RootsGone(float seconds);
+
+/// The deed of making an artefact, which the player's creature may copy
+inline constexpr uint32_t k_DeedMakeArtefact = 14;
+/// How far from a building an object put down gently becomes its town's artefact
+inline constexpr float k_ArtefactReach = 50.0f;
+/// An artefact worth more than this impresses a town that isn't its own
+inline constexpr float k_ArtefactImpressingWorth = 1.0f;
+/// Whether an artefact, worth so much and belonging to a town (none for none), impresses another
+[[nodiscard]] bool ArtefactWillImpress(float worth, bool ownTown);
+
+/// How a felled tree starts to fall: away from the one who felled it, at a fifth of its height a second, turning about
+/// a level axis across its fall
+struct Felling
+{
+	glm::vec3 velocity {0.0f};
+	/// Its spin about its own axes, as the game's bodies count turning
+	glm::vec3 spin {0.0f};
+};
+inline constexpr float k_FellSpeedPerHeight = 0.2f;
+inline constexpr float k_FellSpin = 0.4f;
+/// Nearer than this (squared) the feller stands on the tree, and it falls with no heading
+inline constexpr float k_FellLeastSquaredDistance = 0.001f;
+/// A tree of a height felled from a place: the flat offset from the feller to the tree
+[[nodiscard]] Felling FellingOf(float height, glm::vec2 fellerToTree);
 
 } // namespace openblack::physics::objects

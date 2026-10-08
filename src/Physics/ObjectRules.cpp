@@ -9,6 +9,8 @@
 
 #include "ObjectRules.h"
 
+#include <cmath>
+
 #include <algorithm>
 
 #include <glm/geometric.hpp>
@@ -95,4 +97,21 @@ std::optional<uint8_t> objects::RootsAlpha(float seconds)
 bool objects::RootsGone(float seconds)
 {
 	return seconds > k_RootsLife;
+}
+
+Felling objects::FellingOf(float height, glm::vec2 fellerToTree)
+{
+	// The heading from the feller to the tree, none when they stand together
+	const float heading =
+	    glm::dot(fellerToTree, fellerToTree) > k_FellLeastSquaredDistance ? std::atan2(fellerToTree.x, -fellerToTree.y) : 0.0f;
+	const float speed = k_FellSpeedPerHeight * height;
+	return {
+	    .velocity = {speed * std::sin(heading), 0.0f, -speed * std::cos(heading)},
+	    .spin = {k_FellSpin * std::cos(heading), 0.0f, k_FellSpin * std::sin(heading)},
+	};
+}
+
+bool objects::ArtefactWillImpress(float worth, bool ownTown)
+{
+	return worth > k_ArtefactImpressingWorth && !ownTown;
 }

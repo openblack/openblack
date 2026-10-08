@@ -109,6 +109,8 @@ public:
 	virtual void VillagerIntoHand(entt::entity villager) = 0;
 	/// An animal leaves its flock for one of its own, the old one going if it is left empty
 	virtual void AnimalIntoOwnFlock(entt::entity animal) = 0;
+	/// A rock, static or dead tree taken stops being its town's artefact, remembering who took it
+	virtual void ArtefactTaken(entt::entity object, PlayerNames player) = 0;
 	/// Pulling up a tree moves the player's alignment
 	virtual void TreeUprooted(PlayerNames player, entt::entity tree) = 0;
 	/// A tree pulled out of the ground leaves its roots in a hole, with a puff of smoke

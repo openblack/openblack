@@ -318,6 +318,11 @@ entt::entity PhysicsGameHooks::EndPhysics(DynamicsSystemInterface& dynamics, Phy
 	{
 		return object_physics::EndPot(dynamics, entry, object, insert);
 	}
+	// A rock or other static put down gently by a town becomes its artefact
+	if (registry.AllOf<MobileStatic>(object))
+	{
+		object_physics::ConsiderArtefact(entry, object, insert);
+	}
 	const auto kept = PhysicsClassHooks::EndPhysics(dynamics, entry, object, insert);
 	if (kept == entt::null || !registry.Valid(kept))
 	{
