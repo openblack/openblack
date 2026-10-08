@@ -82,6 +82,7 @@ private:
 	/// The kind of an object as the physics sees it now
 	[[nodiscard]] physics_classes::ClassFacts FactsOf(entt::entity object) const;
 	/// A body for an object at its place, moving or resting; none for an object without a shape
+	std::unique_ptr<physics::Body> MakePieceBody(entt::entity piece, const physics::Material& material);
 	[[nodiscard]] std::unique_ptr<physics::Body> MakeBody(entt::entity object, const physics_classes::ClassFacts& facts);
 	/// The creature's body: an obstacle of its bones' ellipsoids, as it stands posed now
 	[[nodiscard]] std::unique_ptr<physics::Body> MakeCreatureBody(entt::entity creature, const physics::Material& material);
@@ -120,6 +121,10 @@ private:
 	void AttemptCollisionSound(PhysicsEntry& entry);
 	void AddLandingDust(glm::vec3 centre, float radius, uint32_t argb);
 
+public:
+	void AddPuff(glm::vec3 position, glm::vec3 velocity, float size, uint32_t argb) override;
+
+private:
 	[[nodiscard]] PhysicsClassHooks& Hooks();
 
 	std::unique_ptr<PhysicsClassHooks> _hooks;

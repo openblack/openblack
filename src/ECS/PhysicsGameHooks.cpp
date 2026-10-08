@@ -18,8 +18,10 @@
 #include "3D/LandIslandInterface.h"
 #include "3D/MapCoords.h"
 #include "Creature/CreatureDesires.h"
+#include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
+#include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/DeadTree.h"
@@ -30,6 +32,7 @@
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
@@ -37,6 +40,7 @@
 #include "ECS/PhysicsClasses.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AnimalSystemInterface.h"
+#include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/Implementations/VillagerPhysics.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -310,6 +314,11 @@ entt::entity PhysicsGameHooks::EndPhysics(DynamicsSystemInterface& dynamics, Phy
 	{
 		return object_physics::EndTree(dynamics, entry, object, insert);
 	}
+	// A big piece of a building that comes to rest goes back into it as rubble
+	if (registry.AllOf<BuildingPiece>(object) && Locator::buildingDamageSystem::has_value())
+	{
+		return Locator::buildingDamageSystem::value().PieceAtRest(dynamics, entry, object, insert);
+	}
 	if (registry.AllOf<DeadTree>(object))
 	{
 		return object_physics::EndDeadTree(dynamics, entry, object, insert);
@@ -396,6 +405,15 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	    shield != nullptr && shield->kind == MagicShield::Kind::Physical)
 	{
 		StrikeShield(dynamics, object, impact);
+		return;
+	}
+	// Rocks break buildings, the village centre and storage pits among them
+	if (registry.AnyOf<Abode, StoragePit>(object))
+	{
+		if (Locator::buildingDamageSystem::has_value())
+		{
+			Locator::buildingDamageSystem::value().ReactToImpact(dynamics, entry, impact);
+		}
 		return;
 	}
 	// A thing that is a resource and meets a store of it goes into the store: trees, dead trees and fences as wood,

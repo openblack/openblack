@@ -15,6 +15,7 @@
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AnimatedStatic.h"
+#include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/Feature.h"
@@ -266,6 +267,11 @@ physics_classes::ClassFacts ClassifyKind(const Registry& registry, entt::entity 
 		        .canBecomePhysicsObject = chest->state == Reward::State::Landed,
 		        .interacts = true,
 		        .fixedMass = reward::k_Weight};
+	}
+	// A piece broken off a building flies and lands, but nothing flying hits it
+	if (registry.AllOf<BuildingPiece>(entity))
+	{
+		return {.body = BodyKind::BuildingPiece, .row = MaterialRow::Fragment, .canBecomePhysicsObject = true, .dynamic = true};
 	}
 	if (registry.AllOf<Creature>(entity))
 	{

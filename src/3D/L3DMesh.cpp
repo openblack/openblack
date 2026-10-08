@@ -40,6 +40,24 @@ L3DMesh::L3DMesh(std::string debugName, bool dynamic) noexcept
 
 L3DMesh::~L3DMesh() noexcept = default;
 
+bool L3DMesh::LoadMade(const L3DMesh& skinSource, std::span<const std::vector<L3DSubMesh::MadePrimitive>> subMeshes) noexcept
+{
+	_skinSource = &skinSource;
+	for (const auto& primitives : subMeshes)
+	{
+		auto subMesh = std::make_unique<L3DSubMesh>(*this);
+		if (!subMesh->LoadMade(primitives))
+		{
+			continue;
+		}
+		const auto& bb = subMesh->GetBoundingBox();
+		_boundingBox.minima = glm::min(_boundingBox.minima, bb.minima);
+		_boundingBox.maxima = glm::max(_boundingBox.maxima, bb.maxima);
+		_subMeshes.emplace_back(std::move(subMesh));
+	}
+	return !_subMeshes.empty();
+}
+
 bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 {
 	bool result = true;

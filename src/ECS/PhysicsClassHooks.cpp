@@ -8,10 +8,12 @@
  *******************************************************************************/
 
 #include "3D/AllMeshes.h"
+#include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
@@ -54,6 +56,11 @@ void PhysicsClassHooks::DropSound([[maybe_unused]] entt::entity object) {}
 SoundCollisionType PhysicsClassHooks::CollideSoundType(entt::entity object) const
 {
 	const auto& registry = Locator::entitiesRegistry::value();
+	// A piece of a building sounds as a bush does
+	if (registry.AllOf<components::BuildingPiece>(object))
+	{
+		return SoundCollisionType::Bush;
+	}
 	// The wood the hand carries sounds hollow
 	if (registry.AllOf<components::DeadTree>(object))
 	{
@@ -71,7 +78,13 @@ void PhysicsClassHooks::FelledTreeToppled([[maybe_unused]] entt::entity tree) {}
 
 void PhysicsClassHooks::OfferToCatchingCreatures([[maybe_unused]] entt::entity object, [[maybe_unused]] PhysicsEntry& entry) {}
 
-void PhysicsClassHooks::ForgetBuildingHitter([[maybe_unused]] entt::entity object) {}
+void PhysicsClassHooks::ForgetBuildingHitter(entt::entity object)
+{
+	if (Locator::buildingDamageSystem::has_value())
+	{
+		Locator::buildingDamageSystem::value().ForgetHitter(object);
+	}
+}
 
 bool PhysicsClassHooks::RaisesObjects(entt::entity object) const
 {

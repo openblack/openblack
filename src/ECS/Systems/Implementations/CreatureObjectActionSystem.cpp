@@ -49,6 +49,7 @@
 #include "ECS/ObjectPhysics.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AnimalSystemInterface.h"
+#include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
@@ -82,8 +83,6 @@ constexpr float k_ApproachFar = 1.0f;
 constexpr float k_ApproachNear = 0.6f;
 /// Near enough to reach once turned: within this share of the distance to the middle of its reach, either way
 constexpr float k_TurnInReachShare = 0.5f;
-/// A blow knocks a home about by this much for each of the creature's size
-constexpr float k_DestroyForcePerSize = 3.75f;
 /// Pointing, the high animation counts fully this far above level, in radians
 constexpr float k_PointHighRadians = std::numbers::pi_v<float> / 4.0f;
 /// Pointing, the hand is about this share of the creature's height up
@@ -1043,12 +1042,14 @@ void CreatureObjectActionSystem::LateUpdate(std::chrono::duration<float, std::mi
 			{
 				break;
 			}
-			// Homes are knocked about by the blow, and a rock is smashed in two; the blow does nothing to anything else
+			// A building is broken about where it stands, and a rock is smashed in two; the blow does nothing to anything
+			// else
 			if (registry.AllOf<Abode>(target))
 			{
-				auto& damage = registry.AllOf<PhysicalDamage>(target) ? registry.Get<PhysicalDamage>(target)
-				                                                      : registry.Assign<PhysicalDamage>(target);
-				damage.total += body.size * k_DestroyForcePerSize;
+				if (Locator::buildingDamageSystem::has_value())
+				{
+					Locator::buildingDamageSystem::value().Smash(target, creature, body.size);
+				}
 			}
 			else if (object_physics::IsRock(target) && Locator::dynamicsSystem::has_value())
 			{

@@ -24,6 +24,7 @@
 #include "Graphics/LightBeams.h"
 #include "Graphics/Mesh.h"
 #include "Graphics/ShaderProgram.h"
+#include "L3DSubMesh.h"
 #include "ScreenPick.h"
 
 namespace openblack
@@ -104,6 +105,9 @@ public:
 	bool LoadFromFilesystem(const std::filesystem::path& path) noexcept;
 	bool LoadFromFile(const std::filesystem::path& path) noexcept;
 	bool LoadFromBuffer(const std::vector<uint8_t>& data) noexcept;
+	/// A model made while the game runs from the triangles of another, whose skins it is drawn with (which must outlive
+	/// it): one submesh for each group of primitives
+	bool LoadMade(const L3DMesh& skinSource, std::span<const std::vector<L3DSubMesh::MadePrimitive>> subMeshes) noexcept;
 	/// A dynamic mesh takes its vertices afresh from a file of the same shape
 	void UpdateVertices(const l3d::L3DFile& l3d) noexcept;
 	/// A dynamic mesh's skin takes its texels afresh
@@ -112,13 +116,23 @@ public:
 
 	[[nodiscard]] uint8_t GetNumSubMeshes() const { return static_cast<uint8_t>(_subMeshes.size()); }
 	[[nodiscard]] const std::vector<std::unique_ptr<L3DSubMesh>>& GetSubMeshes() const { return _subMeshes; }
-	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const { return _skins; }
+	[[nodiscard]] const std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>>& GetSkins() const
+	{
+		return _skinSource != nullptr ? _skinSource->GetSkins() : _skins;
+	}
 	/// The skins' ids in the order the file lists them
-	[[nodiscard]] const std::vector<SkinId>& GetSkinOrder() const { return _skinOrder; }
+	[[nodiscard]] const std::vector<SkinId>& GetSkinOrder() const
+	{
+		return _skinSource != nullptr ? _skinSource->GetSkinOrder() : _skinOrder;
+	}
 	/// Where each skin is solid, at 64 by 64 places over it, which the cursor is tested against on a model picked through
 	/// its texture's holes
 	[[nodiscard]] const screen_pick::AlphaMask* GetSkinMask(SkinId skin) const
 	{
+		if (_skinSource != nullptr)
+		{
+			return _skinSource->GetSkinMask(skin);
+		}
 		const auto found = _skinMasks.find(skin);
 		return found != _skinMasks.end() ? &found->second : nullptr;
 	}
@@ -166,6 +180,8 @@ private:
 
 	std::unordered_map<SkinId, std::unique_ptr<graphics::Texture2D>> _skins;
 	std::vector<SkinId> _skinOrder;
+	/// A model made while the game runs is drawn with another's skins
+	const L3DMesh* _skinSource {nullptr};
 	std::unordered_map<SkinId, screen_pick::AlphaMask> _skinMasks;
 	std::vector<Footprint> _footprints; ///< If ContainsLandscapeFeature() is true
 	std::vector<VolumeLight> _volumeLights;

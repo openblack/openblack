@@ -98,6 +98,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/AnimalSystemInterface.h"
+#include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/CameraBookmarkSystemInterface.h"
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CameraPathSystemInterface.h"
@@ -971,6 +972,11 @@ bool Game::GameLogicLoop() noexcept
 	if (Locator::dynamicsSystem::has_value())
 	{
 		Locator::dynamicsSystem::value().ProcessTurn();
+	}
+	// The pieces broken off buildings count down their time, and go when it runs out
+	if (Locator::buildingDamageSystem::has_value())
+	{
+		Locator::buildingDamageSystem::value().ProcessTurn();
 	}
 	// What the hand holds stays where the hand is for the game, and is let go once it is gone
 	if (Locator::handGrabSystem::has_value())
@@ -2694,6 +2700,10 @@ void Game::PrepareNewLand()
 	if (Locator::dynamicsSystem::has_value())
 	{
 		Locator::dynamicsSystem::value().ResetSimulation();
+		if (Locator::buildingDamageSystem::has_value())
+		{
+			Locator::buildingDamageSystem::value().Reset();
+		}
 	}
 	// Nor anything in the hand
 	if (Locator::handGrabSystem::has_value())

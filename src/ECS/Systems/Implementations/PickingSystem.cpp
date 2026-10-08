@@ -25,6 +25,7 @@
 #include "Creature/CreatureMorph.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
+#include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Hand.h"
@@ -223,6 +224,48 @@ void picking::CarryHover(const PickingSystemInterface::Pick& previous, PickingSy
 	}
 }
 
+namespace
+{
+/// Along a line, how far (in its direction's lengths) it first meets a broken building's triangles, from either side; a
+/// triangle nearly edge on to the line is passed by
+std::optional<float> BrokenAlong(const physics::damage::Mesh& mesh, glm::vec3 from, glm::vec3 direction)
+{
+	constexpr float k_EdgeOn = 0.005f;
+	std::optional<float> nearest;
+	for (const auto& primitive : mesh.primitives)
+	{
+		for (const auto& triangle : primitive.triangles)
+		{
+			const auto a = triangle.corners[0].position;
+			const auto b = triangle.corners[1].position;
+			const auto c = triangle.corners[2].position;
+			auto normal = glm::cross(b - a, c - a);
+			if (normal != glm::vec3(0.0f))
+			{
+				normal = glm::normalize(normal);
+			}
+			const float facing = glm::dot(direction, normal);
+			if (std::abs(facing) <= k_EdgeOn)
+			{
+				continue;
+			}
+			const float along = (glm::dot(normal, a) - glm::dot(from, normal)) / facing;
+			const auto point = from + direction * along;
+			// Inside when the point is on the same side of all three sides
+			const auto side = [&normal, &point](glm::vec3 p, glm::vec3 q) {
+				return glm::dot(glm::cross(point - p, q - p), normal) > 0.0f ? 1 : 0;
+			};
+			const int inside = side(a, b) + side(b, c) + side(c, a);
+			if ((inside == 0 || inside == 3) && (!nearest.has_value() || along < *nearest))
+			{
+				nearest = along;
+			}
+		}
+	}
+	return nearest;
+}
+} // namespace
+
 void PickingSystem::PickUnderCursor(const Frame& frame)
 {
 	const auto& view = frame.view;
@@ -296,6 +339,12 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 	const auto distanceOf = [&](size_t i) -> std::optional<float> {
 		const auto entity = _candidateEntities[i];
 		const auto& model = _candidateModels[i];
+		// A broken building is picked by its broken model's triangles, along the cursor's line
+		if (const auto* broken = registry.TryGet<const BuildingDamage>(entity); broken != nullptr && broken->drawMesh != 0)
+		{
+			const auto along = BrokenAlong(broken->mesh, view.camera, frame.nearPoint - view.camera);
+			return along.has_value() ? std::optional<float>(*along * view.near) : std::nullopt;
+		}
 		const auto mesh = meshes.Handle(registry.Get<const Mesh>(entity).id);
 		// A tree of a forest is picked through its leaves' holes
 		const auto* info = world_objects::InfoOf(entity);

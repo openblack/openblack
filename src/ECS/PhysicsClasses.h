@@ -53,6 +53,8 @@ enum class BodyKind : uint8_t
 	ShieldDome,
 	/// A gate, the piper's cave or the phone box: a collision model of its own, picked by its state
 	CollisionModel,
+	/// A piece broken off a building: a slab of its triangles
+	BuildingPiece,
 };
 
 /// What the physics knows of an object's kind

@@ -152,6 +152,7 @@ class MiracleFxSystemInterface;
 class FireSystemInterface;
 class ExplosionSystemInterface;
 class RewardSystemInterface;
+class BuildingDamageSystemInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
@@ -244,6 +245,7 @@ struct Locator
 	using fireSystem = entt::locator<ecs::systems::FireSystemInterface>;
 	using explosionSystem = entt::locator<ecs::systems::ExplosionSystemInterface>;
 	using rewardSystem = entt::locator<ecs::systems::RewardSystemInterface>;
+	using buildingDamageSystem = entt::locator<ecs::systems::BuildingDamageSystemInterface>;
 	using vm = entt::locator<lhvm::LHVM>;
 	using chlapi = entt::locator<chlapi::CHLApi>;
 };

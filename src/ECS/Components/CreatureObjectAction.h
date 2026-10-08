@@ -99,10 +99,4 @@ struct CreatureTownAttitude
 	float secondsLeft {0.0f};
 };
 
-/// On an abode or anything else a creature has struck: how hard it has been hit in all
-struct PhysicalDamage
-{
-	float total {0.0f};
-};
-
 } // namespace openblack::ecs::components

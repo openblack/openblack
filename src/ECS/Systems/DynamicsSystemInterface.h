@@ -210,6 +210,12 @@ public:
 	}
 	/// A living thing pushes an object out of its way, which moves in the physics
 	virtual float PushObject([[maybe_unused]] entt::entity object) { return 0.0f; }
+	/// A puff of dust at a point, drifting by a velocity, of a size and colour (0xAARRGGBB), living a second of the game's
+	/// time with the landings' dust
+	virtual void AddPuff([[maybe_unused]] glm::vec3 position, [[maybe_unused]] glm::vec3 velocity, [[maybe_unused]] float size,
+	                     [[maybe_unused]] uint32_t argb)
+	{
+	}
 	/// The land as the physics feels it, none without a land
 	[[nodiscard]] virtual const physics::Ground* GetGround() const { return nullptr; }
 

@@ -32,6 +32,7 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/Implementations/AlignmentSystem.h"
 #include "ECS/Systems/Implementations/AnimalSystem.h"
+#include "ECS/Systems/Implementations/BuildingDamageSystem.h"
 #include "ECS/Systems/Implementations/CameraBookmarkSystem.h"
 #include "ECS/Systems/Implementations/CameraHelpSystem.h"
 #include "ECS/Systems/Implementations/CameraPathSystem.h"
@@ -280,6 +281,7 @@ bool openblack::InitializeGame() noexcept
 	Locator::fireSystem::emplace<ecs::systems::FireSystem>();
 	Locator::explosionSystem::emplace<ecs::systems::ExplosionSystem>();
 	Locator::rewardSystem::emplace<ecs::systems::RewardSystem>();
+	Locator::buildingDamageSystem::emplace<ecs::systems::BuildingDamageSystem>();
 	return true;
 }
 
@@ -387,6 +389,7 @@ void openblack::ShutDownServices()
 	Locator::fireSystem::reset();
 	Locator::explosionSystem::reset();
 	Locator::rewardSystem::reset();
+	Locator::buildingDamageSystem::reset();
 	Locator::magicSystem::reset();
 	Locator::gestureEvents::reset();
 	Locator::reactionSystem::reset();

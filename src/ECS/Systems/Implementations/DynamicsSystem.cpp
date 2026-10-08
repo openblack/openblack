@@ -35,6 +35,7 @@
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/AudioEmitter.h"
+#include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/DeadTree.h"
@@ -284,6 +285,45 @@ physics_classes::ClassFacts DynamicsSystem::FactsOf(entt::entity object) const
 	return facts;
 }
 
+std::unique_ptr<physics::Body> DynamicsSystem::MakePieceBody(entt::entity piece, const physics::Material& material)
+{
+	auto& registry = Entities();
+	const auto* part = registry.TryGet<const BuildingPiece>(piece);
+	const auto* transform = registry.TryGet<const Transform>(piece);
+	if (part == nullptr || transform == nullptr || part->mesh.primitives.empty())
+	{
+		return nullptr;
+	}
+	// Only its first primitive's triangles make its body
+	std::vector<std::array<glm::vec3, 3>> triangles;
+	for (const auto& triangle : part->mesh.primitives.front().triangles)
+	{
+		triangles.push_back({triangle.corners[0].position, triangle.corners[1].position, triangle.corners[2].position});
+	}
+	const auto slab = physics::shapes::Fragment(triangles);
+	if (slab.shape.points.empty())
+	{
+		return nullptr;
+	}
+	// It waits to come to rest as long as the game's first rock would, whatever its own size
+	float halfHeight = 0.0f;
+	if (Locator::infoConstants::has_value() && Locator::resources::has_value())
+	{
+		constexpr size_t k_FirstRock = 2;
+		const auto id = resources::HashIdentifier(Locator::infoConstants::value().mobileStatic.at(k_FirstRock).meshId);
+		auto& meshes = Locator::resources::value().GetMeshes();
+		if (meshes.Contains(id))
+		{
+			halfHeight = 0.5f * meshes.Handle(id)->GetBoundingBox().Size().y;
+		}
+	}
+	const physics::BodySetup setup {
+	    .scale = 1.0f, .halfHeight = halfHeight, .mass = slab.mass, .material = material, .dynamic = true};
+	auto body = std::make_unique<physics::Body>(setup, slab.shape);
+	body->SetUpPose({.axes = transform->rotation, .origin = transform->position});
+	return body;
+}
+
 std::unique_ptr<physics::Body> DynamicsSystem::MakeBody(entt::entity object, const physics_classes::ClassFacts& facts)
 {
 	auto& registry = Entities();
@@ -298,6 +338,10 @@ std::unique_ptr<physics::Body> DynamicsSystem::MakeBody(entt::entity object, con
 	if (facts.body == BodyKind::Creature)
 	{
 		return MakeCreatureBody(object, material);
+	}
+	if (facts.body == BodyKind::BuildingPiece)
+	{
+		return MakePieceBody(object, material);
 	}
 
 	// The model the body is made from, its scale and where it stands
@@ -1363,6 +1407,18 @@ void DynamicsSystem::AttemptCollisionSound(PhysicsEntry& entry)
 		}
 	}
 	_soundPairs.Add(Id(hitter), Id(hit));
+}
+
+void DynamicsSystem::AddPuff(glm::vec3 position, glm::vec3 velocity, float size, uint32_t argb)
+{
+	auto* random = Locator::gameRandom::has_value() ? &Locator::gameRandom::value() : nullptr;
+	// Its look is drawn whether or not there is room for it
+	const auto variant = random != nullptr ? random->CrtRand() & 15 : 0;
+	if (_dust.size() >= turn::k_MostPuffs)
+	{
+		return;
+	}
+	_dust.push_back({.position = position, .velocity = velocity, .size = size, .variant = variant, .argb = argb});
 }
 
 void DynamicsSystem::AddLandingDust(glm::vec3 centre, float radius, uint32_t argb)

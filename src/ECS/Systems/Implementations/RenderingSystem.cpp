@@ -43,6 +43,7 @@
 #include "ECS/Components/Unlit.h"
 #include "ECS/Components/VillagerPose.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -58,6 +59,17 @@
 
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
+
+namespace
+{
+/// The model an object is drawn with: a broken building's broken model in place of its own
+entt::id_type DrawnMeshOf(entt::entity entity, const Mesh& mesh)
+{
+	return openblack::Locator::buildingDamageSystem::has_value()
+	           ? openblack::Locator::buildingDamageSystem::value().DrawnMesh(entity, mesh.id)
+	           : mesh.id;
+}
+} // namespace
 
 RenderingSystem::~RenderingSystem() = default;
 
@@ -83,14 +95,15 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	std::unordered_map<entt::id_type, MeshInstances> meshIds;
 
 	auto prep = [&registry, &meshIds, &instanceCount](entt::entity entity, const Mesh& mesh, bool morphWithTerrain) {
-		auto count = meshIds.insert(std::make_pair(mesh.id, MeshInstances {.count = static_cast<uint32_t>(mesh.submeshId),
-		                                                                   .morphWithTerrain = morphWithTerrain,
-		                                                                   .castsShadow = false,
-		                                                                   .unlit = false,
-		                                                                   .perEntity = false,
-		                                                                   .translucent = false,
-		                                                                   .additiveShare = std::nullopt,
-		                                                                   .instanceAlpha = false}));
+		auto count = meshIds.insert(
+		    std::make_pair(DrawnMeshOf(entity, mesh), MeshInstances {.count = static_cast<uint32_t>(mesh.submeshId),
+		                                                             .morphWithTerrain = morphWithTerrain,
+		                                                             .castsShadow = false,
+		                                                             .unlit = false,
+		                                                             .perEntity = false,
+		                                                             .translucent = false,
+		                                                             .additiveShare = std::nullopt,
+		                                                             .instanceAlpha = false}));
 		count.first->second.count++;
 		// The things whose shadows Black & White bakes into the land (IsCastShadowAtNight), and its features
 		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
@@ -264,7 +277,7 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 	    [this, &registry, &vegetation, &fits, drawBoundingBox](entt::entity entity, const Mesh& mesh,
 	                                                           const Transform& transform) {
 		    // A mesh the draw lists don't have room for, which has changed since they were made
-		    const auto slots = _instanceSlots.find(mesh.id);
+		    const auto slots = _instanceSlots.find(DrawnMeshOf(entity, mesh));
 		    if (!fits || slots == _instanceSlots.end() || slots->second.filled >= slots->second.count)
 		    {
 			    fits = false;
@@ -397,7 +410,8 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 		    }
 		    if (drawBoundingBox)
 		    {
-			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
+			    auto l3dMesh =
+			        entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(DrawnMeshOf(entity, mesh));
 			    auto box = l3dMesh->GetBoundingBox();
 			    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
 			    _renderContext.instanceUniforms[idx + (_renderContext.instanceUniforms.size() / 2)] = {.model = boxMatrix};

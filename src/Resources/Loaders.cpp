@@ -106,6 +106,17 @@ L3DLoader::result_type L3DLoader::operator()(FromDynamicFileTag, const std::stri
 	return mesh;
 }
 
+L3DLoader::result_type L3DLoader::operator()(FromMadeTag, const std::string& debugName, const graphics::L3DMesh& skinSource,
+                                             std::span<const std::vector<graphics::L3DSubMesh::MadePrimitive>> subMeshes) const
+{
+	auto mesh = std::make_shared<graphics::L3DMesh>(debugName);
+	if (!mesh->LoadMade(skinSource, subMeshes))
+	{
+		throw std::runtime_error("Unable to make mesh");
+	}
+	return mesh;
+}
+
 L3DFileLoader::result_type L3DFileLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
 {
 	auto file = std::make_shared<l3d::L3DFile>();

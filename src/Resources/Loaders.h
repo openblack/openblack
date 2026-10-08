@@ -15,6 +15,7 @@
 
 #include "3D/CameraPath.h"
 #include "3D/L3DAnim.h"
+#include "3D/L3DSubMesh.h"
 #include "3D/Light.h"
 #include "Audio/Sound.h"
 #include "Creature/CreatureMind.h"
@@ -92,6 +93,12 @@ struct L3DLoader final: BaseLoader<graphics::L3DMesh>
 	[[nodiscard]] result_type operator()(FromBufferTag, const std::string& debugName, const std::vector<uint8_t>& data) const;
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
 	[[nodiscard]] result_type operator()(FromDynamicFileTag, const std::string& debugName, const l3d::L3DFile& file) const;
+	/// Made while the game runs from triangles of another model, drawn with its skins (a broken building's)
+	struct FromMadeTag
+	{
+	};
+	[[nodiscard]] result_type operator()(FromMadeTag, const std::string& debugName, const graphics::L3DMesh& skinSource,
+	                                     std::span<const std::vector<graphics::L3DSubMesh::MadePrimitive>> subMeshes) const;
 };
 
 /// The data of an L3D file, .l3d or zipped .zzz, for what changes meshes on the CPU

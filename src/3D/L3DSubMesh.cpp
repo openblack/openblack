@@ -337,6 +337,68 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 	return true;
 }
 
+bool L3DSubMesh::LoadMade(std::span<const MadePrimitive> primitives) noexcept
+{
+	_flags = {};
+	_flags.lodMask = 1;
+	_primitives.clear();
+	_surface = {};
+	size_t vertexCount = 0;
+	size_t indexCount = 0;
+	for (const auto& primitive : primitives)
+	{
+		vertexCount += primitive.vertices.size();
+		indexCount += primitive.indices.size();
+	}
+	if (vertexCount == 0 || indexCount == 0 || vertexCount > std::numeric_limits<uint16_t>::max())
+	{
+		return false;
+	}
+	const bgfx::Memory* verticesMem = bgfx::alloc(static_cast<uint32_t>(sizeof(EnhancedL3DVertex) * vertexCount));
+	const bgfx::Memory* indicesMem = bgfx::alloc(static_cast<uint32_t>(sizeof(uint16_t) * indexCount));
+	auto* vertices = reinterpret_cast<EnhancedL3DVertex*>(verticesMem->data);
+	auto* indices = reinterpret_cast<uint16_t*>(indicesMem->data);
+	_boundingBox.maxima = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	_boundingBox.minima = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+	uint32_t firstVertex = 0;
+	uint32_t firstIndex = 0;
+	for (const auto& primitive : primitives)
+	{
+		for (const auto& vertex : primitive.vertices)
+		{
+			vertices[firstVertex + (&vertex - primitive.vertices.data())] = {
+			    .pos = vertex.position, .uv = vertex.uv, .norm = vertex.normal, .index = glm::i16vec4(-1, -1, 0, 0)};
+			_boundingBox.maxima = glm::max(_boundingBox.maxima, vertex.position);
+			_boundingBox.minima = glm::min(_boundingBox.minima, vertex.position);
+		}
+		for (size_t i = 0; i < primitive.indices.size(); ++i)
+		{
+			indices[firstIndex + i] = static_cast<uint16_t>(primitive.indices[i] + firstVertex);
+		}
+		// Drawn with the material of the primitive it came from
+		auto drawn = primitive.source->GetPrimitives().at(primitive.sourcePrimitive);
+		drawn.indicesOffset = firstIndex;
+		drawn.indicesCount = static_cast<uint32_t>(primitive.indices.size());
+		// Seen from both sides
+		drawn.twoSided = true;
+		_primitives.push_back(drawn);
+		firstVertex += static_cast<uint32_t>(primitive.vertices.size());
+		firstIndex += static_cast<uint32_t>(primitive.indices.size());
+	}
+
+	VertexDecl decl;
+	decl.reserve(4);
+	decl.emplace_back(VertexAttrib::Attribute::Position, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::TexCoord0, static_cast<uint8_t>(2), VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Normal, static_cast<uint8_t>(3), VertexAttrib::Type::Float);
+	decl.emplace_back(VertexAttrib::Attribute::Indices, static_cast<uint8_t>(4), VertexAttrib::Type::Int16,
+	                  /*normalized=*/false, /*asInt=*/true);
+	auto* vertexBuffer = new VertexBuffer(_l3dMesh.GetDebugName(), verticesMem, decl);
+	auto* indexBuffer = new IndexBuffer(_l3dMesh.GetDebugName(), indicesMem, IndexBuffer::Type::Uint16);
+	_mesh = std::make_unique<graphics::Mesh>(vertexBuffer, indexBuffer);
+	return true;
+}
+
 void L3DSubMesh::BoundVertices(const l3d::L3DFile& l3d, uint32_t meshIndex)
 {
 	const auto primitiveSpan = l3d.GetPrimitiveSpan(meshIndex);

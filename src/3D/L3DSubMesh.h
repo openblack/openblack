@@ -13,11 +13,13 @@
 
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
 #include <L3DFile.h>
 #include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include "AxisAlignedBoundingBox.h"
@@ -68,6 +70,26 @@ public:
 	~L3DSubMesh() noexcept;
 
 	bool Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept;
+
+	/// A corner of a submesh made while the game runs, such as a broken building's
+	struct MadeVertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		glm::vec3 normal;
+	};
+	/// A primitive of a submesh made while the game runs, drawn with the material of a primitive of another model
+	struct MadePrimitive
+	{
+		const L3DSubMesh* source {nullptr};
+		size_t sourcePrimitive {0};
+		std::vector<MadeVertex> vertices;
+		/// Triangles over its own vertices
+		std::vector<uint16_t> indices;
+	};
+	/// Makes a submesh drawn at the nearest level of detail from primitives given whole; all of them together hold no more
+	/// vertices than a 16-bit index reaches
+	bool LoadMade(std::span<const MadePrimitive> primitives) noexcept;
 	/// A dynamic mesh's submesh takes its vertices afresh from a file of the same shape
 	void UpdateVertices(const l3d::L3DFile& l3d) noexcept;
 
