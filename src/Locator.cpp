@@ -59,6 +59,7 @@
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LeashSystem.h"
 #include "ECS/Systems/Implementations/LivingActionSystem.h"
+#include "ECS/Systems/Implementations/MagicShieldSystem.h"
 #include "ECS/Systems/Implementations/MagicSystem.h"
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/ParticleSystem.h"
@@ -130,6 +131,7 @@ using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LeashSystem;
 using openblack::ecs::systems::LivingActionSystem;
+using openblack::ecs::systems::MagicShieldSystem;
 using openblack::ecs::systems::MagicSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::ParticleSystem;

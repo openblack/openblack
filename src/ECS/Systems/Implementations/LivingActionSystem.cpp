@@ -31,12 +31,14 @@
 #include "VillagerFire.h"
 #include "VillagerHome.h"
 #include "VillagerReactions.h"
+#include "VillagerShieldShelter.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 namespace villager_home = openblack::ecs::villager_home;
 namespace villager_eaten = openblack::ecs::villager_eaten;
+namespace villager_shield = openblack::ecs::villager_shield;
 namespace villager_fire = openblack::ecs::villager_fire;
 
 /// A villager with no state does nothing
@@ -232,7 +234,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* ARRIVES_AT_BIG_FOREST_FOR_BUILDING */ k_TodoEntry,
     /* FISHERMAN_ARRIVES_AT_FISHING */ k_TodoEntry,
     /* FISHING */ k_TodoEntry,
-    /* WAIT_FOR_COUNTER */ k_TodoEntry,
+    /* WAIT_FOR_COUNTER */
+    VillagerStateTableEntry {
+        .state = &villager_shield::WaitForCounter,
+    },
     /* GOTO_WORSHIP_SITE_FOR_WORSHIP */ k_TodoEntry,
     /* ARRIVES_AT_WORSHIP_SITE_FOR_WORSHIP */ k_TodoEntry,
     /* WORSHIPPING_AT_WORSHIP_SITE */ k_TodoEntry,
@@ -362,7 +367,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* EAT_OUTSIDE */ k_TodoEntry,
     /* RUN_AWAY_FROM_OBJECT_REACTION */ k_TodoEntry,
     /* MOVE_TOWARDS_CREATURE_REACTION */ k_TodoEntry,
-    /* AMAZED_BY_MAGIC_SHIELD_REACTION */ k_TodoEntry,
+    /* AMAZED_BY_MAGIC_SHIELD_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_shield::AmazedByMagicShield,
+    },
     /* VILLAGER_GOSSIPS */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_ANIMAL */ k_TodoEntry,
     /* CHECK_INTERACT_WITH_WORSHIP_SITE */ k_TodoEntry,
