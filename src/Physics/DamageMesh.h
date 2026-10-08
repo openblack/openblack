@@ -182,6 +182,12 @@ inline constexpr float k_ScaffoldCutFrom = 0.8f;
 /// The share drawn (held between 0 and 1), the height of the building's foot, its model's half height and its scale
 [[nodiscard]] PartialBuild PartialBuildOf(float share, float footHeight, float halfHeight, float scale);
 
+/// Where a blow passed on to a broken building lands on its model, from four draws of a random source of numbers below a
+/// limit, in this order: a primitive (the game means a random one but its bound is the wrong way round, so the last is
+/// always taken), a triangle of it, and two shares across the triangle, folded back into it when they add up past one.
+/// None when the mesh or that primitive has nothing to land on.
+[[nodiscard]] std::optional<glm::vec3> RandomSurfacePoint(const Mesh& mesh, const std::function<float(float)>& random);
+
 /// How much of a building's life a breaking blow takes, before its defences: down to what is left of its model
 [[nodiscard]] float BreakageShare(float life, float remaining);
 

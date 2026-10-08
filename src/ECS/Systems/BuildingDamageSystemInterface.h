@@ -33,6 +33,10 @@ public:
 	/// A building's reaction to its last turn's knock: a rock struck it, which only sounds when it is slow, and breaks
 	/// pieces off it when it is fast and heavy enough
 	virtual void ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsEntry& entry, const ImpactInfo& impact) = 0;
+	/// A blow struck on another body, a temple's heart, passed on to a building: it lands on a point of the building's
+	/// model and flies its pieces off with no speed at all
+	virtual void ReactToPassedOnImpact(DynamicsSystemInterface& dynamics, entt::entity building, PhysicsEntry& struck,
+	                                   const ImpactInfo& impact) = 0;
 	/// A creature's blow on a building breaks it about where it stands, as far round as the creature is big
 	virtual void Smash(entt::entity building, entt::entity creature, float creatureSize) = 0;
 	/// A piece comes to rest: a big one goes back into its building as rubble, the rest lie where they are. The object that

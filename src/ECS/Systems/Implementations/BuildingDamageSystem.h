@@ -22,6 +22,8 @@ class BuildingDamageSystem final: public BuildingDamageSystemInterface
 {
 public:
 	void ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsEntry& entry, const ImpactInfo& impact) override;
+	void ReactToPassedOnImpact(DynamicsSystemInterface& dynamics, entt::entity building, PhysicsEntry& struck,
+	                           const ImpactInfo& impact) override;
 	void Smash(entt::entity building, entt::entity creature, float creatureSize) override;
 	entt::entity PieceAtRest(DynamicsSystemInterface& dynamics, PhysicsEntry* entry, entt::entity piece, bool insert) override;
 	void ForgetHitter(entt::entity rock) override;
@@ -29,6 +31,11 @@ public:
 	[[nodiscard]] entt::id_type DrawnMesh(entt::entity object, entt::id_type own) const override;
 	[[nodiscard]] std::optional<float> PartialShare(entt::entity building) const override;
 	void Reset() override;
+
+private:
+	/// A rock's blow on a building, struck on the building's own body or passed on to it from another's
+	void Blow(DynamicsSystemInterface& dynamics, entt::entity building, PhysicsEntry& entry, const ImpactInfo& impact,
+	          bool passedOn);
 };
 
 } // namespace openblack::ecs::systems

@@ -11,6 +11,8 @@
 
 #include "TownSystem.h"
 
+#include <algorithm>
+
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
@@ -75,6 +77,10 @@ void TownSystem::AddHomelessVillagerToTown(entt::entity townEntity, entt::entity
 	// TODO(bwrsandman): if already assigned to abode or other villager homeless list, remove
 	assert(villager.abode == entt::null);
 	assert(villager.town == entt::null || villager.town == registryContext.towns[town.id]);
-	town.homelessVillagers.insert(villagerEntity);
+	// The newest homeless comes first
+	if (std::ranges::find(town.homelessVillagers, villagerEntity) == town.homelessVillagers.end())
+	{
+		town.homelessVillagers.insert(town.homelessVillagers.begin(), villagerEntity);
+	}
 	villager.town = townEntity;
 }

@@ -18,6 +18,7 @@
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/StoragePit.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/ChimneySmokeSystemInterface.h"
@@ -104,6 +105,12 @@ entt::entity AbodeArchetype::Create(uint32_t townId, const glm::vec3& position, 
 	const auto& transform =
 	    registry.Assign<Transform>(entity, position, glm::mat3(glm::eulerAngleY(-yAngleRadians)), glm::vec3(scale));
 	registry.Assign<Abode>(entity, info.abodeNumber, townId, foodAmount, woodAmount);
+	// It joins its town's buildings, the newest first
+	if (const auto town = registry.Context().towns.find(townId); town != registry.Context().towns.end())
+	{
+		auto& abodes = registry.Get<Town>(town->second).abodes;
+		abodes.insert(abodes.begin(), entity);
+	}
 	auto resourceId = resources::HashIdentifier(info.meshId);
 	const auto& mesh = registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(0));
 	if (morphsWithTerrain)

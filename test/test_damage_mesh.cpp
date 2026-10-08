@@ -7,6 +7,8 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "Physics/DamageMesh.h"
@@ -240,4 +242,40 @@ TEST(DamageMesh, APartBuiltBuildingStandsAsFarUpAsItsShareWithItsScaffoldRisingT
 	EXPECT_TRUE(high.scaffoldShown);
 	// Almost done, what is left of it is too low to draw
 	EXPECT_FALSE(PartialBuildOf(0.999f, 0.0f, 5.0f, 1.0f).scaffoldShown);
+}
+
+TEST(DamageMesh, ABlowPassedOnLandsOnTheLastPrimitive)
+{
+	const auto triangle = [](glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+		Triangle made;
+		made.corners = {Corner {.position = a}, Corner {.position = b}, Corner {.position = c}};
+		return made;
+	};
+	Mesh mesh;
+	mesh.primitives.push_back({.material = 0, .triangles = {triangle({9, 9, 9}, {9, 9, 9}, {9, 9, 9})}});
+	mesh.primitives.push_back(
+	    {.material = 1, .triangles = {triangle({0, 0, 0}, {1, 0, 0}, {0, 1, 0}), triangle({0, 0, 0}, {4, 0, 0}, {0, 0, 4})}});
+	// The draws: the primitive (the first is drawn, the last taken), the triangle, then two shares adding past one
+	std::vector<float> draws {0.0f, 1.5f, 0.75f, 0.5f};
+	std::vector<float> limits;
+	size_t next = 0;
+	const auto point = RandomSurfacePoint(mesh, [&](float limit) {
+		limits.push_back(limit);
+		return draws.at(next++);
+	});
+	ASSERT_TRUE(point.has_value());
+	EXPECT_EQ(limits, (std::vector {2.0f, 2.0f, 1.0f, 1.0f}));
+	// Folded back: a quarter along the second side and a half along the third
+	EXPECT_FLOAT_EQ(point->x, 1.0f);
+	EXPECT_FLOAT_EQ(point->y, 0.0f);
+	EXPECT_FLOAT_EQ(point->z, 2.0f);
+	// An empty last primitive gives no point, the four draws still made
+	mesh.primitives.push_back({.material = 2});
+	next = 0;
+	limits.clear();
+	EXPECT_FALSE(RandomSurfacePoint(mesh, [&](float limit) {
+		             limits.push_back(limit);
+		             return draws.at(next++);
+	             }).has_value());
+	EXPECT_EQ(limits.size(), 4U);
 }

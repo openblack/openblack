@@ -11,7 +11,6 @@
 
 #include <array>
 #include <optional>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -30,7 +29,12 @@ struct Town
 	PlayerNames owner {PlayerNames::NEUTRAL};
 	std::unordered_map<std::string, float> beliefs;
 	bool uninhabitable = false;
-	std::set<entt::entity> homelessVillagers;
+	/// Its people without a home, the newest first
+	std::vector<entt::entity> homelessVillagers;
+	/// Its buildings, the newest first
+	std::vector<entt::entity> abodes;
+	/// When its player gained it, against the player's other towns: earlier gained, smaller
+	uint32_t gained {0};
 	/// How many of its people are hurt, their life under seven tenths
 	uint32_t injured {0};
 	/// What its people's deaths came to, by the player put down for each (by player number) and what killed them

@@ -11,6 +11,7 @@
 
 #include <cmath>
 
+#include <algorithm>
 #include <chrono>
 
 #include <glm/geometric.hpp>
@@ -30,16 +31,20 @@
 #include "ECS/Components/CreatureFight.h"
 #include "ECS/Components/CreatureObjectAction.h"
 #include "ECS/Components/DeadTree.h"
+#include "ECS/Components/Field.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Indestructible.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingPhysics.h"
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/Mobile.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/ScriptControl.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/StoragePit.h"
+#include "ECS/Components/Temple.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
@@ -60,6 +65,7 @@
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ResourceStoreSystemInterface.h"
+#include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/WorldObjects.h"
 #include "InfoConstants.h"
 #include "Locator.h"
@@ -67,6 +73,7 @@
 #include "Magic/SpellRules.h"
 #include "Physics/Body.h"
 #include "Physics/LivingRules.h"
+#include "Physics/TempleHeart.h"
 #include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
@@ -213,6 +220,103 @@ void HurtCreature(DynamicsSystemInterface& dynamics, const PhysicsEntry& entry, 
 }
 
 /// A physical shield struck by a thing that breaks buildings pays for the blow by its momentum
+/// The temple heart's player's towns as the heart passes a blow on over them: in the order the player gained them, each
+/// with its buildings and homeless people, the newest first
+std::vector<physics::temple_heart::Town> HeartTowns(PlayerNames owner)
+{
+	auto& registry = Entities();
+	std::vector<const Town*> towns;
+	registry.Each<const Town>([&towns, owner](entt::entity, const Town& town) {
+		if (town.owner == owner)
+		{
+			towns.push_back(&town);
+		}
+	});
+	std::ranges::sort(towns, {}, &Town::gained);
+	const auto dying = [&registry](entt::entity villager) {
+		const auto* action = registry.TryGet<const LivingAction>(villager);
+		return action != nullptr && Locator::livingActionSystem::has_value() &&
+		       Locator::livingActionSystem::value().VillagerGetState(*action, LivingAction::Index::Final) ==
+		           VillagerStates::Dying;
+	};
+	std::vector<physics::temple_heart::Town> lists;
+	lists.reserve(towns.size());
+	for (const auto* town : towns)
+	{
+		auto& list = lists.emplace_back();
+		for (const auto abode : town->abodes)
+		{
+			const bool available = registry.Valid(abode);
+			const auto* progress = available ? registry.TryGet<const BuildProgress>(abode) : nullptr;
+			const auto* info = available ? world_objects::AbodeInfoOf(abode) : nullptr;
+			list.buildings.push_back({.entity = abode,
+			                          .available = available,
+			                          .life = available ? world_objects::LifeOf(abode) : 0.0f,
+			                          .built = progress != nullptr ? progress->built : 1.0f,
+			                          .field = available && registry.AllOf<Field>(abode),
+			                          .footballPitch = info != nullptr && info->abodeType == AbodeType::FootballPitch});
+		}
+		for (const auto villager : town->homelessVillagers)
+		{
+			list.homeless.push_back({.entity = villager, .available = registry.Valid(villager) && !dying(villager)});
+		}
+	}
+	return lists;
+}
+
+/// Something thrown strikes a temple's heart: the heart passes the blow on to a building or a homeless villager of its
+/// player's towns, and only with none to take it is the heart itself harmed, by what breaks buildings
+void StrikeHeart(DynamicsSystemInterface& dynamics, PhysicsEntry& entry, const ImpactInfo& impact)
+{
+	auto& registry = Entities();
+	const auto heart = entry.entity;
+	const auto hitter = impact.hitBy;
+	if (hitter == entt::null)
+	{
+		return;
+	}
+	const bool hitterAbout = registry.Valid(hitter);
+	const bool destroys = hitterAbout && dynamics.PhysicallyDestroysAbodes(hitter);
+	auto& temple = registry.Get<Temple>(heart);
+	const auto towns = HeartTowns(temple.owner);
+	const auto target = physics::temple_heart::Choose(towns);
+	// TODO(physics): the heart beams its plasma at what takes the blow, or at a point on itself with none, while what
+	// struck it breaks buildings; openblack has no plasma beam yet
+	switch (target.kind)
+	{
+	case physics::temple_heart::TargetKind::Building:
+		if (Locator::buildingDamageSystem::has_value())
+		{
+			Locator::buildingDamageSystem::value().ReactToPassedOnImpact(dynamics, target.entity, entry, impact);
+		}
+		return;
+	case physics::temple_heart::TargetKind::Villager:
+		// A villager standing in the world is flung up into the physics; one already in it is left as it is
+		if (!registry.AllOf<InPhysics>(target.entity))
+		{
+			dynamics.InitialisePhysics(target.entity, {.velocity = physics::temple_heart::k_VillagerLaunch,
+			                                           .spin = physics::temple_heart::k_VillagerLaunchSpin,
+			                                           .add = true});
+		}
+		return;
+	case physics::temple_heart::TargetKind::Heart:
+		break;
+	}
+	const auto* hitterEntry = hitterAbout ? dynamics.Find(hitter) : nullptr;
+	if (!destroys || hitterEntry == nullptr || hitterEntry->body == nullptr || !Locator::infoConstants::has_value())
+	{
+		return;
+	}
+	const auto& body = *hitterEntry->body;
+	temple.lastHitTurn = Locator::time::has_value() ? Locator::time::value().GetTurn() : 0;
+	// A hit of that harm through the heart's defence, put down to no player
+	magic::EffectValues values {};
+	values[magic::EffectKind::Hit] = physics::temple_heart::Harm(body.velocity, body.Mass());
+	const auto defence = magic::EffectDefence::From(Locator::infoConstants::value().citadelHeart);
+	world_objects::ReduceLife(heart, magic::DamageFrom(values, defence));
+	// TODO(physics): a heart left with no life starts the temple's destruction; openblack has no destruction sequence yet
+}
+
 void StrikeShield(DynamicsSystemInterface& dynamics, entt::entity shield, const ImpactInfo& impact)
 {
 	if (impact.hitBy == entt::null || !Locator::magicShieldSystem::has_value() ||
@@ -549,6 +653,11 @@ void PhysicsGameHooks::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsE
 	    shield != nullptr && shield->kind == MagicShield::Kind::Physical)
 	{
 		StrikeShield(dynamics, object, impact);
+		return;
+	}
+	if (registry.AllOf<Temple>(object))
+	{
+		StrikeHeart(dynamics, entry, impact);
 		return;
 	}
 	// Rocks break buildings, the village centre, storage pits and spell dispensers among them

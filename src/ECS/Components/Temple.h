@@ -39,6 +39,8 @@ struct TempleInteriorPart
 struct Temple
 {
 	PlayerNames owner;
+	/// The game turn its heart last took the harm of a thrown thing
+	uint32_t lastHitTurn {0};
 };
 
 /// The way into a temple, Entrance.l3d at the temple's place, which the temple makes and its player clicks the Action

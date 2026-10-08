@@ -583,8 +583,23 @@ bool Settle(entt::entity building, BuildingDamage& broken)
 
 void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, PhysicsEntry& entry, const ImpactInfo& impact)
 {
+	Blow(dynamics, entry.entity, entry, impact, false);
+}
+
+void BuildingDamageSystem::ReactToPassedOnImpact(DynamicsSystemInterface& dynamics, entt::entity building, PhysicsEntry& struck,
+                                                 const ImpactInfo& impact)
+{
+	Blow(dynamics, building, struck, impact, true);
+}
+
+void BuildingDamageSystem::Blow(DynamicsSystemInterface& dynamics, entt::entity building, PhysicsEntry& entry,
+                                const ImpactInfo& impact, bool passedOn)
+{
 	auto& registry = Entities();
-	const auto building = entry.entity;
+	if (!registry.Valid(building))
+	{
+		return;
+	}
 	const auto hitter = impact.hitBy;
 	if (hitter == entt::null || !registry.Valid(hitter))
 	{
@@ -638,10 +653,9 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 		}
 		else if (broken->lastHitter == hitter)
 		{
-			// The same rock again, hard: the rock and the building pass through each other from now on
-			// (The game also asks that the building's own body is the one struck, which only a temple's redirected blow
-			// isn't; openblack's temple takes no blows yet)
-			if (momentum > damage::k_PassThroughMomentum)
+			// The same rock again, hard, on the building's own body: the rock and the building pass through each other from
+			// now on
+			if (momentum > damage::k_PassThroughMomentum && entry.entity == building)
 			{
 				entry.thrower = hitter;
 				hitterEntry->thrower = building;
@@ -651,8 +665,18 @@ void BuildingDamageSystem::ReactToImpact(DynamicsSystemInterface& dynamics, Phys
 		{
 			broken->lastHitter = hitter;
 		}
-		Strike(building, *broken, rock.Centre(), rock.velocity * damage::k_PieceSpeedShare,
-		       rock.Radius() + damage::k_ReachBeyondRock);
+		auto point = rock.Centre();
+		auto velocity = rock.velocity * damage::k_PieceSpeedShare;
+		if (passedOn)
+		{
+			// A blow passed on lands on a point of the model, from the game's synchronised random numbers, and its pieces
+			// fly with none of the rock's speed: what it is multiplied by is never set in the game, so is always nothing
+			const auto landed = damage::RandomSurfacePoint(
+			    broken->mesh, [](float limit) { return Locator::gameRandom::value().GameFloatRand(limit); });
+			point = landed.value_or(point);
+			velocity *= 0.0f;
+		}
+		Strike(building, *broken, point, velocity, rock.Radius() + damage::k_ReachBeyondRock);
 		if (!Settle(building, registry.Get<BuildingDamage>(building)))
 		{
 			return;
