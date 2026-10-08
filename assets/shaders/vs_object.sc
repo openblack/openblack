@@ -34,6 +34,8 @@ $output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 uniform vec4 u_depthBias;
 // Slides the texture across the mesh, as the game does the creature's waterfall
 uniform vec4 u_uvOffset;
+// xyz: a colour of the object's own, 0 to 255, in place of the land's light; w: its alpha, 0 for no colour of its own
+uniform vec4 u_objectLook;
 #ifdef USE_MORPH
 // How far a creature's body is pulled towards its evil or good, thin or fat and weak or strong mesh, whose vertices
 // come in the second to fourth streams
@@ -129,6 +131,11 @@ void main()
 		colour = min(floor(LandLightAt(origin.xz) * u_landLight.y), vec3_splat(255.0f));
 	}
 #endif // USE_LIGHTMAP
+	// An object of a colour of its own, as the game colours some animals, takes it in place of the land's light
+	if (u_objectLook.w > 0.0f)
+	{
+		colour = u_objectLook.xyz;
+	}
 #ifdef USE_INSTANCING
 	// An instance's own colour, 0xRRGGBB, multiplies the light in whole steps
 	if (i_data4.y > 0.0f)
@@ -150,6 +157,18 @@ void main()
 #endif // USE_LIGHTMAP
 	// w: how much snow shows on it, of 255. An instance can have its own rate and cap of 256 for it, as a field's crop has.
 	v_haze = vec4(added / 255.0f, 0.0f);
+#ifdef USE_INSTANCING
+	// w: how frozen a creature is, positive, or how far it has fizzed out of sight, negative. An instance gives the freeze
+	// as a negative w and the fizz as a w below -2 by it; a field's crop gives its snow cap as a positive one.
+	if (i_data4.w < -1.5f)
+	{
+		v_haze.w = i_data4.w + 2.0f;
+	}
+	else if (i_data4.w < 0.0f)
+	{
+		v_haze.w = -i_data4.w;
+	}
+#endif // USE_INSTANCING
 	// The snow on it: where its texture is read, how much of it shows of 255, and its own light, by the object's colour
 	v_snow = vec4_splat(0.0f);
 	v_snowLight = vec3_splat(0.0f);
@@ -164,6 +183,19 @@ void main()
 			v_snow = vec4(SnowUv(position, worldNormal), snowLevel / 255.0f, 0.0f);
 			v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(normal, localLight));
 		}
+	}
+#endif // USE_INSTANCING
+#ifdef USE_INSTANCING
+	// w: a colour added over it after its texture and light, 0xRRGGBB, as the heal lights the people it heals, which the
+	// instance gives as a negative x; a house's positive x is its windows' light
+	if (u_window.x < 0.5f && i_data4.x < -0.5f)
+	{
+		v_snow.w = -i_data4.x;
+	}
+	// A house glowing with heat while someone is home: 1 plus its glow, its windows lit by the 1
+	else if (u_window.x < 0.5f && i_data4.x > 1.5f)
+	{
+		v_snow.w = i_data4.x - 1.0f;
 	}
 #endif // USE_INSTANCING
 	v_color0 = vec4(ModelLightColour(colour, ModelLightFactor(normal, localLight)), 1.0f);
@@ -226,7 +258,16 @@ void main()
 #else
 	v_texcoord0 = vec4(a_texcoord0, 0.0f, 0.0f);
 #endif // USE_LIGHTMAP
-	v_texcoord0.xy += u_uvOffset.xy;
+	// The texture is scaled (z, none when 0) then slid (xy) across the mesh
+	v_texcoord0.xy = v_texcoord0.xy * (u_uvOffset.z != 0.0 ? u_uvOffset.z : 1.0) + u_uvOffset.xy;
+#ifdef USE_INSTANCING
+	// A pile of grain's texture has flowed down it by a small negative x, as far as the pile is sunk (a glow added over
+	// an object is a larger negative x)
+	if (i_data4.x < 0.0f && i_data4.x >= -0.5f)
+	{
+		v_texcoord0.y -= i_data4.x;
+	}
+#endif // USE_INSTANCING
 	v_normal = normal;
 	gl_Position = mul(u_viewProj, v_position);
 	gl_Position.z *= 1.0f - u_depthBias.x;

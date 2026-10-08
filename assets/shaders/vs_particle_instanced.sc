@@ -3,12 +3,16 @@ $output v_texcoord0, v_color0
 
 #include <bgfx_shader.sh>
 
+uniform vec4 u_islandExtent;
+#include "land_light.sh"
+
 // One particle sprite per instance, turned into a quad here from the plane's corners (-1..1 across and up):
 // i_data0: where it is, and half its width
 // i_data1: half its height, its roll (or yaw when flat), and how far its corners move back by its origin, across and up
 // i_data2: its sheet cell, the top left corner and the size in texture space
 // i_data3: its colour and alpha
-// i_data4: x is 1 when it lies flat on the ground, 0 when it faces the screen
+// i_data4: x is 1 when it lies flat on the ground, 0 when it faces the screen; y is 1 when it takes the colour of the
+// land's light where it is
 
 void main()
 {
@@ -33,5 +37,13 @@ void main()
 	}
 	v_texcoord0 = vec4(i_data2.xy + vec2(corner.x * 0.5 + 0.5, 0.5 - corner.y * 0.5) * i_data2.zw, 0.0, 0.0);
 	v_color0 = i_data3;
+	if (i_data4.y > 0.5)
+	{
+		// Dust takes the land's light where it is: each byte of its colour and alpha times the light's (whose alpha is
+		// full) over 256, in whole steps
+		vec4 bytes = floor(i_data3 * 255.0 + 0.5);
+		vec4 light = vec4(LandLightAt(i_data0.xz), 255.0);
+		v_color0 = floor(bytes * light / 256.0) / 255.0;
+	}
 	gl_Position = mul(u_viewProj, vec4(world, 1.0));
 }

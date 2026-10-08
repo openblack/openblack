@@ -19,14 +19,19 @@
 
 #include "3D/L3DMesh.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureSpells.h"
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Field.h"
+#include "ECS/Components/GroundMark.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/MorphWithTerrain.h"
+#include "ECS/Components/ObjectGlow.h"
+#include "ECS/Components/Pot.h"
+#include "ECS/Components/ResourcePile.h"
 #include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Components/Swayable.h"
@@ -37,6 +42,7 @@
 #include "ECS/Components/Unlit.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/FieldSystemInterface.h"
+#include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/Systems/VegetationInterface.h"
@@ -70,6 +76,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		bool perEntity;
 		bool translucent;
 		std::optional<float> additiveShare;
+		bool instanceAlpha;
 	};
 	std::unordered_map<entt::id_type, MeshInstances> meshIds;
 
@@ -80,16 +87,23 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		                                                                   .unlit = false,
 		                                                                   .perEntity = false,
 		                                                                   .translucent = false,
-		                                                                   .additiveShare = std::nullopt}));
+		                                                                   .additiveShare = std::nullopt,
+		                                                                   .instanceAlpha = false}));
 		count.first->second.count++;
 		// The things whose shadows Black & White bakes into the land (IsCastShadowAtNight), and its features
 		count.first->second.castsShadow |= registry.AnyOf<Abode, Feature, MobileStatic, StoragePit>(entity);
 		count.first->second.unlit |= registry.AnyOf<Unlit>(entity);
-		count.first->second.perEntity |= registry.AnyOf<CreatureMorph>(entity);
+		// The creatures and the animals are each posed as they are
+		count.first->second.perEntity |= registry.AnyOf<CreatureMorph, AnimalPose>(entity);
 		if (const auto* translucent = registry.TryGet<const Translucent>(entity))
 		{
 			count.first->second.translucent = true;
 			count.first->second.additiveShare = translucent->share;
+		}
+		if (const auto* mark = registry.TryGet<const GroundMark>(entity); mark != nullptr && mark->alpha.has_value())
+		{
+			count.first->second.translucent = true;
+			count.first->second.instanceAlpha = true;
 		}
 		instanceCount++;
 	};
@@ -142,6 +156,7 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 		drawDesc->second.materialBlending = desc.translucent;
 		drawDesc->second.translucent = desc.translucent;
 		drawDesc->second.additiveShare = desc.additiveShare;
+		drawDesc->second.instanceAlpha = desc.instanceAlpha;
 		_instanceSlots.emplace(
 		    meshId,
 		    InstanceSlots {.offset = offset, .count = desc.count, .filled = 0, .perEntity = desc.perEntity, .height = 0.0f});
@@ -192,6 +207,7 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float) // i_data1 (matrix row 1)
 		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float) // i_data2 (matrix row 2)
 		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float) // i_data3 (matrix row 3)
+		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float) // i_data4 (how it burns)
 		    .end();
 		_renderContext.treeInstanceUniformBuffer =
 		    graphics::fromBgfx(bgfx::createDynamicVertexBuffer(treeInstanceCount, layout));
@@ -281,17 +297,83 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 			    }
 		    }
 
-		    // A frozen creature takes an icy look, the land's light on it tinted blue as it freezes
-		    // and an invisible one fizzes out of sight
+		    // A pile of food or wood is drawn as far under the ground as it has sunk, not at all once wholly under, and the
+		    // grain of a pile of food flows down it as it rises
+		    if (const auto* pile = registry.TryGet<const ResourcePile>(entity); pile != nullptr && pile->height > 0.0f)
+		    {
+			    if (!magic::piles::Shown(pile->rise, pile->height))
+			    {
+				    look.z = 1.0f;
+			    }
+			    else
+			    {
+				    modelMatrix[3].y += pile->rise.offset;
+				    const auto* pot = registry.TryGet<const Pot>(entity);
+				    if (pot != nullptr && magic::piles::GrainFlows(pot->type))
+				    {
+					    look.x = -magic::piles::GrainFlow(pile->rise.offset, pile->height);
+				    }
+			    }
+		    }
+
+		    // A frozen creature takes an icy look, tinted dark blue and sheened with ice as it freezes, and an invisible one
+		    // dissolves through static
 		    if (const auto* spells = registry.TryGet<const CreatureSpells>(entity))
 		    {
 			    if (spells->freeze > 0.0f)
 			    {
 				    look.y = static_cast<float>(creature_spells::FrozenTint(spells->freeze));
+				    look.w = -spells->freeze;
 			    }
 			    if (spells->fizz > 0.0f)
 			    {
-				    look.z = -spells->fizz;
+				    look.w = -(2.0f + spells->fizz);
+			    }
+		    }
+
+		    // A glow added over it, as the heal lights the people it heals, as a negative x: a house's positive x is its
+		    // windows' light
+		    if (const auto* glow = registry.TryGet<const ObjectGlow>(entity); glow != nullptr && abode == nullptr)
+		    {
+			    look.x = -static_cast<float>(glow->Packed());
+		    }
+		    // A blast's rubble fades by its alpha in its last second
+		    if (const auto* mark = registry.TryGet<const GroundMark>(entity); mark != nullptr && mark->alpha.has_value())
+		    {
+			    look.z = -(1.0f - static_cast<float>(*mark->alpha) / 255.0f);
+		    }
+		    // Something charred by fire is drawn grey
+		    if (look.y == 0.0f && Locator::fireSystem::has_value())
+		    {
+			    if (const auto charred = Locator::fireSystem::value().GetCharredColour(entity))
+			    {
+				    look.y = static_cast<float>(*charred);
+			    }
+		    }
+		    // Something hot glows red-orange, added as the heal's glow is (a pile or pot doesn't). A house's glow goes
+		    // above its windows' light: 1 plus the glow while someone is home
+		    if (Locator::fireSystem::has_value() && !registry.AllOf<Pot>(entity))
+		    {
+			    if (const auto heat = Locator::fireSystem::value().GetGlowColour(entity); heat.has_value() && *heat != 0)
+			    {
+				    if (abode != nullptr)
+				    {
+					    look.x = look.x > 0.5f ? 1.0f + static_cast<float>(*heat) : -static_cast<float>(*heat);
+				    }
+				    else if (look.x <= 0.0f && look.x >= -0.5f)
+				    {
+					    look.x = -static_cast<float>(*heat);
+				    }
+				    else if (look.x < -0.5f)
+				    {
+					    const auto glow = static_cast<uint32_t>(-look.x);
+					    uint32_t sum = 0;
+					    for (const uint32_t shift : {16u, 8u, 0u})
+					    {
+						    sum |= std::min(((glow >> shift) & 0xFFu) + ((*heat >> shift) & 0xFFu), 0xFFu) << shift;
+					    }
+					    look.x = -static_cast<float>(sum);
+				    }
 			    }
 		    }
 
@@ -335,8 +417,8 @@ bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)
 	// Set the transforms of the trees, swaying or bent away from the hand
 	bool fits = true;
 	registry.Each<const Mesh, const Transform, const Tree, const Swayable>(
-	    [this, &fits, drawBoundingBox, &vegetation](const Mesh& mesh, const Transform& transform, const Tree& /*unused*/,
-	                                                const Swayable& swayable) {
+	    [this, &fits, drawBoundingBox, &vegetation](entt::entity entity, const Mesh& mesh, const Transform& transform,
+	                                                const Tree& /*unused*/, const Swayable& swayable) {
 		    const auto slots = _treeSlots.find(mesh.id);
 		    if (!fits || slots == _treeSlots.end() || slots->second.filled >= slots->second.count)
 		    {
@@ -348,6 +430,18 @@ bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
 		    modelMatrix = glm::scale(modelMatrix, transform.scale);
+		    // A tree with a fire on it is drawn darker, its foliage thinning as it burns, and narrows away at the last,
+		    // keeping its height
+		    glm::vec4 burning(0.0f);
+		    if (Locator::fireSystem::has_value())
+		    {
+			    if (const auto look = Locator::fireSystem::value().GetBurningTreeLook(entity))
+			    {
+				    burning = {static_cast<float>(look->grey) / 256.0f, look->alphaReference / 255.0f, 0.0f, 0.0f};
+				    modelMatrix = glm::scale(modelMatrix, glm::vec3(look->scale, 1.0f, look->scale));
+			    }
+		    }
+		    _renderContext.treeInstanceData[idx].burning = burning;
 		    _renderContext.treeInstanceData[idx].modelMatrix = vegetation.GetTreeMatrix(
 		        modelMatrix, transform.position, transform.scale.y, slots->second.height, swayable.swaySlot);
 

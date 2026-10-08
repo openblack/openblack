@@ -118,10 +118,26 @@ private:
 	/// The particle effects in the order the camera of the pass draws them, among the other things that blend: runs of
 	/// sprites that share a sheet as one instanced draw, ribbons, models and mists
 	void DrawParticles(const DrawSceneDesc& desc) const;
+	/// The ghosts of the buildings effects destroyed, each laying its depth through a scrolling pattern and then added
+	/// over itself where it did, the farthest first
+	void DrawDestructionGhosts(const DrawSceneDesc& desc) const;
+	/// The physical shields' domes
+	void DrawShieldDomes(const DrawSceneDesc& desc) const;
 	/// A particle's mist, in the translucent pass at a place among what blends
 	void DrawParticleMist(const DrawSceneDesc& desc, const particles::draw::MistDraw& mist, uint32_t depth) const;
 	/// A particle's model, in the translucent pass at a place among what blends
 	void DrawParticleMesh(const DrawSceneDesc& desc, const particles::draw::MeshDraw& mesh, uint32_t depth) const;
+	/// The one-shot globes, the miracles in them and the rings round the extreme ones, in the main and reflected views
+	void DrawGlobes(const DrawSceneDesc& desc) const;
+	/// The hand holding a miracle glowing in its player's colour, just after the hand at its depth in the sort
+	void DrawHandGlow(const DrawSceneDesc& desc, uint32_t handDepth) const;
+	[[nodiscard]] const Texture2D* HandFlowTexture() const;
+	/// The bands flying onto and off the hand that holds a miracle and the bracelets it wears, in the main view
+	void DrawHandMiracleBands(const DrawSceneDesc& desc) const;
+	/// A tribe's power behind a miracle: its name's letters spinning round the hand or rising where it was cast
+	void DrawTribalPower(const DrawSceneDesc& desc) const;
+	/// A piece of a broken model: its triangles placed by its atom, a draw for each skin
+	void DrawParticleFragment(const DrawSceneDesc& desc, const particles::draw::FragmentDraw& fragment, uint32_t depth) const;
 	/// A frame of a particle light map as a texture of its colours, made when first stamped
 	[[nodiscard]] const Texture2D* ParticleLightMap(entt::id_type bitmap, int frame) const;
 	/// The border of the players' influence, in the main view
@@ -186,6 +202,7 @@ private:
 		CreatureShadowMatrix,
 		CreatureShadow,
 		SkyAlphaThreshold,
+		ObjectLook,
 
 		_count
 	};
@@ -220,6 +237,7 @@ private:
 	    "u_creatureShadowMatrix", //
 	    "u_creatureShadow",       //
 	    "u_skyAlphaThreshold",    //
+	    "u_objectLook",           //
 	};
 	using MeshUniforms = std::array<std::optional<UniformHandle>, static_cast<size_t>(MeshUniform::_count)>;
 	/// A program's handles of the mesh uniforms it has, looked up by name the first time it draws a mesh
@@ -317,6 +335,9 @@ private:
 	/// icons.raw with iconsa.raw's alpha, which the creature's room's belts and medals are drawn with, once loaded
 	mutable std::optional<TextureHandle> _iconsTexture;
 	mutable bool _iconsLoaded {false};
+	/// S_Hand_Flow.raw with S_Hand_Flowa.raw's alpha, which the hand holding a miracle glows with, once loaded
+	mutable std::unique_ptr<Texture2D> _handFlowTexture;
+	mutable bool _handFlowLoaded {false};
 	/// A creature's skins as painted (see components::CreatureSkin), one texture each
 	struct CreatureSkins
 	{

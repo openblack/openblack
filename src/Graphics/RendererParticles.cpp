@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <span>
 #include <vector>
 
 #include <StackedBitmap.h>
@@ -34,19 +35,24 @@
 #include "Camera/Camera.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/Mist.h"
+#include "ECS/Systems/ExplosionSystemInterface.h"
+#include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "Graphics/GraphicsHandleBgfx.h"
 #include "Graphics/IndexBuffer.h"
 #include "Graphics/Mesh.h"
+#include "Graphics/ModelLight.h"
 #include "Graphics/ShaderManager.h"
 #include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2D.h"
 #include "Graphics/VertexBuffer.h"
 #include "Graphics/ZSort.h"
 #include "Locator.h"
+#include "Particles/ParticleBlast.h"
 #include "Particles/ParticleCreators.h"
+#include "Particles/SurfaceOfRevolution.h"
 #include "Profiler.h"
 #include "Renderer.h"
 #include "Resources/ResourcesInterface.h"
@@ -141,6 +147,15 @@ void Renderer::CollectParticles() const
 		return;
 	}
 	Locator::particleSystem::value().CollectDrawFrame(Locator::time::value().GetTurnFraction(), _particleFrame);
+	// What burns, among the other things that blend
+	if (Locator::fireSystem::has_value())
+	{
+		Locator::fireSystem::value().CollectDrawFrame(Locator::time::value().GetTurnFraction(), _particleFrame);
+	}
+	if (Locator::explosionSystem::has_value())
+	{
+		Locator::explosionSystem::value().CollectDrawFrame(_particleFrame);
+	}
 }
 
 const Texture2D* Renderer::ParticleLightMap(entt::id_type bitmap, int frame) const
@@ -157,14 +172,25 @@ const Texture2D* Renderer::ParticleLightMap(entt::id_type bitmap, int frame) con
 	}
 	const auto& stacked = *bitmaps.Handle(bitmap);
 	const auto texels = stacked.Frame(frame);
-	if (stacked.channels != 3 || texels.empty())
+	if ((stacked.channels != 3 && stacked.channels != 1) || texels.empty())
 	{
 		return nullptr;
 	}
+	// A shadow map's one byte a texel is spread over red, green and blue
+	std::vector<uint8_t> rgb;
+	if (stacked.channels == 1)
+	{
+		rgb.reserve(texels.size() * 3);
+		for (const auto texel : texels)
+		{
+			rgb.insert(rgb.end(), {texel, texel, texel});
+		}
+	}
+	const std::span<const uint8_t> image = stacked.channels == 1 ? std::span<const uint8_t>(rgb) : texels;
 	auto texture = std::make_unique<Texture2D>("ParticleLightMap");
 	const auto side = static_cast<uint16_t>(stacked.pitch);
 	texture->CreateWithinFrame(side, side, 1, TextureFormat::RGB8, Wrapping::ClampEdge, Filter::Nearest,
-	                           bgfx::copy(texels.data(), static_cast<uint32_t>(texels.size())));
+	                           bgfx::copy(image.data(), static_cast<uint32_t>(image.size())));
 	return _particleLightMaps.emplace(key, std::move(texture)).first->second.get();
 }
 
@@ -275,6 +301,7 @@ void Renderer::DrawParticleMesh(const DrawSceneDesc& desc, const particles::draw
 	submitDesc.sortDepth = depth;
 	submitDesc.uvOffset = draw.uvOffset;
 	submitDesc.mirrored = reflection;
+	submitDesc.cutBelow = draw.cutBelow;
 	if (creator.changeMaterial)
 	{
 		// The creator's materials in place of the model's own
@@ -301,6 +328,104 @@ void Renderer::DrawParticleMesh(const DrawSceneDesc& desc, const particles::draw
 	const bool unlit = creator.useGlobalAlpha || creator.additiveMaterial;
 	submitDesc.tint = glm::vec4(glm::vec3(draw.colour), unlit ? std::max(draw.colour.a, 1.0f / 255.0f) : 0.0f);
 	DrawMesh(*mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+}
+
+void Renderer::DrawParticleFragment(const DrawSceneDesc& desc, const particles::draw::FragmentDraw& fragment,
+                                    uint32_t depth) const
+{
+	const auto& shape = *fragment.shape;
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto& textures = Locator::resources::value().GetTextures();
+	if (!meshes.Contains(shape.mesh) || shape.positions.empty())
+	{
+		return;
+	}
+	const auto mesh = meshes.Handle(shape.mesh);
+	struct Vertex
+	{
+		glm::vec3 position;
+		glm::vec2 uv;
+		/// x: the model light's factor at the corner, of 256
+		glm::vec2 shade;
+		uint32_t colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::TexCoord3, 2, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+	    .end();
+	const auto alpha = static_cast<uint32_t>(std::clamp(fragment.alpha, 0.0f, 1.0f) * 255.0f);
+	const uint32_t colour = (alpha << 24u) | (static_cast<uint32_t>(fragment.rgb[2]) << 16u) |
+	                        (static_cast<uint32_t>(fragment.rgb[1]) << 8u) | fragment.rgb[0];
+	// The model light shades each corner by its normal, as the model has it, against the light's way in the piece's
+	// own frame: from the piece's middle, as the game takes it
+	const auto light = GetModelLight();
+	const auto localLight =
+	    model_light::LocalDirection(glm::vec3(light), fragment.axes[0], fragment.axes[1], fragment.axes[2], fragment.position);
+	const auto* program = _shaderManager->GetShader("Fragment");
+	const auto& island = Locator::terrainSystem::value();
+	const glm::vec4 islandExtent {island.GetExtent().minimum, island.GetExtent().maximum};
+	const glm::vec4 origin {fragment.position, 0.0f};
+	const auto viewId = static_cast<bgfx::ViewId>(TranslucentPassOf(desc.viewId));
+	// A draw for each of its skins, its triangles placed by its atom
+	const size_t triangles = shape.skins.size();
+	std::vector<bool> drawn(triangles, false);
+	for (size_t first = 0; first < triangles; ++first)
+	{
+		if (drawn[first])
+		{
+			continue;
+		}
+		const auto skin = shape.skins[first];
+		std::vector<Vertex> vertices;
+		for (size_t t = first; t < triangles; ++t)
+		{
+			if (drawn[t] || shape.skins[t] != skin)
+			{
+				continue;
+			}
+			drawn[t] = true;
+			for (size_t c = 0; c < 3; ++c)
+			{
+				const size_t corner = t * 3 + c;
+				const auto normal = corner < shape.normals.size() ? shape.normals[corner] : glm::vec3(0.0f);
+				vertices.push_back({.position = fragment.position + fragment.axes * shape.positions[corner],
+				                    .uv = shape.uvs[corner],
+				                    .shade = {model_light::Factor(normal, localLight, light.w), 0.0f},
+				                    .colour = colour});
+			}
+		}
+		const Texture2D* texture = nullptr;
+		if (const auto found = mesh->GetSkins().find(skin); found != mesh->GetSkins().end())
+		{
+			texture = found->second.get();
+		}
+		else if (const auto* shared = textures.Find(skin))
+		{
+			texture = shared;
+		}
+		const auto count = static_cast<uint32_t>(vertices.size());
+		if (texture == nullptr || count == 0 || bgfx::getAvailTransientVertexBuffer(count, layout) < count)
+		{
+			continue;
+		}
+		bgfx::TransientVertexBuffer buffer;
+		bgfx::allocTransientVertexBuffer(&buffer, count, layout);
+		std::memcpy(buffer.data, vertices.data(), count * sizeof(Vertex));
+		program->SetTextureSampler("s_diffuse", 0, *texture);
+		program->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
+		program->SetTextureSampler("s_landLight", 7, GetLandLightTexture());
+		program->SetTextureSampler("s_landColour", 8, GetLandColour());
+		program->SetUniformValue("u_islandExtent", &islandExtent);
+		program->SetUniformValue("u_fragmentOrigin", &origin);
+		bgfx::setVertexBuffer(0, &buffer);
+		// Drawn from both sides, as a broken piece shows its inside
+		bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_BLEND_ALPHA |
+		               BGFX_STATE_MSAA);
+		program->Submit(viewId, depth);
+	}
 }
 
 void Renderer::DrawParticles(const DrawSceneDesc& desc) const
@@ -362,6 +487,58 @@ void Renderer::DrawParticles(const DrawSceneDesc& desc) const
 		}
 	}
 
+	glm::vec4 islandExtent(0.0f);
+	if (Locator::terrainSystem::has_value())
+	{
+		const auto extent = Locator::terrainSystem::value().GetExtent();
+		islandExtent = glm::vec4(extent.minimum, extent.maximum);
+	}
+	// Every surface's points in one buffer and their triangles in another. The lit ones are lit as the game lights its
+	// models: each point by its normal against the light, seen from the surface's own frame.
+	bgfx::TransientVertexBuffer surfaceVertices {};
+	bgfx::TransientIndexBuffer surfaceIndices {};
+	bool haveSurfaces = false;
+	if (!frame.surfaces.empty())
+	{
+		bgfx::VertexLayout layout;
+		layout.begin()
+		    .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+		    .add(bgfx::Attrib::Color1, 4, bgfx::AttribType::Uint8, true)
+		    .end();
+		const auto vertexCount = static_cast<uint32_t>(frame.surfaceVertices.size());
+		const auto indexCount = static_cast<uint32_t>(frame.surfaceIndices.size());
+		haveSurfaces = bgfx::getAvailTransientVertexBuffer(vertexCount, layout) >= vertexCount &&
+		               bgfx::getAvailTransientIndexBuffer(indexCount, true) >= indexCount;
+		if (haveSurfaces)
+		{
+			bgfx::allocTransientVertexBuffer(&surfaceVertices, vertexCount, layout);
+			auto* out = reinterpret_cast<particles::draw::SurfaceVertex*>(surfaceVertices.data);
+			std::memcpy(out, frame.surfaceVertices.data(), vertexCount * sizeof(particles::draw::SurfaceVertex));
+			const glm::vec3 light(_modelLight);
+			const auto ambient = static_cast<uint32_t>(_modelLight.w);
+			for (const auto& surface : frame.surfaces)
+			{
+				if (!surface.lit)
+				{
+					continue;
+				}
+				const auto towards = glm::vec3(surface.worldToAtom * glm::vec4(light, 1.0f));
+				const auto towardsLight = glm::length(towards) > 0.0f ? glm::normalize(towards) : towards;
+				for (uint32_t i = surface.firstVertex; i < surface.firstVertex + surface.vertexCount; ++i)
+				{
+					const auto level = particles::surface::LightLevel(frame.surfaceNormals[i], towardsLight, ambient);
+					auto& abgr = out[i].abgr;
+					const auto channel = [&](uint32_t shift) { return ((((abgr >> shift) & 0xFFu) * level) >> 8u) & 0xFFu; };
+					abgr = (abgr & 0xFF000000u) | (channel(16) << 16u) | (channel(8) << 8u) | channel(0);
+				}
+			}
+			bgfx::allocTransientIndexBuffer(&surfaceIndices, indexCount, true);
+			std::memcpy(surfaceIndices.data, frame.surfaceIndices.data(), indexCount * sizeof(uint32_t));
+		}
+	}
+
 	const auto* spriteProgram = _shaderManager->GetShader("ParticleInstanced");
 	const auto* chainProgram = _shaderManager->GetShader("ParticleChain");
 	const auto bindMaterial = [&](const ShaderProgram& program, uint32_t index) {
@@ -385,6 +562,10 @@ void Renderer::DrawParticles(const DrawSceneDesc& desc) const
 		case ItemKind::Sprite:
 			if (haveSprites && bindMaterial(*spriteProgram, command.material))
 			{
+				// The sprites tinted by the land read its light
+				spriteProgram->SetTextureSampler("s_landLuminosity", 6, GetLandLuminosity());
+				spriteProgram->SetTextureSampler("s_landLight", 7, GetLandLightTexture());
+				spriteProgram->SetUniformValue("u_islandExtent", &islandExtent);
 				_plane->GetVertexBuffer().Bind();
 				bgfx::setInstanceDataBuffer(&instances, command.first, command.count);
 				spriteProgram->Submit(viewId, command.depth);
@@ -408,6 +589,28 @@ void Renderer::DrawParticles(const DrawSceneDesc& desc) const
 			break;
 		case ItemKind::Mist:
 			DrawParticleMist(desc, frame.mists[command.first], command.depth);
+			break;
+		case ItemKind::Surface:
+		{
+			const auto& surface = frame.surfaces[command.first];
+			const auto* surfaceProgram = _shaderManager->GetShader("ParticleSurface");
+			if (haveSurfaces && bindMaterial(*surfaceProgram, command.material))
+			{
+				// Its points are in the world; the game's surfaces face clockwise, which the mirrored reflection turns
+				bgfx::setTransform(glm::value_ptr(glm::mat4(1.0f)));
+				if (!surface.doubleSided)
+				{
+					bgfx::setState(BlendState(frame.materials[command.material].mode) |
+					               (reflection ? BGFX_STATE_CULL_CW : BGFX_STATE_CULL_CCW));
+				}
+				bgfx::setVertexBuffer(0, &surfaceVertices, surface.firstVertex, surface.vertexCount);
+				bgfx::setIndexBuffer(&surfaceIndices, surface.firstIndex, surface.indexCount);
+				surfaceProgram->Submit(viewId, command.depth);
+			}
+			break;
+		}
+		case ItemKind::Fragment:
+			DrawParticleFragment(desc, frame.fragments[command.first], command.depth);
 			break;
 		}
 	}

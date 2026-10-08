@@ -59,6 +59,7 @@
 #include "Creature/CreatureHair.h"
 #include "Creature/CreatureMorph.h"
 #include "Creature/CreatureSkin.h"
+#include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/ChimneySmoke.h"
 #include "ECS/Components/Cloud.h"
@@ -66,7 +67,10 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/CreatureHair.h"
 #include "ECS/Components/CreatureSkin.h"
+#include "ECS/Components/CreatureSpells.h"
+#include "ECS/Components/DestructionGhost.h"
 #include "ECS/Components/Hand.h"
+#include "ECS/Components/HandGlow.h"
 #include "ECS/Components/HandMorph.h"
 #include "ECS/Components/LightBeam.h"
 #include "ECS/Components/Mesh.h"
@@ -193,6 +197,8 @@ constexpr auto k_BgfxDefaultStateInvertedZ = 0 \
 
 namespace
 {
+/// A creature frozen or fizzed this far casts no shadow
+constexpr float k_NoShadowSpellLook = 0.2f;
 /// How deep the snow lies over the island, as a texture the shaders read point by point, refreshed when the snow
 /// changes; none without snow
 const Texture2D* SnowDepth(std::unique_ptr<Texture2D>& texture, std::optional<uint32_t>& revision)
@@ -473,6 +479,7 @@ Renderer::~Renderer() noexcept
 	_plane.reset();
 	_morphStreamLayouts.reset();
 	_handShadowFrameBuffer.reset();
+	_handFlowTexture.reset();
 	_creatureShadowFrameBuffer.reset();
 	_objectShadowFrameBuffer.reset();
 	_templeMapFrameBuffer.reset();
@@ -629,6 +636,51 @@ void BindBlendSources(const L3DMesh& mesh, const L3DSubMesh& subMesh,
 		program.SetTextureSampler(k_Samplers.at(axis).first, k_Samplers.at(axis).second, *source);
 	}
 }
+
+/// The looks the creature spells give a creature: the ice sheen of a frozen one, and the static an invisible one dissolves
+/// through, scrolling across its skin
+void BindCreatureSpellLooks(const ShaderProgram& program)
+{
+	const auto& textures = Locator::resources::value().GetTextures();
+	constexpr std::array<std::pair<const char*, std::pair<uint8_t, entt::hashed_string>>, 3> k_Looks {{
+	    {"s_iceEnvironment", {10, entt::hashed_string("raw/S_IceEnvMap")}},
+	    {"s_iceEnvironmentAlpha", {1, entt::hashed_string("raw/S_IceEnvMapa")}},
+	    {"s_staticAlpha", {15, entt::hashed_string("raw/S_Statica")}},
+	}};
+	for (const auto& [sampler, binding] : k_Looks)
+	{
+		if (textures.Contains(binding.second.value()))
+		{
+			program.SetTextureSampler(sampler, binding.first, *textures.Handle(binding.second));
+		}
+	}
+	// The static scrolls a tenth of its width and a fifth of its height a second
+	using Clock = std::chrono::steady_clock;
+	static const auto k_Start = Clock::now();
+	const float seconds = std::chrono::duration<float>(Clock::now() - k_Start).count();
+	const glm::vec4 u_creatureSpellLook {std::fmod(seconds * 0.1f, 1.0f), std::fmod(seconds * 0.2f, 1.0f), 0.0f, 0.0f};
+	program.SetUniformValue("u_creatureSpellLook", &u_creatureSpellLook);
+}
+
+/// The colour a recognised gesture's flash adds to the hand's light, 0 to 1 a channel
+glm::vec3 HandGlowColour()
+{
+	if (!Locator::handSystem::has_value() || !Locator::entitiesRegistry::has_value())
+	{
+		return glm::vec3(0.0f);
+	}
+	const auto hand =
+	    Locator::handSystem::value().GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+	const auto* glow = Locator::entitiesRegistry::value().TryGet<ecs::components::HandGlow>(hand);
+	if (glow == nullptr)
+	{
+		return glm::vec3(0.0f);
+	}
+	constexpr float k_ByteMax = 255.0f;
+	return glm::vec3(static_cast<float>((glow->rgb >> 16u) & 0xFFu), static_cast<float>((glow->rgb >> 8u) & 0xFFu),
+	                 static_cast<float>(glow->rgb & 0xFFu)) /
+	       k_ByteMax;
+}
 } // namespace
 
 const Renderer::MeshUniforms& Renderer::MeshUniformsOf(const ShaderProgram& program) const
@@ -767,7 +819,7 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if (has(MeshUniform::Glow))
 			{
 				// A control's glow takes the place of the light's colour added
-				const glm::vec4 u_glow {glow != glm::vec3(0.0f) ? glow : desc.lightAdd, 0.0f};
+				const glm::vec4 u_glow {glow != glm::vec3(0.0f) ? glow : desc.lightAdd, desc.environmentOnlyAlpha};
 				setUniform(MeshUniform::Glow, &u_glow);
 			}
 			if (has(MeshUniform::Darkening))
@@ -783,10 +835,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 			if (desc.morphTargets != nullptr && has(MeshUniform::VertexBlend))
 			{
 				BindBlendSources(mesh, subMesh, *desc.morphTargets, *program);
+				BindCreatureSpellLooks(*program);
 			}
 			if (has(MeshUniform::UvOffset))
 			{
-				const glm::vec4 u_uvOffset {desc.uvOffset, 0.0f, 0.0f};
+				const glm::vec4 u_uvOffset {desc.uvOffset, desc.uvScale, 0.0f};
 				setUniform(MeshUniform::UvOffset, &u_uvOffset);
 			}
 			if (has(MeshUniform::SeaClip))
@@ -794,7 +847,15 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				// The sea mirrors only what stands above it
 				const bool reflection =
 				    desc.viewId == RenderPass::Reflection || desc.viewId == RenderPass::ReflectionTranslucent;
-				const glm::vec4 u_seaClip {reflection ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+				// and a mesh cut by a plane shows nothing below it
+				float height = desc.cutBelow.value_or(0.0f);
+				if (reflection)
+				{
+					height = std::max(height, 0.0f);
+				}
+				// z: 1 to blend by each instance's alpha rather than dissolve it
+				const glm::vec4 u_seaClip {reflection || desc.cutBelow.has_value() ? 1.0f : 0.0f, height,
+				                           desc.instanceAlpha ? 1.0f : 0.0f, 0.0f};
 				setUniform(MeshUniform::SeaClip, &u_seaClip);
 			}
 			if (has(MeshUniform::Snow))
@@ -893,11 +954,19 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				SetCreatureShadowUniforms(*program, desc.creatureShadows && mainView && !inTemple && !desc.isSky &&
 				                                        !desc.drawAll && desc.morphTargets == nullptr);
 			}
+			if (has(MeshUniform::ObjectLook))
+			{
+				// xyz: the object's own colour, w: its alpha; w 0 for none, which is lit by the land as usual
+				const glm::vec4 u_objectLook =
+				    desc.objectLook.has_value() ? glm::vec4(desc.objectLook->colour, desc.objectLook->alpha) : glm::vec4(0.0f);
+				setUniform(MeshUniform::ObjectLook, &u_objectLook);
+			}
 			if (!desc.isSky && has(MeshUniform::SkyAlphaThreshold))
 			{
 				const glm::vec4 u_skyAlphaThreshold = {
 				    Locator::skySystem::value().GetCurrentSkyType(),
-				    prim.thresholdAlpha ? prim.alphaCutoutThreshold : 0.0f,
+				    desc.alphaThreshold.value_or(prim.thresholdAlpha || desc.materialAlphaTest ? prim.alphaCutoutThreshold
+				                                                                               : 0.0f),
 				    0.0f,
 				    0.0f,
 				};
@@ -943,7 +1012,11 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 				if (materialBlending)
 				{
 					using BlendMode = decltype(prim.blend);
-					switch (prim.blend)
+					constexpr uint32_t k_AlphaTextured = 4;
+					constexpr uint32_t k_AlphaTexturedAlpha = 5;
+					const bool swapped = desc.alphaTexturedAdditive &&
+					                     (prim.materialType == k_AlphaTextured || prim.materialType == k_AlphaTexturedAlpha);
+					switch (swapped ? BlendMode::Additive : prim.blend)
 					{
 					case BlendMode::Standard:
 						state |= BGFX_STATE_BLEND_ALPHA;
@@ -955,14 +1028,24 @@ void Renderer::DrawSubMesh(const graphics::L3DMesh& mesh, const graphics::L3DSub
 						state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_ONE);
 						break;
 					case BlendMode::Disabled:
+						// An object fading out blends what would be opaque by its alpha
+						if (desc.objectLook.has_value() && desc.objectLook->alpha < 1.0f)
+						{
+							state |= BGFX_STATE_BLEND_ALPHA;
+						}
 						break;
 					}
-					if (!prim.depthWrite)
+					if (!prim.depthWrite || swapped)
 					{
 						state &= ~BGFX_STATE_WRITE_Z;
 					}
 				}
 				auto rgba = desc.rgba;
+				if (desc.instanceAlpha)
+				{
+					state &= ~BGFX_STATE_BLEND_MASK;
+					state |= BGFX_STATE_BLEND_ALPHA;
+				}
 				if (desc.additiveShare.has_value())
 				{
 					// Added by a constant share, as the game draws a one-shot miracle's bubble
@@ -3379,17 +3462,19 @@ void Renderer::DrawLandColourPass(const DrawSceneDesc& drawDesc) const
 		{
 			return;
 		}
-		const glm::vec4 u_landColourStamp {1.0f, static_cast<float>(strength), static_cast<float>(side), 0.0f};
+		const bool shade = combine == land_colour_stamps::Combine::Shade;
+		const glm::vec4 u_landColourStamp {1.0f, static_cast<float>(strength), static_cast<float>(side), shade ? 1.0f : 0.0f};
 		const glm::vec4 u_landColourWeights {glm::vec2(placement.weight), 0.0f, 0.0f};
 		program.SetTextureSampler("s_texture", 0, image);
 		program.SetUniformValue("u_landColourStamp", &u_landColourStamp);
 		program.SetUniformValue("u_landColourWeights", &u_landColourWeights);
-		// An added stamp brightens the cells to at most white; another keeps the brighter colour
+		// An added stamp brightens the cells to at most white; another keeps the brighter colour; a shade multiplies them
 		const auto equation =
-		    combine == land_colour_stamps::Combine::Add ? BGFX_STATE_BLEND_EQUATION_ADD : BGFX_STATE_BLEND_EQUATION_MAX;
+		    combine == land_colour_stamps::Combine::Brighter ? BGFX_STATE_BLEND_EQUATION_MAX : BGFX_STATE_BLEND_EQUATION_ADD;
+		const auto blend = shade ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_SRC_COLOR)
+		                         : BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE);
 		SubmitLandQuad(viewId, program, from, to, from - origin, to - origin,
-		               BGFX_STATE_WRITE_RGB | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE) |
-		                   BGFX_STATE_BLEND_EQUATION(equation));
+		               BGFX_STATE_WRITE_RGB | blend | BGFX_STATE_BLEND_EQUATION(equation));
 	};
 
 	// Each storm's lightning glows on the ground around where it struck
@@ -3410,7 +3495,8 @@ void Renderer::DrawLandColourPass(const DrawSceneDesc& drawDesc) const
 		if (const auto* image = ParticleLightMap(light.bitmap, light.frame))
 		{
 			stamp(image->GetNativeHandle(), light.pitch, land_colour_stamps::CentredCorner(light.centre, light.pitch),
-			      land_colour_stamps::Strength(light.strength), land_colour_stamps::Combine::Add);
+			      land_colour_stamps::Strength(light.strength),
+			      light.shadow ? land_colour_stamps::Combine::Shade : land_colour_stamps::Combine::Add);
 		}
 	}
 }
@@ -3694,6 +3780,12 @@ void Renderer::DrawCreatureShadowPass(const DrawSceneDesc& drawDesc) const
 		{
 			continue;
 		}
+		// A creature frozen or fizzed a fifth of the way or more casts no shadow
+		if (const auto* spells = drawDesc.entities.TryGet<const ecs::components::CreatureSpells>(entity);
+		    spells != nullptr && (spells->freeze >= k_NoShadowSpellLook || spells->fizz >= k_NoShadowSpellLook))
+		{
+			continue;
+		}
 		const auto* body = &*meshManager.Handle(mesh->id);
 		const auto& model = renderCtx.instanceUniforms[instance].model;
 		const auto box = body->GetBoundingBox();
@@ -3758,6 +3850,69 @@ void Renderer::DrawCreatureShadowPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
+void Renderer::DrawDestructionGhosts(const DrawSceneDesc& desc) const
+{
+	if (desc.viewId != RenderPass::Main || !Locator::entitiesRegistry::has_value())
+	{
+		return;
+	}
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto pattern = entt::hashed_string("raw/cool_effecta").value();
+	if (!textures.Contains(pattern))
+	{
+		return;
+	}
+	const auto& patternTexture = textures.Handle(pattern)->GetNativeHandle();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto camera = desc.camera->GetOrigin();
+	const auto translucent = TranslucentView(desc.viewId);
+	// The game's whole span of a ghost, in milliseconds, and its pattern's scroll
+	constexpr int k_GhostMilliseconds = 500;
+	constexpr double k_ScrollRate = 0.7;
+	constexpr double k_ScrollHeight = 1.7000000476837158;
+	desc.entities.Each<const ecs::components::DestructionGhost>([&](const ecs::components::DestructionGhost& ghost) {
+		if (!meshes.Contains(ghost.mesh))
+		{
+			return;
+		}
+		const auto& mesh = *meshes.Handle(ghost.mesh);
+		const auto centre = glm::vec3(ghost.model * glm::vec4(mesh.GetBoundingBox().Center(), 1.0f));
+		const auto depth = zsort::Depth(centre, camera);
+		// The pattern must pass an alpha that rises as the ghost runs out, so less and less of it lays its depth
+		const auto passed =
+		    static_cast<int32_t>(static_cast<float>(ghost.millisecondsLeft) * 255.0f / static_cast<float>(k_GhostMilliseconds));
+		const auto threshold = static_cast<uint8_t>(0xFF - static_cast<uint8_t>(passed));
+		const double share = static_cast<float>(ghost.millisecondsLeft) / static_cast<float>(k_GhostMilliseconds);
+		const glm::vec2 scroll {static_cast<float>(std::cos(share) + std::cos(share)),
+		                        static_cast<float>(std::sin(share * k_ScrollRate) * k_ScrollHeight)};
+
+		L3DMeshSubmitDesc submitDesc = {};
+		submitDesc.viewId = translucent;
+		submitDesc.modelMatrices = &ghost.model;
+		submitDesc.matrixCount = 1;
+		submitDesc.sortDepth = depth;
+		// First its depth alone, from both sides, through the scrolling pattern
+		submitDesc.program = _shaderManager->GetShader("GhostDepth");
+		submitDesc.state = BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA;
+		submitDesc.skinTexture = &patternTexture;
+		submitDesc.uvOffset = scroll;
+		submitDesc.alphaThreshold = static_cast<float>(threshold) / 255.0f;
+		DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+		// Then itself, added and tested against its materials' alpha, only where that depth was laid
+		submitDesc.program = _shaderManager->GetShader("Object");
+		submitDesc.state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_EQUAL | BGFX_STATE_MSAA |
+		                   BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);
+		submitDesc.useMaterialCulling = true;
+		submitDesc.skinTexture = nullptr;
+		submitDesc.uvOffset = glm::vec2(0.0f);
+		submitDesc.alphaThreshold.reset();
+		submitDesc.materialAlphaTest = true;
+		// Just after its depth, in the sort
+		submitDesc.sortDepth = depth > 0 ? depth - 1 : 0;
+		DrawMesh(mesh, submitDesc, std::numeric_limits<uint8_t>::max());
+	});
+}
+
 void Renderer::SetCreatureShadowUniforms(const ShaderProgram& program, bool receives) const
 {
 	uint16_t width = 0;
@@ -3800,7 +3955,11 @@ void Renderer::SelectDrawnCreatures(const DrawSceneDesc& drawDesc) const
 	_drawnCreatures.clear();
 	for (const auto& [entity, instance] : draws)
 	{
-		_drawnCreatures.push_back({.entity = entity, .instance = instance});
+		// The animals are drawn one by one by themselves
+		if (!drawDesc.entities.AnyOf<ecs::components::AnimalPose>(entity))
+		{
+			_drawnCreatures.push_back({.entity = entity, .instance = instance});
+		}
 	}
 	const auto cap = MaxCreaturesDrawn();
 	if (_drawnCreatures.size() <= cap || drawDesc.camera == nullptr)
@@ -4211,13 +4370,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 
 				submitDesc.useMaterialBlending = useMaterialBlending;
 				submitDesc.additiveShare = placers.additiveShare;
+				submitDesc.instanceAlpha = placers.instanceAlpha;
 				// The game gives the rooms the temple's light; the hand keeps its own
 				const bool templeLit = Locator::temple::has_value() && Locator::temple::value().Active() &&
 				                       meshId != ecs::components::Hand::k_MeshId;
 				const auto light = templeLit ? Locator::temple::value().GetLight() : TempleLight {};
 				submitDesc.tint = glm::vec4(light.multiply, 0.0f);
 				submitDesc.lightMultiply = light.multiply;
-				submitDesc.lightAdd = light.add;
+				// The hand glows as a recognised gesture flashes
+				submitDesc.lightAdd =
+				    light.add + (meshId == ecs::components::Hand::k_MeshId ? HandGlowColour() : glm::vec3(0.0f));
 				submitDesc.landLightScale = meshId == ecs::components::Hand::k_MeshId ? 1.5f : 1.0f;
 				submitDesc.snow = !inTemple && meshId != ecs::components::Hand::k_MeshId;
 				submitDesc.creatureShadows = meshId != ecs::components::Hand::k_MeshId;
@@ -4352,6 +4514,39 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				DrawCreatureEyes(desc, entity, submitDesc);
 				DrawCreatureHair(desc, entity);
 			}
+			// The animals, each posed by its own clip and in its own light; one fading out blends over the rest
+			const auto drawAnimal = [&](entt::entity entity, uint32_t instance, bool translucent) {
+				const auto* pose = desc.entities.TryGet<const ecs::components::AnimalPose>(entity);
+				const auto* mesh = desc.entities.TryGet<const ecs::components::Mesh>(entity);
+				if (pose == nullptr || mesh == nullptr || pose->bones.empty() || (pose->alpha < 255) != translucent ||
+				    !meshManager.Contains(mesh->id))
+				{
+					return;
+				}
+				const auto placers = renderCtx.instancedDrawDescs.find(mesh->id);
+				if (placers == renderCtx.instancedDrawDescs.end() ||
+				    (desc.viewId == RenderPass::Reflection && placers->second.hiddenFromReflection))
+				{
+					return;
+				}
+				glm::vec3 colour(255.0f);
+				if (pose->light == ecs::components::AnimalLight::BrightestLand && _landLightTable)
+				{
+					const auto texel = _landLightTable->GetTexels().back();
+					colour = glm::vec3(static_cast<float>(texel & 0xFFu), static_cast<float>((texel >> 8) & 0xFFu),
+					                   static_cast<float>((texel >> 16) & 0xFFu));
+				}
+				submitDesc.objectLook =
+				    L3DMeshSubmitDesc::ObjectLook {.colour = colour, .alpha = static_cast<float>(pose->alpha) / 255.0f};
+				const EntityPose entityPose {.bones = pose->bones, .morphTargets = nullptr};
+				drawInstances(mesh->id, placers->second, translucent || placers->second.materialBlending, instance, 1,
+				              &entityPose);
+				submitDesc.objectLook.reset();
+			};
+			for (const auto& [entity, instance] : renderCtx.entityDraws)
+			{
+				drawAnimal(entity, instance, false);
+			}
 			DrawTempleUnderside(desc);
 			// In the temple, whose draws keep their order, the sun's glare comes after its solid parts, which hide it, and
 			// before its glass, which blends over it
@@ -4373,6 +4568,15 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 					}
 				}
 			}
+			for (const auto& [entity, instance] : renderCtx.entityDraws)
+			{
+				if (instance < renderCtx.instanceUniforms.size())
+				{
+					const auto position = glm::vec3(renderCtx.instanceUniforms.at(instance).model[3]);
+					submitDesc.sortDepth = zsort::Depth(position, cameraOrigin);
+					drawAnimal(entity, instance, true);
+				}
+			}
 			submitDesc.viewId = desc.viewId;
 			submitDesc.sortDepth = 0;
 			// The main room's pool, the map over it and its markers, ahead of the hand, whose faded wrist they show
@@ -4382,11 +4586,16 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			DrawTempleMapMarkers(desc);
 			DrawCaveTrophies(desc);
 			DrawGroundBlobs(desc);
+			DrawGlobes(desc);
+			DrawHandMiracleBands(desc);
+			DrawTribalPower(desc);
 			DrawLeashes(desc);
 			DrawWaterRings(desc);
 			DrawRain(desc);
 			DrawSnowfall(desc);
 			DrawChimneySmoke(desc);
+			DrawShieldDomes(desc);
+			DrawDestructionGhosts(desc);
 			DrawParticles(desc);
 			DrawInfluenceBorder(desc);
 			DrawInfluenceRipples(desc);
@@ -4421,6 +4630,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				submitDesc.state = (opaqueState & ~BGFX_STATE_CULL_MASK) | cullBack;
 				drawInstances(hand->first, hand->second, true, hand->second.offset, hand->second.count, nullptr, morph);
 				submitDesc.state = opaqueState;
+				DrawHandGlow(desc, submitDesc.sortDepth);
 				submitDesc.viewId = desc.viewId;
 				submitDesc.sortDepth = 0;
 			}

@@ -30,6 +30,8 @@ enum class Combine : uint8_t
 {
 	Add,
 	Brighter,
+	/// Darkens the cells by the image, as a cloud's shadow
+	Shade,
 };
 
 /// Where a stamp's first texel falls on the land's cells, from a point in the world's x and z: its cell, and the

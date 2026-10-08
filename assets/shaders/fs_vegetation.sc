@@ -9,7 +9,8 @@ uniform vec4 u_skyAlphaThreshold;
 
 void main()
 {
-	float alphaThreshold = u_skyAlphaThreshold.y;
+	// A burning tree's foliage is cut away at a higher alpha, the hotter it is
+	float alphaThreshold = (u_skyAlphaThreshold.y > 0.0f && v_color0.a > 0.0f) ? v_color0.a : u_skyAlphaThreshold.y;
 
 	vec3 light = v_color0.rgb;
 

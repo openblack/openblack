@@ -12,6 +12,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <span>
 #include <utility>
 
@@ -74,6 +75,12 @@ public:
 		graphics::RenderPass viewId;
 		/// Every primitive is added over what is behind it by this share, whatever its material says
 		std::optional<float> additiveShare;
+		/// Every primitive is blended over what is behind it by each instance's own alpha, whatever its material says
+		bool instanceAlpha {false};
+		/// Every primitive drops its fragments at or under this alpha, of 1, whatever its material says, when given
+		std::optional<float> alphaThreshold;
+		/// Every primitive drops its fragments under its material's alpha threshold, even where its material doesn't
+		bool materialAlphaTest {false};
 		const graphics::ShaderProgram* program;
 		/// Draws the submeshes that have a lightmap, with it bound to s_lightmap, when set
 		const graphics::ShaderProgram* lightmapProgram;
@@ -103,19 +110,26 @@ public:
 		float depthBias;
 		/// Where the mesh comes in a pass sorted by depth, the greatest first
 		uint32_t sortDepth;
-		/// How far the mesh's texture has slid across it
+		/// How far the mesh's texture has slid across it, after being scaled by uvScale
 		glm::vec2 uvOffset;
+		float uvScale {1.0f};
 		/// A texture every primitive with a skin is drawn with in place of it, when set, as the game gives the creature
 		/// room's icons
 		const TextureHandle* skinTexture;
 		/// The environment map added to the mesh where its program takes one (s_environment)
 		const Texture2D* environment;
+		/// Above 0, the mesh is drawn as its environment map alone in its light, at this alpha, where its program takes
+		/// one: a frozen thing's ice shining over it
+		float environmentOnlyAlpha {0.0f};
 		/// Textures some of the submeshes are drawn with in place of their skins, by submesh
 		std::span<const std::pair<uint32_t, TextureHandle>> subMeshTextures;
 		/// Colours added to some of the submeshes, by submesh, after everything else
 		std::span<const std::pair<uint32_t, glm::vec3>> subMeshGlows;
 		/// Submeshes left undrawn
 		std::span<const uint32_t> hiddenSubMeshes;
+		/// The primitives of the alpha textured materials (4 and 5) are drawn added over what is behind without writing
+		/// depth (13), as the physical shield's dome is made
+		bool alphaTexturedAdditive {false};
 		/// A colour the mesh is drawn in, where its program takes one: lit when w is 0, otherwise unlit with its alpha by w
 		glm::vec4 tint {1.0f, 1.0f, 1.0f, 0.0f};
 		/// The temple's light, which the lightmapped submeshes are multiplied by, and which is added to every submesh
@@ -126,6 +140,17 @@ public:
 		float landLightScale {1.0f};
 		/// The mesh isn't shaded by the sun, only coloured by the land's light where it stands
 		bool unlit {false};
+		/// Nothing of the mesh is drawn below this height, when given, where its program takes it
+		std::optional<float> cutBelow;
+		/// An object's own colour and alpha, as the game gives some objects: the sun shades the colour (0 to 255) in place
+		/// of the land's light where it stands, and every primitive's alpha is its texture's times the alpha (0 to 1).
+		/// Less than whole, the primitives that would be drawn opaque blend by it.
+		struct ObjectLook
+		{
+			glm::vec3 colour {255.0f};
+			float alpha {1.0f};
+		};
+		std::optional<ObjectLook> objectLook;
 		/// The snow lying where the mesh stands shows on it
 		bool snow {false};
 		/// The creatures' shadows fall on the mesh, where its program takes them: not on the creatures themselves

@@ -1,4 +1,4 @@
-$input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3
+$input a_position, a_texcoord0, a_normal, a_indices, i_data0, i_data1, i_data2, i_data3, i_data4
 $output v_position, v_texcoord0, v_normal, v_color0, v_haze, v_snow, v_snowLight
 
 #if BGFX_SHADER_LANGUAGE_HLSL == 3
@@ -47,7 +47,9 @@ void main()
     // The game makes its trees unlit: no light shades them, they take the land's light of the cell they stand in, scaled
     // by the trees' brightness of the frame
     vec3 origin = instMul(model, vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-    vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightCellAt(origin.xz) * u_landLight.y), vec3_splat(255.0)) : vec3_splat(255.0);
+    // A tree with a fire on it takes a grey instead, no brighter than the trees' brightness
+    float brightness = i_data4.x > 0.0 ? min(i_data4.x, u_landLight.y) : u_landLight.y;
+    vec3 colour = u_landLight.x > 0.0 ? min(floor(LandLightCellAt(origin.xz) * brightness), vec3_splat(255.0)) : vec3_splat(255.0);
     float hazeT = HazeT(mul(u_view, vec4(origin, 1.0)).z);
     colour = HazeDiffuse(colour, HazeFactor(hazeT));
     // The haze is added with the land's colour of the cell the tree stands in, each channel at most white
@@ -74,7 +76,8 @@ void main()
             v_snowLight = ModelLightColour(SnowColour(colour), ModelLightFactor(a_normal, localLight));
         }
     }
-    v_color0 = vec4(colour / 255.0, 1.0);
+    // The alpha its foliage is cut away below while it burns, 0 for its own
+    v_color0 = vec4(colour / 255.0, i_data4.y);
 
     v_texcoord0 = vec4(a_texcoord0, 0.0, 0.0);
     v_normal = a_normal;
