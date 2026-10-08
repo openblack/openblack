@@ -60,6 +60,8 @@ public:
 	bool Faint(entt::entity creature) override;
 	void Wake(entt::entity creature) override;
 	void FoughtFight(entt::entity creature, bool won) override;
+	void ReactToNastyMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
+	void ReactToNiceMagic(entt::entity creature, const glm::vec3& point, std::optional<size_t> learn) override;
 
 private:
 	/// Sets up what a creature has learnt the first time its mind thinks, from its mind file when it has one
@@ -84,6 +86,8 @@ private:
 
 	/// Plans an activity in place of what the creature was doing, getting it up and stopping it first
 	bool Replan(entt::entity creature, creature_mind::Activity activity, std::vector<creature_mind::Step> agenda);
+	/// The creature sees a miracle it reacted to, and learns from it
+	void WatchMiracle(entt::entity creature, size_t miracle);
 	/// The minds choose at random, apart from the game's own random numbers
 	std::mt19937 _random {std::random_device {}()};
 	/// The game's tables for the minds, taken once the game's data is loaded

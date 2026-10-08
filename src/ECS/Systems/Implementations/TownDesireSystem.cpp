@@ -18,6 +18,7 @@
 #include "3D/SkyInterface.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Town.h"
+#include "ECS/Components/TownAggression.h"
 #include "ECS/Components/TownDesire.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Registry.h"
@@ -148,6 +149,12 @@ town_desire::DesireInputs GatherInputs(entt::entity townEntity, const Town& town
 	{
 		in.turn = Locator::time::value().GetTurn();
 	}
+	// What it wants of protection and mercy is what it summed of the attacks on it last turn
+	if (const auto* aggression = registry.TryGet<const TownAggression>(townEntity))
+	{
+		in.protection = aggression->record.protection;
+		in.mercy = aggression->record.mercy;
+	}
 	return in;
 }
 } // namespace
@@ -171,6 +178,11 @@ void TownDesireSystem::ProcessTurn()
 		        .farmerMaxWood = farmer.maxWoodCarried,
 		    };
 		    town_desire::Process(desire, context);
+		    // Then the attacks on it fade and are summed for its next turn's desires
+		    if (auto* aggression = registry.TryGet<TownAggression>(entity))
+		    {
+			    town_aggression::ProcessTurn(aggression->record, town.owner);
+		    }
 	    });
 }
 

@@ -7,10 +7,13 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
 #include "ECS/Components/Player.h"
 #include "ECS/Registry.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 
 // Enable this define because we use a custom locator
@@ -84,4 +87,23 @@ TEST_F(Alignment, TheSkyTurnsAWholeASecondOfGameTime)
 	_alignment.UpdateTurn();
 	_alignment.Update(1500ms);
 	EXPECT_FLOAT_EQ(_alignment.GetSkyAlignment(), 0.5f);
+}
+
+TEST_F(Alignment, WhatTheirDeedsChangeScalesOneTurnsChange)
+{
+	// The tables are large: made on the heap
+	auto info = std::make_unique<InfoConstants>();
+	info->player.maxAlignmentChangePerGameTurn = 0.01f;
+	Locator::infoConstants::emplace(*info);
+	_alignment.AddPendingAlignment(PlayerNames::PLAYER_ONE, -0.025f);
+	EXPECT_FLOAT_EQ(_alignment.GetPendingAlignment(PlayerNames::PLAYER_ONE), -0.025f);
+	// Setting the alignment keeps what is still to come
+	_alignment.SetPlayerAlignment(PlayerNames::PLAYER_ONE, 0.5f);
+	// The turn's change is the limit times what waits, and the rest of what waited is gone
+	_alignment.UpdateTurn();
+	EXPECT_FLOAT_EQ(_alignment.GetPlayerAlignment(PlayerNames::PLAYER_ONE), 0.5f - (0.025f * 0.01f));
+	EXPECT_FLOAT_EQ(_alignment.GetPendingAlignment(PlayerNames::PLAYER_ONE), 0.0f);
+	_alignment.UpdateTurn();
+	EXPECT_FLOAT_EQ(_alignment.GetPlayerAlignment(PlayerNames::PLAYER_ONE), 0.5f - (0.025f * 0.01f));
+	Locator::infoConstants::reset();
 }

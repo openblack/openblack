@@ -64,6 +64,7 @@
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RainSystem.h"
+#include "ECS/Systems/Implementations/ReactionSystem.h"
 #include "ECS/Systems/Implementations/RenderingSystem.h"
 #include "ECS/Systems/Implementations/SnowSystem.h"
 #include "ECS/Systems/Implementations/SnowfallSystem.h"
@@ -134,6 +135,7 @@ using openblack::ecs::systems::ParticleSystem;
 using openblack::ecs::systems::PathfindingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RainSystem;
+using openblack::ecs::systems::ReactionSystem;
 using openblack::ecs::systems::RenderingSystem;
 using openblack::ecs::systems::SnowfallSystem;
 using openblack::ecs::systems::SnowSystem;

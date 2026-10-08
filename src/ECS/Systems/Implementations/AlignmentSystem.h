@@ -28,6 +28,8 @@ public:
 	[[nodiscard]] float GetPlayerAlignment(PlayerNames player) const override;
 	void SetPlayerAlignment(PlayerNames player, float alignment) override;
 	void AddPlayerAlignment(PlayerNames player, float change) override;
+	void AddPendingAlignment(PlayerNames player, float change) override;
+	[[nodiscard]] float GetPendingAlignment(PlayerNames player) const override;
 	void UpdateTurn() override;
 	void Update(std::chrono::duration<float, std::milli> gameTime) override;
 	[[nodiscard]] float GetCameraAlignment() const override { return _camera; }

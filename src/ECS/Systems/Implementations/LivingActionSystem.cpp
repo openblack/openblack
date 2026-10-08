@@ -19,6 +19,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Common/RandomNumberManager.h"
+#include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
@@ -26,18 +27,21 @@
 #include "ECS/Registry.h"
 #include "Enums.h"
 #include "Locator.h"
+#include "VillagerEaten.h"
+#include "VillagerFire.h"
 #include "VillagerHome.h"
+#include "VillagerReactions.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
 using namespace openblack::ecs::systems;
 namespace villager_home = openblack::ecs::villager_home;
+namespace villager_eaten = openblack::ecs::villager_eaten;
+namespace villager_fire = openblack::ecs::villager_fire;
 
-uint32_t VillagerInvalidState(LivingAction& action)
+/// A villager with no state does nothing
+uint32_t VillagerInvalidState(LivingAction& /*action*/)
 {
-	SPDLOG_LOGGER_ERROR(spdlog::get("ai"), "Villager #{}: Stuck in an invalid state",
-	                    static_cast<uint32_t>(Locator::entitiesRegistry::value().ToEntity(action)));
-	assert(false);
 	return 0;
 }
 
@@ -144,19 +148,37 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* MOVE_ON_STRUCTURE */ k_TodoEntry,
     /* IN_SCRIPT */ k_TodoEntry,
     /* IN_DANCE */ k_TodoEntry,
-    /* FLEEING_FROM_OBJECT_REACTION */ k_TodoEntry,
-    /* LOOKING_AT_OBJECT_REACTION */ k_TodoEntry,
+    /* FLEEING_FROM_OBJECT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_reactions::Fleeing,
+    },
+    /* LOOKING_AT_OBJECT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_reactions::Watching,
+    },
     /* FOLLOWING_OBJECT_REACTION */ k_TodoEntry,
     /* INSPECT_OBJECT_REACTION */ k_TodoEntry,
     /* FLYING */ k_TodoEntry,
     /* LANDED */ k_TodoEntry,
     /* LOOK_AT_FLYING_OBJECT_REACTION */ k_TodoEntry,
     /* SET_DYING */ k_TodoEntry,
-    /* DYING */ k_TodoEntry,
-    /* DEAD */ k_TodoEntry,
+    /* DYING */
+    VillagerStateTableEntry {
+        .state = &villager_fire::Dying,
+    },
+    /* DEAD */
+    VillagerStateTableEntry {
+        .state = &villager_fire::Dead,
+    },
     /* DROWNING */ k_TodoEntry,
-    /* DOWNED */ k_TodoEntry,
-    /* BEING_EATEN */ k_TodoEntry,
+    /* DOWNED */
+    VillagerStateTableEntry {
+        .state = &villager_eaten::LiesStill,
+    },
+    /* BEING_EATEN */
+    VillagerStateTableEntry {
+        .state = &villager_eaten::LiesStill,
+    },
     /* GOTO_FOOD_REACTION */ k_TodoEntry,
     /* ARRIVES_AT_FOOD_REACTION */ k_TodoEntry,
     /* GOTO_WOOD_REACTION */ k_TodoEntry,
@@ -168,7 +190,10 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* MOVE_IN_FLOCK */ k_TodoEntry,
     /* MOVE_ALONG_PATH */ k_TodoEntry,
     /* MOVE_ON_PATH */ k_TodoEntry,
-    /* FLEEING_AND_LOOKING_AT_OBJECT_REACTION */ k_TodoEntry,
+    /* FLEEING_AND_LOOKING_AT_OBJECT_REACTION */
+    VillagerStateTableEntry {
+        .state = &villager_reactions::Watching,
+    },
     /* GOTO_STORAGE_PIT_FOR_DROP_OFF */ k_TodoEntry,
     /* ARRIVES_AT_STORAGE_PIT_FOR_DROP_OFF */ k_TodoEntry,
     /* GOTO_STORAGE_PIT_FOR_FOOD */ k_TodoEntry,
@@ -384,12 +409,46 @@ const static std::array<VillagerStateTableEntry, static_cast<size_t>(VillagerSta
     /* SHOW_POISONED */ k_TodoEntry,
     /* HIDING_AT_WORSHIP_SITE */ k_TodoEntry,
     /* CROWD_REACTION */ k_TodoEntry,
-    /* REACT_TO_FIRE */ k_TodoEntry,
-    /* PUT_OUT_FIRE_BY_BEATING */ k_TodoEntry,
-    /* PUT_OUT_FIRE_WITH_WATER */ k_TodoEntry,
-    /* GET_WATER_TO_PUT_OUT_FIRE */ k_TodoEntry,
-    /* ON_FIRE */ k_TodoEntry,
-    /* MOVE_AROUND_FIRE */ k_TodoEntry,
+    /* REACT_TO_FIRE */
+    VillagerStateTableEntry {
+        .state = &villager_fire::ReactToFire,
+        .exitState = &villager_fire::ExitReaction,
+        .validate = &villager_fire::ReactionValidate,
+    },
+    /* PUT_OUT_FIRE_BY_BEATING */
+    VillagerStateTableEntry {
+        .state = &villager_fire::PutOutFireByBeating,
+        .entryState = &villager_fire::EnterPutOutFire,
+        .exitState = &villager_fire::ExitPutOutFire,
+        .validate = &villager_fire::ReactionValidate,
+    },
+    /* PUT_OUT_FIRE_WITH_WATER */
+    VillagerStateTableEntry {
+        .state = &villager_fire::PutOutFireWithWater,
+        .entryState = &villager_fire::EnterPutOutFire,
+        .exitState = &villager_fire::ExitPutOutFire,
+        .validate = &villager_fire::ReactionValidate,
+    },
+    /* GET_WATER_TO_PUT_OUT_FIRE */
+    VillagerStateTableEntry {
+        .state = &villager_fire::PutOutFireWithWater,
+        .entryState = &villager_fire::EnterPutOutFire,
+        .exitState = &villager_fire::ExitPutOutFire,
+        .validate = &villager_fire::ReactionValidate,
+    },
+    /* ON_FIRE */
+    VillagerStateTableEntry {
+        .state = &villager_fire::OnFire,
+        .entryState = &villager_fire::EnterOnFire,
+        .exitState = &villager_fire::ExitOnFire,
+    },
+    /* MOVE_AROUND_FIRE */
+    VillagerStateTableEntry {
+        .state = &villager_fire::MoveAroundFire,
+        .entryState = &villager_fire::EnterPutOutFire,
+        .exitState = &villager_fire::ExitPutOutFire,
+        .validate = &villager_fire::ReactionValidate,
+    },
     /* DISCIPLE_NOTHING_TO_DO */ k_TodoEntry,
     /* FOOTBALL_MOVE_TO_BALL */ k_TodoEntry,
     /* ARRIVES_AT_STORAGE_PIT_FOR_TRADER_PICK_UP */ k_TodoEntry,
@@ -445,9 +504,12 @@ void LivingActionSystem::Update()
 	// TODO(#476): same call but for other types of living
 
 	// TODO(bwrsandman): Store result of this call in vector or with tag component
-	registry.Each<const Villager, LivingAction>([this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
-		VillagerCallState(action, LivingAction::Index::Top);
-	});
+	// A villager carried off by a tornado does nothing of its own
+	registry.Each<const Villager, LivingAction>(
+	    [this]([[maybe_unused]] const Villager& villager, LivingAction& action) {
+		    VillagerCallState(action, LivingAction::Index::Top);
+	    },
+	    entt::exclude<CarriedByTornado>);
 	// TODO(#476): same call but for other types of living
 }
 

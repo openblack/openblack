@@ -13,10 +13,14 @@
 
 #include <algorithm>
 
+#include "3D/CreatureBody.h"
 #include "ECS/Components/Alignment.h"
+#include "ECS/Components/Creature.h"
 #include "ECS/Components/Player.h"
 #include "ECS/Registry.h"
+#include "InfoConstants.h"
 #include "Locator.h"
+#include "Magic/AreaEffect.h"
 
 using namespace openblack;
 using namespace openblack::ecs::systems;
@@ -56,8 +60,39 @@ void AlignmentSystem::SetPlayerAlignment(PlayerNames player, float alignment)
 {
 	if (const auto entity = FindPlayer(player); entity.has_value())
 	{
-		Locator::entitiesRegistry::value().AssignOrReplace<Alignment>(*entity, std::clamp(alignment, -1.0f, 1.0f));
+		auto& registry = Locator::entitiesRegistry::value();
+		auto* component = registry.TryGet<Alignment>(*entity);
+		if (component == nullptr)
+		{
+			component = &registry.Assign<Alignment>(*entity);
+		}
+		component->value = std::clamp(alignment, -1.0f, 1.0f);
 	}
+}
+
+void AlignmentSystem::AddPendingAlignment(PlayerNames player, float change)
+{
+	if (const auto entity = FindPlayer(player); entity.has_value())
+	{
+		auto& registry = Locator::entitiesRegistry::value();
+		auto* component = registry.TryGet<Alignment>(*entity);
+		if (component == nullptr)
+		{
+			component = &registry.Assign<Alignment>(*entity);
+		}
+		component->pending += change;
+	}
+}
+
+float AlignmentSystem::GetPendingAlignment(PlayerNames player) const
+{
+	const auto entity = FindPlayer(player);
+	if (!entity.has_value())
+	{
+		return 0.0f;
+	}
+	const auto* alignment = Locator::entitiesRegistry::value().TryGet<const Alignment>(*entity);
+	return alignment != nullptr ? alignment->pending : 0.0f;
 }
 
 void AlignmentSystem::AddPlayerAlignment(PlayerNames player, float change)
@@ -67,6 +102,26 @@ void AlignmentSystem::AddPlayerAlignment(PlayerNames player, float change)
 
 void AlignmentSystem::UpdateTurn()
 {
+	// What the players' and the creatures' deeds changed comes through: each turn the change waiting, held to a whole one,
+	// moves the alignment by that share of the owner's change a turn, and the rest is gone
+	if (Locator::infoConstants::has_value())
+	{
+		const auto& info = Locator::infoConstants::value();
+		const float change = info.player.maxAlignmentChangePerGameTurn;
+		auto& registry = Locator::entitiesRegistry::value();
+		registry.Each<Alignment>([change](entt::entity, Alignment& alignment) {
+			alignment.value = magic::StepPendingAlignment(alignment.value, alignment.pending, change);
+		});
+		registry.Each<Creature>([&info](entt::entity, Creature& creature) {
+			const auto row = creature::InfoRow(creature.species);
+			if (row < info.creature.size())
+			{
+				creature.alignment = magic::StepPendingAlignment(creature.alignment, creature.pendingAlignment,
+				                                                 info.creature.at(row).alignmentChangePerTurn);
+			}
+		});
+	}
+
 	// The game takes the most influential player at the camera's eye, the neutral player where none has any, and
 	// keeps their alignment as a goodness from 0 to 1, held there
 	// TODO(raffclar): once influence is simulated; until then it is the player's own

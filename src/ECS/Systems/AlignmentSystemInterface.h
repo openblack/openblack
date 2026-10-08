@@ -31,6 +31,11 @@ public:
 	virtual void SetPlayerAlignment(PlayerNames player, float alignment) = 0;
 	/// Added to the alignment, held between -1 and 1, as the script's SET_ALIGNMENT does
 	virtual void AddPlayerAlignment(PlayerNames player, float change) = 0;
+	/// A change the player's deeds made, such as a miracle hurting or healing, which moves the alignment over the turns to
+	/// come no faster than the game's limit a turn
+	virtual void AddPendingAlignment(PlayerNames player, float change) = 0;
+	/// The change still to come
+	[[nodiscard]] virtual float GetPendingAlignment(PlayerNames player) const = 0;
 
 	/// At the end of a game turn the camera takes the alignment of the player of most influence where it is
 	virtual void UpdateTurn() = 0;
