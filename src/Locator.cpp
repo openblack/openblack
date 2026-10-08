@@ -384,6 +384,9 @@ void openblack::ShutDownServices()
 	Locator::oceanSystem::reset();
 	Locator::skySystem ::reset();
 	Locator::debugGui::reset();
+	// The map listens to the registry's signals, so it goes first: a map left behind would later let go of signals of a
+	// registry that is gone
+	Locator::entitiesMap::reset();
 	Locator::entitiesRegistry::reset();
 	Locator::rendererInterface::reset();
 	Locator::windowing::reset();
