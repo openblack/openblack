@@ -76,14 +76,17 @@
 #include "ECS/Components/CreatureHair.h"
 #include "ECS/Components/CreatureMind.h"
 #include "ECS/Components/CreatureNeeds.h"
+#include "ECS/Components/DeadTree.h"
 #include "ECS/Components/Hand.h"
 #include "ECS/Components/HandMorph.h"
 #include "ECS/Components/Influence.h"
 #include "ECS/Components/Mist.h"
 #include "ECS/Components/Player.h"
 #include "ECS/Components/PrayerPower.h"
+#include "ECS/Components/SpellSeed.h"
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Tree.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
@@ -126,6 +129,7 @@
 #include "ECS/Systems/MistSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/PathfindingSystemInterface.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
@@ -613,23 +617,14 @@ void Game::UpdateGestures(const Camera& camera, glm::ivec2 screenSize, float del
 	             .cameraForward = camera.GetForward()},
 	    .cameraShaking = Locator::explosionSystem::has_value() && Locator::explosionSystem::value().IsShaking(),
 	};
-	// The land or the sea under a point of the screen
-	frame.view.landAt = [rayAt](glm::vec2 pixel) -> std::optional<glm::vec3> {
-		const auto [origin, direction] = rayAt(pixel);
-		if (glm::any(glm::isnan(origin) || glm::isnan(direction)))
+	// The land or the sea under a point of the screen, as the interface takes it to be under the cursor
+	frame.view.landAt = [&camera, size](glm::vec2 pixel) -> std::optional<glm::vec3> {
+		if (!Locator::pickingSystem::has_value())
 		{
 			return std::nullopt;
 		}
-		if (auto hit = Locator::dynamicsSystem::value().RayCastClosestHit(origin, direction, 1e10f))
-		{
-			return hit->first.position;
-		}
-		float distance = 0.0f;
-		if (glm::intersectRayPlane(origin, direction, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), distance))
-		{
-			return origin + (direction * distance);
-		}
-		return std::nullopt;
+		const auto [eye, nearPoint] = camera.OnNearPlane(pixel / size);
+		return Locator::pickingSystem::value().LandUnderPixel(eye, nearPoint, true);
 	};
 	// A point of the screen as far in front of the camera as another point
 	frame.view.atDepthOf = [rayAt, forward = camera.GetForward()](glm::vec2 pixel, glm::vec3 sameDepthAs) {
@@ -641,31 +636,18 @@ void Game::UpdateGestures(const Camera& camera, glm::ivec2 screenSize, float del
 		}
 		return sameDepthAs;
 	};
-	// Where a recognised gesture's trail is laid under a pixel: where the ray meets the land through whatever stands on
-	// it, or the sea's level no further than 7500 units from the camera across the land, at the land's height there;
+	// Where a recognised gesture's trail is laid under a pixel: where the line from the camera through it meets the land,
+	// or the sea's level no further than 7500 units from the camera across the land, at the land's height there;
 	// otherwise 400 units from the camera towards the pixel
-	frame.view.trailPointUnder = [rayAt, eye = camera.GetOrigin()](glm::ivec2 pixel) {
-		constexpr float k_FarthestSea = 7500.0f;
-		const auto [origin, direction] = rayAt(glm::vec2(pixel));
-		std::optional<glm::vec3> hit;
-		if (!glm::any(glm::isnan(origin) || glm::isnan(direction)))
+	frame.view.trailPointUnder = [&camera, rayAt, size, eye = camera.GetOrigin()](glm::ivec2 pixel) {
+		const auto direction = rayAt(glm::vec2(pixel)).second;
+		const auto onNear = camera.OnNearPlane(glm::vec2(pixel) / size);
+		if (Locator::pickingSystem::has_value())
 		{
-			hit = Locator::dynamicsSystem::value().RayCastLand(origin, direction, 1e10f);
-			if (!hit.has_value() && direction.y < 0.0f)
+			if (const auto hit = Locator::pickingSystem::value().LandOrSeaAlong(onNear.eye, onNear.point, onNear.eye))
 			{
-				const auto atSea = origin + (direction * (-origin.y / direction.y));
-				const auto across = glm::vec2(atSea.x - eye.x, atSea.z - eye.z);
-				if (glm::dot(across, across) <= k_FarthestSea * k_FarthestSea)
-				{
-					hit = atSea;
-				}
+				return *hit;
 			}
-		}
-		if (hit.has_value())
-		{
-			const auto height =
-			    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt({hit->x, hit->z}) : hit->y;
-			return glm::vec3(hit->x, height, hit->z);
 		}
 		return eye + (direction * gesture::k_TrailSkyDistance);
 	};
@@ -675,6 +657,35 @@ void Game::UpdateGestures(const Camera& camera, glm::ivec2 screenSize, float del
 	{
 		_mousePosition = glm::ivec2(*drawing * (size.y / gesture::k_ReferenceHeight));
 	}
+}
+
+void Game::PickUnderCursor()
+{
+	if (!Locator::pickingSystem::has_value() || !Locator::windowing::has_value())
+	{
+		return;
+	}
+	const auto screenSize = Locator::windowing::value().GetSize();
+	if (screenSize.x <= 0 || screenSize.y <= 0)
+	{
+		return;
+	}
+	const auto& camera = Locator::camera::value();
+	const auto resolution = static_cast<glm::vec2>(screenSize);
+	const auto cursor = static_cast<glm::vec2>(_mousePosition);
+	const auto [eye, nearPoint] = camera.OnNearPlane(cursor / resolution);
+	Locator::pickingSystem::value().PickUnderCursor({
+	    .view =
+	        {
+	            .worldToClip = camera.GetViewProjectionMatrix(),
+	            .resolution = resolution,
+	            .near = camera.GetNearClip(),
+	            .xScale = camera.GetProjectionMatrix()[0][0],
+	            .camera = eye,
+	            .cursor = cursor,
+	        },
+	    .nearPoint = nearPoint,
+	});
 }
 
 void Game::UpdateHandInterface()
@@ -1318,7 +1329,6 @@ bool Game::Update() noexcept
 				glm::vec3 rayDirection;
 				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
 				                              rayOrigin, rayDirection);
-				auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
 				_cursorWorldPosition.reset();
 				if (Locator::temple::has_value() && Locator::temple::value().Active())
@@ -1366,29 +1376,41 @@ bool Game::Update() noexcept
 						UpdateGestures(camera, screenSize,
 						               std::chrono::duration_cast<std::chrono::duration<float>>(deltaTime).count());
 					}
-					_cursorOnObject = false;
-					handPick =
-					    hand_morph::Pick(dynamicsSystem.RayCastLand(rayOrigin, rayDirection, 1e10f), rayOrigin, rayDirection,
-					                     [](const map_coords::MapCoords& coords) {
-						                     return Locator::terrainSystem::value().GetHeightAt(map_coords::ToMetres(coords));
-					                     });
-					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+					// What the interface picked under the cursor as the last frame was drawn: the object nearest the camera, or
+					// else the land or the sea. The hand's influence is tested at that point.
+					const auto& picking = Locator::pickingSystem::value();
+					const auto& pick = picking.GetPick();
+					_cursorOnObject = pick.object.has_value();
+					if (pick.point.has_value())
 					{
-						intersectionTransform = hit->first;
-						_cursorWorldPosition = intersectionTransform.position;
-						_cursorOnObject = hit->second.type == RigidBodyType::Entity;
+						handPick = map_coords::FromMetres({pick.point->x, pick.point->z});
 					}
-					else // For the water
+					// The hand rests on the land, turned to its slope, or on a model it feels the triangles of
+					const auto feelsModel = [](entt::entity object) {
+						return !Locator::entitiesRegistry::value()
+						            .AnyOf<ecs::components::Tree, ecs::components::DeadTree, ecs::components::SpellSeed>(
+						                object);
+					};
+					const auto [eye, nearPoint] =
+					    camera.OnNearPlane(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize));
+					std::optional<screen_pick::MeshHit> felt;
+					if (pick.object.has_value() && feelsModel(*pick.object))
 					{
-						float intersectDistance = 0.0f;
-						const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-						const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-						if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
-						{
-							intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
-							intersectionTransform.rotation = glm::mat3(1.0f);
-							_cursorWorldPosition = intersectionTransform.position;
-						}
+						felt = picking.FeelModel(*pick.object, eye, glm::normalize(nearPoint - eye));
+					}
+					if (felt.has_value())
+					{
+						intersectionTransform.position = felt->point;
+						intersectionTransform.rotation =
+						    glm::mat3_cast(glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f), -felt->normal));
+						_cursorWorldPosition = felt->point;
+					}
+					else if (pick.point.has_value())
+					{
+						const auto normal = Locator::terrainSystem::value().GetNormalAt({pick.point->x, pick.point->z});
+						intersectionTransform.position = *pick.point;
+						intersectionTransform.rotation = glm::mat3_cast(glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f), normal));
+						_cursorWorldPosition = *pick.point;
 					}
 				}
 				intersectionTransform.scale = scale;
@@ -1670,6 +1692,8 @@ bool Game::Update() noexcept
 			{
 				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
 				                                                config.drawStreams);
+				// The interface picks what is under the cursor as the frame is drawn, for the next frame to go by
+				PickUnderCursor();
 			}
 		}
 	} // Update Uniforms

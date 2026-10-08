@@ -261,10 +261,13 @@ bool L3DSubMesh::Load(const l3d::L3DFile& l3d, uint32_t meshIndex) noexcept
 		const auto count = std::min<size_t>(nVertices, verticesSpan.size());
 		_bodyGeometry.positions.clear();
 		_bodyGeometry.positions.reserve(count);
+		_bodyGeometry.uvs.clear();
+		_bodyGeometry.uvs.reserve(count);
 		for (size_t i = 0; i < count; ++i)
 		{
 			_bodyGeometry.positions.emplace_back(verticesSpan[i].position.x, verticesSpan[i].position.y,
 			                                     verticesSpan[i].position.z);
+			_bodyGeometry.uvs.emplace_back(verticesSpan[i].texCoord.x, verticesSpan[i].texCoord.y);
 		}
 		_bodyGeometry.indices.assign(indices, indices + nIndices);
 		_bodyGeometry.bones.clear();

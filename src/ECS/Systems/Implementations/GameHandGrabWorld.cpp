@@ -14,7 +14,6 @@
 #include <cmath>
 
 #include <algorithm>
-#include <set>
 
 #include <entt/core/hashed_string.hpp>
 #include <fmt/format.h>
@@ -56,6 +55,7 @@
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/VillagerMemory.h"
@@ -75,15 +75,6 @@ using namespace openblack::ecs::systems;
 
 namespace
 {
-// TODO(physics): the interface's own pick of the thing under the cursor replaces this search when the hand's picking
-// leaves Bullet; until then the line through the cursor is walked over the map's cells for the things standing on it.
-/// How far along the line through the cursor the hand looks for things to take
-constexpr float k_SearchLength = 2000.0f;
-/// The line is walked in steps of this many metres, looking in the map's cells along it
-constexpr float k_SearchStep = 5.0f;
-/// Only where the line runs this low over the land can it meet something standing on it
-constexpr float k_SearchHeight = 80.0f;
-
 /// A pulled-up tree's hole of roots is this share of its width across
 constexpr float k_RootsHoleShare = 0.3f;
 
@@ -108,73 +99,6 @@ const graphics::L3DMesh* MeshOf(const Registry& registry, entt::entity object)
 	}
 	auto& meshes = Locator::resources::value().GetMeshes();
 	return meshes.Contains(mesh->id) ? &*meshes.Handle(mesh->id) : nullptr;
-}
-
-/// Where a line first meets a thing's drawn model, as a distance along the line; none when it misses it
-std::optional<float> HitModel(const graphics::L3DMesh& mesh, const glm::mat3& axes, glm::vec3 origin, glm::vec3 rayOrigin,
-                              glm::vec3 rayDirection)
-{
-	// The line in the model's own space, whose distances along it are the world's
-	if (glm::determinant(axes) == 0.0f)
-	{
-		return std::nullopt;
-	}
-	const auto inverse = glm::inverse(axes);
-	const auto localOrigin = inverse * (rayOrigin - origin);
-	const auto localDirection = inverse * rayDirection;
-	// First its box
-	const auto box = mesh.GetBoundingBox();
-	float enter = 0.0f;
-	float leave = k_SearchLength * 2.0f;
-	for (glm::length_t axis = 0; axis < 3; ++axis)
-	{
-		if (localDirection[axis] == 0.0f)
-		{
-			if (localOrigin[axis] < box.minima[axis] || localOrigin[axis] > box.maxima[axis])
-			{
-				return std::nullopt;
-			}
-			continue;
-		}
-		float near = (box.minima[axis] - localOrigin[axis]) / localDirection[axis];
-		float far = (box.maxima[axis] - localOrigin[axis]) / localDirection[axis];
-		if (near > far)
-		{
-			std::swap(near, far);
-		}
-		enter = std::max(enter, near);
-		leave = std::min(leave, far);
-		if (enter > leave)
-		{
-			return std::nullopt;
-		}
-	}
-	// A model moved by bones keeps its points about its bones, so its box stands for it
-	if (mesh.IsBoned())
-	{
-		return enter;
-	}
-	// Then the triangles it is drawn with nearest
-	std::optional<float> nearest;
-	for (const auto& subMesh : mesh.GetSubMeshes())
-	{
-		if (subMesh->IsPhysics() || (subMesh->GetFlags().lodMask & 1u) == 0)
-		{
-			continue;
-		}
-		const auto& surface = subMesh->GetSurface();
-		for (size_t i = 0; i + 2 < surface.indices.size(); i += 3)
-		{
-			const auto hit =
-			    hand_grab::RayTriangle(localOrigin, localDirection, surface.positions[surface.indices[i]],
-			                           surface.positions[surface.indices[i + 1]], surface.positions[surface.indices[i + 2]]);
-			if (hit.has_value() && (!nearest.has_value() || *hit < *nearest))
-			{
-				nearest = hit;
-			}
-		}
-	}
-	return nearest;
 }
 
 const InfoConstants* Info()
@@ -208,89 +132,15 @@ PlayerNames GameHandGrabWorld::HandPlayer() const
 	return Locator::playerSystem::has_value() ? Locator::playerSystem::value().GetLocalPlayer() : PlayerNames::PLAYER_ONE;
 }
 
-std::optional<entt::entity> GameHandGrabWorld::ObjectUnderCursor(glm::vec3 rayOrigin, glm::vec3 rayDirection) const
+std::optional<entt::entity> GameHandGrabWorld::ObjectUnderCursor([[maybe_unused]] glm::vec3 rayOrigin,
+                                                                 [[maybe_unused]] glm::vec3 rayDirection) const
 {
-	if (!Locator::entitiesMap::has_value() || glm::length(rayDirection) == 0.0f)
+	// The object the interface picked under the cursor as the last frame was drawn
+	if (!Locator::pickingSystem::has_value())
 	{
 		return std::nullopt;
 	}
-	const auto direction = glm::normalize(rayDirection);
-	auto& registry = Locator::entitiesRegistry::value();
-	const auto& map = Locator::entitiesMap::value();
-	const auto* land = Locator::terrainSystem::has_value() ? &Locator::terrainSystem::value() : nullptr;
-
-	// What stands in the map's cells along the line where it runs low over the land, and what flies
-	std::set<entt::entity> candidates;
-	std::set<std::pair<int, int>> looked;
-	for (float t = 0.0f; t <= k_SearchLength; t += k_SearchStep)
-	{
-		const auto point = rayOrigin + direction * t;
-		if (land != nullptr && point.y - land->GetHeightAt({point.x, point.z}) > k_SearchHeight)
-		{
-			continue;
-		}
-		const auto cell = map_coords::CellOf(glm::vec2(point.x, point.z));
-		for (int dx = -1; dx <= 1; ++dx)
-		{
-			for (int dz = -1; dz <= 1; ++dz)
-			{
-				const glm::ivec2 near(static_cast<int>(cell.x) + dx, static_cast<int>(cell.y) + dz);
-				if (!looked.emplace(near.x, near.y).second)
-				{
-					continue;
-				}
-				for (const auto entity : map.GetAllInCell(near))
-				{
-					candidates.insert(entity);
-				}
-			}
-		}
-		if (land != nullptr && point.y < land->GetHeightAt({point.x, point.z}))
-		{
-			// The line has gone into the land: nothing beyond can be seen
-			break;
-		}
-	}
-	if (Locator::dynamicsSystem::has_value())
-	{
-		Locator::dynamicsSystem::value().ForEachEntry([&candidates](const PhysicsEntry& entry) {
-			if (entry.IsFlying())
-			{
-				candidates.insert(entry.entity);
-			}
-		});
-	}
-
-	std::optional<entt::entity> nearest;
-	float best = k_SearchLength;
-	for (const auto entity : candidates)
-	{
-		if (!registry.Valid(entity) || registry.AnyOf<InHand, Creature>(entity))
-		{
-			continue;
-		}
-		const auto* mesh = MeshOf(registry, entity);
-		const auto* transform = registry.TryGet<const Transform>(entity);
-		if (mesh == nullptr || transform == nullptr)
-		{
-			continue;
-		}
-		// A thing in flight is where it is drawn
-		auto axes = transform->rotation * glm::mat3(glm::scale(glm::mat4(1.0f), transform->scale));
-		auto position = transform->position;
-		if (const auto* drawn = registry.TryGet<const PhysicsDrawPose>(entity))
-		{
-			axes = drawn->axes;
-			position = drawn->origin;
-		}
-		const auto hit = HitModel(*mesh, axes, position, rayOrigin, direction);
-		if (hit.has_value() && *hit < best)
-		{
-			best = *hit;
-			nearest = entity;
-		}
-	}
-	return nearest;
+	return Locator::pickingSystem::value().GetPick().object;
 }
 
 bool GameHandGrabWorld::InInfluence(PlayerNames player, glm::vec3 point) const

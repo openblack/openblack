@@ -118,6 +118,8 @@ public:
 	struct BodyGeometry
 	{
 		std::vector<glm::vec3> positions;
+		/// Each vertex's texture coordinates
+		std::vector<glm::vec2> uvs;
 		std::vector<uint16_t> indices;
 		std::vector<uint16_t> bones;
 	};

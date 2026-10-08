@@ -42,7 +42,7 @@ using namespace openblack;
 struct TestValues
 {
 	std::string_view name;
-	MockDynamicsSystem* dynamicsSystem;
+	MockPickingSystem* pickingSystem;
 	MockAction* actionInterface;
 };
 // Padding causes valgrind errors https://github.com/google/googletest/issues/3805
@@ -61,13 +61,13 @@ protected:
 		Locator::entitiesRegistry::emplace<Registry>();
 
 		_camera = std::make_unique<Camera>();
-		GetParam().dynamicsSystem->camera = _camera.get();
+		GetParam().pickingSystem->camera = _camera.get();
 
 		Locator::rng::emplace<openblack::RandomNumberManagerTesting>();
 		Locator::audio::emplace<openblack::audio::AudioManagerNoOp>();
 		Locator::terrainSystem::emplace<MockTerrain>();
 		Locator::windowing::emplace<MockWindowingSystem>();
-		Locator::dynamicsSystem::reset<MockDynamicsSystem>(GetParam().dynamicsSystem);
+		Locator::pickingSystem::reset<MockPickingSystem>(GetParam().pickingSystem);
 		Locator::gameActionSystem::reset<MockAction>(GetParam().actionInterface);
 
 		const auto aspect = Locator::windowing::value().GetAspectRatio();
@@ -85,7 +85,7 @@ protected:
 		_camera.reset();
 		Locator::terrainSystem::reset();
 		Locator::windowing::reset();
-		Locator::dynamicsSystem::reset();
+		Locator::pickingSystem::reset();
 		Locator::gameActionSystem::reset();
 	}
 
@@ -378,7 +378,7 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 			(*_camera).SetFocusInterpolator(p0, p1, v0 * duration, v1 * duration).SetInterpolatorT(t);
 		}
 
-		GetParam().dynamicsSystem->frameNumber = i;
+		GetParam().pickingSystem->frameNumber = i;
 		GetParam().actionInterface->frameNumber = i;
 
 		const auto deltaTimePrev = std::chrono::milliseconds(framePrev["g_delta_time"].get<int>());
@@ -414,10 +414,10 @@ TEST_P(TestDefaultCameraModel, ValidateRecordedData)
 	}
 }
 
-#define SCENARIO_VALUES(name)                                     \
-	TestValues                                                    \
-	{                                                             \
-		#name, new name##MockDynamicsSystem, new name##MockAction \
+#define SCENARIO_VALUES(name)                                    \
+	TestValues                                                   \
+	{                                                            \
+		#name, new name##MockPickingSystem, new name##MockAction \
 	}
 
 const auto k_TestingScenarioValues = testing::Values( //

@@ -69,6 +69,7 @@
 #include "ECS/Systems/Implementations/MistSystem.h"
 #include "ECS/Systems/Implementations/ParticleSystem.h"
 #include "ECS/Systems/Implementations/PathfindingSystem.h"
+#include "ECS/Systems/Implementations/PickingSystem.h"
 #include "ECS/Systems/Implementations/PlayerSystem.h"
 #include "ECS/Systems/Implementations/RainSystem.h"
 #include "ECS/Systems/Implementations/ReactionSystem.h"
@@ -147,6 +148,7 @@ using openblack::ecs::systems::MiracleFxSystem;
 using openblack::ecs::systems::MistSystem;
 using openblack::ecs::systems::ParticleSystem;
 using openblack::ecs::systems::PathfindingSystem;
+using openblack::ecs::systems::PickingSystem;
 using openblack::ecs::systems::PlayerSystem;
 using openblack::ecs::systems::RainSystem;
 using openblack::ecs::systems::ReactionSystem;
@@ -288,6 +290,8 @@ void InitializeLevelWith(const LandSource& land)
 	Locator::gameRandom::value().SetSeeds({0, 0});
 	Locator::entitiesMap::emplace<MapProduction>();
 	Locator::dynamicsSystem::emplace<DynamicsSystem>();
+	// What lines and the cursor meet, as the game finds them
+	Locator::pickingSystem::emplace<PickingSystem>();
 	// The game's own kinds of thing in the physics
 	Locator::dynamicsSystem::value().SetClassHooks(std::make_unique<openblack::ecs::PhysicsGameHooks>());
 	Locator::livingActionSystem::emplace<LivingActionSystem>();
@@ -339,6 +343,7 @@ void openblack::ShutDownServices()
 
 	Locator::rendereringSystem::reset();
 	Locator::dynamicsSystem::reset();
+	Locator::pickingSystem::reset();
 	Locator::editorSystem::reset();
 	Locator::cameraBookmarkSystem::reset();
 	Locator::livingActionSystem::reset();

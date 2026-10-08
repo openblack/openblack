@@ -15,11 +15,12 @@
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 
+#include "3D/MapCoords.h"
 #include "Camera/Camera.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
-#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "LHScriptX/FeatureScriptCommands.h"
 #include "LHScriptX/Script.h"
 #include "Locator.h"
@@ -222,37 +223,18 @@ void Console::Draw() noexcept
 	const auto& io = ImGui::GetIO();
 
 	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
-	glm::ivec2 mousePosition {};
-	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
+	// What the interface picked under the cursor: an object, or the map cell of the land
+	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0 && Locator::pickingSystem::has_value())
 	{
-		glm::vec3 rayOrigin;
-		glm::vec3 rayDirection;
-		Locator::camera::value().DeprojectScreenToWorld(
-		    static_cast<glm::vec2>(mousePosition) / static_cast<glm::vec2>(screenSize), rayOrigin, rayDirection);
-		const auto& dynamicsSystem = Locator::dynamicsSystem::value();
-		if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+		const auto& pick = Locator::pickingSystem::value().GetPick();
+		if (pick.object.has_value())
 		{
-			if (hit->second.userData != nullptr)
-			{
-				switch (hit->second.type)
-				{
-				case RigidBodyType::Terrain:
-				{
-					// auto landIsland = reinterpret_cast<const LandIsland*>(hit->second.userData);
-					auto blockIndex = hit->second.id;
-					ImGui::SetTooltip("Block Index: %d", blockIndex);
-				}
-				break;
-				case RigidBodyType::Entity:
-				{
-					// auto registry = reinterpret_cast<const openblack::ecs::Registry*>(hit->second.userData);
-					auto entity = hit->second.id;
-					ImGui::SetTooltip("Entity %d", entity);
-				}
-				break;
-				}
-			}
+			ImGui::SetTooltip("Entity %u", static_cast<uint32_t>(entt::to_integral(*pick.object)));
+		}
+		else if (pick.land.has_value())
+		{
+			const auto cell = map_coords::CellOf(glm::vec2(pick.land->x, pick.land->z));
+			ImGui::SetTooltip("Cell %d, %d", static_cast<int>(cell.x), static_cast<int>(cell.y));
 		}
 	}
 

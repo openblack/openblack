@@ -364,35 +364,3 @@ uint32_t hand_grab::ScoopTaken(uint32_t wanted, uint32_t sourceHas, uint32_t hel
 	}
 	return taken;
 }
-
-std::optional<float> hand_grab::RayTriangle(glm::vec3 origin, glm::vec3 direction, glm::vec3 a, glm::vec3 b, glm::vec3 c)
-{
-	constexpr float k_Parallel = 1e-8f;
-	const auto edge1 = b - a;
-	const auto edge2 = c - a;
-	const auto p = glm::cross(direction, edge2);
-	const float det = glm::dot(edge1, p);
-	if (std::abs(det) < k_Parallel)
-	{
-		return std::nullopt;
-	}
-	const float inverse = 1.0f / det;
-	const auto s = origin - a;
-	const float u = glm::dot(s, p) * inverse;
-	if (u < 0.0f || u > 1.0f)
-	{
-		return std::nullopt;
-	}
-	const auto q = glm::cross(s, edge1);
-	const float v = glm::dot(direction, q) * inverse;
-	if (v < 0.0f || u + v > 1.0f)
-	{
-		return std::nullopt;
-	}
-	const float t = glm::dot(edge2, q) * inverse;
-	if (t < 0.0f)
-	{
-		return std::nullopt;
-	}
-	return t;
-}

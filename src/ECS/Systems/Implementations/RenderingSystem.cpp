@@ -257,6 +257,7 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 
 	// Set transforms for instanced draw at offsets
 	_renderContext.entityDraws.clear();
+	_renderContext.drawnObjects.clear();
 	bool fits = true;
 	registry.Each<const Mesh, const Transform>(
 	    [this, &registry, &vegetation, &fits, drawBoundingBox](entt::entity entity, const Mesh& mesh,
@@ -385,6 +386,10 @@ bool RenderingSystem::UploadInstances(bool drawBoundingBox)
 
 		    const uint32_t idx = slots->second.offset + slots->second.filled;
 		    _renderContext.instanceUniforms[idx] = {.model = modelMatrix, .look = look};
+		    if (look.z != 1.0f)
+		    {
+			    _renderContext.drawnObjects.push_back({.entity = entity, .model = modelMatrix});
+		    }
 		    if (slots->second.perEntity)
 		    {
 			    _renderContext.entityDraws.push_back({.entity = entity, .instance = idx});
@@ -422,52 +427,54 @@ bool RenderingSystem::UploadTreeInstances(bool drawBoundingBox)
 
 	// Set the transforms of the trees, swaying or bent away from the hand
 	bool fits = true;
-	registry.Each<const Mesh, const Transform, const Tree, const Swayable>(
-	    [this, &registry, &fits, drawBoundingBox, &vegetation](entt::entity entity, const Mesh& mesh,
-	                                                           const Transform& transform, const Tree& /*unused*/,
-	                                                           const Swayable& swayable) {
-		    const auto slots = _treeSlots.find(mesh.id);
-		    if (!fits || slots == _treeSlots.end() || slots->second.filled >= slots->second.count)
-		    {
-			    fits = false;
-			    return;
-		    }
+	registry.Each<const Mesh, const Transform, const Tree, const Swayable>([this, &registry, &fits, drawBoundingBox,
+	                                                                        &vegetation](entt::entity entity, const Mesh& mesh,
+	                                                                                     const Transform& transform,
+	                                                                                     const Tree& /*unused*/,
+	                                                                                     const Swayable& swayable) {
+		const auto slots = _treeSlots.find(mesh.id);
+		if (!fits || slots == _treeSlots.end() || slots->second.filled >= slots->second.count)
+		{
+			fits = false;
+			return;
+		}
 
-		    const uint32_t idx = slots->second.offset + slots->second.filled;
-		    auto modelMatrix = glm::mat4(transform.rotation);
-		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
-		    modelMatrix = glm::scale(modelMatrix, transform.scale);
-		    // A body moving in the physics is drawn between its last two turns
-		    if (const auto* drawn = registry.TryGet<const PhysicsDrawPose>(entity))
-		    {
-			    modelMatrix = glm::translate(glm::mat4(1.0f), drawn->origin) * glm::mat4(drawn->axes);
-		    }
-		    // A tree with a fire on it is drawn darker, its foliage thinning as it burns, and narrows away at the last,
-		    // keeping its height
-		    glm::vec4 burning(0.0f);
-		    if (Locator::fireSystem::has_value())
-		    {
-			    if (const auto look = Locator::fireSystem::value().GetBurningTreeLook(entity))
-			    {
-				    burning = {static_cast<float>(look->grey) / 256.0f, look->alphaReference / 255.0f, 0.0f, 0.0f};
-				    modelMatrix = glm::scale(modelMatrix, glm::vec3(look->scale, 1.0f, look->scale));
-			    }
-		    }
-		    _renderContext.treeInstanceData[idx].burning = burning;
-		    _renderContext.treeInstanceData[idx].modelMatrix = vegetation.GetTreeMatrix(
-		        modelMatrix, transform.position, transform.scale.y, slots->second.height, swayable.swaySlot);
+		const uint32_t idx = slots->second.offset + slots->second.filled;
+		auto modelMatrix = glm::mat4(transform.rotation);
+		modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
+		modelMatrix = glm::scale(modelMatrix, transform.scale);
+		// A body moving in the physics is drawn between its last two turns
+		if (const auto* drawn = registry.TryGet<const PhysicsDrawPose>(entity))
+		{
+			modelMatrix = glm::translate(glm::mat4(1.0f), drawn->origin) * glm::mat4(drawn->axes);
+		}
+		// A tree with a fire on it is drawn darker, its foliage thinning as it burns, and narrows away at the last,
+		// keeping its height
+		glm::vec4 burning(0.0f);
+		if (Locator::fireSystem::has_value())
+		{
+			if (const auto look = Locator::fireSystem::value().GetBurningTreeLook(entity))
+			{
+				burning = {static_cast<float>(look->grey) / 256.0f, look->alphaReference / 255.0f, 0.0f, 0.0f};
+				modelMatrix = glm::scale(modelMatrix, glm::vec3(look->scale, 1.0f, look->scale));
+			}
+		}
+		_renderContext.treeInstanceData[idx].burning = burning;
+		_renderContext.treeInstanceData[idx].modelMatrix = vegetation.GetTreeMatrix(
+		    modelMatrix, transform.position, transform.scale.y, slots->second.height, swayable.swaySlot);
+		_renderContext.drawnObjects.push_back({.entity = entity, .model = _renderContext.treeInstanceData[idx].modelMatrix});
 
-		    if (drawBoundingBox && idx + _renderContext.treeInstanceData.size() / 2 < _renderContext.treeInstanceData.size())
-		    {
-			    auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
-			    auto box = l3dMesh->GetBoundingBox();
-			    auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
+		if (drawBoundingBox && idx + _renderContext.treeInstanceData.size() / 2 < _renderContext.treeInstanceData.size())
+		{
+			auto l3dMesh = entt::locator<resources::ResourcesInterface>::value().GetMeshes().Handle(mesh.id);
+			auto box = l3dMesh->GetBoundingBox();
+			auto boxMatrix = modelMatrix * glm::translate(box.Center()) * glm::scale(box.Size());
 
-			    // Store bounding box matrix in the second half of the instance data array
-			    _renderContext.treeInstanceData[idx + (_renderContext.treeInstanceData.size() / 2)].modelMatrix = boxMatrix;
-		    }
-		    ++slots->second.filled;
-	    });
+			// Store bounding box matrix in the second half of the instance data array
+			_renderContext.treeInstanceData[idx + (_renderContext.treeInstanceData.size() / 2)].modelMatrix = boxMatrix;
+		}
+		++slots->second.filled;
+	});
 
 	if (fits && !_renderContext.treeInstanceData.empty())
 	{

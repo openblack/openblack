@@ -331,7 +331,4 @@ struct ScoopFacts
 /// What a scoop takes, no more than the source has nor than the handful has room for
 [[nodiscard]] uint32_t ScoopTaken(uint32_t wanted, uint32_t sourceHas, uint32_t held, const ScoopFacts& facts);
 
-/// Where a line meets a triangle, as a distance along the line, none when it misses it
-[[nodiscard]] std::optional<float> RayTriangle(glm::vec3 origin, glm::vec3 direction, glm::vec3 a, glm::vec3 b, glm::vec3 c);
-
 } // namespace openblack::hand_grab

@@ -29,7 +29,7 @@
 #include "ECS/Systems/CameraHelpSystemInterface.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/CreatureFightSystemInterface.h"
-#include "ECS/Systems/DynamicsSystemInterface.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "Input/GameActionMapInterface.h"
 #include "Locator.h"
 #include "Windowing/WindowingInterface.h"
@@ -430,11 +430,11 @@ void DefaultWorldCameraModel::UpdateModeDragging(const Camera& camera, glm::u16v
 	// The camera stops short of land in its way, or of the sea
 	auto stopped = *place;
 	const auto move = place->origin - _originAtClick;
-	if (glm::length(move) > 0.0f && Locator::dynamicsSystem::has_value())
+	if (glm::length(move) > 0.0f && Locator::pickingSystem::has_value())
 	{
-		const auto land =
-		    Locator::dynamicsSystem::value().RayCastLand(_originAtClick, glm::normalize(move), k_ConstrainDiscRadius * 4.0f);
-		const auto hit = land.has_value() ? land : camera_pan::SeaHit(_originAtClick, place->origin, camera.GetOrigin());
+		// The line from where the camera was through where it goes, carried on to the map's edge, meets the land, or else
+		// the sea near the camera
+		const auto hit = Locator::pickingSystem::value().LandOrSeaAlong(_originAtClick, place->origin, camera.GetOrigin());
 		if (hit.has_value())
 		{
 			stopped = camera_pan::StopShortOfLand(*place, _originAtClick, *hit);

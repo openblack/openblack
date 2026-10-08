@@ -269,6 +269,8 @@ private:
 	/// Once a frame outside the temple: where the hand's tooltip is drawn, and the status panel of the creature the hand
 	/// is held to, or over
 	void UpdateHandInterface();
+	/// The interface's pick of what is under the cursor, at the frame as it is about to be drawn
+	void PickUnderCursor();
 	/// Once a game turn outside the temple: the hand's tooltip for what it is over, "Interact" over the player's own
 	/// creature
 	void ProcessHandToolTipTurn();

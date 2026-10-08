@@ -315,18 +315,6 @@ TEST(HandGrab, PeopleFencesAndUprightTreesLeaveThePhysicsOnLanding)
 	EXPECT_EQ(OutcomeOfLanding({}), LandedOutcome::Settles);
 }
 
-TEST(HandGrab, ALineMeetsATriangle)
-{
-	const glm::vec3 a(0.0f, 0.0f, 0.0f);
-	const glm::vec3 b(1.0f, 0.0f, 0.0f);
-	const glm::vec3 c(0.0f, 0.0f, 1.0f);
-	const auto hit = RayTriangle({0.2f, 5.0f, 0.2f}, {0.0f, -1.0f, 0.0f}, a, b, c);
-	ASSERT_TRUE(hit.has_value());
-	EXPECT_FLOAT_EQ(*hit, 5.0f);
-	EXPECT_FALSE(RayTriangle({0.8f, 5.0f, 0.8f}, {0.0f, -1.0f, 0.0f}, a, b, c).has_value());
-	EXPECT_FALSE(RayTriangle({0.2f, 5.0f, 0.2f}, {0.0f, 1.0f, 0.0f}, a, b, c).has_value());
-}
-
 TEST(HandGrab, AScoopRampsUpOverItsTimeAsASquare)
 {
 	const ScoopFacts facts {.initial = 25, .perTurn = 8, .perTurnEnd = 70, .maxPickedUp = 20000, .rampSeconds = 6.0f};

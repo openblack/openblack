@@ -39,10 +39,10 @@ public:
 };
 
 // NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size, readability-function-size)
-class TiltUpPanLeftMockDynamicsSystem: public MockDynamicsSystem
+class TiltUpPanLeftMockPickingSystem: public MockPickingSystem
 {
 public:
-	TiltUpPanLeftMockDynamicsSystem() = default;
+	TiltUpPanLeftMockPickingSystem() = default;
 
 	[[nodiscard]] std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const override
 	{

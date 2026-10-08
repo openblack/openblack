@@ -117,6 +117,13 @@ struct RenderContext
 		uint32_t instance;
 	};
 	std::vector<EntityDraw> entityDraws;
+	/// Every object drawn this frame, in the order it is drawn, with the matrix it is drawn by: what the cursor can pick
+	struct DrawnObject
+	{
+		entt::entity entity;
+		glm::mat4 model;
+	};
+	std::vector<DrawnObject> drawnObjects;
 	/// The rivers' stretches, whose beds and channels are laid into the land (see components::StreamSegment)
 	std::vector<glm::mat4> streamSegments;
 	/// The hand is scaled by a negative factor to mirror it, which turns its faces round

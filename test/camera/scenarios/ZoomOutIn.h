@@ -41,10 +41,10 @@ public:
 };
 
 // NOLINTBEGIN(bugprone-branch-clone, google-readability-function-size, readability-function-size)
-class ZoomOutInMockDynamicsSystem: public MockDynamicsSystem
+class ZoomOutInMockPickingSystem: public MockPickingSystem
 {
 public:
-	ZoomOutInMockDynamicsSystem() = default;
+	ZoomOutInMockPickingSystem() = default;
 
 	[[nodiscard]] std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const override
 	{

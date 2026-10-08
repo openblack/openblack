@@ -38,6 +38,11 @@
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
 #endif
 
+namespace bgfx
+{
+struct OcclusionQueryHandle;
+}
+
 namespace openblack
 {
 class Camera;
@@ -96,6 +101,10 @@ private:
 	void DrawSun(RenderPass viewId) const;
 	/// The sun's glare over the finished view, dimmed by what hides the sun from the camera
 	void DrawSunGlare(const Camera& camera) const;
+	/// Asks the drawing of a glare sample's pixel, between two corners of the screen (0 to 1 from the top left), whether
+	/// anything is drawn there nearer than a depth
+	void AskGlareSampleDrawn(const Camera& camera, bgfx::OcclusionQueryHandle query, glm::vec2 topLeft, glm::vec2 bottomRight,
+	                         float depth) const;
 	/// The puffs of mist, blended over the scene, the farthest first
 	void DrawMists(const DrawSceneDesc& desc) const;
 	/// The moon and its glow in the sky, after the sky's dome
@@ -317,6 +326,9 @@ private:
 	mutable std::optional<TextureHandle> _lightningGlowTexture;
 	/// How strongly the sun glares, 0 to 255, easing towards how much of the sun shows
 	mutable float _sunGlare {0.0f};
+	/// The question asked of each glare sample's pixel as the scene is drawn: whether anything nearer than the depth that
+	/// hides it is there. Made the first time it is asked.
+	mutable std::array<uint16_t, 5> _glareQueries {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// The mesh uniforms of each program that has drawn a mesh; the programs live as long as the renderer
 	mutable std::unordered_map<const ShaderProgram*, MeshUniforms> _meshUniforms;

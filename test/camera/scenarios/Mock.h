@@ -13,8 +13,9 @@
 #include <optional>
 
 #include <3D/LandIslandInterface.h>
+#include <3D/LandLine.h>
 #include <Camera/Camera.h>
-#include <ECS/Systems/DynamicsSystemInterface.h>
+#include <ECS/Systems/PickingSystemInterface.h>
 #include <Input/GameActionMapInterface.h>
 #include <Locator.h>
 #include <Windowing/WindowingInterface.h>
@@ -111,53 +112,81 @@ public:
 	uint32_t frameNumber = 0;
 };
 
-// The mock land should work perfectly well and if not, there is something wrong with the physics
-class MockDynamicsSystem: public openblack::ecs::systems::DynamicsSystemInterface
+// The land under the cursor, as recorded from the game for each scenario: the land itself has no cells
+class MockPickingSystem: public openblack::ecs::systems::PickingSystemInterface
 {
 public:
-	virtual ~MockDynamicsSystem() = default;
+	~MockPickingSystem() override = default;
 
-	void Reset() override {}
-	void Update(std::chrono::microseconds& dt) override {}
-	void AddRigidBody(btRigidBody* object) override {}
-	void RemoveRigidBody(btRigidBody* object) override {}
-	void RegisterRigidBodies() override {}
-	void RegisterIslandRigidBodies(openblack::LandIslandInterface& island) override {}
-	void UpdatePhysicsTransforms() override {}
 	[[nodiscard]] virtual std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const = 0;
-	[[nodiscard]] std::optional<std::pair<openblack::ecs::components::Transform, openblack::RigidBodyDetails>>
-	RayCastClosestHit(const glm::vec3& origin, [[maybe_unused]] const glm::vec3& direction,
-	                  [[maybe_unused]] float tMax) const override
+
+	[[nodiscard]] std::optional<glm::vec3> LandAlong(glm::vec3 from, glm::vec3 to) const override
+	{
+		const auto hit = openblack::land_line::LandAlong(from, to, NoCells);
+		return hit.has_value() ? std::optional(glm::vec3(hit->x, 0.0f, hit->y)) : std::nullopt;
+	}
+	[[nodiscard]] std::optional<glm::vec3> LandOrSeaAlong(glm::vec3 from, glm::vec3 to, glm::vec3 camera) const override
+	{
+		const auto hit = openblack::land_line::LandOrSeaAlong(from, to, camera, NoCells);
+		return hit.has_value() ? std::optional(glm::vec3(hit->x, 0.0f, hit->y)) : std::nullopt;
+	}
+	[[nodiscard]] std::optional<glm::vec3> LandUnderPixel(glm::vec3 camera, glm::vec3 nearPoint,
+	                                                      [[maybe_unused]] bool withSea) const override
 	{
 		const auto& terrain = openblack::Locator::terrainSystem::value();
-		const auto screenCoord = GetWindowCoordinates(origin);
+		// The pixel the line through the near plane's point shows
+		const auto screenCoord = GetWindowCoordinates(camera + (nearPoint - camera) * 100.0f);
 		if (!screenCoord.has_value())
 		{
 			return std::nullopt;
 		}
-		auto hit = RayCastClosestHitScreenCoord(*screenCoord);
+		const auto hit = RayCastClosestHitScreenCoord(*screenCoord);
 		if (!hit.has_value())
 		{
 			return std::nullopt;
 		}
-		return {{{{hit->x, terrain.GetHeightAt(*hit), hit->y}}, {}}};
+		return glm::vec3(hit->x, terrain.GetHeightAt(*hit), hit->y);
+	}
+	void PickUnderCursor(const Frame& /*unused*/) override {}
+	[[nodiscard]] const Pick& GetPick() const override { return _pick; }
+	[[nodiscard]] const Pick& GetHandPick() const override { return _pick; }
+	[[nodiscard]] std::optional<openblack::screen_pick::MeshHit> FeelModel(entt::entity /*unused*/, glm::vec3 /*unused*/,
+	                                                                       glm::vec3 /*unused*/) const override
+	{
+		return std::nullopt;
 	}
 
 	[[nodiscard]] std::optional<glm::u16vec2> GetWindowCoordinates(const glm::vec3& position) const
 	{
-		glm::vec3 screenPosition;
-		const auto size = openblack::Locator::windowing::value().GetSize();
-		const auto viewport = glm::vec4(0, 0, size.x, size.y);
-		if (!camera->ProjectWorldToScreen(position, viewport, screenPosition, openblack::Camera::Interpolation::Target))
+		const auto size = glm::vec2(openblack::Locator::windowing::value().GetSize());
+		const auto clip =
+		    camera->GetViewProjectionMatrix(openblack::Camera::Projection::Normal, openblack::Camera::Interpolation::Target) *
+		    glm::vec4(position, 1.0f);
+		if (clip.w <= 0.0f)
 		{
 			return std::nullopt;
 		}
+		// As the window has it, from the bottom up, then turned to the screen's rows from the top
+		auto screenPosition = glm::vec2((clip.x / clip.w + 1.0f) * 0.5f * size.x, (clip.y / clip.w + 1.0f) * 0.5f * size.y);
+		if (screenPosition.x < 0.0f || screenPosition.y < 0.0f || glm::round(screenPosition.x) > size.x ||
+		    glm::round(screenPosition.y) > size.y)
+		{
+			return std::nullopt;
+		}
+		screenPosition.y = size.y - screenPosition.y;
 		// Move point because of precision loss in project/deproject
-		return static_cast<glm::u16vec2>(glm::round(glm::round(glm::xy(screenPosition * 10.0f)) / 10.0f));
+		return static_cast<glm::u16vec2>(glm::round(glm::round(screenPosition * 10.0f) / 10.0f));
 	}
 
 	uint16_t frameNumber = 0;
 	const openblack::Camera* camera;
+
+private:
+	static std::optional<openblack::land_line::CellHeights> NoCells(int32_t /*unused*/, int32_t /*unused*/)
+	{
+		return std::nullopt;
+	}
+	Pick _pick;
 };
 
 #if defined(_MSC_VER)

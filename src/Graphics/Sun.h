@@ -34,17 +34,23 @@ struct Placement
 /// The glare is the sun again, larger, over the finished view
 inline constexpr float k_GlareScale = 1.8f;
 
-/// Where the glare looks for the land in the way: the sun's middle and four points 500 units across and up from it,
-/// along the sun's own right and the world's up
+/// Where the glare looks for what is in the way: the sun's middle and four points 500 units from it across the world's x
+/// and up its y, each moved on by the near plane's distance along the line from the camera to the sun, and never lower
+/// than 10
 inline constexpr std::array<glm::vec2, 5> k_GlareSamples = {{
     {0.0f, 0.0f},
-    {500.0f, 500.0f},
+    {-500.0f, -500.0f},
     {-500.0f, 500.0f},
     {500.0f, -500.0f},
-    {-500.0f, -500.0f},
+    {500.0f, 500.0f},
 }};
 /// The samples are never lower than this
 inline constexpr float k_GlareLowestSample = 10.0f;
+[[nodiscard]] std::array<glm::vec3, 5> GlareSamples(glm::vec3 sun, glm::vec3 camera, float near);
+
+/// A sample the land doesn't hide is hidden by what is drawn at its pixel, when that is nearer the camera than this: the
+/// game hides it where its depth buffer, of 16 bits holding 1 - near / depth, is below 65000
+[[nodiscard]] float GlareHidingDepth(float near);
 
 /// The glare's strength, 0 to 255, eased towards a fifth less for each hidden sample by a hundredth of the way for
 /// each millisecond of game time; it stays put while the game is paused

@@ -87,10 +87,10 @@
 #include "ECS/Registry.h"
 #include "ECS/Systems/AlignmentSystemInterface.h"
 #include "ECS/Systems/CreatureHairSystemInterface.h"
-#include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "ECS/Systems/RainSystemInterface.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
@@ -502,6 +502,13 @@ Renderer::~Renderer() noexcept
 	if (_lightningGlowTexture)
 	{
 		bgfx::destroy(toBgfx(*_lightningGlowTexture));
+	}
+	for (const auto query : _glareQueries)
+	{
+		if (query != bgfx::kInvalidHandle)
+		{
+			bgfx::destroy(bgfx::OcclusionQueryHandle {query});
+		}
 	}
 	_shaderManager.reset();
 	bgfx::frame();
@@ -2992,22 +2999,52 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	}
 	const auto model = SunModel(placement->position);
 
-	// Each sample of the sun the land or a thing hides from the camera dims the glare by a fifth
+	// Each sample of the sun hidden from the camera dims the glare by a fifth. The land hides it where the line from the
+	// camera to it meets the land; otherwise what is drawn at its pixel does, when it is nearer than the depth the game's
+	// depth buffer counts as hidden. That is asked of the drawing as it happens, and answered a frame or two later.
 	int hidden = 0;
 	const auto origin = camera.GetOrigin();
-	const auto right = glm::vec3(model * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-	if (Locator::dynamicsSystem::has_value())
+	const float near = camera.GetNearClip();
+	const auto samples = sun::GlareSamples(placement->position, origin, near);
+	const bool asksDrawing = (bgfx::getCaps()->supported & BGFX_CAPS_OCCLUSION_QUERY) != 0;
+	const auto resolution =
+	    Locator::windowing::has_value() ? static_cast<glm::vec2>(Locator::windowing::value().GetSize()) : glm::vec2(0.0f);
+	const auto toClip = camera.GetViewProjectionMatrix();
+	for (size_t i = 0; i < samples.size(); ++i)
 	{
-		for (const auto& offset : sun::k_GlareSamples)
+		bool isHidden = Locator::pickingSystem::has_value() &&
+		                Locator::pickingSystem::value().LandOrSeaAlong(origin, samples[i], origin).has_value();
+		// The sample's pixel, when it is in front of the near plane and on the screen
+		const auto clip = toClip * glm::vec4(samples[i], 1.0f);
+		std::optional<glm::vec2> pixel;
+		if (!(clip.w < near) && resolution.x > 0.0f)
 		{
-			auto sample = placement->position + (right * offset.x) + glm::vec3(0.0f, offset.y, 0.0f);
-			sample.y = std::max(sample.y, sun::k_GlareLowestSample);
-			const auto towards = sample - origin;
-			if (Locator::dynamicsSystem::value().RayCastClosestHit(origin, glm::normalize(towards), glm::length(towards)))
+			const auto x = static_cast<int32_t>((clip.x / clip.w + 1.0f) * resolution.x * 0.5f);
+			const auto y = static_cast<int32_t>((1.0f - clip.y / clip.w) * resolution.y * 0.5f);
+			if (x >= 0 && y >= 0 && x < static_cast<int32_t>(resolution.x) && y < static_cast<int32_t>(resolution.y))
 			{
-				++hidden;
+				pixel = glm::vec2(static_cast<float>(x), static_cast<float>(y));
 			}
 		}
+		if (asksDrawing)
+		{
+			auto& query = _glareQueries.at(i);
+			if (!isHidden && pixel.has_value() && query != bgfx::kInvalidHandle &&
+			    bgfx::getResult(bgfx::OcclusionQueryHandle {query}) == bgfx::OcclusionQueryResult::Invisible)
+			{
+				isHidden = true;
+			}
+			if (pixel.has_value())
+			{
+				if (query == bgfx::kInvalidHandle)
+				{
+					query = bgfx::createOcclusionQuery().idx;
+				}
+				AskGlareSampleDrawn(camera, bgfx::OcclusionQueryHandle {query}, *pixel / resolution,
+				                    (*pixel + 1.0f) / resolution, sun::GlareHidingDepth(near));
+			}
+		}
+		hidden += isHidden ? 1 : 0;
 	}
 	const auto frameMilliseconds = static_cast<uint32_t>(Locator::time::value().GetFrameGameTime().count());
 	_sunGlare = sun::EaseGlare(_sunGlare, hidden, frameMilliseconds);
@@ -3028,6 +3065,49 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 	                                        .celestial = glm::vec4(0.0f),
 	                                        .state = k_AdditiveState | (inTemple ? BGFX_STATE_DEPTH_TEST_GREATER : 0),
 	                                    });
+}
+
+void Renderer::AskGlareSampleDrawn(const Camera& camera, bgfx::OcclusionQueryHandle query, glm::vec2 topLeft,
+                                   glm::vec2 bottomRight, float depth) const
+{
+	// A square over the sample's pixel at the depth that counts as hidden, drawn after the scene against its depth and
+	// writing nothing: none of it shows when the scene there is nearer
+	struct Corner
+	{
+		glm::vec4 position;
+		glm::vec4 colour;
+	};
+	bgfx::VertexLayout layout;
+	layout.begin()
+	    .add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float)
+	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+	    .end();
+	if (bgfx::getAvailTransientVertexBuffer(6, layout) < 6)
+	{
+		return;
+	}
+	const auto at = [&camera, depth](glm::vec2 screen) {
+		const auto [eye, nearPoint] = camera.OnNearPlane(screen);
+		return glm::vec4(eye + (nearPoint - eye) * (depth / camera.GetNearClip()), 1.0f);
+	};
+	const auto a = at(topLeft);
+	const auto b = at({bottomRight.x, topLeft.y});
+	const auto c = at(bottomRight);
+	const auto d = at({topLeft.x, bottomRight.y});
+	bgfx::TransientVertexBuffer buffer;
+	bgfx::allocTransientVertexBuffer(&buffer, 6, layout);
+	auto* corners = reinterpret_cast<Corner*>(buffer.data);
+	const glm::vec4 colour(1.0f);
+	corners[0] = {a, colour};
+	corners[1] = {b, colour};
+	corners[2] = {c, colour};
+	corners[3] = {a, colour};
+	corners[4] = {c, colour};
+	corners[5] = {d, colour};
+	bgfx::setVertexBuffer(0, &buffer);
+	bgfx::setState(BGFX_STATE_DEPTH_TEST_GREATER | BGFX_STATE_MSAA);
+	const auto* program = _shaderManager->GetShader("DebugLine");
+	bgfx::submit(static_cast<bgfx::ViewId>(TranslucentView(RenderPass::Main)), toBgfx(program->GetRawHandle()), query);
 }
 
 namespace

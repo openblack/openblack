@@ -104,6 +104,14 @@ public:
 
 	void DeprojectScreenToWorld(glm::vec2 screenCoord, glm::vec3& outWorldOrigin, glm::vec3& outWorldDirection,
 	                            Interpolation interpolation = Camera::Interpolation::Current) const;
+	/// The eye, and the point of the near plane a point of the screen (0 to 1 from the top left) shows
+	struct NearPlanePoint
+	{
+		glm::vec3 eye;
+		glm::vec3 point;
+	};
+	[[nodiscard]] NearPlanePoint OnNearPlane(glm::vec2 screenCoord,
+	                                         Interpolation interpolation = Camera::Interpolation::Current) const;
 	bool ProjectWorldToScreen(glm::vec3 worldPosition, glm::vec4 viewport, glm::vec3& outScreenPosition,
 	                          Interpolation interpolation = Camera::Interpolation::Current) const;
 
