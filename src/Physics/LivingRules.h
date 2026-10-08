@@ -129,6 +129,9 @@ enum class FlyingObjectResponse : uint8_t
 [[nodiscard]] FlyingObjectResponse RespondToFlyingObject(float distance, float speed);
 /// How far a living thing is from a flying thing for that choice: across the map, heights left out
 [[nodiscard]] float MapDistance(glm::vec3 from, glm::vec3 to);
+/// A dancing villager only notices a flying thing coming at it: the thing's heading and the way from it to the villager
+/// within about 37 degrees of each other
+[[nodiscard]] bool FlyingAt(glm::vec3 living, glm::vec3 object, glm::vec3 velocity);
 /// A thing in the physics is still really in the air while it moves faster than this, in metres a second
 inline constexpr float k_AirborneSpeed = 3.0f;
 /// or while the bottom of its round reach is this far over the land under its middle

@@ -3170,6 +3170,14 @@ void Game::OrientHand(ecs::components::Transform& handTransform, const glm::mat3
 	const auto up = _handUp.GetValue();
 	const auto onLevelLand = TurnToHeading(facingCamera, cameraHeading, _handHeading);
 	handTransform.rotation = glm::length(up) > 0.0f ? StandOnSlope(onLevelLand, _handHeading, up) : onLevelLand;
+	// Scooping, the hand faces along its heading on level land and is tipped down towards what it scoops from
+	if (Locator::handGrabSystem::has_value())
+	{
+		if (const auto tip = Locator::handGrabSystem::value().GetScoopTip())
+		{
+			handTransform.rotation = TipForwards(onLevelLand, _handHeading, *tip);
+		}
+	}
 }
 
 float Game::HandStepSeconds() const

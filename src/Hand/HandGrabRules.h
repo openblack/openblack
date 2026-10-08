@@ -31,6 +31,8 @@ inline constexpr float k_ScoopHoverAbove = 3.0f;
 inline constexpr float k_ScoopTip = 1.3744469f;
 /// Below this height the hand tips further down while scooping
 inline constexpr float k_ScoopTipLowHeight = 2.5f;
+/// The hand's length, which a scoop low over the land tips it further by
+inline constexpr float k_HandLength = 3.2f;
 /// How far a hand scooping at a height is tipped down: further when it is low, by the angle of its drop below the
 /// low height over the hand's own length
 [[nodiscard]] float ScoopTip(float height, float handLength);

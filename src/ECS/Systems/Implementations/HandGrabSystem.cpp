@@ -1045,3 +1045,14 @@ float HandGrabSystem::GetCursorRaise() const
 	const auto* grab = Grab();
 	return grab != nullptr ? hand_grab::CursorRaise(grab->rise) : 0.0f;
 }
+
+std::optional<float> HandGrabSystem::GetScoopTip() const
+{
+	const auto* grab = Grab();
+	if (grab == nullptr || grab->scoopSource == entt::null || !Exists(grab->scoopSource))
+	{
+		return std::nullopt;
+	}
+	// Tipped by how high it hovers, against the hand's own length
+	return hand_grab::ScoopTip(grab->lastTarget.y, hand_grab::k_HandLength);
+}

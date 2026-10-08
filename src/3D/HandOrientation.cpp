@@ -56,4 +56,14 @@ glm::mat3 StandOnSlope(const glm::mat3& onLevelLand, glm::vec3 heading, glm::vec
 	return Frame(front, upright) * glm::transpose(Frame(heading, k_Up)) * onLevelLand;
 }
 
+glm::mat3 TipForwards(const glm::mat3& onLevelLand, glm::vec3 heading, float angle)
+{
+	const auto across = glm::cross(k_Up, heading);
+	if (glm::length(across) <= 0.0f)
+	{
+		return onLevelLand;
+	}
+	return glm::mat3(glm::rotate(glm::mat4(1.0f), angle, glm::normalize(across))) * onLevelLand;
+}
+
 } // namespace openblack::hand_orientation

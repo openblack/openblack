@@ -92,6 +92,8 @@ public:
 	[[nodiscard]] virtual std::optional<PullPose> GetPullPose() const = 0;
 	/// How far the point the hand picks on the land is raised for what it holds
 	[[nodiscard]] virtual float GetCursorRaise() const = 0;
+	/// While the hand scoops, how far it is tipped down towards what it scoops from, in radians
+	[[nodiscard]] virtual std::optional<float> GetScoopTip() const = 0;
 };
 
 } // namespace openblack::ecs::systems

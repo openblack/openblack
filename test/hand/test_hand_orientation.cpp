@@ -77,3 +77,13 @@ TEST(HandOrientation, OnASlopeItsUpIsTheSlopesAndItsFrontTheHeadingLaidAlongIt)
 	// It stays a rotation
 	EXPECT_NEAR(glm::determinant(stood), 1.0f, 1e-5f);
 }
+
+TEST(HandOrientation, ScoopingTheHandTipsItsFingersDownAlongItsHeading)
+{
+	const glm::vec3 heading {0.0f, 0.0f, -1.0f};
+	const auto tipped = TipForwards(glm::mat3(1.0f), heading, glm::half_pi<float>());
+	// What pointed ahead points down, and the line across the heading stays where it was
+	ExpectNear(tipped * heading, {0.0f, -1.0f, 0.0f});
+	ExpectNear(tipped * glm::vec3(1.0f, 0.0f, 0.0f), {1.0f, 0.0f, 0.0f});
+	EXPECT_NEAR(glm::determinant(tipped), 1.0f, 1e-5f);
+}

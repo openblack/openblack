@@ -50,6 +50,7 @@ public:
 	[[nodiscard]] bool IsBusy() const override;
 	[[nodiscard]] std::optional<HeldPose> GetHeldPose() const override;
 	[[nodiscard]] float GetCursorRaise() const override;
+	[[nodiscard]] std::optional<float> GetScoopTip() const override;
 
 private:
 	/// The hand's grab, made on the hand when first needed; none without a hand

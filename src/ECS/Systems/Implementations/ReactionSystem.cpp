@@ -380,6 +380,8 @@ uint32_t ReactionSystem::PriorityTo(const Active& reaction, entt::entity living,
 	{
 		return 0;
 	}
+	// TODO(physics): a dancing villager (one in a dance group) notices a flying thing only when it comes at it
+	// (living::FlyingAt); openblack's villagers don't dance in groups yet
 	// A villager sheltering under a magic shield takes no notice of what flies outside the shield
 	if (reaction.source.type == Reaction::ReactToFlyingObject && registry.AllOf<Villager>(living))
 	{

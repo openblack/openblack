@@ -32,4 +32,8 @@ constexpr float k_MinHeadingLean = 0.01f;
 /// how it stands facing along the heading on level land
 [[nodiscard]] glm::mat3 StandOnSlope(const glm::mat3& onLevelLand, glm::vec3 heading, glm::vec3 up);
 
+/// The hand tipped forwards by an angle about the level line across its heading, so that its fingers point down
+/// towards what is ahead of it, from how it stands facing along the heading on level land
+[[nodiscard]] glm::mat3 TipForwards(const glm::mat3& onLevelLand, glm::vec3 heading, float angle);
+
 } // namespace openblack::hand_orientation

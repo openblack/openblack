@@ -260,6 +260,21 @@ float living::MapDistance(glm::vec3 from, glm::vec3 to)
 	return glm::distance(glm::vec2(from.x, from.z), glm::vec2(to.x, to.z));
 }
 
+bool living::FlyingAt(glm::vec3 living, glm::vec3 object, glm::vec3 velocity)
+{
+	constexpr float k_Coming = 0.8f;
+	auto towards = living - object;
+	if (towards != glm::vec3(0.0f))
+	{
+		towards = glm::normalize(towards);
+	}
+	if (velocity != glm::vec3(0.0f))
+	{
+		velocity = glm::normalize(velocity);
+	}
+	return !(glm::dot(velocity, towards) < k_Coming);
+}
+
 bool living::IsActuallyInTheAir(float speed, float centreHeight, float landHeight, float radius)
 {
 	return speed > k_AirborneSpeed || centreHeight - landHeight + radius > k_AirborneHeight;

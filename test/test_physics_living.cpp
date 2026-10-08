@@ -223,3 +223,15 @@ TEST(PhysicsLiving, AStatesClipChoiceIsNoChoiceOfTheNextState)
 	EXPECT_EQ(ChoiceOfState(1, 11, AnimId::PLanded), std::nullopt);
 	EXPECT_EQ(VillagerStateClip(1, ChoiceOfState(1, 11, AnimId::PLanded), 0), AnimId::Invalid);
 }
+
+TEST(PhysicsLiving, ADancerNoticesOnlyWhatFliesAtIt)
+{
+	using openblack::physics::living::FlyingAt;
+	const glm::vec3 villager(0.0f, 0.0f, 0.0f);
+	const glm::vec3 object(10.0f, 0.0f, 0.0f);
+	EXPECT_TRUE(FlyingAt(villager, object, glm::vec3(-5.0f, 0.0f, 0.0f)));
+	// Turned more than about 37 degrees away it isn't coming at it
+	EXPECT_TRUE(FlyingAt(villager, object, glm::vec3(-1.0f, 0.0f, 0.7f)));
+	EXPECT_FALSE(FlyingAt(villager, object, glm::vec3(-1.0f, 0.0f, 0.8f)));
+	EXPECT_FALSE(FlyingAt(villager, object, glm::vec3(5.0f, 0.0f, 0.0f)));
+}
