@@ -56,6 +56,7 @@
 #include "3D/WaterRings.h"
 #include "Audio/AtmosAudio.h"
 #include "Audio/AudioManagerInterface.h"
+#include "Audio/ClipSounds.h"
 #include "Audio/GameMusic.h"
 #include "CHLApi.h"
 #include "Camera/Camera.h"
@@ -2038,6 +2039,21 @@ bool Game::Initialize() noexcept
 	for (size_t i = 0; i < animations.size(); i++)
 	{
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
+	}
+	// The game stops one of the packed clips playing round and round as it loads them
+	if (constexpr uint32_t k_HeldOnceClip = 323; animationManager.Contains(k_HeldOnceClip))
+	{
+		animationManager.Handle(resources::HashIdentifier(k_HeldOnceClip))->StopLooping();
+	}
+	// The sounds placed on the frames of the people's, animals' and birds' clips
+	if (const auto sounds = fileSystem.GetPath<Path::Data>() / "SmallSounds.SAS"; fileSystem.Exists(sounds))
+	{
+		resources.GetClipSounds().Load(audio::clip_sounds::k_TableId.value(), resources::ClipSoundsLoader::FromDiskTag {},
+		                               sounds);
+	}
+	else
+	{
+		resources.GetClipSounds().Load(audio::clip_sounds::k_TableId.value(), resources::ClipSoundsLoader::EmptyTag {});
 	}
 
 	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {

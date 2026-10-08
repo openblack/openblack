@@ -31,6 +31,7 @@
 #include "Common/GUtilsAngle.h"
 #include "Common/GameRandom.h"
 #include "ECS/Archetypes/AnimalArchetype.h"
+#include "ECS/ClipSoundPlayer.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/HandGrab.h"
@@ -1500,6 +1501,12 @@ void AnimalSystem::Update(uint32_t turn, float turnFraction)
 		const auto played = moving && !timing.playedByTime
 		                        ? animals::MovingPlay(timing, animal.move.speed, elapsed, transform.scale.x)
 		                        : static_cast<int32_t>(elapsed);
+		// The sounds on the clip's frames it passes play from the animal
+		if (played > 0)
+		{
+			ecs::clip_sound_player::Play(entity, animal.animation, *clip, animal.clipPlace, static_cast<uint32_t>(played),
+			                             transform.position);
+		}
 		animal.clipPlace = animals::AdvanceClip(timing, animal.clipPlace, played);
 
 		// A wolf fades out of sight as it goes; the doves and bats stay whole until they go

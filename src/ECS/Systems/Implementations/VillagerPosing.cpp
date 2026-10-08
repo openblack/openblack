@@ -16,9 +16,11 @@
 #include "3D/L3DAnim.h"
 #include "3D/L3DMesh.h"
 #include "Animals/AnimalAnimation.h"
+#include "ECS/ClipSoundPlayer.h"
 #include "ECS/Components/LivingAction.h"
 #include "ECS/Components/LivingPhysics.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Components/VillagerPose.h"
 #include "ECS/Registry.h"
@@ -48,8 +50,9 @@ void LivingActionSystem::UpdatePoses(uint32_t turn, float turnFraction)
 	auto& meshes = Locator::resources::value().GetMeshes();
 	const auto& states = Locator::infoConstants::value().villagerStateTable;
 
-	registry.Each<const Villager, const LivingAction, const Mesh, VillagerPose>(
-	    [&](entt::entity entity, const Villager& /*unused*/, const LivingAction& action, const Mesh& mesh, VillagerPose& pose) {
+	registry.Each<const Villager, const LivingAction, const Mesh, const Transform, VillagerPose>(
+	    [&](entt::entity entity, const Villager& /*unused*/, const LivingAction& action, const Mesh& mesh,
+	        const Transform& transform, VillagerPose& pose) {
 		    const auto state = action.states[static_cast<size_t>(LivingAction::Index::Top)];
 		    std::optional<AnimId> chosen;
 		    if (const auto* own = registry.TryGet<const VillagerClip>(entity); own != nullptr)
@@ -78,6 +81,8 @@ void LivingActionSystem::UpdatePoses(uint32_t turn, float turnFraction)
 		                                      .looping = clip->IsLooping(),
 		                                      .playedByTime = true,
 		                                      .stride = clip->GetStride()};
+		    // The sounds on the clip's frames it passes play from the villager
+		    ecs::clip_sound_player::Play(entity, pose.clip, *clip, pose.place, elapsed, transform.position);
 		    pose.place = animals::AdvanceClip(timing, pose.place, static_cast<int32_t>(elapsed));
 
 		    // The pose between the two keyframes around its place, each bone then placed by its parent

@@ -25,6 +25,7 @@ public:
 	Bitmap16BManager& GetBitmaps() override { return _bitmaps; }
 	LandLightPaletteManager& GetLandLightPalettes() override { return _landLightPalettes; }
 	PhysicsMaterialsManager& GetPhysicsMaterials() override { return _physicsMaterials; }
+	ClipSoundsManager& GetClipSounds() override { return _clipSounds; }
 	TextureManager& GetTextures() override { return _textures; }
 	AnimationManager& GetAnimations() override { return _animations; }
 	LevelManager& GetLevels() override { return _levels; }
@@ -44,6 +45,7 @@ private:
 	Bitmap16BManager _bitmaps;
 	LandLightPaletteManager _landLightPalettes;
 	PhysicsMaterialsManager _physicsMaterials;
+	ClipSoundsManager _clipSounds;
 	TextureManager _textures;
 	AnimationManager _animations;
 	LevelManager _levels;

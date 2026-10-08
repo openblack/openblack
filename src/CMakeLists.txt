@@ -119,6 +119,7 @@ target_link_libraries(
           morph
           psys
           physconst
+          sas
           gestures
           rawimage
           imgui::imgui

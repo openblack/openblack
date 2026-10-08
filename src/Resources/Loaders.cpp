@@ -25,6 +25,7 @@
 #include <ParticleFile.h>
 #include <PhysicsConstantsFile.h>
 #include <RawImage.h>
+#include <SASFile.h>
 #include <StackedBitmap.h>
 #include <bgfx/bgfx.h>
 #include <spdlog/spdlog.h>
@@ -33,6 +34,7 @@
 #include "3D/LandLightTable.h"
 #include "3D/Light.h"
 #include "Audio/AudioManagerInterface.h"
+#include "Audio/ClipSounds.h"
 #include "Common/Bitmap16B.h"
 #include "Common/StringUtils.h"
 #include "Common/Zip.h"
@@ -121,6 +123,19 @@ Bitmap16BLoader::result_type Bitmap16BLoader::operator()(FromDiskTag, const std:
 {
 	const auto data = Locator::filesystem::value().ReadAll(path);
 	return std::make_shared<Bitmap16B>(data.data());
+}
+
+ClipSoundsLoader::result_type ClipSoundsLoader::operator()(FromDiskTag, const std::filesystem::path& path) const
+{
+	const auto data = Locator::filesystem::value().ReadAll(path);
+	const auto file = sas::Parse(data);
+	return file.has_value() ? std::make_shared<audio::clip_sounds::ClipSoundTable>(*file)
+	                        : std::make_shared<audio::clip_sounds::ClipSoundTable>();
+}
+
+ClipSoundsLoader::result_type ClipSoundsLoader::operator()(EmptyTag) const
+{
+	return std::make_shared<audio::clip_sounds::ClipSoundTable>();
 }
 
 PhysicsMaterialsLoader::result_type PhysicsMaterialsLoader::operator()(FromDiskTag, const std::filesystem::path& path) const

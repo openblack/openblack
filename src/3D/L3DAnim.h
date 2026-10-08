@@ -57,6 +57,8 @@ public:
 	[[nodiscard]] bool IsPlayedByTime() const noexcept { return (_unknown_0x50 & k_PlayedByTime) != 0; }
 	/// How far one play of a moving clip carries its animal, in the mesh's units: the stride a walk or run covers
 	[[nodiscard]] float GetStride() const noexcept { return _unknown_0x28; }
+	/// The clip holds its last pose rather than playing round and round
+	void StopLooping() noexcept { _unknown_0x50 &= ~k_Looping; }
 
 private:
 	static constexpr uint32_t k_Looping = 0x100;

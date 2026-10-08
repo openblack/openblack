@@ -19,6 +19,7 @@ using L3DFileManager = ResourceManager<L3DFileLoader>;
 using Bitmap16BManager = ResourceManager<Bitmap16BLoader>;
 using LandLightPaletteManager = ResourceManager<LandLightPaletteLoader>;
 using PhysicsMaterialsManager = ResourceManager<PhysicsMaterialsLoader>;
+using ClipSoundsManager = ResourceManager<ClipSoundsLoader>;
 using TextureManager = ResourceManager<Texture2DLoader>;
 using AnimationManager = ResourceManager<L3DAnimLoader>;
 using LevelManager = ResourceManager<LevelLoader>;
@@ -42,6 +43,8 @@ public:
 	virtual LandLightPaletteManager& GetLandLightPalettes() = 0;
 	/// The physics materials, by physics::k_MaterialsId
 	virtual PhysicsMaterialsManager& GetPhysicsMaterials() = 0;
+	/// The sounds on the people's, animals' and birds' clips, by audio::clip_sounds::k_TableId
+	virtual ClipSoundsManager& GetClipSounds() = 0;
 	virtual TextureManager& GetTextures() = 0;
 	virtual AnimationManager& GetAnimations() = 0;
 	virtual LevelManager& GetLevels() = 0;

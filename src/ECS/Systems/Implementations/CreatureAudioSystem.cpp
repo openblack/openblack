@@ -36,6 +36,7 @@
 #include "ECS/Components/CreatureBody.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "ECS/SoundGround.h"
 #include "ECS/Systems/CinematicDirectorSystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
@@ -61,58 +62,6 @@ const CreatureRig* RigOf(const Creature& creature)
 	return rigs.Contains(id) ? &*rigs.Handle(id) : nullptr;
 }
 
-/// The ground under a point as the sounds see it, nothing off the map or where there is no land
-std::optional<creature_audio::Ground> GroundAt(const glm::vec3& position)
-{
-	if (!Locator::terrainSystem::has_value())
-	{
-		return std::nullopt;
-	}
-	const auto& land = Locator::terrainSystem::value();
-	const auto cellX = static_cast<int32_t>(std::floor(position.x / LandIslandInterface::k_CellSize));
-	const auto cellZ = static_cast<int32_t>(std::floor(position.z / LandIslandInterface::k_CellSize));
-	if (cellX < 0 || cellZ < 0 || cellX >= LandIslandInterface::k_MapCellsPerSide ||
-	    cellZ >= LandIslandInterface::k_MapCellsPerSide)
-	{
-		return std::nullopt;
-	}
-	const auto* cell = land.FindCell({static_cast<uint16_t>(cellX), static_cast<uint16_t>(cellZ)});
-	if (cell == nullptr)
-	{
-		return std::nullopt;
-	}
-	if (cell->properties.hasWater != 0)
-	{
-		return creature_audio::Ground {.water = true, .materialSurface = 0};
-	}
-
-	// The second of the two materials the cell's country blends at its altitude
-	std::optional<uint16_t> materialType;
-	const auto& countries = land.GetCountries();
-	const auto types = land.GetMaterialTypes();
-	if (cell->properties.country < countries.size())
-	{
-		const auto index = countries[cell->properties.country].materials.at(cell->altitude).indices[1];
-		if (index < types.size())
-		{
-			materialType = types[index];
-		}
-	}
-	const auto snow = Locator::snowSystem::has_value() ? Locator::snowSystem::value().GetDepth({position.x, position.z}) : 0.0f;
-	const auto material = creature_audio::TerrainMaterial(materialType, snow);
-
-	int32_t surface = 0;
-	if (Locator::infoConstants::has_value())
-	{
-		const auto& materials = Locator::infoConstants::value().terrainMaterial;
-		if (material < materials.size())
-		{
-			surface = static_cast<int32_t>(materials.at(material).surfaceSound);
-		}
-	}
-	return creature_audio::Ground {.water = false, .materialSurface = surface};
-}
-
 /// Plays an event's sound from the creature and notes it among the creature's last sounds
 void Sound(entt::entity entity, const Creature& creature, const Transform& transform, const CreatureRig& rig,
            CreatureAudio& heard, const creature_audio::SoundEvent& event, const std::string& silence)
@@ -121,7 +70,7 @@ void Sound(entt::entity entity, const Creature& creature, const Transform& trans
 	                      ? std::string(creature_audio::k_GenericBank)
 	                      : creature_audio::VoiceBank(rig.soundBankName, creature.species);
 	const auto keys = creature_audio::Keys(creature.size, creature.alignment, rig.soundObject,
-	                                       creature_audio::SurfaceKey(GroundAt(transform.position)), event.action);
+	                                       creature_audio::SurfaceKey(ecs::sound_ground::At(transform.position)), event.action);
 	CreatureAudio::Heard note {
 	    .atMs = heard.clockMs,
 	    .kind = event.kind,

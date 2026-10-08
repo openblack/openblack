@@ -61,6 +61,11 @@ namespace openblack::physics
 class MaterialTable;
 }
 
+namespace openblack::audio::clip_sounds
+{
+class ClipSoundTable;
+}
+
 namespace openblack::resources
 {
 
@@ -99,6 +104,16 @@ struct L3DFileLoader final: BaseLoader<l3d::L3DFile>
 struct Bitmap16BLoader final: BaseLoader<Bitmap16B>
 {
 	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+};
+
+/// The sounds placed on the people's, animals' and birds' clips, from Data/SmallSounds.SAS; none when there is no file
+struct ClipSoundsLoader final: BaseLoader<audio::clip_sounds::ClipSoundTable>
+{
+	[[nodiscard]] result_type operator()(FromDiskTag, const std::filesystem::path& path) const;
+	struct EmptyTag
+	{
+	};
+	[[nodiscard]] result_type operator()(EmptyTag) const;
 };
 
 /// The physics materials of Data/PhysicsConstants.txt; every row zero when there is no file
