@@ -166,7 +166,7 @@ public:
 	/// A handful the hand holds is made, holding so much, where the hand is; poisoned when scooped from poison
 	[[nodiscard]] virtual entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned) = 0;
 	/// The stream of what is scooped flowing from its source into the hand starts, and stops; its effect
-	[[nodiscard]] virtual std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) = 0;
+	[[nodiscard]] virtual std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source, bool poisoned) = 0;
 	virtual void StopScoopStream(uint32_t stream) = 0;
 	/// The stream flows to where the hand now is
 	virtual void MoveScoopStream(uint32_t stream, glm::vec3 hand) = 0;

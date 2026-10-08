@@ -94,6 +94,7 @@ constexpr auto k_PourPoisonedFood = ParticleType::FoodPutdownPoisoned;
 /// The particles of what is scooped streaming into the hand: food and wood
 constexpr auto k_ScoopFood = ParticleType::FoodPickup;
 constexpr auto k_ScoopWood = ParticleType::WoodPickup;
+constexpr auto k_ScoopPoisonedFood = ParticleType::FoodPickupPoisoned;
 /// The scooping sound of the in-game bank, for food and for wood, played each game turn at a pitch rising with the scoop
 constexpr uint32_t k_ScoopSample = 44;
 constexpr uint32_t k_ScoopWoodSample = 98;
@@ -610,14 +611,16 @@ void GameHandGrabWorld::ResizePot(entt::entity pot)
 	transform->scale = glm::vec3(magic::piles::PotScale(data->amount, kind.scaleEvery));
 }
 
-std::optional<uint32_t> GameHandGrabWorld::StartScoopStream(ResourceType resource, glm::vec3 source)
+std::optional<uint32_t> GameHandGrabWorld::StartScoopStream(ResourceType resource, glm::vec3 source, bool poisoned)
 {
 	if (!Locator::particleSystem::has_value())
 	{
 		return std::nullopt;
 	}
-	// TODO(hand): poisoned food streams as particles 108 and a fish farm's fish as 109 (openblack has neither)
-	return Locator::particleSystem::value().Start(resource == ResourceType::Wood ? k_ScoopWood : k_ScoopFood, source, 1.0f);
+	// TODO(hand): a fish farm's fish stream as their own (openblack has no fish farms)
+	// Poisoned food streams as its own
+	const auto stream = resource == ResourceType::Wood ? k_ScoopWood : poisoned ? k_ScoopPoisonedFood : k_ScoopFood;
+	return Locator::particleSystem::value().Start(stream, source, 1.0f);
 }
 
 void GameHandGrabWorld::StopScoopStream(uint32_t stream)

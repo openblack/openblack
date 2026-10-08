@@ -379,7 +379,7 @@ bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
 	grab.scoopAnchor = hand;
 	// What is scooped streams from the source into the hand
 	grab.scoopStreamSeconds = 0.0f;
-	grab.scoopStream = _world->StartScoopStream(facts->resource, sourcePosition);
+	grab.scoopStream = _world->StartScoopStream(facts->resource, sourcePosition, facts->poisoned);
 	return true;
 }
 
@@ -416,7 +416,7 @@ bool HandGrabSystem::StartFieldScoop(HandGrab& grab, entt::entity field, const F
 	grab.scoopTurns = 0;
 	grab.scoopAnchor = hand;
 	grab.scoopStreamSeconds = 0.0f;
-	grab.scoopStream = _world->StartScoopStream(ResourceType::Food, _world->PoseOf(field).origin);
+	grab.scoopStream = _world->StartScoopStream(ResourceType::Food, _world->PoseOf(field).origin, false);
 	return true;
 }
 

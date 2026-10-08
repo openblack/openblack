@@ -71,7 +71,7 @@ public:
 	void TakeFromField(entt::entity field, uint32_t amount) override;
 	void ResizePot(entt::entity pot) override;
 	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount, bool poisoned) override;
-	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) override;
+	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source, bool poisoned) override;
 	void StopScoopStream(uint32_t stream) override;
 	void MoveScoopStream(uint32_t stream, glm::vec3 hand) override;
 	void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) override;

@@ -196,7 +196,7 @@ public:
 		sizes[handful] = {.radius = 0.5f, .height = 1.0f};
 		return handful;
 	}
-	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType, glm::vec3) override
+	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType, glm::vec3, bool) override
 	{
 		++streams;
 		return streams;
