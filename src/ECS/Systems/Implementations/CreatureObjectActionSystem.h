@@ -39,6 +39,7 @@ public:
 	bool Throw(entt::entity creature, const glm::vec3& target) override;
 	bool Destroy(entt::entity creature, entt::entity target) override;
 	bool PointAt(entt::entity creature, const glm::vec3& point) override;
+	bool Catch(entt::entity creature, entt::entity object) override;
 	void Cancel(entt::entity creature) override;
 	void Drop(entt::entity creature) override;
 

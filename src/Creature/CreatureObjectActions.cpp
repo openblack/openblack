@@ -34,6 +34,8 @@ std::string_view creature_object_actions::Name(Kind kind)
 		return "Knocking down";
 	case Kind::Point:
 		return "Pointing";
+	case Kind::Catch:
+		return "Catching";
 	}
 	return "Nothing";
 }
@@ -51,6 +53,7 @@ Hands creature_object_actions::HandsFor(Kind kind)
 		return Hands::Holding;
 	case Kind::PickUp:
 	case Kind::Destroy:
+	case Kind::Catch:
 		return Hands::Empty;
 	case Kind::Point:
 		return Hands::Either;
@@ -91,6 +94,7 @@ TownAttitude creature_object_actions::AttitudeTo(Kind kind, bool targetIsVillage
 	case Kind::Lob:
 	case Kind::Keep:
 	case Kind::Point:
+	case Kind::Catch:
 		break;
 	}
 	return TownAttitude::None;

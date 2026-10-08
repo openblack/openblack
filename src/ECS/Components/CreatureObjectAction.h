@@ -62,6 +62,16 @@ struct CreatureObjectAction
 	uint32_t attempts {0};
 	/// Throwing: how long the throw is to take to get there
 	float flightSeconds {0.0f};
+	/// Catching: where the hand closes in each catching animation, in the model's units, and how the catch goes:
+	/// reaching for it, missed and drawing back, or caught and finishing
+	enum class Catching : uint8_t
+	{
+		Reaching,
+		Missed,
+		Caught,
+	};
+	std::array<glm::vec3, 4> catchHands {};
+	Catching catching {Catching::Reaching};
 	/// Why it gave up, when it did
 	std::string failure;
 };

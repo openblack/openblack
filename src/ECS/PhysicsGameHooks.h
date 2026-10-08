@@ -30,6 +30,7 @@ public:
 	void ImpactFeedback(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry, bool hit) override;
 	bool HasSunk(systems::DynamicsSystemInterface& dynamics, PhysicsEntry& entry) override;
 	void DropSound(entt::entity object) override;
+	void OfferToCatchingCreatures(entt::entity object, PhysicsEntry& entry) override;
 };
 
 } // namespace openblack::ecs

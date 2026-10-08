@@ -61,6 +61,8 @@ public:
 	virtual bool Throw(entt::entity creature, const glm::vec3& target) = 0;
 	virtual bool Destroy(entt::entity creature, entt::entity target) = 0;
 	virtual bool PointAt(entt::entity creature, const glm::vec3& point) = 0;
+	/// Catches something flying at it, when it can still reach where it passes
+	virtual bool Catch(entt::entity creature, entt::entity object) = 0;
 	/// Stops what it is doing, keeping hold of whatever it holds
 	virtual void Cancel(entt::entity creature) = 0;
 	/// Lets go of what it holds at once, dropping it from the hand

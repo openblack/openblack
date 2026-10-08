@@ -598,6 +598,7 @@ CreatureRigLoader::result_type CreatureRigLoader::operator()(FromBufferTag, cons
 			    .eatMs = ms(points->eatTime),
 			    .throwMs = ms(points->throwTime),
 			    .putDownMs = ms(points->putDownTime),
+			    .catchMs = ms(points->catchTimes[1]),
 			};
 		}
 	}

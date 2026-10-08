@@ -17,13 +17,18 @@
 
 #include "3D/LandIslandInterface.h"
 #include "3D/MapCoords.h"
+#include "Common/GameRandom.h"
+#include "Creature/CreatureCatch.h"
 #include "Creature/CreatureDesires.h"
+#include "Creature/CreatureRig.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
 #include "ECS/Components/BuildingDamage.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/CreatureBody.h"
+#include "ECS/Components/CreatureFight.h"
+#include "ECS/Components/CreatureObjectAction.h"
 #include "ECS/Components/DeadTree.h"
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Indestructible.h"
@@ -43,7 +48,9 @@
 #include "ECS/Systems/AnimalSystemInterface.h"
 #include "ECS/Systems/BuildingDamageSystemInterface.h"
 #include "ECS/Systems/CreatureAnimationSystemInterface.h"
+#include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
+#include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/Implementations/VillagerPhysics.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
@@ -56,6 +63,7 @@
 #include "Magic/SpellRules.h"
 #include "Physics/Body.h"
 #include "Physics/LivingRules.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::ecs;
@@ -131,6 +139,14 @@ bool IsToy(entt::entity object)
 	return mobile != nullptr && Locator::infoConstants::has_value() &&
 	       physics_classes::IsToyModel(
 	           Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(mobile->type)).meshId);
+}
+
+/// The bones a creature acts with and the moments of its object animations, if its species has them
+const creature::CreatureRig::ActionPoints* RigPointsOf(const Creature& creature)
+{
+	const auto& rigs = Locator::resources::value().GetCreatureRigs();
+	const auto id = creature::GetRigId(creature.species);
+	return rigs.Contains(id) && rigs.Handle(id)->actionPoints.has_value() ? &*rigs.Handle(id)->actionPoints : nullptr;
 }
 
 /// A creature struck by a thrown thing (not a toy) is hurt a hundredth of how hard it was struck for its weight, its
@@ -389,6 +405,77 @@ void PhysicsGameHooks::DropSound(entt::entity object)
 	const auto ticks =
 	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 	object_physics::TreeDropSound(object, static_cast<uint64_t>(ticks));
+}
+
+void PhysicsGameHooks::OfferToCatchingCreatures(entt::entity object, PhysicsEntry& entry)
+{
+	auto& registry = Entities();
+	if (entry.body == nullptr || !Locator::creatureObjectActionSystem::has_value() ||
+	    !Locator::creatureAnimationSystem::has_value() || !Locator::gameRandom::has_value())
+	{
+		return;
+	}
+	auto& actions = Locator::creatureObjectActionSystem::value();
+	auto& animations = Locator::creatureAnimationSystem::value();
+	std::vector<entt::entity> creatures;
+	registry.Each<const Creature, const Transform>(
+	    [&creatures](entt::entity creature, const Creature&, const Transform&) { creatures.push_back(creature); });
+	for (const auto creature : creatures)
+	{
+		// One that is fighting, out cold or busy with something in its hands doesn't catch
+		if (registry.AnyOf<CreatureFighting, CreatureKnockedOut, CreatureHeldObject>(creature))
+		{
+			continue;
+		}
+		const auto& body = registry.Get<const Creature>(creature);
+		const auto& transform = registry.Get<const Transform>(creature);
+		const auto* morph = registry.TryGet<const CreatureMorph>(creature);
+		const float weight = living::CreatureMass(body.size, morph != nullptr ? morph->drawn.thinFat : 0.0f,
+		                                          morph != nullptr ? morph->drawn.weakStrong : 0.0f);
+		if (!(entry.body->Mass() < creature_catch::k_MostWeightShare * weight) || !actions.CanPickUp(object))
+		{
+			continue;
+		}
+		// Not its own throw; another player's only now and then
+		if (entry.thrower == creature)
+		{
+			continue;
+		}
+		if (entry.player.has_value() && *entry.player != body.owner &&
+		    Locator::gameRandom::value().GameRand(100) > creature_catch::k_OtherPlayersChance)
+		{
+			continue;
+		}
+		const auto* points = registry.Valid(creature) ? RigPointsOf(body) : nullptr;
+		const auto stepMs = animations.AnimationDuration(creature, creature_catch::k_CatchStep);
+		const auto stepTravel = animations.AnimationTravel(creature, creature_catch::k_CatchStep);
+		if (points == nullptr || !stepMs.has_value() || !stepTravel.has_value())
+		{
+			continue;
+		}
+		const creature_catch::Approach approach {.thing = entry.body->Centre(),
+		                                         .velocity = entry.body->velocity,
+		                                         .creature = transform.position,
+		                                         .size = body.size,
+		                                         .modelScale = transform.scale.x,
+		                                         .catchMs = points->catchMs,
+		                                         .stepMs = *stepMs,
+		                                         .stepTravel = *stepTravel};
+		if (!creature_catch::Reaches(approach))
+		{
+			continue;
+		}
+		// It drops what it was doing and stands to catch
+		if (Locator::creatureMindSystem::has_value())
+		{
+			Locator::creatureMindSystem::value().AbandonAction(creature);
+		}
+		if (Locator::creatureLocomotionSystem::has_value())
+		{
+			Locator::creatureLocomotionSystem::value().Stop(creature);
+		}
+		actions.Catch(creature, object);
+	}
 }
 
 void PhysicsGameHooks::StartFlyingFromHand([[maybe_unused]] DynamicsSystemInterface& dynamics, PhysicsEntry& entry)

@@ -41,6 +41,8 @@ public:
 	                                                               uint32_t bone, bool mirrored) = 0;
 	/// How long one of a creature's animations lasts, in milliseconds, if it has it
 	[[nodiscard]] virtual std::optional<float> AnimationDuration(entt::entity creature, size_t animation) = 0;
+	/// How far one of a creature's animations carries it across, in its model's units, if it has it
+	[[nodiscard]] virtual std::optional<float> AnimationTravel(entt::entity creature, size_t animation) = 0;
 	/// A force kicks a creature's body at a point, swaying its upper body when the point is high on it and its lower
 	/// body otherwise, unless it is striking with a destroying blow
 	virtual void KickSway(entt::entity creature, glm::vec3 force, glm::vec3 point) = 0;

@@ -128,6 +128,8 @@ struct CreatureRig
 		float eatMs;
 		float throwMs;
 		float putDownMs;
+		/// When the catching hand closes on what it catches
+		float catchMs;
 	};
 	std::optional<ActionPoints> actionPoints;
 

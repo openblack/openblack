@@ -39,6 +39,8 @@ enum class Kind : uint8_t
 	Destroy,
 	/// Pointing at something for a while
 	Point,
+	/// Catching something flying at it with the four catching animations blended
+	Catch,
 };
 [[nodiscard]] std::string_view Name(Kind kind);
 
