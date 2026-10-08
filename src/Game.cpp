@@ -1702,7 +1702,23 @@ bool Game::Update() noexcept
 				        : _handOnCreature->onBody ? HandCycle::Stroke
 				                                  : HandCycle::Wiggle;
 			}
-			if (!holdingSeed)
+			// Pulling a thing free, the hand takes the pose the thing is held with
+			std::optional<ecs::systems::HandGrabSystemInterface::PullPose> pull;
+			if (!holdingSeed && Locator::handGrabSystem::has_value())
+			{
+				pull = Locator::handGrabSystem::value().GetPullPose();
+			}
+			const auto pullCycle = pull.has_value() ? magic::hand_hold::HoldCycle(pull->hold) : std::nullopt;
+			const auto* pullClip =
+			    pullCycle.has_value() ? _handAnimation->GetAnimation(static_cast<size_t>(*pullCycle)) : nullptr;
+			if (pullClip != nullptr)
+			{
+				const float handSize = HandAnimation::SizeAtDistance(glm::distance(camera.GetOrigin(), _handPosition));
+				_handAnimation->UpdateHeld(deltaTime, *pullCycle,
+				                           magic::hand_hold::HoldTimeMs(pull->hold, pullClip->duration, pull->reach, handSize),
+				                           _mousePosition);
+			}
+			else if (!holdingSeed)
 			{
 				_handAnimation->Update(deltaTime, state, cycle, _mousePosition);
 			}

@@ -408,8 +408,13 @@ TEST_F(HandGrabSystemWithWorld, AHeavyTreeIsNeverPulledFree)
 	}
 	EXPECT_FALSE(system->GetHeld().has_value());
 	EXPECT_TRUE(world->holes.empty());
+	// While it pulls the hand takes the pose a tree is held with
+	const auto pose = system->GetPullPose();
+	ASSERT_TRUE(pose.has_value());
+	EXPECT_EQ(pose->hold, HoldType::Tree);
 	// Let go before it came free, it stays where it is
 	EXPECT_FALSE(Release().has_value());
+	EXPECT_FALSE(system->GetPullPose().has_value());
 	EXPECT_FALSE(world->registry.AllOf<InHand>(tree));
 }
 

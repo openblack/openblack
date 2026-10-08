@@ -567,6 +567,8 @@ void HandGrabSystem::StartPull(HandGrab& grab, const Frame& frame)
 	grab.pullPlanePoint.y =
 	    toHand > 0.0f ? frame.camera.y - (toBase / toHand) * (frame.camera.y - frame.target.y) : pose.origin.y;
 	const auto hold = HoldOfObject(object);
+	// The hand holds it the way its kind is held while it pulls
+	grab.hold = hold;
 	grab.holdDistance = hand_grab::HoldDistance(hold.loweringMultiplier, _world->SizeOf(object).height, grab.handSize);
 	grab.stretch.Reset(1.0f);
 	grab.tug = tug;
@@ -1025,6 +1027,17 @@ std::optional<HandGrabSystemInterface::HeldPose> HandGrabSystem::GetHeldPose() c
 	    .hang = grab.hold.loweringMultiplier * _world->SizeOf(*held).height,
 	    .reach = grab.hold.holdRadius,
 	};
+}
+
+std::optional<HandGrabSystemInterface::PullPose> HandGrabSystem::GetPullPose() const
+{
+	const auto* grab = Grab();
+	if (grab == nullptr || grab->state != HandGrab::State::Grabbing || !grab->pulling || !grab->tug.has_value() ||
+	    !Exists(grab->object))
+	{
+		return std::nullopt;
+	}
+	return PullPose {.hold = grab->hold.type, .reach = grab->hold.holdRadius};
 }
 
 float HandGrabSystem::GetCursorRaise() const

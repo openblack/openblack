@@ -83,6 +83,13 @@ public:
 		float reach {0.0f};
 	};
 	[[nodiscard]] virtual std::optional<HeldPose> GetHeldPose() const = 0;
+	/// While the hand pulls a thing free it takes the pose the thing is held with: its hold and how far it spreads
+	struct PullPose
+	{
+		HoldType hold {HoldType::Above};
+		float reach {0.0f};
+	};
+	[[nodiscard]] virtual std::optional<PullPose> GetPullPose() const = 0;
 	/// How far the point the hand picks on the land is raised for what it holds
 	[[nodiscard]] virtual float GetCursorRaise() const = 0;
 };

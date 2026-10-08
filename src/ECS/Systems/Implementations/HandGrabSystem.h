@@ -42,6 +42,7 @@ public:
 	glm::vec3 UpdateFrame(const Frame& frame) override;
 	void ProcessTurn() override;
 	void ForceDrop() override;
+	[[nodiscard]] std::optional<PullPose> GetPullPose() const override;
 	[[nodiscard]] bool IsInInfluence() const override { return HandInInfluence(); }
 	void Reset() override;
 
