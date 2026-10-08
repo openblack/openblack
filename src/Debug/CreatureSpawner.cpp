@@ -549,6 +549,12 @@ void CreatureSpawner::DrawMind(entt::entity entity) noexcept
 			break;
 		case creature_mind::Step::Kind::Object:
 			break;
+		case creature_mind::Step::Kind::Cast:
+			ImGui::Text("Casting for %.1f of %.1f s", static_cast<double>(idle.stepSeconds), static_cast<double>(step.seconds));
+			break;
+		case creature_mind::Step::Kind::Gesture:
+			ImGui::Text("Drawing a gesture for %.1f s", static_cast<double>(idle.stepSeconds));
+			break;
 		}
 	}
 	ImGui::Text("Shows a desire again in %.0f s%s%s", static_cast<double>(idle.showDesireSeconds),
