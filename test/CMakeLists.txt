@@ -250,6 +250,7 @@ openblack_setup_and_add_test(test_animal_move test_animal_move.cpp)
 openblack_setup_and_add_test(test_teleport_rules test_teleport_rules.cpp)
 openblack_setup_and_add_test(test_fire test_fire.cpp)
 openblack_setup_and_add_test(test_blast test_blast.cpp)
+openblack_setup_and_add_test(test_gesture_events test_gesture_events.cpp)
 openblack_setup_and_add_test(
   test_magic_shield_forest test_magic_shield_forest.cpp
 )
@@ -284,6 +285,8 @@ openblack_setup_and_add_test(
   test_gesture_recognition test_gesture_recognition.cpp
 )
 target_link_libraries(test_gesture_recognition PRIVATE gestures)
+openblack_setup_and_add_test(test_gesture_system test_gesture_system.cpp)
+target_link_libraries(test_gesture_system PRIVATE gestures)
 openblack_setup_and_add_test(test_creature_spells test_creature_spells.cpp)
 openblack_setup_and_add_test(test_particle_miracles test_particle_miracles.cpp)
 target_link_libraries(test_particle_miracles PRIVATE psys)

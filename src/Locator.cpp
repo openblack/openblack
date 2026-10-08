@@ -52,6 +52,7 @@
 #include "ECS/Systems/Implementations/EditorSystem.h"
 #include "ECS/Systems/Implementations/FieldSystem.h"
 #include "ECS/Systems/Implementations/FootprintSystem.h"
+#include "ECS/Systems/Implementations/GestureSystem.h"
 #include "ECS/Systems/Implementations/HandSystem.h"
 #include "ECS/Systems/Implementations/InfluenceSystem.h"
 #include "ECS/Systems/Implementations/LeashSystem.h"
@@ -121,6 +122,7 @@ using openblack::ecs::systems::EditorSystem;
 using openblack::ecs::systems::FieldSystem;
 using openblack::ecs::systems::FootprintSystem;
 using openblack::ecs::systems::GestureEventsInterface;
+using openblack::ecs::systems::GestureSystem;
 using openblack::ecs::systems::HandSystem;
 using openblack::ecs::systems::InfluenceSystem;
 using openblack::ecs::systems::LeashSystem;
