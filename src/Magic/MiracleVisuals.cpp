@@ -62,9 +62,8 @@ constexpr uint8_t k_FlyOffAlphaAtHand = 50;
 constexpr int k_FlyInBands = 5;
 /// A band in front of the camera stays this far beyond the near plane
 constexpr float k_BandNearMargin = 0.2f;
-/// The announcer's power-up voices in the spell dialogue bank
-constexpr int k_FirstPowerUpVoice = 10;
-constexpr int k_LastPowerUpLevel = 2;
+/// The announcer's power-up voices in the spell dialogue bank, by power-up level
+constexpr std::array<int, 3> k_PowerUpVoices = {10, 11, 12};
 
 /// A frame stepped on and kept within its cells, either way round
 float Wrap(float frame, float cells)
@@ -382,9 +381,11 @@ glm::vec2 visuals::GlowUvOffset(float frame)
 
 std::optional<int> visuals::PowerUpVoiceSample(int powerUp)
 {
-	if (powerUp < 0 || powerUp > k_LastPowerUpLevel)
+	// A table rather than an offset: clang 18 packs the optional into one register and the offset's carry from a
+	// negative level spilled into its flag, so -1 came back as a voice
+	if (powerUp < 0 || powerUp >= static_cast<int>(k_PowerUpVoices.size()))
 	{
 		return std::nullopt;
 	}
-	return k_FirstPowerUpVoice + powerUp;
+	return k_PowerUpVoices.at(static_cast<size_t>(powerUp));
 }
