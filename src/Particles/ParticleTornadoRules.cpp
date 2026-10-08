@@ -335,7 +335,9 @@ private:
 			}
 			else
 			{
-				std::erase_if(flying.atoms, [&](const auto& owned) { return owned.get() == atom; });
+				// Apple's clang can't capture a structured binding: take a plain copy of it
+				const auto* gone = atom;
+				std::erase_if(flying.atoms, [gone](const auto& owned) { return owned.get() == gone; });
 			}
 		}
 	}
