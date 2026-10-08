@@ -108,11 +108,28 @@ inline constexpr float k_RockHalfSpread = k_RockHalfScale;
 /// A flying rock's halves keep this share of its spin
 inline constexpr float k_RockHalfSpin = 0.5f;
 
-/// A rock wider across the ground than this can't be picked up: the hand taps it instead
-inline constexpr float k_RockLargestHeld = 3.6f;
 /// Tapping a rock to break it shows the player's creature how much fun the player is having, this much
 inline constexpr float k_TapEmpathy = 0.5f;
 /// Whether a rock can be broken by tapping it: only one tall enough
 [[nodiscard]] bool RockBreaksWhenTapped(float height);
+
+/// A tree that falls dead drops its roots: they are this share of the tree's model's half width, as big as the tree is
+inline constexpr float k_RootsScale = 0.15f;
+/// They come to rest this share of their own half width above the land
+inline constexpr float k_RootsRestShare = 0.1f;
+/// They fall from where the tree lies, faster and faster, this many metres times the square of their seconds
+inline constexpr float k_RootsFall = 20.0f;
+/// They begin to fade after this many seconds, and are gone after this many
+inline constexpr float k_RootsFadeStart = 18.0f;
+inline constexpr float k_RootsLife = 20.0f;
+/// How fast they fade, in their share of themselves a second
+inline constexpr float k_RootsFadePerSecond = 0.5f;
+
+/// How high the falling roots are after some seconds: dropping from where they started until they reach where they rest
+[[nodiscard]] float RootsHeight(float startHeight, float restHeight, float seconds);
+/// How opaque the roots are, 0 to 255, once they have begun to fade; none while still whole
+[[nodiscard]] std::optional<uint8_t> RootsAlpha(float seconds);
+/// Whether the roots have gone
+[[nodiscard]] bool RootsGone(float seconds);
 
 } // namespace openblack::physics::objects

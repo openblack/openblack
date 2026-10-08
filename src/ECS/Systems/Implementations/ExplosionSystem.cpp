@@ -13,19 +13,26 @@
 
 #include <glm/gtx/euler_angles.hpp>
 
+#include "3D/L3DMesh.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/MapCoords.h"
 #include "Camera/Camera.h"
 #include "Common/GameRandom.h"
+#include "ECS/Components/DeadTree.h"
 #include "ECS/Components/DestructionGhost.h"
+#include "ECS/Components/FallingRoots.h"
 #include "ECS/Components/GroundMark.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/MorphWithTerrain.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
+#include "InfoConstants.h"
 #include "Locator.h"
 #include "Particles/ParticleBlast.h"
 #include "Particles/ParticleDrawFrame.h"
+#include "Physics/ObjectRules.h"
 #include "Resources/ResourceManager.h"
+#include "Resources/ResourcesInterface.h"
 
 using namespace openblack;
 using namespace openblack::ecs::components;
@@ -60,6 +67,76 @@ const particles::Creator& DustCreator()
 		return dust;
 	}();
 	return creator;
+}
+/// Half the size of a model's box, in its own units
+glm::vec3 MeshHalfSize(MeshId mesh)
+{
+	auto& meshes = Locator::resources::value().GetMeshes();
+	const auto id = resources::HashIdentifier(mesh);
+	return meshes.Contains(id) ? meshes.Handle(id)->GetBoundingBox().Size() * 0.5f : glm::vec3(0.0f);
+}
+
+/// A dead tree just fallen drops its roots: as it lies, a share of its model's half width in size, falling from where it
+/// lies to just above the land
+void DropRoots(ecs::Registry& registry, entt::entity deadTree)
+{
+	namespace objects = physics::objects;
+	const auto& transform = registry.Get<const Transform>(deadTree);
+	const auto type = registry.Get<const DeadTree>(deadTree).type;
+	const auto treeMesh = Locator::infoConstants::value().tree.at(static_cast<size_t>(type)).normal;
+	const float scale = transform.scale.x * objects::k_RootsScale * MeshHalfSize(treeMesh).x;
+	const auto rootsHalf = MeshHalfSize(MeshId::TreeRoots);
+	const float land = Locator::terrainSystem::value().GetHeightAt({transform.position.x, transform.position.z});
+	const auto roots = registry.Create();
+	registry.Assign<Transform>(roots, transform.position, transform.rotation, glm::vec3(scale));
+	registry.Assign<Mesh>(roots, resources::HashIdentifier(MeshId::TreeRoots), static_cast<int8_t>(0), static_cast<int8_t>(0));
+	registry.Assign<FallingRoots>(
+	    roots, FallingRoots {
+	               .seconds = 0.0f,
+	               .startHeight = transform.position.y,
+	               .restHeight = land + objects::k_RootsRestShare * std::max(rootsHalf.x, rootsHalf.z) * scale,
+	           });
+	// Drawn with its own fade once it begins to fade
+	registry.Assign<GroundMark>(roots);
+}
+
+/// The falling roots drop, settle, fade and go by the game's time
+void AdvanceRoots(ecs::Registry& registry, float seconds)
+{
+	namespace objects = physics::objects;
+	if (Locator::terrainSystem::has_value() && Locator::infoConstants::has_value() && Locator::resources::has_value())
+	{
+		std::vector<entt::entity> fallen;
+		registry.Each<const DropsRoots, const DeadTree, const Transform>(
+		    [&fallen](entt::entity entity, const DeadTree&, const Transform&) { fallen.push_back(entity); });
+		for (const auto deadTree : fallen)
+		{
+			registry.Remove<DropsRoots>(deadTree);
+			DropRoots(registry, deadTree);
+		}
+	}
+	std::vector<entt::entity> gone;
+	bool changed = false;
+	registry.Each<FallingRoots, Transform, GroundMark>(
+	    [&](entt::entity entity, FallingRoots& roots, Transform& transform, GroundMark& mark) {
+		    roots.seconds += seconds;
+		    if (objects::RootsGone(roots.seconds))
+		    {
+			    gone.push_back(entity);
+			    return;
+		    }
+		    transform.position.y = objects::RootsHeight(roots.startHeight, roots.restHeight, roots.seconds);
+		    mark.alpha = objects::RootsAlpha(roots.seconds);
+		    changed = true;
+	    });
+	for (const auto entity : gone)
+	{
+		registry.Destroy(entity);
+	}
+	if (changed || !gone.empty())
+	{
+		registry.SetDirty();
+	}
 }
 } // namespace
 
@@ -98,23 +175,26 @@ void ExplosionSystem::Update(float milliseconds)
 		auto& registry = Locator::entitiesRegistry::value();
 		std::vector<entt::entity> gone;
 		bool fading = false;
-		registry.Each<GroundMark>([&](entt::entity entity, GroundMark& mark) {
-			// In its last second its alpha is its time left as a share of the second, set before the time passes
-			if (mark.millisecondsLeft <= k_FadeMilliseconds)
-			{
-				// Blending it changes how its model is drawn
-				if (!mark.alpha.has_value())
-				{
-					fading = true;
-				}
-				mark.alpha = static_cast<uint8_t>(map_coords::FtoL(mark.millisecondsLeft * k_AlphaPerMillisecond));
-			}
-			mark.millisecondsLeft -= milliseconds;
-			if (mark.millisecondsLeft < 1.0f)
-			{
-				gone.push_back(entity);
-			}
-		});
+		AdvanceRoots(registry, milliseconds / 1000.0f);
+		registry.Each<GroundMark>(
+		    [&](entt::entity entity, GroundMark& mark) {
+			    // In its last second its alpha is its time left as a share of the second, set before the time passes
+			    if (mark.millisecondsLeft <= k_FadeMilliseconds)
+			    {
+				    // Blending it changes how its model is drawn
+				    if (!mark.alpha.has_value())
+				    {
+					    fading = true;
+				    }
+				    mark.alpha = static_cast<uint8_t>(map_coords::FtoL(mark.millisecondsLeft * k_AlphaPerMillisecond));
+			    }
+			    mark.millisecondsLeft -= milliseconds;
+			    if (mark.millisecondsLeft < 1.0f)
+			    {
+				    gone.push_back(entity);
+			    }
+		    },
+		    entt::exclude<FallingRoots>);
 		for (const auto entity : gone)
 		{
 			registry.Destroy(entity);

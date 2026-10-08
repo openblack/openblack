@@ -473,6 +473,20 @@ void ForestSystem::ProcessForests()
 	}
 }
 
+uint32_t ForestSystem::NewLandForestId() const
+{
+	// The game makes each such forest a thing of its own; here forests are numbers, so the new one takes the number after
+	// the land's highest, below those the miracles' forests are counted from
+	uint32_t highest = 0;
+	EntityRegistry().Each<const ForestMember>([&highest](entt::entity, const ForestMember& member) {
+		if (member.forest < k_FirstMiracleForestId)
+		{
+			highest = std::max(highest, member.forest);
+		}
+	});
+	return highest + 1;
+}
+
 void ForestSystem::Reset()
 {
 	_lastTreeAddedTurn = 0;

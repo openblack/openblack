@@ -46,6 +46,9 @@ public:
 	/// the first free spot of up to 160 tried round it. One planted by a forest miracle's tree joins that miracle's
 	/// forest and goes with it. The tree planted, none when it is too soon, the tree is in no forest, or no spot is free.
 	virtual std::optional<entt::entity> AddTreeNear(entt::entity tree) = 0;
+	/// The number a new forest of the land takes, as a tree put down away from any forest starts one: the next after the
+	/// land's own forests, never one the forest miracles' forests are numbered with
+	[[nodiscard]] virtual uint32_t NewLandForestId() const = 0;
 
 	/// Once a game turn, after the miracles: the forests grow or wither
 	virtual void ProcessTurn() = 0;

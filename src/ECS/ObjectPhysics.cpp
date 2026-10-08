@@ -26,15 +26,20 @@
 #include "ECS/Archetypes/DeadTreeArchetype.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Abode.h"
+#include "ECS/Components/CarriedByTornado.h"
 #include "ECS/Components/DeadTree.h"
+#include "ECS/Components/FallingRoots.h"
 #include "ECS/Components/Field.h"
 #include "ECS/Components/Fire.h"
 #include "ECS/Components/ForestMember.h"
+#include "ECS/Components/Indestructible.h"
 #include "ECS/Components/MagicForest.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/Temple.h"
 #include "ECS/Components/TempleExterior.h"
+#include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/CreatureSight.h"
@@ -47,6 +52,7 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
+#include "ECS/Systems/ForestSystemInterface.h"
 #include "ECS/Systems/ParticleSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/ResourceStoreSystemInterface.h"
@@ -93,27 +99,37 @@ audio::SoundId NextInTurn(const std::array<audio::SoundId, N>& sounds, uint8_t& 
 	return sound;
 }
 
-/// Whether a fixed thing belongs to a town, or is part of a temple, and its town's forest when it has one
+/// Whether a fixed thing belongs to a town or is part of a temple: a building or a field only when it has a town, a
+/// building standing outside any town not counting
 bool OfTown(const Registry& registry, entt::entity thing)
 {
-	return registry.AnyOf<Abode, Field, TempleExterior>(thing);
-}
-
-/// The forests a land's trees belong to are numbered; a forest a replanted tree starts takes the next free number
-uint32_t NewForest(const Registry& registry)
-{
-	uint32_t highest = 0;
-	registry.Each<const ForestMember>(
-	    [&highest](entt::entity, const ForestMember& member) { highest = std::max(highest, member.forest); });
-	return highest + 1;
+	if (registry.AnyOf<Temple, TempleExterior, TempleEntrance>(thing))
+	{
+		return true;
+	}
+	bool found = false;
+	if (const auto* abode = registry.TryGet<const Abode>(thing))
+	{
+		registry.Each<const Town>(
+		    [&found, abode](entt::entity, const Town& town) { found = found || town.id == abode->townId; });
+	}
+	else if (const auto* field = registry.TryGet<const Field>(thing))
+	{
+		registry.Each<const Town>(
+		    [&found, field](entt::entity, const Town& town) { found = found || static_cast<int>(town.id) == field->town; });
+	}
+	return found;
 }
 
 /// The tree takes root again: a white puff of smoke at its foot, then it finds a forest to join among what stands round it
 void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInterface& land)
 {
 	auto& registry = Entities();
-	const auto position = registry.Get<const Transform>(tree).position;
-	const glm::vec3 foot(position.x, land.GetHeightAt({position.x, position.z}), position.z);
+	// It stands on the land again, at no height above it
+	auto& placed = registry.Get<Transform>(tree).position;
+	placed.y = land.GetHeightAt({placed.x, placed.z});
+	const auto position = placed;
+	const glm::vec3 foot = position;
 	if (Locator::explosionSystem::has_value())
 	{
 		Locator::explosionSystem::value().AddSmoke(foot, objects::k_ReplantSmokeSize, objects::k_ReplantSmokeColour);
@@ -160,9 +176,9 @@ void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInter
 	{
 		registry.Assign<ForestMember>(tree, *forest);
 	}
-	else if (search.StartsForest())
+	else if (search.StartsForest() && Locator::forestSystem::has_value())
 	{
-		registry.Assign<ForestMember>(tree, NewForest(registry));
+		registry.Assign<ForestMember>(tree, Locator::forestSystem::value().NewLandForestId());
 	}
 	// Away from towns, the player sees the forest grow
 	if (!search.NearTown() && Locator::particleSystem::has_value())
@@ -193,7 +209,7 @@ void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInter
 	}
 }
 
-/// The people come for a dead tree's wood, called by its player
+/// The people come for a dead tree's wood, called by its player, or by no player at all
 void CallForWood(entt::entity deadTree, std::optional<PlayerNames> player)
 {
 	const auto* transform = Entities().TryGet<const Transform>(deadTree);
@@ -219,6 +235,8 @@ entt::entity BecomeDeadTree(const PhysicsEntry* entry, entt::entity tree)
 	const auto dead = archetypes::DeadTreeArchetype::Create(transform.position, type, 0.0f, transform.scale.x);
 	registry.Get<Transform>(dead).rotation = transform.rotation;
 	registry.Get<DeadTree>(dead).woodMultiplier = magic != nullptr ? magic->woodMultiplier : 1.0f;
+	// The first time it is drawn its roots drop from it
+	registry.Assign<DropsRoots>(dead);
 	// It lies where it came down, in the cells there
 	if (Locator::entitiesMap::has_value())
 	{
@@ -228,7 +246,8 @@ entt::entity BecomeDeadTree(const PhysicsEntry* entry, entt::entity tree)
 	{
 		Locator::fireSystem::value().MoveFire(tree, dead);
 	}
-	CallForWood(dead, entry != nullptr ? entry->player : std::nullopt);
+	// A dead tree made from a tree always has a player, the neutral one when no one threw it, and calls people as theirs
+	CallForWood(dead, entry != nullptr && entry->player.has_value() ? *entry->player : PlayerNames::NEUTRAL);
 	// TODO(scripts): a script's hold on the tree passes to the dead tree; openblack's scripts keep no object references yet
 	world_objects::Remove(tree);
 	return dead;
@@ -240,6 +259,11 @@ entt::entity object_physics::EndTree(systems::DynamicsSystemInterface& dynamics,
 {
 	auto& registry = Entities();
 	const bool hasBody = entry != nullptr;
+	// A tree a tornado carries ends nothing: it stays as it is until it is let go
+	if (registry.AllOf<CarriedByTornado>(tree))
+	{
+		return tree;
+	}
 	if (!registry.AllOf<InPhysics>(tree) || !Locator::terrainSystem::has_value())
 	{
 		return dynamics.EndPhysicsAsObject(tree, insert, hasBody);
@@ -316,8 +340,18 @@ void object_physics::TreeDropSound(entt::entity tree, uint64_t ticks)
 	PlaySound(k_TreePlantings.at(ticks % k_TreePlantings.size()), position);
 }
 
+bool object_physics::IsBonfire(entt::entity object)
+{
+	const auto* mobile = Entities().TryGet<const MobileStatic>(object);
+	return mobile != nullptr && mobile->type == MobileStaticInfo::Bonfire;
+}
+
 bool object_physics::IsRock(entt::entity object)
 {
+	if (IsBonfire(object))
+	{
+		return true;
+	}
 	const auto* mobile = Entities().TryGet<const MobileStatic>(object);
 	return mobile != nullptr && Locator::infoConstants::has_value() &&
 	       Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(mobile->type)).mobileType ==
@@ -327,6 +361,11 @@ bool object_physics::IsRock(entt::entity object)
 void object_physics::KnockRock(systems::DynamicsSystemInterface& dynamics, entt::entity rock, const ImpactInfo& impact)
 {
 	auto& registry = Entities();
+	// A bonfire is a kind of rock that is never worn by knocks
+	if (IsBonfire(rock))
+	{
+		return;
+	}
 	const bool struckByRock = impact.hitBy != entt::null && registry.Valid(impact.hitBy) && IsRock(impact.hitBy);
 	const auto wear = objects::RockWear(impact.g, world_objects::SizeOf(rock).height, struckByRock);
 	if (!wear.has_value())
@@ -334,7 +373,13 @@ void object_physics::KnockRock(systems::DynamicsSystemInterface& dynamics, entt:
 		return;
 	}
 	auto& life = registry.AllOf<ObjectLife>(rock) ? registry.Get<ObjectLife>(rock) : registry.Assign<ObjectLife>(rock);
-	life.life -= *wear;
+	const float worn = life.life - *wear;
+	// An indestructible rock's life is never let down to where it would break
+	if (registry.AllOf<Indestructible>(rock) && worn <= objects::k_RockBreakLife)
+	{
+		return;
+	}
+	life.life = worn;
 	if (life.life < objects::k_RockBreakLife)
 	{
 		SplitRock(dynamics, rock);
@@ -392,7 +437,8 @@ void object_physics::SplitRock(systems::DynamicsSystemInterface& dynamics, entt:
 
 bool object_physics::CanTapRock(entt::entity rock)
 {
-	return IsRock(rock) && objects::RockBreaksWhenTapped(world_objects::SizeOf(rock).height);
+	// A bonfire is never broken by a tap
+	return IsRock(rock) && !IsBonfire(rock) && objects::RockBreaksWhenTapped(world_objects::SizeOf(rock).height);
 }
 
 void object_physics::TapRock(systems::DynamicsSystemInterface& dynamics, entt::entity rock, glm::vec3 handPoint,

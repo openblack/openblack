@@ -25,6 +25,7 @@ public:
 	[[nodiscard]] bool CanGrowAt(glm::vec3 point) const override;
 	[[nodiscard]] bool HasTrees(entt::entity spell) const override;
 	std::optional<entt::entity> AddTreeNear(entt::entity tree) override;
+	[[nodiscard]] uint32_t NewLandForestId() const override;
 	void ProcessTurn() override;
 	void Reset() override;
 

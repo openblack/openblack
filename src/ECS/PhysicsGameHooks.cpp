@@ -278,13 +278,6 @@ void StartFlying(entt::entity object)
 	}
 }
 
-bool IsRock(entt::entity object)
-{
-	const auto* mobile = Entities().TryGet<const MobileStatic>(object);
-	return mobile != nullptr && Locator::infoConstants::has_value() &&
-	       Locator::infoConstants::value().mobileStatic.at(static_cast<size_t>(mobile->type)).mobileType ==
-	           MobileStaticInfo::Rock;
-}
 } // namespace
 
 PhysicsStarted PhysicsGameHooks::InitialisePhysics(DynamicsSystemInterface& dynamics, entt::entity object,
@@ -451,7 +444,7 @@ void PhysicsGameHooks::ImpactFeedback([[maybe_unused]] DynamicsSystemInterface& 
 		return;
 	}
 	const bool alive = registry.AnyOf<Villager, Animal, Creature>(entry.entity);
-	if ((!alive && !IsRock(entry.entity)) || registry.AllOf<Tree>(entry.entity))
+	if ((!alive && !object_physics::IsRock(entry.entity)) || registry.AllOf<Tree>(entry.entity))
 	{
 		return;
 	}

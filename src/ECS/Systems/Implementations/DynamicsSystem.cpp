@@ -30,6 +30,7 @@
 #include "Camera/Camera.h"
 #include "Common/GameRandom.h"
 #include "Creature/CreatureRig.h"
+#include "ECS/Archetypes/DeadTreeArchetype.h"
 #include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/AtHome.h"
@@ -1163,6 +1164,11 @@ void DynamicsSystem::Step(const physics::Ground& ground)
 					TakeKind(entry, FactsOf(kept));
 					SyncObject(entry, Place::Kept);
 					registry.Remove<PhysicsDrawPose>(kept);
+					// A dead tree covers the ground as it lies
+					if (registry.AllOf<DeadTree>(kept))
+					{
+						archetypes::DeadTreeArchetype::FitObstacle(kept);
+					}
 				}
 				else
 				{

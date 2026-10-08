@@ -19,6 +19,8 @@ namespace openblack::ecs::archetypes
 class DeadTreeArchetype
 {
 public:
+	/// The ground a dead tree covers as an obstacle follows how it lies, once it has come to rest
+	static void FitObstacle(entt::entity deadTree);
 	static entt::entity Create(const glm::vec3& position, TreeInfo type, float yAngleRadians, float scale);
 	DeadTreeArchetype() = delete;
 };

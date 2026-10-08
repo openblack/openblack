@@ -223,7 +223,7 @@ hand_grab::HoldFacts HandGrabSystem::HoldOfObject(entt::entity object) const
 
 void HandGrabSystem::Tap(entt::entity object)
 {
-	// Only within the player's influence (unless the thing asks for none), and not a thing a script holds out of reach
+	// Only within the player's influence, and not a thing a script holds out of reach
 	const auto& registry = _world->Entities();
 	if (!HandInInfluence() || registry.AllOf<CannotBePickedUp>(object))
 	{

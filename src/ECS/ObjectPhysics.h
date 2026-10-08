@@ -43,7 +43,9 @@ entt::entity EndPot(systems::DynamicsSystemInterface& dynamics, PhysicsEntry* en
 /// The sound a tree makes as it takes root, one of three chosen by the system clock's milliseconds
 void TreeDropSound(entt::entity tree, uint64_t ticks);
 
-/// Whether a thing is a rock
+/// Whether a thing is a bonfire, which is a kind of rock
+[[nodiscard]] bool IsBonfire(entt::entity object);
+/// Whether a thing is a rock, bonfires included: what a creature's blow smashes, and what doesn't wear another rock
 [[nodiscard]] bool IsRock(entt::entity object);
 /// A rock's reaction to a knock: worn away by a hard one, and broken in two once worn out
 void KnockRock(systems::DynamicsSystemInterface& dynamics, entt::entity rock, const ImpactInfo& impact);

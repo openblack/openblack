@@ -850,7 +850,14 @@ void FireSystem::MoveFire(entt::entity from, entt::entity to)
 	{
 		Locator::reactionSystem::value().SetInitiator(moved.reaction, to);
 	}
-	StopSound(from);
+	// Its crackle carries on from what it became
+	for (auto& slot : _soundSlots)
+	{
+		if (slot.fire == from)
+		{
+			slot.fire = to;
+		}
+	}
 	registry.Remove<FireGroup>(from);
 	registry.Remove<FireLook>(from);
 	registry.Remove<Fire>(from);

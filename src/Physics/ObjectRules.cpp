@@ -9,6 +9,8 @@
 
 #include "ObjectRules.h"
 
+#include <algorithm>
+
 #include <glm/geometric.hpp>
 
 using namespace openblack::physics;
@@ -72,4 +74,25 @@ glm::mat3 objects::HeadingOnly(const glm::mat3& axes)
 bool objects::RockBreaksWhenTapped(float height)
 {
 	return height > k_RockLeastHeight;
+}
+
+float objects::RootsHeight(float startHeight, float restHeight, float seconds)
+{
+	const float falling = startHeight - k_RootsFall * seconds * seconds;
+	return falling > restHeight ? falling : restHeight;
+}
+
+std::optional<uint8_t> objects::RootsAlpha(float seconds)
+{
+	if (!(seconds > k_RootsFadeStart))
+	{
+		return std::nullopt;
+	}
+	const float share = 1.0f - (seconds - k_RootsFadeStart) * k_RootsFadePerSecond;
+	return static_cast<uint8_t>(static_cast<int>(std::clamp(share, 0.0f, 1.0f) * 255.0f));
+}
+
+bool objects::RootsGone(float seconds)
+{
+	return seconds > k_RootsLife;
 }

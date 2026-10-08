@@ -97,3 +97,21 @@ TEST(PhysicsObjects, HeadingOnlyStandsAThingUpright)
 	// The heading is kept
 	EXPECT_NEAR(std::atan2(upright[2].x, upright[2].z), std::atan2(tilted[2].x, tilted[2].z), 1e-5f);
 }
+
+TEST(PhysicsObjects, ATreeThatFallsDeadDropsItsRootsToTheLand)
+{
+	// They fall faster and faster from where the tree lies, and stop just above the land
+	EXPECT_FLOAT_EQ(RootsHeight(10.0f, 2.0f, 0.0f), 10.0f);
+	EXPECT_FLOAT_EQ(RootsHeight(10.0f, 2.0f, 0.5f), 10.0f - 20.0f * 0.25f);
+	EXPECT_FLOAT_EQ(RootsHeight(10.0f, 2.0f, 1.0f), 2.0f);
+}
+
+TEST(PhysicsObjects, FallenRootsFadeAfterEighteenSecondsAndGoAfterTwenty)
+{
+	EXPECT_FALSE(RootsAlpha(18.0f).has_value());
+	ASSERT_TRUE(RootsAlpha(19.0f).has_value());
+	EXPECT_EQ(*RootsAlpha(19.0f), 127);
+	EXPECT_EQ(*RootsAlpha(20.0f), 0);
+	EXPECT_FALSE(RootsGone(20.0f));
+	EXPECT_TRUE(RootsGone(20.01f));
+}

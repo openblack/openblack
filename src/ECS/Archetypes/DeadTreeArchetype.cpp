@@ -44,3 +44,12 @@ entt::entity DeadTreeArchetype::Create(const glm::vec3& position, TreeInfo type,
 
 	return entity;
 }
+
+void DeadTreeArchetype::FitObstacle(entt::entity deadTree)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	const auto& info =
+	    Locator::infoConstants::value().tree.at(static_cast<size_t>(registry.Get<const DeadTree>(deadTree).type));
+	const auto [point, radius] = GetFixedObstacleBoundingCircle(info.normal, registry.Get<const Transform>(deadTree));
+	registry.AssignOrReplace<Fixed>(deadTree, point, radius);
+}
