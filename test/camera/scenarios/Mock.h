@@ -112,13 +112,16 @@ public:
 	uint32_t frameNumber = 0;
 };
 
-// The land under the cursor, as recorded from the game for each scenario: the land itself has no cells
+// The land under the cursor, as recorded from the game for each scenario: the land itself has no cells. The recordings
+// stand for the land under each pixel, sea or not and already within reach of the map's middle, so `withSea` and the reach
+// aren't looked at here.
 class MockPickingSystem: public openblack::ecs::systems::PickingSystemInterface
 {
 public:
 	~MockPickingSystem() override = default;
 
-	[[nodiscard]] virtual std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const = 0;
+	/// The recorded land under a pixel, across x and z
+	[[nodiscard]] virtual std::optional<glm::vec2> LandAtPixel(glm::u16vec2 screenCoord) const = 0;
 
 	[[nodiscard]] std::optional<glm::vec3> LandAlong(glm::vec3 from, glm::vec3 to) const override
 	{
@@ -140,7 +143,7 @@ public:
 		{
 			return std::nullopt;
 		}
-		const auto hit = RayCastClosestHitScreenCoord(*screenCoord);
+		const auto hit = LandAtPixel(*screenCoord);
 		if (!hit.has_value())
 		{
 			return std::nullopt;
@@ -149,7 +152,6 @@ public:
 	}
 	void PickUnderCursor(const Frame& /*unused*/) override {}
 	[[nodiscard]] const Pick& GetPick() const override { return _pick; }
-	[[nodiscard]] const Pick& GetHandPick() const override { return _pick; }
 	[[nodiscard]] std::optional<openblack::screen_pick::MeshHit> FeelModel(entt::entity /*unused*/, glm::vec3 /*unused*/,
 	                                                                       glm::vec3 /*unused*/) const override
 	{

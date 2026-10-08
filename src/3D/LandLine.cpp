@@ -28,7 +28,8 @@ constexpr float k_ReachBefore = -0.1f;
 constexpr float k_ReachAcross = 0.9f;
 /// The share of the line, from the start to the map's edge, the game takes as "never" when the line runs along an axis
 constexpr float k_Never = 1.0000000200408773e20f;
-/// No walk over a 512 by 512 map can cross more cells than this
+/// The game's walk has no limit, and over a 512 by 512 map it crosses at most 1022 cells; this bound only keeps a line
+/// of non-finite numbers from walking for ever
 constexpr int k_MostCells = 4 * 512;
 
 /// The sides of the map along z a point is past: 4 before z's edge, 8 past its far edge

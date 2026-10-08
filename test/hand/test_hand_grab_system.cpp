@@ -65,7 +65,7 @@ public:
 	Registry& Entities() override { return registry; }
 	[[nodiscard]] entt::entity Hand() const override { return hand; }
 	[[nodiscard]] PlayerNames HandPlayer() const override { return PlayerNames::PLAYER_ONE; }
-	[[nodiscard]] std::optional<entt::entity> ObjectUnderCursor(glm::vec3, glm::vec3) const override { return underCursor; }
+	[[nodiscard]] std::optional<entt::entity> ObjectUnderCursor() const override { return underCursor; }
 	[[nodiscard]] bool InInfluence(PlayerNames, glm::vec3) const override { return influence; }
 	[[nodiscard]] bool InBounds(glm::vec3) const override { return true; }
 	[[nodiscard]] glm::vec3 LandNormalAt(glm::vec3) const override { return {0.0f, 1.0f, 0.0f}; }
@@ -293,7 +293,7 @@ protected:
 		                            .turn = now / 100});
 	}
 
-	bool Press() { return system->Press({0.0f, 50.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, now, now / 100); }
+	bool Press() { return system->Press(now, now / 100); }
 	std::optional<entt::entity> Release() { return system->Release(now, now / 100); }
 
 	FakeWorld* world {nullptr};

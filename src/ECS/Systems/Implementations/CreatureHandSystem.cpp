@@ -120,9 +120,9 @@ std::optional<glm::vec3> OnPlaneThrough(const glm::vec3& centre, const glm::vec3
 }
 } // namespace
 
-bool CreatureHandSystem::Grab(const glm::vec3& rayOrigin, const glm::vec3& rayDirection)
+bool CreatureHandSystem::Grab()
 {
-	const auto nearest = CreatureAlong(rayOrigin, rayDirection);
+	const auto nearest = CreatureUnderCursor();
 	if (!nearest.has_value() || !MayHold(*nearest))
 	{
 		return false;
@@ -166,8 +166,7 @@ bool CreatureHandSystem::IsClick() const
 	return contact != nullptr && !contact->byCommand && creature_hand::IsClick(contact->heldMs, contact->strokedOrSlapped);
 }
 
-std::optional<entt::entity> CreatureHandSystem::CreatureAlong([[maybe_unused]] const glm::vec3& rayOrigin,
-                                                              [[maybe_unused]] const glm::vec3& rayDirection) const
+std::optional<entt::entity> CreatureHandSystem::CreatureUnderCursor() const
 {
 	// The creature the interface picked under the cursor as the last frame was drawn
 	if (!Locator::handSystem::has_value() || !Locator::pickingSystem::has_value())

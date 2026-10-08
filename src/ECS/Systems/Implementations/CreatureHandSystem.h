@@ -22,7 +22,7 @@ namespace openblack::ecs::systems
 class CreatureHandSystem final: public CreatureHandSystemInterface
 {
 public:
-	bool Grab(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) override;
+	bool Grab() override;
 	[[nodiscard]] bool MayHold(entt::entity creature) const override;
 	[[nodiscard]] bool IsClick() const override;
 	std::optional<HandPose> Update(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, glm::vec2 cursor,
@@ -32,8 +32,7 @@ public:
 	bool Slap(entt::entity creature, float heightShare, bool gentle, bool sweepsRight) override;
 	[[nodiscard]] std::optional<entt::entity> GetCreature() const override;
 	[[nodiscard]] bool IsHeldByCommand() const override;
-	[[nodiscard]] std::optional<entt::entity> CreatureAlong(const glm::vec3& rayOrigin,
-	                                                        const glm::vec3& rayDirection) const override;
+	[[nodiscard]] std::optional<entt::entity> CreatureUnderCursor() const override;
 	[[nodiscard]] float GetFeedbackSum() const override;
 	[[nodiscard]] float GetLastFeedbackSum() const override;
 

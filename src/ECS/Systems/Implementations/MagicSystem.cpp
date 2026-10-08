@@ -1902,7 +1902,7 @@ std::optional<entt::entity> MagicSystem::HeldSeedTarget() const
 	{
 		return std::nullopt;
 	}
-	const auto target = Locator::creatureHandSystem::value().CreatureAlong(_hand.rayOrigin, _hand.rayDirection);
+	const auto target = Locator::creatureHandSystem::value().CreatureUnderCursor();
 	if (!target.has_value() || !CanCastOn(HeldMagicType(), *target))
 	{
 		return std::nullopt;

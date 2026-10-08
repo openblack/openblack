@@ -29,14 +29,20 @@ public:
 
 	void PickUnderCursor(const Frame& frame) override;
 	[[nodiscard]] const Pick& GetPick() const override { return _pick; }
-	[[nodiscard]] const Pick& GetHandPick() const override { return _handPick; }
 
 	[[nodiscard]] std::optional<screen_pick::MeshHit> FeelModel(entt::entity object, glm::vec3 origin,
 	                                                            glm::vec3 direction) const override;
 
 private:
 	Pick _pick;
-	Pick _handPick;
+	/// Room the pick reuses from frame to frame
+	std::vector<screen_pick::Candidate> _candidates;
+	std::vector<entt::entity> _candidateEntities;
+	std::vector<glm::mat4> _candidateModels;
+	std::vector<screen_pick::ClipCorner> _corners;
+	std::vector<glm::vec3> _placed;
+	std::vector<glm::vec2> _uvs;
+	screen_pick::PickScratch _scratch;
 };
 
 } // namespace openblack::ecs::systems

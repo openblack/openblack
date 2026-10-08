@@ -38,6 +38,10 @@ public:
 		float distance {std::numeric_limits<float>::max()};
 		/// The land or sea under the cursor, whatever was picked
 		std::optional<glm::vec3> land;
+		/// What was picked when the hover time last started again, nothing included, and how long, in seconds of the
+		/// frames drawn since, it has stayed picked
+		std::optional<entt::entity> hoverObject;
+		float hoverSeconds {0.0f};
 	};
 
 	/// A frame as it is drawn: the camera, its view and the cursor
@@ -46,6 +50,11 @@ public:
 		screen_pick::View view;
 		/// The cursor's point on the near plane
 		glm::vec3 nearPoint {0.0f};
+		/// How long the frame took, in seconds
+		float seconds {0.0f};
+		/// The hand is gripping the land: the interface keeps what it picked before the grip and follows only the land
+		/// under the cursor
+		bool locked {false};
 	};
 
 	virtual ~PickingSystemInterface() = default;
@@ -61,15 +70,25 @@ public:
 
 	/// The interface's pick at a frame as it is drawn: the drawn object under the cursor, weighed against the land
 	virtual void PickUnderCursor(const Frame& frame) = 0;
-	/// The pick of the last frame drawn
+	/// The pick of the last frame drawn, which the interface and the hand go by
 	[[nodiscard]] virtual const Pick& GetPick() const = 0;
-	/// The pick before that, which the hand goes by
-	[[nodiscard]] virtual const Pick& GetHandPick() const = 0;
 
 	/// Where a line meets an object's model as it is drawn, the hand feeling it: the nearest triangle ahead of the line's
 	/// start, and its normal turned along the line
 	[[nodiscard]] virtual std::optional<screen_pick::MeshHit> FeelModel(entt::entity object, glm::vec3 origin,
 	                                                                    glm::vec3 direction) const = 0;
 };
+
+/// The rules by which the interface carries its pick from one frame to the next
+namespace picking
+{
+/// While the hand grips the land the interface picks no object and weighs nothing: what it picked before stays picked,
+/// and only the point and its distance follow the land under the cursor, kept as they were where there is none
+[[nodiscard]] PickingSystemInterface::Pick Locked(const PickingSystemInterface::Pick& previous, std::optional<glm::vec3> land,
+                                                  float landDistance);
+/// How long the same thing has stayed picked: the frame's seconds are added while it does, nothing picked included, and
+/// the count starts again at nothing when it changes
+void CarryHover(const PickingSystemInterface::Pick& previous, PickingSystemInterface::Pick& next, float seconds);
+} // namespace picking
 
 } // namespace openblack::ecs::systems

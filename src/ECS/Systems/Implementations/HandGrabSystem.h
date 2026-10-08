@@ -37,7 +37,7 @@ public:
 	explicit HandGrabSystem(std::unique_ptr<hand_grab::HandGrabWorldInterface> world);
 	~HandGrabSystem() override;
 
-	bool Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t nowMs, uint32_t turn) override;
+	bool Press(uint32_t nowMs, uint32_t turn) override;
 	std::optional<entt::entity> Release(uint32_t nowMs, uint32_t turn) override;
 	glm::vec3 UpdateFrame(const Frame& frame) override;
 	void ProcessTurn() override;

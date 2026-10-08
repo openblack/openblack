@@ -68,14 +68,6 @@ float HeightAt(glm::vec2 point)
 	return Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(point) : 0.0f;
 }
 
-/// A model as it is drawn: each submesh's corners in the world, with their texture coordinates
-struct DrawnSubMesh
-{
-	const graphics::L3DSubMesh* subMesh;
-	std::vector<glm::vec3> corners;
-	std::vector<glm::vec2> uvs;
-};
-
 /// The bones a model is posed by as it is drawn: an animal by its clip, a creature by its animations, anything else in
 /// the pose its model rests in
 std::span<const glm::mat4> BonesOf(const ecs::Registry& registry, entt::entity entity, const graphics::L3DMesh& mesh)
@@ -95,13 +87,13 @@ std::span<const glm::mat4> BonesOf(const ecs::Registry& registry, entt::entity e
 
 /// The corners of a submesh in the world as it is drawn: posed by its bones, a creature's body blended from its
 /// meshes, and a model following the land moved up and down with it
-DrawnSubMesh Place(const ecs::Registry& registry, entt::entity entity, const graphics::L3DMesh& mesh, size_t index,
-                   const glm::mat4& model)
+void Place(const ecs::Registry& registry, entt::entity entity, const graphics::L3DMesh& mesh, size_t index,
+           const glm::mat4& model, std::vector<glm::vec3>& corners)
 {
 	const auto& subMesh = *mesh.GetSubMeshes()[index];
 	const auto& geometry = subMesh.GetBodyGeometry();
-	DrawnSubMesh drawn {.subMesh = &subMesh, .corners = {}, .uvs = geometry.uvs};
-	drawn.corners.reserve(geometry.positions.size());
+	corners.clear();
+	corners.reserve(geometry.positions.size());
 
 	// A creature's body is its base mesh moved towards the meshes of how evil or good, thin or fat and weak or strong
 	// it is drawn
@@ -158,9 +150,8 @@ DrawnSubMesh Place(const ecs::Registry& registry, entt::entity entity, const gra
 				world += up * (rise / scale);
 			}
 		}
-		drawn.corners.push_back(world);
+		corners.push_back(world);
 	}
-	return drawn;
 }
 
 /// Whether the submesh is drawn at the level of detail and stage the model is drawn at: the nearest level of detail and
@@ -200,40 +191,77 @@ std::optional<glm::vec3> PickingSystem::LandUnderPixel(glm::vec3 camera, glm::ve
 	return std::nullopt;
 }
 
+PickingSystemInterface::Pick picking::Locked(const PickingSystemInterface::Pick& previous, std::optional<glm::vec3> land,
+                                             float landDistance)
+{
+	auto pick = previous;
+	if (land.has_value())
+	{
+		pick.land = land;
+		pick.point = land;
+		pick.distance = landDistance;
+	}
+	return pick;
+}
+
+void picking::CarryHover(const PickingSystemInterface::Pick& previous, PickingSystemInterface::Pick& next, float seconds)
+{
+	if (next.object == previous.hoverObject)
+	{
+		next.hoverObject = previous.hoverObject;
+		next.hoverSeconds = previous.hoverSeconds + seconds;
+	}
+	else
+	{
+		next.hoverObject = next.object;
+		next.hoverSeconds = 0.0f;
+	}
+}
+
 void PickingSystem::PickUnderCursor(const Frame& frame)
 {
-	_handPick = _pick;
-	_pick = {};
 	const auto& view = frame.view;
 
 	// The land or sea under the cursor, counted a little further than it is
 	float landDistance = std::numeric_limits<float>::max();
-	if (const auto land = land_line::UnderPixel(view.camera, frame.nearPoint, true, CornersOf, HeightAt))
+	std::optional<glm::vec3> land;
+	if (const auto under = land_line::UnderPixel(view.camera, frame.nearPoint, true, CornersOf, HeightAt))
 	{
-		landDistance = screen_pick::Depth(view, *land) + land_line::k_LandDistanceAllowance;
-		_pick.land = land_line::KeptInReach(*land);
+		landDistance = screen_pick::Depth(view, *under) + land_line::k_LandDistanceAllowance;
+		land = land_line::KeptInReach(*under);
 	}
 
-	// The drawn object nearest the camera under the cursor
+	// Gripping the land, the interface keeps what it picked and follows only the land
+	if (frame.locked)
+	{
+		_pick = picking::Locked(_pick, land, landDistance);
+		return;
+	}
+
+	const auto previous = _pick;
+	_pick = {};
+	_pick.land = land;
 	if (!Locator::rendereringSystem::has_value() || !Locator::resources::has_value())
 	{
 		_pick.point = _pick.land;
 		_pick.distance = landDistance;
+		picking::CarryHover(previous, _pick, frame.seconds);
 		return;
 	}
+
+	// The objects drawn this frame, in the order they are drawn: a hand, what a hand holds and a building not begun are
+	// not there for the cursor
 	const auto& registry = Locator::entitiesRegistry::value();
 	auto& meshes = Locator::resources::value().GetMeshes();
-	std::optional<entt::entity> picked;
-	float pickedDistance = std::numeric_limits<float>::max();
-	glm::vec3 pickedOrigin(0.0f);
-	glm::vec2 pickedExtents(0.0f);
+	_candidates.clear();
+	_candidateEntities.clear();
+	_candidateModels.clear();
 	for (const auto& [entity, model] : Locator::rendereringSystem::value().GetContext().drawnObjects)
 	{
 		if (!registry.Valid(entity) || registry.AnyOf<Hand, InHand>(entity))
 		{
 			continue;
 		}
-		// A building not begun is no more there for the cursor than it is for anything else
 		if (const auto* progress = registry.TryGet<const BuildProgress>(entity);
 		    progress != nullptr && registry.AllOf<Abode>(entity) && progress->built == 0.0f)
 		{
@@ -249,19 +277,21 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 		const float scale = transform != nullptr ? transform->scale.x : 1.0f;
 		const auto box = mesh->GetBoundingBox();
 		const auto halfExtents = box.Size() * 0.5f;
-		const float radius = glm::length(halfExtents) * scale;
-		const auto centre = glm::vec3(model * glm::vec4(box.Center(), 1.0f));
-		const glm::vec3 origin(model[3]);
-		if (!screen_pick::CursorOverSphere(view, centre, radius, origin))
-		{
-			continue;
-		}
-		// Nothing past the nearest object picked so far is tested
-		if (picked.has_value() && pickedDistance + radius < screen_pick::Depth(view, centre))
-		{
-			continue;
-		}
+		_candidates.push_back({
+		    .centre = glm::vec3(model * glm::vec4(box.Center(), 1.0f)),
+		    .radius = glm::length(halfExtents) * scale,
+		    .origin = glm::vec3(model[3]),
+		    .halfExtents = glm::vec2(halfExtents.x, halfExtents.z),
+		});
+		_candidateEntities.push_back(entity);
+		_candidateModels.push_back(model);
+	}
 
+	// How far along the view an object's first triangle under the cursor is
+	const auto distanceOf = [&](size_t i) -> std::optional<float> {
+		const auto entity = _candidateEntities[i];
+		const auto& model = _candidateModels[i];
+		const auto mesh = meshes.Handle(registry.Get<const Mesh>(entity).id);
 		// A tree of a forest is picked through its leaves' holes
 		const auto* info = world_objects::InfoOf(entity);
 		const bool throughHoles = info != nullptr && info->type == ObjectType::ForestTree;
@@ -273,15 +303,15 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 			{
 				continue;
 			}
-			const auto drawn = Place(registry, entity, *mesh, s, model);
-			std::vector<screen_pick::ClipCorner> corners;
-			corners.reserve(drawn.corners.size());
-			for (size_t i = 0; i < drawn.corners.size(); ++i)
+			Place(registry, entity, *mesh, s, model, _placed);
+			const auto& geometry = subMesh.GetBodyGeometry();
+			_corners.clear();
+			for (size_t c = 0; c < _placed.size(); ++c)
 			{
-				corners.push_back(
-				    screen_pick::ToClip(view, drawn.corners[i], i < drawn.uvs.size() ? drawn.uvs[i] : glm::vec2(0.0f)));
+				_corners.push_back(
+				    screen_pick::ToClip(view, _placed[c], c < geometry.uvs.size() ? geometry.uvs[c] : glm::vec2(0.0f)));
 			}
-			const auto& indices = subMesh.GetBodyGeometry().indices;
+			const auto& indices = geometry.indices;
 			for (const auto& primitive : subMesh.GetPrimitives())
 			{
 				if (primitive.indicesOffset + primitive.indicesCount > indices.size())
@@ -289,10 +319,12 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 					continue;
 				}
 				distance = screen_pick::FirstHit(
-				    view, {.corners = corners,
-				           .indices = std::span(indices).subspan(primitive.indicesOffset, primitive.indicesCount),
-				           .twoSided = primitive.twoSided,
-				           .mask = throughHoles ? mesh->GetSkinMask(primitive.skinID) : nullptr});
+				    view,
+				    {.corners = _corners,
+				     .indices = std::span(indices).subspan(primitive.indicesOffset, primitive.indicesCount),
+				     .twoSided = primitive.twoSided,
+				     .mask = throughHoles ? mesh->GetSkinMask(primitive.skinID) : nullptr},
+				    _scratch);
 				if (distance.has_value())
 				{
 					break;
@@ -301,48 +333,50 @@ void PickingSystem::PickUnderCursor(const Frame& frame)
 		}
 		if (!distance.has_value())
 		{
-			continue;
+			return std::nullopt;
 		}
 		// A building following the land that is only partly built is hit only below what of it stands
 		if (const auto* progress = registry.TryGet<const BuildProgress>(entity);
 		    progress != nullptr && registry.AllOf<MorphWithTerrain>(entity) && progress->built < 1.0f)
 		{
+			const auto* transform = registry.TryGet<const Transform>(entity);
+			const float scale = transform != nullptr ? transform->scale.x : 1.0f;
 			const auto hit = view.camera + (frame.nearPoint - view.camera) * (*distance / view.near);
-			if (hit.y > origin.y + halfExtents.y * 2.0f * scale * progress->built)
+			const float halfHeight = mesh->GetBoundingBox().Size().y * 0.5f;
+			if (hit.y > _candidates[i].origin.y + halfHeight * 2.0f * scale * progress->built)
 			{
-				continue;
+				return std::nullopt;
 			}
 		}
-		if (*distance < pickedDistance)
-		{
-			picked = entity;
-			pickedDistance = *distance;
-			pickedOrigin = origin;
-			pickedExtents = glm::vec2(halfExtents.x, halfExtents.z);
-		}
-	}
+		return distance;
+	};
+	auto picked = screen_pick::PickAmong(view, _candidates, distanceOf);
 
 	// The land wins over the object when it is as near or nearer and its point is off the object's footprint
 	if (picked.has_value() && _pick.land.has_value())
 	{
-		const auto land = map_coords::ToMetres(map_coords::FromMetres({_pick.land->x, _pick.land->z}));
-		if (screen_pick::LandHidesObject(landDistance, pickedDistance, land, {pickedOrigin.x, pickedOrigin.z}, pickedExtents))
+		const auto landPoint = map_coords::ToMetres(map_coords::FromMetres({_pick.land->x, _pick.land->z}));
+		const auto& candidate = _candidates[picked->index];
+		if (screen_pick::LandHidesObject(landDistance, picked->distance, landPoint, {candidate.origin.x, candidate.origin.z},
+		                                 candidate.halfExtents))
 		{
 			picked.reset();
 		}
 	}
 	if (picked.has_value())
 	{
-		_pick.object = picked;
-		const auto* transform = registry.TryGet<const Transform>(*picked);
-		_pick.point = transform != nullptr ? transform->position : pickedOrigin;
-		_pick.distance = pickedDistance;
+		const auto entity = _candidateEntities[picked->index];
+		_pick.object = entity;
+		const auto* transform = registry.TryGet<const Transform>(entity);
+		_pick.point = transform != nullptr ? transform->position : _candidates[picked->index].origin;
+		_pick.distance = picked->distance;
 	}
 	else
 	{
 		_pick.point = _pick.land;
 		_pick.distance = landDistance;
 	}
+	picking::CarryHover(previous, _pick, frame.seconds);
 }
 
 std::optional<screen_pick::MeshHit> PickingSystem::FeelModel(entt::entity object, glm::vec3 origin, glm::vec3 direction) const
@@ -373,9 +407,10 @@ std::optional<screen_pick::MeshHit> PickingSystem::FeelModel(entt::entity object
 		{
 			continue;
 		}
-		const auto placed = Place(registry, object, *mesh, s, found->model);
-		const auto hit = screen_pick::NearestIntersection(placed.corners, mesh->GetSubMeshes()[s]->GetBodyGeometry().indices,
-		                                                  origin, direction, false);
+		std::vector<glm::vec3> placed;
+		Place(registry, object, *mesh, s, found->model, placed);
+		const auto hit = screen_pick::NearestIntersection(placed, mesh->GetSubMeshes()[s]->GetBodyGeometry().indices, origin,
+		                                                  direction, false);
 		if (hit.has_value() && (!nearest.has_value() || hit->distance < nearest->distance))
 		{
 			nearest = hit;

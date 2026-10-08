@@ -11,7 +11,6 @@
 
 #include <cstdint>
 
-#include <functional>
 #include <optional>
 #include <span>
 
@@ -69,19 +68,10 @@ struct Change
 /// shape both catch up with it.
 [[nodiscard]] Change Advance(State& state, float playerAlignment, std::optional<bool> inInfluence);
 
-/// Whether the hand is in its player's influence is tested at the point the interface picks under the cursor. It is
-/// taken while the frame is drawn and tested after it, so a frame's hand goes by the point picked the frame before.
+/// Whether the hand is in its player's influence is tested at the point the interface picks under the cursor (see
+/// PickingSystemInterface). It is taken while the frame is drawn and tested after it, so a frame's hand goes by the point
+/// picked the frame before.
 ///
-/// The point is where the ray from the camera through the cursor meets the land, or else the sea's level where the ray
-/// points down. It is kept within k_PickReach of k_PickMiddle, counting its height, the land's there.
-constexpr glm::vec3 k_PickMiddle {2560.0f, 0.0f, 2560.0f};
-constexpr float k_PickReach = 7680.0f;
-
-/// The point picked for a ray (origin and direction) that meets the land at landHit, if it does, made a map position;
-/// none when it misses the land and doesn't point down. heightAt gives the land's height at a map position.
-[[nodiscard]] std::optional<map_coords::MapCoords> Pick(std::optional<glm::vec3> landHit, glm::vec3 origin, glm::vec3 direction,
-                                                        const std::function<float(const map_coords::MapCoords&)>& heightAt);
-
 /// The point tested after a frame: the one picked, or else the map's origin. While held, as while the hand grips the
 /// land, a frame that picks nothing keeps the last point instead.
 [[nodiscard]] map_coords::MapCoords NextPoint(const map_coords::MapCoords& last, std::optional<map_coords::MapCoords> picked,

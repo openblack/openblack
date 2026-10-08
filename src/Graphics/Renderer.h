@@ -328,7 +328,8 @@ private:
 	mutable float _sunGlare {0.0f};
 	/// The question asked of each glare sample's pixel as the scene is drawn: whether anything nearer than the depth that
 	/// hides it is there. Made the first time it is asked.
-	mutable std::array<uint16_t, 5> _glareQueries {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
+	mutable std::array<bgfx::OcclusionQueryHandle, 5> _glareQueries {
+	    {BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE}};
 	mutable std::optional<TextureHandle> _landLightTexture;
 	/// The mesh uniforms of each program that has drawn a mesh; the programs live as long as the renderer
 	mutable std::unordered_map<const ShaderProgram*, MeshUniforms> _meshUniforms;

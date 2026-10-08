@@ -41,7 +41,7 @@ class DoubleClickFlyToMockPickingSystem: public MockPickingSystem
 public:
 	DoubleClickFlyToMockPickingSystem() = default;
 
-	[[nodiscard]] std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const override
+	[[nodiscard]] std::optional<glm::vec2> LandAtPixel(glm::u16vec2 screenCoord) const override
 	{
 		if (screenCoord == glm::u16vec2(100, 310))
 		{

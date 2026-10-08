@@ -16,6 +16,7 @@
 
 #include "3D/LandLine.h"
 #include "3D/ScreenPick.h"
+#include "ECS/Systems/PickingSystemInterface.h"
 #include "Graphics/Sun.h"
 
 namespace land_line = openblack::land_line;
@@ -310,4 +311,133 @@ TEST(SunGlare, TheSamplesLieAcrossTheWorldsXAndUpItsY)
 	EXPECT_FLOAT_EQ(low[1].y, 10.0f);
 	// Hidden by what is nearer than about 122 near planes
 	EXPECT_NEAR(sun::GlareHidingDepth(1.0f), 65535.0f / 535.5f, 1e-2f);
+}
+
+namespace
+{
+/// The cells a line's walk asks the land of, in order, over land that is never met
+std::vector<glm::ivec2> WalkedCells(glm::vec3 from, glm::vec3 to)
+{
+	std::vector<glm::ivec2> asked;
+	const land_line::CellLookup record = [&asked](int32_t x, int32_t z) -> std::optional<land_line::CellHeights> {
+		asked.emplace_back(x, z);
+		return std::nullopt;
+	};
+	EXPECT_FALSE(land_line::FirstHit(from, to, record).has_value());
+	return asked;
+}
+
+/// The cells a straight line crosses from its start, nearest first, found by stepping finely along it
+std::vector<glm::ivec2> CellsCrossed(glm::vec2 from, glm::vec2 to, size_t count)
+{
+	std::vector<glm::ivec2> cells;
+	constexpr int k_Steps = 100000;
+	for (int i = 0; i <= k_Steps && cells.size() < count; ++i)
+	{
+		const auto at = glm::mix(from, to, static_cast<float>(i) / static_cast<float>(k_Steps));
+		const glm::ivec2 cell(static_cast<int32_t>(at.x), static_cast<int32_t>(at.y));
+		if (cells.empty() || cells.back() != cell)
+		{
+			cells.push_back(cell);
+		}
+	}
+	return cells;
+}
+} // namespace
+
+TEST(LandLine, TheWalkCrossesTheCellsTheLineDoesInEachDirection)
+{
+	// One line each way across x and z, none of them along an axis or through a cell's corner
+	const std::array<glm::vec2, 4> towards = {glm::vec2(2.0f, 1.0f), glm::vec2(2.0f, -1.0f), glm::vec2(-2.0f, 1.0f),
+	                                          glm::vec2(-2.0f, -1.0f)};
+	for (const auto& step : towards)
+	{
+		const glm::vec2 start(100.5f, 100.2f);
+		const auto end = start + step * 1.5f;
+		const auto walked = WalkedCells({start.x, 50.0f, start.y}, {end.x, 50.0f, end.y});
+		ASSERT_GE(walked.size(), 8u);
+		// The line is carried on to the map's edge, so the first cells are those the line crosses on its way there
+		const auto crossed = CellsCrossed(start, start + step * 50.0f, 8);
+		for (size_t i = 0; i < crossed.size(); ++i)
+		{
+			EXPECT_EQ(walked[i], crossed[i]) << "towards " << step.x << ", " << step.y << " at cell " << i;
+		}
+	}
+}
+
+TEST(ScreenPick, AnObjectFurtherThanTheNearestByMoreThanItsRadiusIsNotTested)
+{
+	const auto view = View();
+	const std::array<screen_pick::Candidate, 3> candidates = {{
+	    {.centre = {0.0f, 0.0f, -10.0f}, .radius = 1.0f, .origin = {0.0f, 0.0f, -10.0f}},
+	    {.centre = {0.0f, 0.0f, -30.0f}, .radius = 1.0f, .origin = {0.0f, 0.0f, -30.0f}},
+	    {.centre = {0.0f, 0.0f, -10.5f}, .radius = 1.0f, .origin = {0.0f, 0.0f, -10.5f}},
+	}};
+	std::vector<size_t> tested;
+	const auto picked = screen_pick::PickAmong(view, candidates, [&tested](size_t i) -> std::optional<float> {
+		tested.push_back(i);
+		return i == 2 ? 10.0f : 10.0f + static_cast<float>(i);
+	});
+	ASSERT_TRUE(picked.has_value());
+	// The far one is passed by; the third, as near as the first, doesn't take its place
+	EXPECT_EQ(tested, (std::vector<size_t> {0, 2}));
+	EXPECT_EQ(picked->index, 0u);
+	EXPECT_FLOAT_EQ(picked->distance, 10.0f);
+}
+
+TEST(ScreenPick, OnlyAStrictlyNearerObjectTakesThePick)
+{
+	const auto view = View();
+	const std::array<screen_pick::Candidate, 2> candidates = {{
+	    {.centre = {0.0f, 0.0f, -12.0f}, .radius = 3.0f, .origin = {0.0f, 0.0f, -12.0f}},
+	    {.centre = {0.0f, 0.0f, -10.0f}, .radius = 3.0f, .origin = {0.0f, 0.0f, -10.0f}},
+	}};
+	const auto picked =
+	    screen_pick::PickAmong(view, candidates, [](size_t i) -> std::optional<float> { return i == 0 ? 12.0f : 9.0f; });
+	ASSERT_TRUE(picked.has_value());
+	EXPECT_EQ(picked->index, 1u);
+	// A miss is nothing picked
+	EXPECT_FALSE(
+	    screen_pick::PickAmong(view, candidates, [](size_t) -> std::optional<float> { return std::nullopt; }).has_value());
+}
+
+TEST(Picking, GrippingTheLandKeepsWhatWasPickedAndFollowsOnlyTheLand)
+{
+	using Pick = openblack::ecs::systems::PickingSystemInterface::Pick;
+	namespace picking = openblack::ecs::systems::picking;
+	const Pick before {.object = entt::entity {7},
+	                   .point = glm::vec3(1.0f, 2.0f, 3.0f),
+	                   .distance = 50.0f,
+	                   .land = glm::vec3(4.0f, 5.0f, 6.0f),
+	                   .hoverObject = entt::entity {7},
+	                   .hoverSeconds = 2.0f};
+	const auto moved = picking::Locked(before, glm::vec3(10.0f, 0.0f, 10.0f), 30.0f);
+	EXPECT_EQ(moved.object, before.object);
+	EXPECT_EQ(moved.point, glm::vec3(10.0f, 0.0f, 10.0f));
+	EXPECT_FLOAT_EQ(moved.distance, 30.0f);
+	EXPECT_FLOAT_EQ(moved.hoverSeconds, 2.0f);
+	// Off the land the last point is kept
+	const auto kept = picking::Locked(before, std::nullopt, 30.0f);
+	EXPECT_EQ(kept.point, before.point);
+	EXPECT_FLOAT_EQ(kept.distance, before.distance);
+}
+
+TEST(Picking, TheHoverTimeRunsWhileTheSameThingStaysPicked)
+{
+	using Pick = openblack::ecs::systems::PickingSystemInterface::Pick;
+	namespace picking = openblack::ecs::systems::picking;
+	Pick previous;
+	Pick next;
+	// Nothing picked counts as staying the same
+	picking::CarryHover(previous, next, 0.5f);
+	EXPECT_FLOAT_EQ(next.hoverSeconds, 0.5f);
+	previous = next;
+	next = {.object = entt::entity {3}};
+	picking::CarryHover(previous, next, 0.5f);
+	EXPECT_FLOAT_EQ(next.hoverSeconds, 0.0f);
+	EXPECT_EQ(next.hoverObject, entt::entity {3});
+	previous = next;
+	next = {.object = entt::entity {3}};
+	picking::CarryHover(previous, next, 0.25f);
+	EXPECT_FLOAT_EQ(next.hoverSeconds, 0.25f);
 }

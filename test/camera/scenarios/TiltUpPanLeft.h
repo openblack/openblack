@@ -44,7 +44,7 @@ class TiltUpPanLeftMockPickingSystem: public MockPickingSystem
 public:
 	TiltUpPanLeftMockPickingSystem() = default;
 
-	[[nodiscard]] std::optional<glm::vec2> RayCastClosestHitScreenCoord(glm::u16vec2 screenCoord) const override
+	[[nodiscard]] std::optional<glm::vec2> LandAtPixel(glm::u16vec2 screenCoord) const override
 	{
 		if (screenCoord == k_ScreenCentreLine[0])
 		{

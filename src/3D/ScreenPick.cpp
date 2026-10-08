@@ -20,25 +20,22 @@ namespace openblack::screen_pick
 {
 namespace
 {
-/// The view's sides a corner is beyond: in front of the near plane, past the right, left, top and bottom edges
-enum Beyond : uint8_t
-{
-	k_BeyondBottom = 0x2,
-	k_BeyondTop = 0x4,
-	k_BeyondLeft = 0x8,
-	k_BeyondRight = 0x10,
-	k_BeforeNear = 0x20,
-};
+// The view's sides a corner is beyond, as bits: in front of the near plane, past the right, left, top and bottom edges
+constexpr uint8_t k_BeyondBottom = 0x2;
+constexpr uint8_t k_BeyondTop = 0x4;
+constexpr uint8_t k_BeyondLeft = 0x8;
+constexpr uint8_t k_BeyondRight = 0x10;
+constexpr uint8_t k_BeforeNear = 0x20;
 /// The sides in the order the clipper cuts by them
 constexpr std::array<uint8_t, 5> k_Sides = {k_BeforeNear, k_BeyondRight, k_BeyondLeft, k_BeyondTop, k_BeyondBottom};
 
-/// A corner on the screen: its pixel, near over its depth, and its texture coordinates
-struct ScreenCorner
+/// A triangle cut by the view's five sides has at most three corners and one more for each side
+constexpr size_t k_MostCutCorners = 3 + k_Sides.size();
+/// A polygon being cut, its corners in place
+struct CutPolygon
 {
-	float x;
-	float y;
-	float depth;
-	glm::vec2 uv;
+	std::array<ClipCorner, k_MostCutCorners + 1> corners {};
+	size_t count {0};
 };
 
 [[nodiscard]] uint8_t SidesBeyond(const View& view, const ClipCorner& corner)
@@ -256,9 +253,19 @@ bool Solid(const AlphaMask& mask, glm::vec2 uv)
 
 std::optional<float> FirstHit(const View& view, const Primitive& primitive)
 {
+	PickScratch scratch;
+	return FirstHit(view, primitive, scratch);
+}
+
+std::optional<float> FirstHit(const View& view, const Primitive& primitive, PickScratch& scratch)
+{
 	const auto count = primitive.corners.size();
-	std::vector<uint8_t> beyond(count);
-	std::vector<ScreenCorner> onScreen(count);
+	auto& beyond = scratch.beyond;
+	auto& onScreen = scratch.onScreen;
+	auto& drawn = scratch.drawn;
+	beyond.assign(count, 0);
+	onScreen.resize(count);
+	drawn.clear();
 	for (size_t i = 0; i < count; ++i)
 	{
 		beyond[i] = SidesBeyond(view, primitive.corners[i]);
@@ -269,7 +276,6 @@ std::optional<float> FirstHit(const View& view, const Primitive& primitive)
 	}
 
 	// The triangles drawn, cut to the view where they reach past it
-	std::vector<std::array<ScreenCorner, 3>> drawn;
 	const auto keep = [&drawn, &primitive](const ScreenCorner& a, const ScreenCorner& b, const ScreenCorner& c) {
 		if (primitive.twoSided || FacesCamera(a, b, c))
 		{
@@ -294,14 +300,20 @@ std::optional<float> FirstHit(const View& view, const Primitive& primitive)
 		{
 			continue;
 		}
-		std::vector<ClipCorner> polygon = {primitive.corners[i0], primitive.corners[i1], primitive.corners[i2]};
+		CutPolygon polygon {.corners = {primitive.corners[i0], primitive.corners[i1], primitive.corners[i2]}, .count = 3};
 		for (const auto side : k_Sides)
 		{
-			std::vector<ClipCorner> cut;
-			for (size_t k = 0; k < polygon.size(); ++k)
+			CutPolygon cut;
+			const auto push = [&cut](const ClipCorner& corner) {
+				if (cut.count < cut.corners.size())
+				{
+					cut.corners[cut.count++] = corner;
+				}
+			};
+			for (size_t k = 0; k < polygon.count; ++k)
 			{
-				const auto& from = polygon[(k + polygon.size() - 1) % polygon.size()];
-				const auto& to = polygon[k];
+				const auto& from = polygon.corners[(k + polygon.count - 1) % polygon.count];
+				const auto& to = polygon.corners[k];
 				const float fromInside = Inside(view, from, side);
 				const float toInside = Inside(view, to, side);
 				const auto crossing = [&] {
@@ -316,34 +328,29 @@ std::optional<float> FirstHit(const View& view, const Primitive& primitive)
 				{
 					if (fromInside < 0.0f)
 					{
-						cut.push_back(crossing());
+						push(crossing());
 					}
-					cut.push_back(to);
+					push(to);
 				}
 				else if (fromInside >= 0.0f)
 				{
-					cut.push_back(crossing());
+					push(crossing());
 				}
 			}
-			polygon = std::move(cut);
-			if (polygon.size() < 3)
+			polygon = cut;
+			if (polygon.count < 3)
 			{
 				break;
 			}
 		}
-		if (polygon.size() < 3)
+		if (polygon.count < 3)
 		{
 			continue;
 		}
-		std::vector<ScreenCorner> projected;
-		projected.reserve(polygon.size());
-		for (const auto& corner : polygon)
+		const auto first = Project(view, polygon.corners[0]);
+		for (size_t k = 1; k + 1 < polygon.count; ++k)
 		{
-			projected.push_back(Project(view, corner));
-		}
-		for (size_t k = 1; k + 1 < projected.size(); ++k)
-		{
-			keep(projected[0], projected[k], projected[k + 1]);
+			keep(first, Project(view, polygon.corners[k]), Project(view, polygon.corners[k + 1]));
 		}
 	}
 
@@ -361,6 +368,31 @@ std::optional<float> FirstHit(const View& view, const Primitive& primitive)
 		return view.near / at.depth;
 	}
 	return std::nullopt;
+}
+
+std::optional<Picked> PickAmong(const View& view, std::span<const Candidate> candidates,
+                                const std::function<std::optional<float>(size_t)>& distanceOf)
+{
+	std::optional<Picked> picked;
+	for (size_t i = 0; i < candidates.size(); ++i)
+	{
+		const auto& candidate = candidates[i];
+		if (!CursorOverSphere(view, candidate.centre, candidate.radius, candidate.origin))
+		{
+			continue;
+		}
+		// Nothing further than the nearest object picked so far by more than its own radius is tested
+		if (picked.has_value() && picked->distance + candidate.radius < Depth(view, candidate.centre))
+		{
+			continue;
+		}
+		const auto distance = distanceOf(i);
+		if (distance.has_value() && (!picked.has_value() || *distance < picked->distance))
+		{
+			picked = Picked {.index = i, .distance = *distance};
+		}
+	}
+	return picked;
 }
 
 bool LandHidesObject(float landDistance, float objectDistance, glm::vec2 landPoint, glm::vec2 objectOrigin,

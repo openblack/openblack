@@ -40,9 +40,9 @@ public:
 
 	virtual ~CreatureHandSystemInterface() = default;
 
-	/// The hand's button was pressed with the cursor on a line of sight from a point: whether it is now held to a
+	/// The hand's button was pressed over the creature the interface picked under the cursor: whether it is now held to a
 	/// creature. A creature the player's hand may not touch is refused.
-	virtual bool Grab(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) = 0;
+	virtual bool Grab() = 0;
 	/// Whether the player's hand may take hold of the creature to stroke and slap it
 	[[nodiscard]] virtual bool MayHold(entt::entity creature) const = 0;
 	/// Whether the hand held to a creature by the button would, let go now, have been clicked on it rather than held
@@ -64,9 +64,8 @@ public:
 	[[nodiscard]] virtual std::optional<entt::entity> GetCreature() const = 0;
 	/// Whether the hand was put on the creature by a command, so the button letting go leaves it held
 	[[nodiscard]] virtual bool IsHeldByCommand() const = 0;
-	/// The nearest creature along a line of sight, which the hand would take hold of
-	[[nodiscard]] virtual std::optional<entt::entity> CreatureAlong(const glm::vec3& rayOrigin,
-	                                                                const glm::vec3& rayDirection) const = 0;
+	/// The creature the interface picked under the cursor at the last frame drawn, which the hand would take hold of
+	[[nodiscard]] virtual std::optional<entt::entity> CreatureUnderCursor() const = 0;
 	/// How the creature has been treated since the hand took hold, from -1 to 1
 	[[nodiscard]] virtual float GetFeedbackSum() const = 0;
 	/// While held to a creature the same, and after letting go the sum it let go with, until it takes hold again

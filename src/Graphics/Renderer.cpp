@@ -503,11 +503,12 @@ Renderer::~Renderer() noexcept
 	{
 		bgfx::destroy(toBgfx(*_lightningGlowTexture));
 	}
-	for (const auto query : _glareQueries)
+	for (auto& query : _glareQueries)
 	{
-		if (query != bgfx::kInvalidHandle)
+		if (bgfx::isValid(query))
 		{
-			bgfx::destroy(bgfx::OcclusionQueryHandle {query});
+			bgfx::destroy(query);
+			query = BGFX_INVALID_HANDLE;
 		}
 	}
 	_shaderManager.reset();
@@ -3029,19 +3030,19 @@ void Renderer::DrawSunGlare(const Camera& camera) const
 		if (asksDrawing)
 		{
 			auto& query = _glareQueries.at(i);
-			if (!isHidden && pixel.has_value() && query != bgfx::kInvalidHandle &&
-			    bgfx::getResult(bgfx::OcclusionQueryHandle {query}) == bgfx::OcclusionQueryResult::Invisible)
+			if (!isHidden && pixel.has_value() && bgfx::isValid(query) &&
+			    bgfx::getResult(query) == bgfx::OcclusionQueryResult::Invisible)
 			{
 				isHidden = true;
 			}
 			if (pixel.has_value())
 			{
-				if (query == bgfx::kInvalidHandle)
+				if (!bgfx::isValid(query))
 				{
-					query = bgfx::createOcclusionQuery().idx;
+					query = bgfx::createOcclusionQuery();
 				}
-				AskGlareSampleDrawn(camera, bgfx::OcclusionQueryHandle {query}, *pixel / resolution,
-				                    (*pixel + 1.0f) / resolution, sun::GlareHidingDepth(near));
+				AskGlareSampleDrawn(camera, query, *pixel / resolution, (*pixel + 1.0f) / resolution,
+				                    sun::GlareHidingDepth(near));
 			}
 		}
 		hidden += isHidden ? 1 : 0;
@@ -3077,11 +3078,15 @@ void Renderer::AskGlareSampleDrawn(const Camera& camera, bgfx::OcclusionQueryHan
 		glm::vec4 position;
 		glm::vec4 colour;
 	};
-	bgfx::VertexLayout layout;
-	layout.begin()
-	    .add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float)
-	    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
-	    .end();
+	// The corners' layout never changes, so it is made once
+	static const auto layout = [] {
+		bgfx::VertexLayout made;
+		made.begin()
+		    .add(bgfx::Attrib::Position, 4, bgfx::AttribType::Float)
+		    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
+		    .end();
+		return made;
+	}();
 	if (bgfx::getAvailTransientVertexBuffer(6, layout) < 6)
 	{
 		return;

@@ -26,7 +26,7 @@ public:
 	[[nodiscard]] entt::entity Hand() const override;
 	[[nodiscard]] PlayerNames HandPlayer() const override;
 
-	[[nodiscard]] std::optional<entt::entity> ObjectUnderCursor(glm::vec3 rayOrigin, glm::vec3 rayDirection) const override;
+	[[nodiscard]] std::optional<entt::entity> ObjectUnderCursor() const override;
 	[[nodiscard]] bool InInfluence(PlayerNames player, glm::vec3 point) const override;
 	[[nodiscard]] bool InBounds(glm::vec3 point) const override;
 	[[nodiscard]] glm::vec3 LandNormalAt(glm::vec3 point) const override;

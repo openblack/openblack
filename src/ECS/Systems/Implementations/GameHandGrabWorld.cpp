@@ -135,8 +135,7 @@ PlayerNames GameHandGrabWorld::HandPlayer() const
 	return Locator::playerSystem::has_value() ? Locator::playerSystem::value().GetLocalPlayer() : PlayerNames::PLAYER_ONE;
 }
 
-std::optional<entt::entity> GameHandGrabWorld::ObjectUnderCursor([[maybe_unused]] glm::vec3 rayOrigin,
-                                                                 [[maybe_unused]] glm::vec3 rayDirection) const
+std::optional<entt::entity> GameHandGrabWorld::ObjectUnderCursor() const
 {
 	// The object the interface picked under the cursor as the last frame was drawn
 	if (!Locator::pickingSystem::has_value())

@@ -49,7 +49,7 @@ public:
 	[[nodiscard]] virtual PlayerNames HandPlayer() const = 0;
 
 	/// The thing the interface picks under the cursor, none over the land or nothing
-	[[nodiscard]] virtual std::optional<entt::entity> ObjectUnderCursor(glm::vec3 rayOrigin, glm::vec3 rayDirection) const = 0;
+	[[nodiscard]] virtual std::optional<entt::entity> ObjectUnderCursor() const = 0;
 	/// Whether a point is in a player's influence
 	[[nodiscard]] virtual bool InInfluence(PlayerNames player, glm::vec3 point) const = 0;
 	/// Whether a point is on the map

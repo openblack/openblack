@@ -236,6 +236,10 @@ private:
 	bool _handUpWasHeld {false};
 	/// Whether the cursor is on a thing rather than the land or the sea
 	bool _cursorOnObject {false};
+	/// The up of the face of a model the hand rests on, none over the land or what the hand doesn't feel
+	std::optional<glm::vec3> _handSurfaceUp;
+	/// The hand rests over a thing picked under the cursor
+	bool _handOverObject {false};
 	/// Where the cursor points at in the world, on the landscape or the sea
 	std::optional<glm::vec3> _cursorWorldPosition;
 	/// Where the hand is and how it is posed while it is held to a creature
@@ -270,7 +274,7 @@ private:
 	/// is held to, or over
 	void UpdateHandInterface();
 	/// The interface's pick of what is under the cursor, at the frame as it is about to be drawn
-	void PickUnderCursor();
+	void PickUnderCursor(float seconds);
 	/// Once a game turn outside the temple: the hand's tooltip for what it is over, "Interact" over the player's own
 	/// creature
 	void ProcessHandToolTipTurn();

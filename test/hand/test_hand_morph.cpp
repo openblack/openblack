@@ -155,45 +155,6 @@ TEST(HandMorph, CrossingTheInfluenceBlendsTheSkinForTheLastAlignmentTaken)
 	EXPECT_TRUE(change.shape);
 }
 
-namespace
-{
-float FlatLand(const map_coords::MapCoords&)
-{
-	return 0.0f;
-}
-} // namespace
-
-TEST(HandMorph, PicksTheLandWhereTheRayMeetsIt)
-{
-	const auto picked =
-	    hand_morph::Pick(glm::vec3(1000.0f, 30.0f, 2000.0f), {0.0f, 500.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, FlatLand);
-	ASSERT_TRUE(picked.has_value());
-	EXPECT_EQ(*picked, map_coords::FromMetres({1000.0f, 2000.0f}));
-}
-
-TEST(HandMorph, PicksTheSeasLevelWhereTheRayPointsDownPastTheLand)
-{
-	const auto picked =
-	    hand_morph::Pick(std::nullopt, {100.0f, 200.0f, 300.0f}, glm::normalize(glm::vec3(1.0f, -1.0f, 0.0f)), FlatLand);
-	ASSERT_TRUE(picked.has_value());
-	EXPECT_EQ(picked->x, map_coords::ToFixed(300.0f));
-	EXPECT_EQ(picked->z, map_coords::ToFixed(300.0f));
-}
-
-TEST(HandMorph, PicksNothingInTheSky)
-{
-	EXPECT_FALSE(hand_morph::Pick(std::nullopt, {0.0f, 100.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, FlatLand).has_value());
-	EXPECT_FALSE(hand_morph::Pick(std::nullopt, {0.0f, 100.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, FlatLand).has_value());
-}
-
-TEST(HandMorph, KeepsThePickWithinReachOfTheMapsMiddle)
-{
-	// Far out to sea along x: pulled back to the reach from the middle
-	const auto picked = hand_morph::Pick(glm::vec3(20000.0f, 0.0f, 2560.0f), {}, {0.0f, -1.0f, 0.0f}, FlatLand);
-	ASSERT_TRUE(picked.has_value());
-	EXPECT_EQ(*picked, map_coords::FromMetres({2560.0f + hand_morph::k_PickReach, 2560.0f}));
-}
-
 TEST(HandMorph, TestsThePickOrElseTheOriginUnlessHeld)
 {
 	const auto last = map_coords::FromMetres({10.0f, 20.0f});

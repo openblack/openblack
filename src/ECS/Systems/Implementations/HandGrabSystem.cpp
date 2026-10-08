@@ -221,7 +221,7 @@ hand_grab::HoldFacts HandGrabSystem::HoldOfObject(entt::entity object) const
 	                         size.radius);
 }
 
-bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t nowMs, uint32_t turn)
+bool HandGrabSystem::Press(uint32_t nowMs, uint32_t turn)
 {
 	auto* grab = Grab();
 	if (grab == nullptr)
@@ -233,8 +233,7 @@ bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t
 	case HandGrab::State::Holding:
 		// On something the held thing can be used on, it is given to it; otherwise ready to throw: the spring takes hold of
 		// the hand the next frame, where the hand then is
-		if (const auto target = _world->ObjectUnderCursor(rayOrigin, rayDirection);
-		    target.has_value() && HandInInfluence() && ApplyTo(*grab, *target))
+		if (const auto target = _world->ObjectUnderCursor(); target.has_value() && HandInInfluence() && ApplyTo(*grab, *target))
 		{
 			return true;
 		}
@@ -248,7 +247,7 @@ bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t
 		break;
 	}
 
-	const auto object = _world->ObjectUnderCursor(rayOrigin, rayDirection);
+	const auto object = _world->ObjectUnderCursor();
 	// A pile is scooped from at once
 	if (object.has_value() && StartScoop(*grab, *object))
 	{

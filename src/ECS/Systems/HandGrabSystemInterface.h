@@ -52,9 +52,9 @@ public:
 		uint32_t turn {0};
 	};
 
-	/// The Action button is pressed with the cursor along a line: whether the hand took the press, to take hold of a thing
-	/// under it or to make ready to throw what it holds
-	virtual bool Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t nowMs, uint32_t turn) = 0;
+	/// The Action button is pressed: whether the hand took the press, to take hold of the thing the interface picked
+	/// under the cursor or to make ready to throw what it holds
+	virtual bool Press(uint32_t nowMs, uint32_t turn) = 0;
 	/// The Action button is let go: what the hand was taking is let be, or what it holds is put down or thrown. The thing a
 	/// press tapped, a press too short to take it.
 	virtual std::optional<entt::entity> Release(uint32_t nowMs, uint32_t turn) = 0;

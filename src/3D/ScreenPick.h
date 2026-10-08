@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <array>
+#include <functional>
 #include <optional>
 #include <span>
 #include <vector>
@@ -82,8 +83,48 @@ struct Primitive
 	const AlphaMask* mask {nullptr};
 };
 
+/// A corner on the screen: its pixel, near over its depth, and its texture coordinates
+struct ScreenCorner
+{
+	float x;
+	float y;
+	float depth;
+	glm::vec2 uv;
+};
+
+/// Room a pick keeps from one primitive to the next, so that testing a frame's objects stops allocating once it has grown
+struct PickScratch
+{
+	std::vector<uint8_t> beyond;
+	std::vector<ScreenCorner> onScreen;
+	std::vector<std::array<ScreenCorner, 3>> drawn;
+};
+
 /// How far along the view the first triangle of the primitive covering the cursor is, none when none does
 [[nodiscard]] std::optional<float> FirstHit(const View& view, const Primitive& primitive);
+/// The same, reusing the room of earlier tests
+[[nodiscard]] std::optional<float> FirstHit(const View& view, const Primitive& primitive, PickScratch& scratch);
+
+/// An object drawn this frame whose sphere the cursor may be over, as the interface weighs it
+struct Candidate
+{
+	/// Where its sphere's centre is, its radius (the model's half diagonal times its scale) and the object's origin
+	glm::vec3 centre {0.0f};
+	float radius {0.0f};
+	glm::vec3 origin {0.0f};
+	/// Half its model's extents across x and z, unscaled: its footprint
+	glm::vec2 halfExtents {0.0f};
+};
+/// The object the interface picks among the frame's objects in the order they are drawn: one whose sphere the cursor is
+/// over and which lies no further than the nearest so far by more than its radius is tested, its distance found by
+/// `distanceOf` (none for a miss), and it replaces the nearest only when strictly nearer, so a tie keeps the first drawn
+struct Picked
+{
+	size_t index;
+	float distance;
+};
+[[nodiscard]] std::optional<Picked> PickAmong(const View& view, std::span<const Candidate> candidates,
+                                              const std::function<std::optional<float>(size_t)>& distanceOf);
 
 /// The interface's choice between the object picked and the land under the cursor: the object is kept unless the land is
 /// nearer or as near and the land's point lies outside the object's footprint, the circle through its model's
