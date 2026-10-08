@@ -209,7 +209,8 @@ void Replant(const PhysicsEntry* entry, entt::entity tree, const LandIslandInter
 	}
 	else if (search.StartsForest() && Locator::forestSystem::has_value())
 	{
-		registry.Assign<ForestMember>(tree, Locator::forestSystem::value().NewLandForestId());
+		registry.Assign<ForestMember>(tree,
+		                              Locator::forestSystem::value().MakeLandForest(std::nullopt, position, entt::null, false));
 	}
 	// Away from towns, the player sees the forest grow
 	if (!search.NearTown() && Locator::particleSystem::has_value())

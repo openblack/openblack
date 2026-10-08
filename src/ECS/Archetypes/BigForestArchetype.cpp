@@ -18,6 +18,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Unlit.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/ForestSystemInterface.h"
 #include "InfoConstants.h"
 #include "Locator.h"
 #include "Resources/ResourceManager.h"
@@ -44,6 +45,11 @@ entt::entity BigForestArchetype::Create(const glm::vec3& position, BigForestInfo
 	registry.Assign<Unlit>(entity);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
+	// A big forest is the forest of its own trees, made about its place
+	if (Locator::forestSystem::has_value())
+	{
+		Locator::forestSystem::value().MakeLandForest(std::nullopt, position, entity, false);
+	}
 
 	return entity;
 }

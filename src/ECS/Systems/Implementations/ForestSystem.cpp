@@ -40,6 +40,7 @@
 #include "ECS/Components/Flowers.h"
 #include "ECS/Components/Forest.h"
 #include "ECS/Components/ForestMember.h"
+#include "ECS/Components/LandForest.h"
 #include "ECS/Components/MagicForest.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/Spell.h"
@@ -50,11 +51,13 @@
 #include "ECS/Components/Town.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
+#include "ECS/LandForests.h"
 #include "ECS/Map.h"
 #include "ECS/Registry.h"
 #include "ECS/ScenicForest.h"
 #include "ECS/Systems/FireSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
+#include "ECS/Systems/ResourceStoreSystemInterface.h"
 #include "ECS/Systems/SnowSystemInterface.h"
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "ECS/WorldObjects.h"
@@ -478,18 +481,202 @@ void ForestSystem::ProcessForests()
 	}
 }
 
-uint32_t ForestSystem::NewLandForestId() const
+uint32_t ForestSystem::MakeLandForest(std::optional<uint32_t> id, glm::vec3 position, entt::entity bigForest, bool scenic)
 {
-	// The game makes each such forest a thing of its own; here forests are numbers, so the new one takes the number after
-	// the land's highest, below those the miracles' forests are counted from
-	uint32_t highest = 0;
-	EntityRegistry().Each<const ForestMember>([&highest](entt::entity, const ForestMember& member) {
-		if (member.forest < k_FirstMiracleForestId)
+	// A number given is kept and moves the count past it; none takes the next
+	uint32_t number = _nextLandForestId;
+	if (id.has_value() && *id != 0)
+	{
+		number = *id;
+		_nextLandForestId = std::max(_nextLandForestId, number + 1);
+	}
+	else
+	{
+		++_nextLandForestId;
+	}
+	auto& registry = EntityRegistry();
+	const auto forest = registry.Create();
+	registry.Assign<Transform>(forest, position, glm::mat3(1.0f), glm::vec3(1.0f));
+	registry.Assign<LandForest>(
+	    forest, LandForest {.id = number, .bigForest = bigForest, .scenic = scenic, .made = _landForestsMade++});
+	return number;
+}
+
+std::vector<entt::entity> ForestSystem::LandForests() const
+{
+	std::vector<std::pair<uint32_t, entt::entity>> made;
+	EntityRegistry().Each<const LandForest>(
+	    [&made](entt::entity forest, const LandForest& record) { made.emplace_back(record.made, forest); });
+	std::ranges::sort(made, std::greater {});
+	std::vector<entt::entity> forests;
+	forests.reserve(made.size());
+	std::ranges::transform(made, std::back_inserter(forests), [](const auto& pair) { return pair.second; });
+	return forests;
+}
+
+std::optional<entt::entity> ForestSystem::LandForestOf(uint32_t id) const
+{
+	const auto& registry = EntityRegistry();
+	for (const auto forest : LandForests())
+	{
+		if (registry.Get<const LandForest>(forest).id == id)
 		{
-			highest = std::max(highest, member.forest);
+			return forest;
+		}
+	}
+	return std::nullopt;
+}
+
+std::vector<entt::entity> ForestSystem::TreesOf(entt::entity forest, bool growing) const
+{
+	const auto& registry = EntityRegistry();
+	const auto* record = registry.Valid(forest) ? registry.TryGet<const LandForest>(forest) : nullptr;
+	if (record == nullptr)
+	{
+		return {};
+	}
+	const auto centre = map_coords::FromMetres(glm::xz(registry.Get<const Transform>(forest).position));
+	std::vector<std::pair<float, entt::entity>> trees;
+	registry.Each<const Tree, const ForestMember, const Transform>(
+	    [&](entt::entity tree, const Tree& kind, const ForestMember& member, const Transform& at) {
+		    // A tree still short of its size grows on; the others are grown
+		    if (member.forest == record->id && (at.scale.x < kind.maxSize) == growing)
+		    {
+			    trees.emplace_back(gutils::GetDistanceInMetres(map_coords::FromMetres(glm::xz(at.position)), centre), tree);
+		    }
+	    });
+	std::ranges::stable_sort(trees, {}, &std::pair<float, entt::entity>::first);
+	std::vector<entt::entity> sorted;
+	std::ranges::transform(trees, std::back_inserter(sorted), [](const auto& pair) { return pair.second; });
+	return sorted;
+}
+
+float ForestSystem::WoodOf(entt::entity forest) const
+{
+	const auto& registry = EntityRegistry();
+	const auto* record = registry.Valid(forest) ? registry.TryGet<const LandForest>(forest) : nullptr;
+	if (record == nullptr || !Locator::resourceStoreSystem::has_value())
+	{
+		return 0.0f;
+	}
+	const auto& stores = Locator::resourceStoreSystem::value();
+	float wood = 0.0f;
+	if (record->bigForest != entt::null && registry.Valid(record->bigForest))
+	{
+		wood += static_cast<float>(stores.ResourceOf(record->bigForest).amount);
+	}
+	for (const bool growing : {false, true})
+	{
+		for (const auto tree : TreesOf(forest, growing))
+		{
+			wood += static_cast<float>(stores.ResourceOf(tree).amount);
+		}
+	}
+	return wood;
+}
+
+glm::vec3 ForestSystem::NearestPointOf(entt::entity forest, glm::vec3 to) const
+{
+	const auto& registry = EntityRegistry();
+	const auto& record = registry.Get<const LandForest>(forest);
+	if (record.bigForest != entt::null && registry.Valid(record.bigForest))
+	{
+		// On the big forest's edge, towards the point
+		const auto& at = registry.Get<const Transform>(record.bigForest).position;
+		const glm::vec2 towards = glm::xz(to) - glm::xz(at);
+		const float length = glm::length(towards);
+		const auto edge =
+		    length > 0.0f ? towards / length * ecs::world_objects::SizeOf(record.bigForest).radius : glm::vec2(0.0f);
+		return {at.x + edge.x, at.y, at.z + edge.y};
+	}
+	return registry.Get<const Transform>(forest).position;
+}
+
+void ForestSystem::AssignForestsToTowns()
+{
+	if (!Locator::infoConstants::has_value())
+	{
+		return;
+	}
+	auto& registry = EntityRegistry();
+	const float reach = Locator::infoConstants::value().town.maxDistanceForTownForest;
+	const auto forests = LandForests();
+	registry.Each<const Town>([&](entt::entity townEntity, const Town& town) {
+		// Measured from the town's storage pit. (The game makes a town without one a temporary pile for wood beside its
+		// meeting place and measures from that; openblack's towns have no meeting place yet, so such a town lists none.)
+		std::optional<glm::vec3> from;
+		registry.Each<const StoragePit, const Abode, const Transform>(
+		    [&](entt::entity, const StoragePit&, const Abode& abode, const Transform& at) {
+			    if (!from.has_value() && abode.townId == town.id)
+			    {
+				    from = at.position;
+			    }
+		    });
+		auto& listed = registry.AssignOrReplace<TownForests>(townEntity);
+		if (!from.has_value())
+		{
+			return;
+		}
+		for (const auto forest : forests)
+		{
+			const float distance = glm::length(glm::xz(NearestPointOf(forest, *from)) - glm::xz(*from));
+			if (ecs::land_forests::NearTown(distance, reach, WoodOf(forest)))
+			{
+				listed.forests.push_back(forest);
+			}
 		}
 	});
-	return highest + 1;
+}
+
+std::optional<glm::vec3> ForestSystem::ForestLair(AnimalInfo kind, glm::vec3 from) const
+{
+	const auto& registry = EntityRegistry();
+	const auto own = map_coords::FromMetres(glm::xz(from));
+	const auto distanceTo = [&own](glm::vec3 at) { return gutils::GetDistance(own, map_coords::FromMetres(glm::xz(at))); };
+	if (kind == AnimalInfo::Wolf)
+	{
+		// A wolf's flock goes to the nearest big forest first
+		std::vector<entt::entity> bigForests;
+		std::vector<int32_t> distances;
+		registry.Each<const BigForest, const Transform>([&](entt::entity big, const BigForest&, const Transform& at) {
+			bigForests.push_back(big);
+			distances.push_back(distanceTo(at.position));
+		});
+		if (const auto nearest = ecs::land_forests::Nearest(distances))
+		{
+			return registry.Get<const Transform>(bigForests[*nearest]).position;
+		}
+	}
+	// Then the forest the flock's rule chooses, at its grown tree nearest its place
+	const auto forests = LandForests();
+	std::vector<float> scores;
+	std::ranges::transform(forests, std::back_inserter(scores), [&](entt::entity forest) {
+		return ecs::land_forests::LairScore(distanceTo(registry.Get<const Transform>(forest).position));
+	});
+	if (const auto chosen = ecs::land_forests::LairForest(scores))
+	{
+		const auto grown = TreesOf(forests[*chosen], false);
+		if (!grown.empty())
+		{
+			return registry.Get<const Transform>(grown.front()).position;
+		}
+	}
+	if (kind == AnimalInfo::Wolf)
+	{
+		// Else the nearest tree of all
+		std::vector<entt::entity> trees;
+		std::vector<int32_t> distances;
+		registry.Each<const Tree, const Transform>([&](entt::entity tree, const Tree&, const Transform& at) {
+			trees.push_back(tree);
+			distances.push_back(distanceTo(at.position));
+		});
+		if (const auto nearest = ecs::land_forests::Nearest(distances))
+		{
+			return registry.Get<const Transform>(trees[*nearest]).position;
+		}
+	}
+	// Else where the animal is
+	return from;
 }
 
 void ForestSystem::MakeScenicForests()
@@ -556,7 +743,9 @@ void ForestSystem::MakeScenicForests()
 				// The forest is made, about the town's centre, at the first tree it takes
 				if (!forest.has_value())
 				{
-					forest = NewLandForestId();
+					const float height =
+					    Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt(centre) : 0.0f;
+					forest = MakeLandForest(std::nullopt, {centre.x, height, centre.y}, entt::null, true);
 					centres[*forest] = centre;
 					town.scenicForestCentre = centre;
 				}
@@ -571,4 +760,6 @@ void ForestSystem::Reset()
 {
 	_lastTreeAddedTurn = 0;
 	_nextMiracleForestId = k_FirstMiracleForestId;
+	_nextLandForestId = 1;
+	_landForestsMade = 0;
 }

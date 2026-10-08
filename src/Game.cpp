@@ -2651,6 +2651,8 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	if (Locator::forestSystem::has_value())
 	{
 		Locator::forestSystem::value().MakeScenicForests();
+		// Each town finds the forests near it with wood in them
+		Locator::forestSystem::value().AssignForestsToTowns();
 	}
 
 	StartNewLand();

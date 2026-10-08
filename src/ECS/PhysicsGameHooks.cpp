@@ -53,6 +53,7 @@
 #include "ECS/Systems/CreatureLocomotionSystemInterface.h"
 #include "ECS/Systems/CreatureMindSystemInterface.h"
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
+#include "ECS/Systems/ForestSystemInterface.h"
 #include "ECS/Systems/Implementations/VillagerPhysics.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
 #include "ECS/Systems/MagicShieldSystemInterface.h"
@@ -280,8 +281,29 @@ void LandAnimal(PhysicsEntry* entry, entt::entity entity)
 			animals.SetFlockCentre(animal->flock, glm::vec2(position.x, position.z));
 			break;
 		case living::LandedLair::ForestOfItsKind:
-			// TODO(physics): tigers and wolves choose a forest by drinking water and distance; that choice is not
-			// ported, so their flock's home stays
+		{
+			// Tigers and wolves choose a forest; a wolf only when it leads its flock, keeping to where it is while a
+			// script holds it. (A flag of the wolf's flock that stops the choice altogether isn't known in openblack.)
+			const bool leader = animals.LeaderOf(animal->flock) == entity;
+			if (animal->type == AnimalInfo::Wolf && !leader)
+			{
+				break;
+			}
+			std::optional<glm::vec3> lair;
+			if (animal->type == AnimalInfo::Wolf && registry.AllOf<InScript>(entity))
+			{
+				lair = position;
+			}
+			else if (Locator::forestSystem::has_value())
+			{
+				lair = Locator::forestSystem::value().ForestLair(animal->type, position);
+			}
+			if (lair.has_value())
+			{
+				animals.SetFlockCentre(animal->flock, glm::vec2(lair->x, lair->z));
+			}
+			break;
+		}
 		case living::LandedLair::Unchanged:
 			break;
 		}

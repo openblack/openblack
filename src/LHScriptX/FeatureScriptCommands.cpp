@@ -44,6 +44,7 @@
 #include "ECS/Components/Footpath.h"
 #include "ECS/Components/Stream.h"
 #include "ECS/Registry.h"
+#include "ECS/Systems/ForestSystemInterface.h"
 #include "ECS/Systems/PlayerSystemInterface.h"
 #include "ECS/Systems/ReactionSystemInterface.h"
 #include "ECS/Systems/WeatherSystemInterface.h"
@@ -428,10 +429,12 @@ void FeatureScriptCommands::CreateNewAnimal([[maybe_unused]] glm::vec3 position,
 	// __func__);
 }
 
-void FeatureScriptCommands::CreateForest([[maybe_unused]] int32_t forestId, [[maybe_unused]] glm::vec3 position)
+void FeatureScriptCommands::CreateForest(int32_t forestId, glm::vec3 position)
 {
-	// SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "LHScriptX: {}:{}: Function {} not implemented.", __FILE__, __LINE__,
-	// __func__);
+	if (Locator::forestSystem::has_value())
+	{
+		Locator::forestSystem::value().MakeLandForest(static_cast<uint32_t>(forestId), position, entt::null, false);
+	}
 }
 
 void FeatureScriptCommands::CreateTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t rotation, int32_t scale)
@@ -449,7 +452,14 @@ void FeatureScriptCommands::CreateDeadTree(glm::vec3 position, [[maybe_unused]] 
 void FeatureScriptCommands::CreateNewTree(int32_t forestId, glm::vec3 position, TreeInfo treeType, int32_t isNonScenic,
                                           float rotation, float currentSize, float maxSize)
 {
-	TreeArchetype::Create(forestId, position, treeType, static_cast<bool>(isNonScenic), rotation, maxSize, currentSize);
+	// A tree joins the first of the land's forests with its forest's number, or none when there is none
+	uint32_t forest = 0;
+	if (forestId != 0 && Locator::forestSystem::has_value() &&
+	    Locator::forestSystem::value().LandForestOf(static_cast<uint32_t>(forestId)).has_value())
+	{
+		forest = static_cast<uint32_t>(forestId);
+	}
+	TreeArchetype::Create(forest, position, treeType, static_cast<bool>(isNonScenic), rotation, maxSize, currentSize);
 }
 
 void FeatureScriptCommands::CreateField(glm::vec3 position, FieldTypeInfo type)
