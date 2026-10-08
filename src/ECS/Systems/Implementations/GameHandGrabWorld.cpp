@@ -28,6 +28,8 @@
 #include "3D/MapCoords.h"
 #include "Audio/AudioManagerInterface.h"
 #include "Common/GameRandom.h"
+#include "ECS/Archetypes/PotArchetype.h"
+#include "ECS/Components/Abode.h"
 #include "ECS/Components/Animal.h"
 #include "ECS/Components/Creature.h"
 #include "ECS/Components/HandGrab.h"
@@ -37,6 +39,7 @@
 #include "ECS/Components/Physics.h"
 #include "ECS/Components/Player.h"
 #include "ECS/Components/Pot.h"
+#include "ECS/Components/StoragePit.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Villager.h"
 #include "ECS/Map.h"
@@ -87,6 +90,14 @@ constexpr float k_RootsHoleShare = 0.3f;
 /// The particles of a handful poured out of the hand: food and wood
 constexpr auto k_PourFood = static_cast<ParticleType>(113);
 constexpr auto k_PourWood = static_cast<ParticleType>(112);
+/// The particles of what is scooped streaming into the hand: food and wood
+constexpr auto k_ScoopFood = static_cast<ParticleType>(107);
+constexpr auto k_ScoopWood = static_cast<ParticleType>(110);
+/// The scooping sound of the in-game bank, for food and for wood, played each game turn at a pitch rising with the scoop
+constexpr uint32_t k_ScoopSample = 44;
+constexpr uint32_t k_ScoopWoodSample = 98;
+constexpr float k_ScoopPitchStart = 60.0f;
+constexpr float k_ScoopPitchRise = 180.0f;
 
 const graphics::L3DMesh* MeshOf(const Registry& registry, entt::entity object)
 {
@@ -583,27 +594,150 @@ std::optional<hand_grab::HandGrabWorldInterface::Pose> GameHandGrabWorld::Releas
 
 void GameHandGrabWorld::PourPot(entt::entity pot, PlayerNames player)
 {
-	auto& registry = Locator::entitiesRegistry::value();
-	const auto* data = registry.TryGet<const Pot>(pot);
-	const auto* info = Info();
-	if (data == nullptr || info == nullptr)
+	const auto facts = PotFactsOf(pot);
+	if (!facts.has_value())
 	{
 		return;
 	}
-	const auto& kind = info->pot.at(static_cast<size_t>(data->type));
 	// It pours out of the hand where the hand is
 	const auto hand = PoseOf(Hand()).origin;
 	if (Locator::particleSystem::has_value() && player == HandPlayer())
 	{
 		// TODO(hand): a poisoned handful pours poisoned food, particles 111 (openblack keeps no poisoned pots)
-		const auto particles = kind.resourceType == ResourceType::Wood ? k_PourWood : k_PourFood;
+		const auto particles = facts->resource == ResourceType::Wood ? k_PourWood : k_PourFood;
 		Locator::particleSystem::value().Start(particles, hand, 1.0f);
 	}
 	// What it holds goes to the stores and piles of it about the point, or makes a pile there; in the water it is lost
+	PourAt(facts->resource, hand, facts->amount, player);
+	UseUp(pot);
+}
+
+std::optional<hand_grab::HandGrabWorldInterface::PotFacts> GameHandGrabWorld::PotFactsOf(entt::entity pot) const
+{
+	const auto* data = Locator::entitiesRegistry::value().TryGet<const Pot>(pot);
+	const auto* info = Info();
+	if (data == nullptr || info == nullptr)
+	{
+		return std::nullopt;
+	}
+	const auto& kind = info->pot.at(static_cast<size_t>(data->type));
+	// A pile of food is scooped into a handful of food, a pile of wood into one of wood
+	return PotFacts {.potType = kind.potType,
+	                 .resource = kind.resourceType,
+	                 .handful = kind.resourceType == ResourceType::Wood ? PotInfo::HandWood : PotInfo::HandFood,
+	                 .amount = data->amount};
+}
+
+hand_grab::ScoopFacts GameHandGrabWorld::ScoopFactsOf(PotInfo handful) const
+{
+	const auto* info = Info();
+	if (info == nullptr)
+	{
+		return {};
+	}
+	const auto& kind = info->pot.at(static_cast<size_t>(handful));
+	return {.initial = kind.amountPickedUpInitially,
+	        .perTurn = kind.amountPickedUpPerTurn,
+	        .perTurnEnd = kind.amountPickedUpPerTurnEnd,
+	        .maxPickedUp = kind.maxAmountCanBePickedUp,
+	        .rampSeconds = kind.multiPickUpRampTime};
+}
+
+uint32_t GameHandGrabWorld::TakeFromPile(entt::entity pile, uint32_t amount)
+{
+	auto& registry = Locator::entitiesRegistry::value();
+	auto* pot = registry.TryGet<Pot>(pile);
+	if (pot == nullptr)
+	{
+		return 0;
+	}
+	const auto taken = std::min(amount, pot->amount);
+	pot->amount -= taken;
+	// A store's pile stays, its store counting what it lost; any other goes once it has nothing left
+	entt::entity store = entt::null;
+	registry.Each<const StoragePit>([pile, &store](entt::entity pit, const StoragePit& data) {
+		if (data.foodPile == pile || std::ranges::find(data.woodPiles, pile) != data.woodPiles.end())
+		{
+			store = pit;
+		}
+	});
+	if (auto* abode = store != entt::null ? registry.TryGet<Abode>(store) : nullptr)
+	{
+		const auto facts = PotFactsOf(pile);
+		auto& counted = facts.has_value() && facts->resource == ResourceType::Wood ? abode->woodAmount : abode->foodAmount;
+		counted -= std::min(counted, taken);
+	}
+	else if (pot->amount == 0)
+	{
+		world_objects::Remove(pile);
+	}
+	return taken;
+}
+
+entt::entity GameHandGrabWorld::MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount)
+{
+	return archetypes::PotArchetype::Create(position, 0.0f, type, static_cast<int32_t>(amount));
+}
+
+std::optional<uint32_t> GameHandGrabWorld::StartScoopStream(ResourceType resource, glm::vec3 source)
+{
+	if (!Locator::particleSystem::has_value())
+	{
+		return std::nullopt;
+	}
+	// TODO(hand): poisoned food streams as particles 108 and a fish farm's fish as 109 (openblack has neither)
+	return Locator::particleSystem::value().Start(resource == ResourceType::Wood ? k_ScoopWood : k_ScoopFood, source, 1.0f);
+}
+
+void GameHandGrabWorld::StopScoopStream(uint32_t stream)
+{
+	if (Locator::particleSystem::has_value())
+	{
+		Locator::particleSystem::value().CloseDown(stream);
+	}
+}
+
+void GameHandGrabWorld::PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp)
+{
+	if (!Locator::audio::has_value())
+	{
+		return;
+	}
+	// Wood rattles in, anything else pours; its pitch rises as the scoop ramps up
+	const uint32_t sample = resource == ResourceType::Wood ? k_ScoopWoodSample : k_ScoopSample;
+	const auto pitch = static_cast<uint32_t>(ramp * k_ScoopPitchRise + k_ScoopPitchStart);
+	Locator::audio::value().StartSoundEffect(entt::hashed_string(fmt::format("InGame.sad/{}", sample).c_str()).value(),
+	                                         {.position = hand, .pitchPercent = pitch});
+}
+
+float GameHandGrabWorld::LandHeightAt(glm::vec3 point) const
+{
+	return Locator::terrainSystem::has_value() ? Locator::terrainSystem::value().GetHeightAt({point.x, point.z}) : 0.0f;
+}
+
+bool GameHandGrabWorld::StoresResource(entt::entity store, ResourceType resource) const
+{
+	// A storage pit stores any resource
+	return (resource == ResourceType::Food || resource == ResourceType::Wood) &&
+	       Locator::entitiesRegistry::value().AllOf<StoragePit, Abode>(store);
+}
+
+uint32_t GameHandGrabWorld::AddToStore(entt::entity store, ResourceType resource, uint32_t amount)
+{
+	// TODO(hand): the player's creature may copy the giving, and the advisor says the resource was dropped
+	return _resources.StoreResource(store, resource, amount);
+}
+
+void GameHandGrabWorld::PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player)
+{
 	// TODO(hand): the player's creature may copy the giving to each store, and the advisor says the resource was dropped
-	_resources.AddResource(kind.resourceType, hand, data->amount, false, player);
-	world_objects::LeaveGhost(pot);
-	world_objects::Remove(pot);
+	_resources.AddResource(resource, point, amount, false, player);
+}
+
+void GameHandGrabWorld::UseUp(entt::entity object)
+{
+	world_objects::LeaveGhost(object);
+	world_objects::Remove(object);
 }
 
 FromHandResult GameHandGrabWorld::LetGoFromHand(entt::entity object, const FromHand& release)

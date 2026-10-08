@@ -11,6 +11,8 @@
 
 #include "HandGrabSystem.h"
 
+#include <algorithm>
+
 #include <glm/geometric.hpp>
 
 #include "ECS/Components/Animal.h"
@@ -149,8 +151,14 @@ GrabKind HandGrabSystem::KindOf(entt::entity object) const
 	}
 	if (const auto* pot = registry.TryGet<const Pot>(object))
 	{
-		// Piles are scooped from, not picked up
-		return _world->IsLoosePot(pot->type) ? GrabKind::MobileObject : GrabKind::None;
+		// Loose pots are picked up. Piles are scooped from, not picked up: the only pile the hand holds is a handful, of
+		// its pile's own handful kind, while it holds something
+		if (_world->IsLoosePot(pot->type))
+		{
+			return GrabKind::MobileObject;
+		}
+		const auto facts = _world->PotFactsOf(object);
+		return facts.has_value() && facts->handful == pot->type && pot->amount > 0 ? GrabKind::MobileObject : GrabKind::None;
 	}
 	if (const auto* still = registry.TryGet<const MobileStatic>(object))
 	{
@@ -222,7 +230,13 @@ bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t
 	switch (grab->state)
 	{
 	case HandGrab::State::Holding:
-		// Ready to throw: the spring takes hold of the hand the next frame, where the hand then is
+		// On something the held thing can be used on, it is given to it; otherwise ready to throw: the spring takes hold of
+		// the hand the next frame, where the hand then is
+		if (const auto target = _world->ObjectUnderCursor(rayOrigin, rayDirection);
+		    target.has_value() && HandInInfluence() && ApplyTo(*grab, *target))
+		{
+			return true;
+		}
 		grab->state = HandGrab::State::ReadyToThrow;
 		grab->springPending = true;
 		return true;
@@ -234,6 +248,11 @@ bool HandGrabSystem::Press(glm::vec3 rayOrigin, glm::vec3 rayDirection, uint32_t
 	}
 
 	const auto object = _world->ObjectUnderCursor(rayOrigin, rayDirection);
+	// A pile is scooped from at once
+	if (object.has_value() && StartScoop(*grab, *object))
+	{
+		return true;
+	}
 	if (!object.has_value() || !MayTake(*object))
 	{
 		// A press the hand can't take is a tap on the thing (clicking and activating)
@@ -284,10 +303,133 @@ std::optional<entt::entity> HandGrabSystem::Release(uint32_t nowMs, uint32_t tur
 		return std::nullopt;
 	}
 	case HandGrab::State::Holding:
+		// Letting go of the button ends a scoop; the hand holds its handful
+		if (grab->scoopSource != entt::null)
+		{
+			EndScoop(*grab);
+		}
+		break;
 	case HandGrab::State::Empty:
 		break;
 	}
 	return std::nullopt;
+}
+
+bool HandGrabSystem::StartScoop(HandGrab& grab, entt::entity source)
+{
+	const auto facts = _world->PotFactsOf(source);
+	// Only a pile is scooped from, never a handful, and only inside the player's influence
+	if (!facts.has_value() || facts->potType == PotType::Pot || !HandInInfluence())
+	{
+		return false;
+	}
+	const auto& registry = _world->Entities();
+	if (registry.Get<const Pot>(source).type == facts->handful)
+	{
+		return false;
+	}
+	const auto scoop = _world->ScoopFactsOf(facts->handful);
+	const auto first = std::min(scoop.initial, facts->amount);
+	if (first == 0)
+	{
+		return false;
+	}
+	const auto sourcePosition = _world->PoseOf(source).origin;
+	_world->TakeFromPile(source, first);
+	const auto hand = _world->PoseOf(_world->Hand()).origin;
+	const auto handful = _world->MakeHandful(facts->handful, hand, first);
+	if (!Exists(handful))
+	{
+		return false;
+	}
+	Take(grab, handful, false);
+	if (grab.state != HandGrab::State::Holding)
+	{
+		return false;
+	}
+	grab.scoopSource = source;
+	grab.scoopTurns = 0;
+	grab.scoopAnchor = hand;
+	// What is scooped streams from the source into the hand
+	grab.scoopStream = _world->StartScoopStream(facts->resource, sourcePosition);
+	return true;
+}
+
+bool HandGrabSystem::Scoop(HandGrab& grab)
+{
+	auto& registry = _world->Entities();
+	const auto* handful = registry.TryGet<Pot>(grab.object);
+	const auto source = _world->PotFactsOf(grab.scoopSource);
+	// It scoops only into a handful of the pile's own kind
+	if (handful == nullptr || !source.has_value() || handful->type != source->handful)
+	{
+		return false;
+	}
+	const auto scoop = _world->ScoopFactsOf(source->handful);
+	const auto wanted = hand_grab::ScoopAmount(grab.scoopTurns, scoop);
+	_world->PlayScoopSound(source->resource, _world->PoseOf(_world->Hand()).origin,
+	                       hand_grab::ScoopRamp(grab.scoopTurns, scoop));
+	const auto taken = hand_grab::ScoopTaken(wanted, source->amount, handful->amount, scoop);
+	if (taken == 0)
+	{
+		if (grab.scoopStream.has_value())
+		{
+			_world->StopScoopStream(*grab.scoopStream);
+			grab.scoopStream.reset();
+		}
+		return false;
+	}
+	const auto took = _world->TakeFromPile(grab.scoopSource, taken);
+	registry.Get<Pot>(grab.object).amount += took;
+	// A pile scooped empty stops streaming; the scoop ends with the next turn
+	if (!Exists(grab.scoopSource) && grab.scoopStream.has_value())
+	{
+		_world->StopScoopStream(*grab.scoopStream);
+		grab.scoopStream.reset();
+	}
+	return true;
+}
+
+void HandGrabSystem::EndScoop(HandGrab& grab)
+{
+	if (grab.scoopStream.has_value())
+	{
+		_world->StopScoopStream(*grab.scoopStream);
+		grab.scoopStream.reset();
+	}
+	grab.scoopSource = entt::null;
+	grab.scoopTurns = 0;
+}
+
+bool HandGrabSystem::ApplyTo(HandGrab& grab, entt::entity target)
+{
+	const auto held = grab.object;
+	if (!Exists(held) || target == held || !Exists(target))
+	{
+		return false;
+	}
+	// A pot is given to a store of what it holds, or poured into a pile or pot of the same
+	const auto pot = _world->PotFactsOf(held);
+	if (!pot.has_value())
+	{
+		return false;
+	}
+	if (_world->StoresResource(target, pot->resource))
+	{
+		_world->AddToStore(target, pot->resource, pot->amount);
+	}
+	else if (const auto other = _world->PotFactsOf(target); other.has_value() && other->resource == pot->resource)
+	{
+		_world->PourAt(pot->resource, _world->PoseOf(_world->Hand()).origin, pot->amount, _world->HandPlayer());
+	}
+	else
+	{
+		return false;
+	}
+	_world->Entities().Remove<InHand>(held);
+	_world->UseUp(held);
+	Empty(grab);
+	return true;
 }
 
 void HandGrabSystem::StartPull(HandGrab& grab, const Frame& frame)
@@ -358,7 +500,7 @@ glm::vec3 HandGrabSystem::Pull(HandGrab& grab, const Frame& frame)
 	return hand_grab::TugHandPoint(tug, grab.holdDistance, leans ? grab.stretch.GetValue() : 1.0f);
 }
 
-void HandGrabSystem::Take(HandGrab& grab, entt::entity object)
+void HandGrabSystem::Take(HandGrab& grab, entt::entity object, bool fromTheWorld)
 {
 	auto& registry = _world->Entities();
 	// The pull may have ended on a thing that can no longer be taken: the hand lets go of it
@@ -372,12 +514,15 @@ void HandGrabSystem::Take(HandGrab& grab, entt::entity object)
 	const auto player = _world->HandPlayer();
 
 	// Out of the physics without landing, and out of the map's cells; it no longer flies past anyone
-	_world->LeavePhysicsAndMap(object);
-	_world->RemoveReactions(object, Reaction::ReactToFlyingObject);
+	if (fromTheWorld)
+	{
+		_world->LeavePhysicsAndMap(object);
+		_world->RemoveReactions(object, Reaction::ReactToFlyingObject);
+	}
 	const auto position = _world->PoseOf(object).origin;
 
 	// Its pick-up sound: a standing tree pulled from the ground creaks instead; people cry out
-	if (kind != GrabKind::Tree || wasFlying)
+	if (fromTheWorld && (kind != GrabKind::Tree || wasFlying))
 	{
 		_world->PlaySample(k_PickUpSample, position);
 		if (const auto* villager = registry.TryGet<const Villager>(object);
@@ -502,6 +647,8 @@ void HandGrabSystem::Empty(HandGrab& grab)
 	grab.rise = 0.0f;
 	grab.springOn = false;
 	grab.springPending = false;
+	grab.scoopSource = entt::null;
+	grab.scoopTurns = 0;
 }
 
 glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
@@ -585,7 +732,15 @@ glm::vec3 HandGrabSystem::UpdateFrame(const Frame& frame)
 	// While it holds something its twist is made ready again, for when it lets go
 	grab->releaseSpinMs = static_cast<int32_t>(hand_grab::k_ReleaseSpinDelayMs);
 	grab->lastTarget = frame.target;
-	const auto target = frame.target + glm::vec3(0.0f, grab->rise, 0.0f);
+	auto target = frame.target + glm::vec3(0.0f, grab->rise, 0.0f);
+	if (grab->scoopSource != entt::null && Exists(grab->scoopSource))
+	{
+		// Scooping, the hand stays where it began, over the land by the height of what it scoops from
+		target = grab->scoopAnchor;
+		target.y = _world->LandHeightAt(target) + _world->SizeOf(grab->scoopSource).height + grab->rise;
+		grab->lastTarget = target;
+		return target;
+	}
 	// The game time spent holding is counted whether the spring is on or not
 	grab->spring.Count(frame.gameMs);
 	if (grab->springOn)
@@ -625,8 +780,19 @@ void HandGrabSystem::ProcessTurn()
 	// What is no longer there leaves the hand
 	if (!Exists(grab->object))
 	{
+		EndScoop(*grab);
 		Empty(*grab);
 		return;
+	}
+	// A scoop goes on while its source is there, the hand is in its player's influence and the source gives more
+	if (grab->scoopSource != entt::null)
+	{
+		++grab->scoopTurns;
+		const auto hand = _world->PoseOf(_world->Hand()).origin;
+		if (!Exists(grab->scoopSource) || !_world->InInfluence(_world->HandPlayer(), hand) || !Scoop(*grab))
+		{
+			EndScoop(*grab);
+		}
 	}
 	// The hold is asked again, as what is held may have changed
 	grab->hold = HoldOfObject(grab->object);

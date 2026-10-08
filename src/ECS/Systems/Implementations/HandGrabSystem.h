@@ -66,8 +66,17 @@ private:
 	void StartPull(components::HandGrab& grab, const Frame& frame);
 	/// A frame of pulling; where the hand is, on the thing
 	glm::vec3 Pull(components::HandGrab& grab, const Frame& frame);
-	/// The hand takes a thing it waited for or pulled free
-	void Take(components::HandGrab& grab, entt::entity object);
+	/// The hand takes a thing it waited for or pulled free; or, not from the world, a handful it made as it scoops
+	void Take(components::HandGrab& grab, entt::entity object, bool fromTheWorld = true);
+	/// A press on a pile scoops a handful out of it, which grows while the button is held; whether it did
+	bool StartScoop(components::HandGrab& grab, entt::entity source);
+	/// A game turn of scooping: whether the scoop goes on
+	bool Scoop(components::HandGrab& grab);
+	/// The scoop ends: its stream stops, and the hand holds its handful as anything else
+	void EndScoop(components::HandGrab& grab);
+	/// The second press with the pointer on something the held thing is used on (a store, a pile of the same): it is
+	/// given to it at once, without being thrown. Whether it was.
+	bool ApplyTo(components::HandGrab& grab, entt::entity target);
 	/// The hand lets go of what it holds at a velocity, put down or thrown; made to, it starts from where it is held
 	/// and is never planted again
 	void LetGo(components::HandGrab& grab, glm::vec3 velocity, bool forced);

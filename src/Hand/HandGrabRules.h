@@ -312,6 +312,25 @@ struct LandedThing
 };
 [[nodiscard]] LandedOutcome OutcomeOfLanding(const LandedThing& thing);
 
+/// What a handful's table says of scooping it up
+struct ScoopFacts
+{
+	/// The first scoop, and what each game turn scoops as the scoop ramps up from the one to the other
+	uint32_t initial {0};
+	uint32_t perTurn {0};
+	uint32_t perTurnEnd {0};
+	/// The most a handful can hold, nothing for no limit
+	uint32_t maxPickedUp {0};
+	/// How long the scoop takes to ramp up, in seconds
+	float rampSeconds {0.0f};
+};
+/// How far a scoop has ramped up after some game turns, 0 to 1: the share of its ramp gone, squared
+[[nodiscard]] float ScoopRamp(uint32_t turns, const ScoopFacts& facts);
+/// What a game turn of scooping takes, after some turns of it
+[[nodiscard]] uint32_t ScoopAmount(uint32_t turns, const ScoopFacts& facts);
+/// What a scoop takes, no more than the source has nor than the handful has room for
+[[nodiscard]] uint32_t ScoopTaken(uint32_t wanted, uint32_t sourceHas, uint32_t held, const ScoopFacts& facts);
+
 /// Where a line meets a triangle, as a distance along the line, none when it misses it
 [[nodiscard]] std::optional<float> RayTriangle(glm::vec3 origin, glm::vec3 direction, glm::vec3 a, glm::vec3 b, glm::vec3 c);
 

@@ -326,3 +326,18 @@ TEST(HandGrab, ALineMeetsATriangle)
 	EXPECT_FALSE(RayTriangle({0.8f, 5.0f, 0.8f}, {0.0f, -1.0f, 0.0f}, a, b, c).has_value());
 	EXPECT_FALSE(RayTriangle({0.2f, 5.0f, 0.2f}, {0.0f, 1.0f, 0.0f}, a, b, c).has_value());
 }
+
+TEST(HandGrab, AScoopRampsUpOverItsTimeAsASquare)
+{
+	const ScoopFacts facts {.initial = 25, .perTurn = 8, .perTurnEnd = 70, .maxPickedUp = 20000, .rampSeconds = 6.0f};
+	EXPECT_EQ(ScoopAmount(0, facts), 8u);
+	// Half way through its 60 turns, a quarter of the rise
+	EXPECT_EQ(ScoopAmount(30, facts), 8u + 62u / 4u);
+	EXPECT_EQ(ScoopAmount(60, facts), 70u);
+	EXPECT_EQ(ScoopAmount(600, facts), 70u);
+	EXPECT_FLOAT_EQ(ScoopRamp(30, facts), 0.25f);
+	// No more than the source has, nor than the handful has room for
+	EXPECT_EQ(ScoopTaken(70, 10, 0, facts), 10u);
+	EXPECT_EQ(ScoopTaken(70, 1000, 19990, facts), 10u);
+	EXPECT_EQ(ScoopTaken(70, 1000, 30000, facts), 0u);
+}

@@ -327,6 +327,44 @@ LandedOutcome hand_grab::OutcomeOfLanding(const LandedThing& thing)
 	return LandedOutcome::LeavesPhysics;
 }
 
+namespace
+{
+/// The game turns a scoop takes to ramp up: its seconds at ten turns a second, whole
+int32_t ScoopRampTurns(const ScoopFacts& facts)
+{
+	constexpr float k_TurnsPerSecond = 1000.0f / static_cast<float>(k_TurnMs);
+	return static_cast<int32_t>(k_TurnsPerSecond * facts.rampSeconds);
+}
+} // namespace
+
+float hand_grab::ScoopRamp(uint32_t turns, const ScoopFacts& facts)
+{
+	const auto rampTurns = ScoopRampTurns(facts);
+	// A ramp of no turns is over at once
+	const float share =
+	    rampTurns > 0 ? std::clamp(static_cast<float>(turns) / static_cast<float>(rampTurns), 0.0f, 1.0f) : 1.0f;
+	return share * share;
+}
+
+uint32_t hand_grab::ScoopAmount(uint32_t turns, const ScoopFacts& facts)
+{
+	const float ramp = ScoopRamp(turns, facts);
+	// The difference is taken as the game takes it, unsigned
+	const auto rise = static_cast<double>(static_cast<uint32_t>(facts.perTurnEnd - facts.perTurn));
+	return static_cast<uint32_t>(static_cast<double>(facts.perTurn) + rise * static_cast<double>(ramp));
+}
+
+uint32_t hand_grab::ScoopTaken(uint32_t wanted, uint32_t sourceHas, uint32_t held, const ScoopFacts& facts)
+{
+	uint32_t taken = std::min(wanted, sourceHas);
+	if (facts.maxPickedUp != 0)
+	{
+		const uint32_t room = held < facts.maxPickedUp ? facts.maxPickedUp - held : 0;
+		taken = std::min(taken, room);
+	}
+	return taken;
+}
+
 std::optional<float> hand_grab::RayTriangle(glm::vec3 origin, glm::vec3 direction, glm::vec3 a, glm::vec3 b, glm::vec3 c)
 {
 	constexpr float k_Parallel = 1e-8f;

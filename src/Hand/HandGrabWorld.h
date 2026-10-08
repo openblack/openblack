@@ -129,6 +129,37 @@ public:
 	/// A pot let go slowly is poured out where it is: what it holds goes to what takes it there or into a pile, and the
 	/// pot goes
 	virtual void PourPot(entt::entity pot, PlayerNames player) = 0;
+
+	/// What a pile or pot holds, and what its handful's table says of scooping it
+	struct PotFacts
+	{
+		PotType potType {PotType::Pot};
+		ResourceType resource {ResourceType::Food};
+		/// The handful the hand scoops out of it
+		PotInfo handful {PotInfo::HandFood};
+		uint32_t amount {0};
+	};
+	[[nodiscard]] virtual std::optional<PotFacts> PotFactsOf(entt::entity pot) const = 0;
+	[[nodiscard]] virtual ScoopFacts ScoopFactsOf(PotInfo handful) const = 0;
+	/// Some of what a pile holds is taken out of it: no more than it has. The pile goes once it has nothing left, unless
+	/// it is a store's. What was taken.
+	virtual uint32_t TakeFromPile(entt::entity pile, uint32_t amount) = 0;
+	/// A handful the hand holds is made, holding so much, where the hand is
+	[[nodiscard]] virtual entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) = 0;
+	/// The stream of what is scooped flowing from its source into the hand starts, and stops; its effect
+	[[nodiscard]] virtual std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) = 0;
+	virtual void StopScoopStream(uint32_t stream) = 0;
+	/// The scooping sound of a game turn, rising as the scoop ramps up
+	virtual void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) = 0;
+	[[nodiscard]] virtual float LandHeightAt(glm::vec3 point) const = 0;
+	/// Whether something stores a resource, as a village store stores food and wood
+	[[nodiscard]] virtual bool StoresResource(entt::entity store, ResourceType resource) const = 0;
+	/// A store takes what it will of some resource; what it took
+	virtual uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount) = 0;
+	/// Some resource poured onto a point: to the stores and piles of it about the point, or a new pile
+	virtual void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player) = 0;
+	/// A thing is used up: a ghost of it flickers out where it was, and it goes
+	virtual void UseUp(entt::entity object) = 0;
 	/// It goes into the physics from the hand, put down or thrown
 	virtual ecs::systems::FromHandResult LetGoFromHand(entt::entity object, const ecs::systems::FromHand& release) = 0;
 	/// Whether the player's hand throws things without the air's drag, as a script can set

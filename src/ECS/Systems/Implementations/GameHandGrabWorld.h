@@ -62,6 +62,18 @@ public:
 
 	[[nodiscard]] std::optional<Pose> ReleasePose(entt::entity object, bool alignToSlope) override;
 	void PourPot(entt::entity pot, PlayerNames player) override;
+	[[nodiscard]] std::optional<PotFacts> PotFactsOf(entt::entity pot) const override;
+	[[nodiscard]] hand_grab::ScoopFacts ScoopFactsOf(PotInfo handful) const override;
+	uint32_t TakeFromPile(entt::entity pile, uint32_t amount) override;
+	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) override;
+	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType resource, glm::vec3 source) override;
+	void StopScoopStream(uint32_t stream) override;
+	void PlayScoopSound(ResourceType resource, glm::vec3 hand, float ramp) override;
+	[[nodiscard]] float LandHeightAt(glm::vec3 point) const override;
+	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType resource) const override;
+	uint32_t AddToStore(entt::entity store, ResourceType resource, uint32_t amount) override;
+	void PourAt(ResourceType resource, glm::vec3 point, uint32_t amount, PlayerNames player) override;
+	void UseUp(entt::entity object) override;
 	FromHandResult LetGoFromHand(entt::entity object, const FromHand& release) override;
 	[[nodiscard]] bool PlayerHasNoWindResistance(PlayerNames player) const override;
 	[[nodiscard]] std::optional<BodyFacts> BodyOf(entt::entity object) const override;

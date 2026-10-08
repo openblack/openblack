@@ -26,11 +26,13 @@
 #include "ECS/Components/Feature.h"
 #include "ECS/Components/Flowers.h"
 #include "ECS/Components/Forest.h"
+#include "ECS/Components/HandGrab.h"
 #include "ECS/Components/MagicShield.h"
 #include "ECS/Components/MapCellResident.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
 #include "ECS/Components/OneOffSpellSeed.h"
+#include "ECS/Components/Physics.h"
 #include "ECS/Components/Pot.h"
 #include "ECS/Components/SpellDispenser.h"
 #include "ECS/Components/TeleportStone.h"
@@ -192,7 +194,9 @@ void MapProduction::FileMade() const
 	_made.clear();
 	for (const auto entity : made)
 	{
-		if (!_registry->Valid(entity) || _registry->AllOf<MapCellResident>(entity))
+		// What is held by a hand or moving in the physics stays out of the map's cells until it is put back
+		if (!_registry->Valid(entity) || _registry->AllOf<MapCellResident>(entity) ||
+		    _registry->AnyOf<InHand, InPhysics>(entity))
 		{
 			continue;
 		}

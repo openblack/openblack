@@ -66,6 +66,9 @@ public:
 	bool AddResource(ResourceType type, glm::vec3 point, uint32_t amount, bool speedUp, PlayerNames player) override;
 	[[nodiscard]] bool CanBeDestroyedBySpell(entt::entity object) const override;
 
+	/// What a store takes of food or wood given to it, as a storage pit takes it into its piles
+	uint32_t StoreResource(entt::entity store, ResourceType type, uint32_t given) { return AddToStore(store, type, given); }
+
 	/// Once a game turn: the flames burn down, and the objects are filed by their cells afresh when next asked for
 	void ProcessTurn();
 	void Reset();

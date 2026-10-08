@@ -18,6 +18,7 @@
 
 #include "ECS/Components/HandGrab.h"
 #include "ECS/Components/Mobile.h"
+#include "ECS/Components/Pot.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Tree.h"
 #include "ECS/Components/Villager.h"
@@ -83,7 +84,7 @@ public:
 	[[nodiscard]] bool SpeciesAllowsPickUp(entt::entity) const override { return true; }
 	[[nodiscard]] MobileStaticInfo StaticKindOf(MobileStaticInfo) const override { return MobileStaticInfo::Rock; }
 	[[nodiscard]] MeshId StaticMeshOf(MobileStaticInfo) const override { return MeshId::Dummy; }
-	[[nodiscard]] bool IsLoosePot(PotInfo) const override { return true; }
+	[[nodiscard]] bool IsLoosePot(PotInfo type) const override { return type == PotInfo::FoodPot; }
 	[[nodiscard]] bool IsOfRockMaterial(entt::entity object) const override { return registry.AllOf<MobileStatic>(object); }
 	[[nodiscard]] bool IsSexuallyActive(entt::entity) const override { return true; }
 	[[nodiscard]] std::optional<PlayerNames> PlayerOf(entt::entity) const override { return PlayerNames::PLAYER_ONE; }
@@ -136,6 +137,62 @@ public:
 	}
 	[[nodiscard]] std::optional<Pose> ReleasePose(entt::entity, bool) override { return std::nullopt; }
 	void PourPot(entt::entity pot, PlayerNames) override { poured.push_back(pot); }
+	[[nodiscard]] std::optional<PotFacts> PotFactsOf(entt::entity pot) const override
+	{
+		const auto* data = registry.TryGet<const Pot>(pot);
+		if (data == nullptr)
+		{
+			return std::nullopt;
+		}
+		const bool handful = data->type == PotInfo::HandFood;
+		return PotFacts {.potType = handful ? PotType::Pot : PotType::PileFood,
+		                 .resource = ResourceType::Food,
+		                 .handful = PotInfo::HandFood,
+		                 .amount = data->amount};
+	}
+	[[nodiscard]] hand_grab::ScoopFacts ScoopFactsOf(PotInfo) const override
+	{
+		return {.initial = 25, .perTurn = 8, .perTurnEnd = 70, .maxPickedUp = 20000, .rampSeconds = 6.0f};
+	}
+	uint32_t TakeFromPile(entt::entity pile, uint32_t amount) override
+	{
+		auto& pot = registry.Get<Pot>(pile);
+		const auto taken = std::min(amount, pot.amount);
+		pot.amount -= taken;
+		if (pot.amount == 0)
+		{
+			registry.Destroy(pile);
+		}
+		return taken;
+	}
+	[[nodiscard]] entt::entity MakeHandful(PotInfo type, glm::vec3 position, uint32_t amount) override
+	{
+		const auto handful = registry.Create();
+		registry.Assign<Transform>(handful, position, glm::mat3(1.0f), glm::vec3(1.0f));
+		registry.Assign<Pot>(handful, Pot {.amount = amount, .maxAmount = 20000, .type = type});
+		sizes[handful] = {.radius = 0.5f, .height = 1.0f};
+		return handful;
+	}
+	[[nodiscard]] std::optional<uint32_t> StartScoopStream(ResourceType, glm::vec3) override
+	{
+		++streams;
+		return streams;
+	}
+	void StopScoopStream(uint32_t stream) override { stopped.push_back(stream); }
+	void PlayScoopSound(ResourceType, glm::vec3, float ramp) override { scoopSounds.push_back(ramp); }
+	[[nodiscard]] float LandHeightAt(glm::vec3) const override { return 0.0f; }
+	[[nodiscard]] bool StoresResource(entt::entity store, ResourceType) const override { return stores.contains(store); }
+	uint32_t AddToStore(entt::entity store, ResourceType, uint32_t amount) override
+	{
+		stored[store] += amount;
+		return amount;
+	}
+	void PourAt(ResourceType, glm::vec3, uint32_t amount, PlayerNames) override { pouredAmounts.push_back(amount); }
+	void UseUp(entt::entity object) override
+	{
+		usedUp.push_back(object);
+		registry.Destroy(object);
+	}
 	FromHandResult LetGoFromHand(entt::entity object, const FromHand& release) override
 	{
 		released.emplace_back(object, release.velocity);
@@ -167,6 +224,13 @@ public:
 	std::vector<entt::entity> poured;
 	std::vector<std::pair<entt::entity, glm::vec3>> released;
 	std::vector<std::pair<entt::entity, glm::vec3>> twists;
+	uint32_t streams {0};
+	std::vector<uint32_t> stopped;
+	std::vector<float> scoopSounds;
+	std::set<entt::entity> stores;
+	std::map<entt::entity, uint32_t> stored;
+	std::vector<uint32_t> pouredAmounts;
+	std::vector<entt::entity> usedUp;
 };
 
 } // namespace
@@ -398,4 +462,55 @@ TEST_F(HandGrabSystemWithWorld, WhatIsHeldIsHeatedEachTurnAndDroppedOnceGone)
 	world->registry.Destroy(rock);
 	system->ProcessTurn();
 	EXPECT_FALSE(system->IsBusy());
+}
+
+TEST_F(HandGrabSystemWithWorld, APileIsScoopedIntoAHandfulThatGrowsWhileTheButtonIsHeld)
+{
+	const auto pile = world->registry.Create();
+	world->registry.Assign<Transform>(pile, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->registry.Assign<Pot>(pile, Pot {.amount = 1000, .maxAmount = 2000, .type = PotInfo::FoodPile});
+	world->sizes[pile] = {.radius = 2.0f, .height = 3.0f};
+	world->underCursor = pile;
+	EXPECT_TRUE(Press());
+	// The first scoop is taken at once
+	const auto handful = system->GetHeld();
+	ASSERT_TRUE(handful.has_value());
+	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 25u);
+	EXPECT_EQ(world->registry.Get<const Pot>(pile).amount, 975u);
+	EXPECT_EQ(world->streams, 1u);
+	// Each game turn takes more, from 8 a turn
+	system->ProcessTurn();
+	EXPECT_EQ(world->registry.Get<const Pot>(*handful).amount, 25u + 8u);
+	system->ProcessTurn();
+	EXPECT_GT(world->registry.Get<const Pot>(*handful).amount, 33u);
+	EXPECT_EQ(world->scoopSounds.size(), 2u);
+	// The hand hovers over the pile, by the pile's height and how far the handful hangs
+	const auto hovering = Frame(10, {30.0f, 0.0f, 0.0f});
+	EXPECT_FLOAT_EQ(hovering.x, 0.0f);
+	EXPECT_GE(hovering.y, 3.0f);
+	// Let go, the scoop ends and its stream stops
+	Release();
+	EXPECT_EQ(world->stopped, std::vector<uint32_t> {1u});
+	system->ProcessTurn();
+	EXPECT_EQ(world->scoopSounds.size(), 2u);
+	EXPECT_TRUE(system->GetHeld().has_value());
+}
+
+TEST_F(HandGrabSystemWithWorld, AHandfulPressedOntoAStoreGoesIntoIt)
+{
+	const auto pile = world->registry.Create();
+	world->registry.Assign<Transform>(pile, glm::vec3(0.0f), glm::mat3(1.0f), glm::vec3(1.0f));
+	world->registry.Assign<Pot>(pile, Pot {.amount = 100, .maxAmount = 2000, .type = PotInfo::FoodPile});
+	world->underCursor = pile;
+	Press();
+	Release();
+	const auto handful = *system->GetHeld();
+	const auto store = world->registry.Create();
+	world->stores.insert(store);
+	world->underCursor = store;
+	EXPECT_TRUE(Press());
+	EXPECT_FALSE(system->IsBusy());
+	EXPECT_EQ(world->stored[store], 25u);
+	EXPECT_EQ(world->usedUp, std::vector<entt::entity> {handful});
+	EXPECT_TRUE(world->released.empty());
 }

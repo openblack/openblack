@@ -86,6 +86,13 @@ struct HandGrab
 	/// Where the hand was last meant to be while holding, before it rose, for the twist of a throw
 	glm::vec3 lastTarget {0.0f};
 
+	/// What it scoops a handful from while the button is held, the game turns it has scooped for, the stream of what it
+	/// scoops flowing into it, and where over the land the hand stays as it scoops
+	entt::entity scoopSource {entt::null};
+	uint32_t scoopTurns {0};
+	std::optional<uint32_t> scoopStream;
+	glm::vec3 scoopAnchor {0.0f};
+
 	/// What it last let go, which gets a twist once the hand has moved on a little, and how long until it does
 	entt::entity released {entt::null};
 	std::optional<int32_t> releaseSpinMs;
