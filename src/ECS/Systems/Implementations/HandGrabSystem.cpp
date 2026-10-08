@@ -670,7 +670,8 @@ void HandGrabSystem::Take(HandGrab& grab, entt::entity object, bool fromTheWorld
 	    {.initiator = _world->Hand(), .type = Reaction::ReactToHandPickUp, .player = player, .position = handPosition});
 	// A burning thing keeps burning in the hand, out of its blaze; the people round it flee one that isn't a villager
 	_world->FireStartedMoving(object, !registry.AllOf<Villager>(object));
-	// TODO(hand): a firefly sitting on what is picked up is taken off it for a reward (openblack has no fireflies)
+	// A firefly hiding exactly where the thing stood is caught, for a miracle there
+	_world->CatchFirefly(object);
 
 	// The thing's own part of going into the hand
 	if (registry.AllOf<Villager>(object))

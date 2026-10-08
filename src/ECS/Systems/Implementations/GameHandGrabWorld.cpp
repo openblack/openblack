@@ -55,6 +55,7 @@
 #include "ECS/Systems/DynamicsSystemInterface.h"
 #include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
+#include "ECS/Systems/FireflySystemInterface.h"
 #include "ECS/Systems/HandSystemInterface.h"
 #include "ECS/Systems/InfluenceSystemInterface.h"
 #include "ECS/Systems/LivingActionSystemInterface.h"
@@ -282,6 +283,16 @@ void GameHandGrabWorld::FireStartedMoving(entt::entity object, bool inHand)
 	{
 		Locator::fireSystem::value().StartedMoving(object, inHand);
 	}
+}
+
+void GameHandGrabWorld::CatchFirefly(entt::entity object)
+{
+	const auto* transform = Locator::entitiesRegistry::value().TryGet<const Transform>(object);
+	if (transform == nullptr || !Locator::fireflySystem::has_value() || !Locator::terrainSystem::has_value())
+	{
+		return;
+	}
+	Locator::fireflySystem::value().Catch(map_coords::FromWorld(Locator::terrainSystem::value(), transform->position));
 }
 
 void GameHandGrabWorld::HeatHeld(entt::entity object)

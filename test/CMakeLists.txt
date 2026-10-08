@@ -78,7 +78,9 @@ openblack_setup_and_add_test(
 )
 openblack_setup_and_add_test(test_hand_morph hand/test_hand_morph.cpp)
 openblack_setup_and_add_test(test_hand_grab hand/test_hand_grab.cpp)
-openblack_setup_and_add_test(test_hand_grab_system hand/test_hand_grab_system.cpp)
+openblack_setup_and_add_test(
+  test_hand_grab_system hand/test_hand_grab_system.cpp
+)
 openblack_setup_and_add_test(test_hand_feel hand/test_hand_feel.cpp)
 openblack_setup_and_add_test(test_hand_hold_pose test_hand_hold_pose.cpp)
 openblack_setup_and_add_test(test_tribal_power_spin test_tribal_power_spin.cpp)
@@ -328,6 +330,7 @@ openblack_setup_and_add_test(test_script_objects test_script_objects.cpp)
 openblack_setup_and_add_test(test_partial_build_cap test_partial_build_cap.cpp)
 openblack_setup_and_add_test(test_town_playthings test_town_playthings.cpp)
 openblack_setup_and_add_test(test_temple_heart test_temple_heart.cpp)
+openblack_setup_and_add_test(test_fireflies test_fireflies.cpp)
 openblack_setup_and_add_test(test_store_rules test_store_rules.cpp)
 openblack_setup_and_add_test(test_clip_sounds test_clip_sounds.cpp)
 target_link_libraries(test_clip_sounds PRIVATE sas)

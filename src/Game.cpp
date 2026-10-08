@@ -122,6 +122,7 @@
 #include "ECS/Systems/ExplosionSystemInterface.h"
 #include "ECS/Systems/FieldSystemInterface.h"
 #include "ECS/Systems/FireSystemInterface.h"
+#include "ECS/Systems/FireflySystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/ForestSystemInterface.h"
 #include "ECS/Systems/GestureEventsInterface.h"
@@ -899,6 +900,12 @@ bool Game::GameLogicLoop() noexcept
 	// The scripts' fade moves on with their turn
 	Locator::cinematicDirectorSystem::value().ProcessTurn();
 
+	// The fireflies come out at nightfall and go home at dawn, by the time of day the turn began at
+	if (Locator::fireflySystem::has_value())
+	{
+		Locator::fireflySystem::value().ProcessTurn();
+	}
+
 	// The time of day moves on
 	Locator::skySystem::value().GetClock().ProcessTurn();
 
@@ -1265,6 +1272,12 @@ bool Game::Update() noexcept
 		// The blasts' rubble lies and fades, their dust flies and the camera shakes
 		auto explosions = profiler.BeginScoped(Profiler::Stage::ExplosionUpdate);
 		Locator::explosionSystem::value().Update(std::chrono::duration<float, std::milli>(gameTime).count());
+	}
+	// The fireflies out drift about where they are between their last two turns
+	if (Locator::fireflySystem::has_value())
+	{
+		Locator::fireflySystem::value().Update(std::chrono::duration<float, std::milli>(gameTime).count(),
+		                                       clock.GetTurnFraction());
 	}
 	// The moving bodies are drawn between their last two turns, and the dust their landings threw up flies and fades
 	if (Locator::dynamicsSystem::has_value())
@@ -2732,6 +2745,8 @@ void Game::PrepareNewLand()
 	Locator::animalSystem::value().Reset();
 	Locator::magicShieldSystem::value().Reset();
 	Locator::forestSystem::value().Reset();
+	// Nor its fireflies, nor what they give
+	Locator::fireflySystem::value().Reset();
 	Locator::reactionSystem::value().Reset();
 	Locator::teleportSystem::value().Reset();
 	Locator::gestureEvents::value().Reset();

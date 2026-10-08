@@ -17,6 +17,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -249,6 +250,8 @@ struct ObjectSetup
 	std::optional<float> fullSize;
 	/// A villager or animal that has eaten poison
 	bool poisoned {false};
+	/// A firefly hides exactly where the thing stands, as a land's script places one
+	bool firefly {false};
 };
 
 /// A particle effect played on the land
@@ -546,6 +549,9 @@ struct Scenario
 	std::optional<Crowd> crowd;
 	/// Every miracle's position and the land's height under it are logged this often, in seconds
 	std::optional<float> logMiraclesEvery;
+	/// The weights a caught firefly's miracle is drawn by, by the miracles' names, as a land's script sets them; the
+	/// testbed's land sets none
+	std::vector<std::pair<std::string_view, float>> fireflyRewards;
 };
 
 /// The miracles' scenarios, added to every scenario by the registry

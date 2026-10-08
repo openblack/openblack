@@ -36,6 +36,7 @@
 
 #include "3D/DayNightClock.h"
 #include "3D/LandIslandInterface.h"
+#include "3D/MapCoords.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "Common/FileDialog.h"
@@ -83,6 +84,7 @@
 #include "ECS/Systems/CreatureObjectActionSystemInterface.h"
 #include "ECS/Systems/CreaturePhysiologySystemInterface.h"
 #include "ECS/Systems/CreatureSkinSystemInterface.h"
+#include "ECS/Systems/FireflySystemInterface.h"
 #include "ECS/Systems/FootprintSystemInterface.h"
 #include "ECS/Systems/GestureEventsInterface.h"
 #include "ECS/Systems/GestureSystemInterface.h"
@@ -419,6 +421,13 @@ void Runner::Start(const Scenario& scenario)
 	PlaceObjects(scenario, _middle);
 	PlaceCreatures(scenario, _middle);
 	PlaceDispensers(scenario);
+	if (Locator::fireflySystem::has_value())
+	{
+		for (const auto& [name, weight] : scenario.fireflyRewards)
+		{
+			Locator::fireflySystem::value().SetRewardWeight(name, weight);
+		}
+	}
 	if (scenario.tribalPower.has_value() && Locator::magicSystem::has_value())
 	{
 		Locator::magicSystem::value().SetTribalPower(PlayerNames::PLAYER_ONE, scenario.tribalPower->first,
@@ -645,6 +654,11 @@ void Runner::PlaceObjects(const Scenario& scenario, glm::vec2 middle)
 		    },
 		    object.type));
 		SetLifeAndPoison(_objects.back(), object);
+		if (object.firefly && Locator::fireflySystem::has_value())
+		{
+			const auto& placed = Locator::entitiesRegistry::value().Get<const ecs::components::Transform>(_objects.back());
+			Locator::fireflySystem::value().Create(map_coords::FromWorld(land, placed.position));
+		}
 	}
 }
 

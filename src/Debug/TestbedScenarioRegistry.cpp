@@ -2292,10 +2292,12 @@ std::vector<std::string> testbed_scenarios::Problems(const Scenario& scenario)
 	}
 	if (scenario.creatures.empty() && scenario.particles.empty() && scenario.miracles.empty() && scenario.dispensers.empty() &&
 	    !environment.dispenserGrid && !scenario.crowd.has_value() && !environment.playerAlignment.has_value() &&
+	    scenario.fireflyRewards.empty() &&
 	    std::ranges::none_of(scenario.commands, [](const Command& command) { return NeedsNoCreature(command.kind); }))
 	{
 		problems.emplace_back(
-		    "no creatures, particles, miracles, dispensers, crowd, player's commands or alignment for the hand");
+		    "no creatures, particles, miracles, dispensers, crowd, fireflies' rewards, player's commands or alignment for "
+		    "the hand");
 	}
 	if ((environment.playerAlignment && !InRange(*environment.playerAlignment, -1.0f, 1.0f)) ||
 	    (environment.cursor && (!InRange(environment.cursor->x, 0.0f, 1.0f) || !InRange(environment.cursor->y, 0.0f, 1.0f))))

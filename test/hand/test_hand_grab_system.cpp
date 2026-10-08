@@ -97,6 +97,7 @@ public:
 	void CreateReaction(const ReactionRequest& request) override { reactions.push_back(request); }
 	void RemoveReactions(entt::entity, Reaction) override {}
 	void FireStartedMoving(entt::entity, bool) override {}
+	void CatchFirefly(entt::entity) override {}
 	void HeatHeld(entt::entity object) override { heated.push_back(object); }
 	void ArtefactTaken(entt::entity object, PlayerNames) override { artefactsTaken.push_back(object); }
 	void PlaySample(uint32_t sample, glm::vec3) override { samples.push_back(sample); }
