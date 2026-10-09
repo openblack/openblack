@@ -399,9 +399,11 @@ bool openblack::l3d::DecodeLightmaps(std::span<const uint8_t> data, uint32_t blo
 	}
 
 	coordinates.resize(vertexCount);
-	std::memcpy(coordinates.data(), &data[coordinatesOffset - blockStart - k_DataStart], vertexCount * sizeof(L3DPoint2D));
+	std::memcpy(coordinates.data(), &data[static_cast<size_t>(coordinatesOffset - blockStart - k_DataStart)],
+	            vertexCount * sizeof(L3DPoint2D));
 	lightmaps.resize(submeshCount);
-	std::memcpy(lightmaps.data(), &data[lightmapsOffset - blockStart - k_DataStart], submeshCount * sizeof(L3DLightmap));
+	std::memcpy(lightmaps.data(), &data[static_cast<size_t>(lightmapsOffset - blockStart - k_DataStart)],
+	            submeshCount * sizeof(L3DLightmap));
 	return true;
 }
 
