@@ -337,8 +337,7 @@ void LHVM::Reboot()
 int LHVM::SaveBinary(const std::filesystem::path& filepath)
 {
 	LHVMFile file(LHVMVersion::BlackAndWhite, _variablesNames, _instructions, _auto, _scripts, _data);
-	file.Write(filepath);
-	return EXIT_SUCCESS;
+	return file.Write(filepath) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int LHVM::SaveState(const std::filesystem::path& filepath)
@@ -352,8 +351,7 @@ int LHVM::SaveState(const std::filesystem::path& filepath)
 
 	LHVMFile file(LHVMVersion::BlackAndWhite, _variablesNames, _instructions, _auto, _scripts, _data, _mainStack, _variables,
 	              tasks, _ticks, _currentLineNumber, _highestTaskId, _highestScriptId, _executedInstructions);
-	file.Write(filepath);
-	return EXIT_SUCCESS;
+	return file.Write(filepath) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 void LHVM::LookIn(const ScriptType allowedScriptTypesMask)
