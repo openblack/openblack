@@ -31,6 +31,7 @@ public:
 	}
 
 	/// Items up to `end` (a closing bracket, or the end of the text). False when malformed.
+	// NOLINTNEXTLINE(misc-no-recursion): brackets nest, so the pattern is parsed recursively
 	bool ParseItems(std::vector<PatternItem>& items, char end)
 	{
 		while (true)
@@ -255,7 +256,7 @@ std::vector<PatternItem> ParsePattern(std::string_view pattern)
 
 std::vector<const StatementForm*> FormsForNative(std::string_view native)
 {
-	static const auto k_Index = [] {
+	static const auto formsByNative = [] {
 		std::map<std::string_view, std::vector<const StatementForm*>, std::less<>> index;
 		for (const auto& form : StatementForms())
 		{
@@ -263,8 +264,8 @@ std::vector<const StatementForm*> FormsForNative(std::string_view native)
 		}
 		return index;
 	}();
-	const auto it = k_Index.find(native);
-	return it != k_Index.end() ? it->second : std::vector<const StatementForm*> {};
+	const auto it = formsByNative.find(native);
+	return it != formsByNative.end() ? it->second : std::vector<const StatementForm*> {};
 }
 
 } // namespace openblack::lhvm::chl

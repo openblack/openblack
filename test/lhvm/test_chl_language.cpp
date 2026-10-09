@@ -63,6 +63,7 @@ TEST(ChlLanguage, PatternItems)
 
 namespace
 {
+// NOLINTNEXTLINE(misc-no-recursion): optional parts nest
 void CollectArguments(const std::vector<PatternItem>& items, std::vector<int>& out)
 {
 	for (const auto& item : items)

@@ -37,7 +37,7 @@ struct NativeParam
 	std::string_view name;
 	ArgType type {ArgType::Any};
 	/// For an integer: the script header enum its constants belong to ("HELP_TEXT*" for every text group), if known
-	std::string_view enumName {};
+	std::string_view enumName;
 };
 
 /// The signature of one native (CHL API) function, indexed by its number in the call instruction

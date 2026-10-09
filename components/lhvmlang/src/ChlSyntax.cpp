@@ -38,6 +38,7 @@ constexpr std::array<std::string_view, 7> k_ScriptKindKeywords = {
 
 const OperatorInfo& GetOperator(Op op)
 {
+	// NOLINTNEXTLINE(readability-qualified-auto): std::array's iterator is only a pointer on some standard libraries
 	const auto it = std::ranges::find(k_Operators, op, &OperatorInfo::op);
 	return it != k_Operators.end() ? *it : k_Operators.front();
 }
@@ -57,7 +58,7 @@ std::optional<Op> FindOperator(std::string_view spelling, bool unary)
 std::string_view ScriptKindKeyword(ScriptKind kind)
 {
 	const auto index = static_cast<size_t>(kind);
-	return index < k_ScriptKindKeywords.size() ? k_ScriptKindKeywords[index] : k_ScriptKindKeywords.front();
+	return index < k_ScriptKindKeywords.size() ? k_ScriptKindKeywords.at(index) : k_ScriptKindKeywords.front();
 }
 
 std::optional<ScriptKind> ParseScriptKind(std::string_view keywords)
@@ -69,7 +70,7 @@ std::optional<ScriptKind> ParseScriptKind(std::string_view keywords)
 	}
 	for (size_t i = 0; i < k_ScriptKindKeywords.size(); ++i)
 	{
-		if (k_ScriptKindKeywords[i] == keywords)
+		if (k_ScriptKindKeywords.at(i) == keywords)
 		{
 			return static_cast<ScriptKind>(i);
 		}
@@ -95,7 +96,7 @@ bool IsDecimalNumber(std::string_view text)
 	{
 		return false;
 	}
-	return !(text.size() > 1 && text[0] == '0' && (text[1] == 'x' || text[1] == 'X'));
+	return text.size() <= 1 || text[0] != '0' || (text[1] != 'x' && text[1] != 'X');
 }
 
 template <typename T, typename Parse>

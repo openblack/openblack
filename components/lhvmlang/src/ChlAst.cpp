@@ -12,6 +12,7 @@
 namespace openblack::lhvm::chl
 {
 
+// NOLINTNEXTLINE(misc-no-recursion): a syntax tree is walked recursively
 void CollectIps(const ExprPtr& expr, std::vector<uint32_t>& out)
 {
 	if (expr == nullptr)

@@ -17,7 +17,7 @@ std::span<const NativeSignature> DefaultNativeSignatures()
 	// The game's native functions in call number order: name, stack slots taken, stack slots returned, result type and
 	// parameters in source order. Names and stack use follow the CHL API table the game binds, which a unit test checks;
 	// argument types come from that table's implementations or, where they don't say, from the language's grammar.
-	static const std::vector<NativeSignature> k_Natives = {
+	static const std::vector<NativeSignature> natives = {
 	    {"NONE", 0, 0, ArgType::None, {}},
 	    {"SET_CAMERA_POSITION", 3, 0, ArgType::None, {{"position", ArgType::Coord}}},
 	    {"SET_CAMERA_FOCUS", 3, 0, ArgType::None, {{"position", ArgType::Coord}}},
@@ -1156,7 +1156,7 @@ std::span<const NativeSignature> DefaultNativeSignatures()
 	    {"IS_KEEPING_OLD_CREATURE", 0, 1, ArgType::Bool, {}},
 	    {"CURRENT_PROFILE_HAS_CREATURE", 0, 1, ArgType::Bool, {}},
 	};
-	return k_Natives;
+	return natives;
 }
 
 } // namespace openblack::lhvm
