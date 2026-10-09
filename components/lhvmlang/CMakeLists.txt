@@ -1,16 +1,23 @@
-file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.h")
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+     "${CMAKE_CURRENT_LIST_DIR}/src/*.h"
+)
 file(GLOB HEADERS "${CMAKE_CURRENT_LIST_DIR}/include/*.h")
 
 add_library(lhvmlang STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(
-  lhvmlang PUBLIC $<INSTALL_INTERFACE:include>
-               $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  lhvmlang
+  PUBLIC $<INSTALL_INTERFACE:include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 find_package(fmt CONFIG REQUIRED)
-target_link_libraries(lhvmlang PUBLIC ScriptLibrary PRIVATE fmt::fmt)
+target_link_libraries(
+  lhvmlang
+  PUBLIC ScriptLibrary
+  PRIVATE fmt::fmt
+)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)
