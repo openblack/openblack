@@ -8,7 +8,9 @@ target_link_libraries(creaturemindtool PRIVATE creaturemind)
 
 if (OPENBLACK_CLANG_TIDY_CHECKS)
   if (CLANG_TIDY)
-    set_target_properties(creaturemindtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY})
+    set_target_properties(
+      creaturemindtool PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY}
+    )
   else ()
     message("Clang-tidy checks requested but unavailable")
   endif ()
