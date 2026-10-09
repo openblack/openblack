@@ -386,7 +386,7 @@ bool openblack::l3d::DecodeLightmaps(std::span<const uint8_t> data, uint32_t blo
 	// The coordinates of every vertex and the lightmap of each submesh, where the block says they are
 	uint32_t coordinatesOffset = 0;
 	uint32_t lightmapsOffset = 0;
-	std::memcpy(&coordinatesOffset, &data[0], sizeof(coordinatesOffset));
+	std::memcpy(&coordinatesOffset, data.data(), sizeof(coordinatesOffset));
 	std::memcpy(&lightmapsOffset, &data[sizeof(uint32_t)], sizeof(lightmapsOffset));
 	const auto blockStart = static_cast<uint64_t>(blockOffset);
 	const auto blockEnd = std::min(blockStart + blockSize, blockStart + k_DataStart + data.size());
