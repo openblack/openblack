@@ -5,6 +5,9 @@
 #
 # Usage: cmake -DSOURCE=<CHLApi.cpp> -DOUTPUT=<header> -P GenerateUnimplementedNatives.cmake
 
+# Script mode starts with old policies; IN_LIST needs the project's minimum version.
+cmake_minimum_required(VERSION 3.18)
+
 file(STRINGS "${SOURCE}" lines)
 
 set(stubs "")
