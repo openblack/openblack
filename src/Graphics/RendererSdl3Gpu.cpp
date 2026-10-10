@@ -26,6 +26,7 @@
 
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_surface.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
@@ -90,6 +91,7 @@ using GpuResource = std::unique_ptr<T, GpuResourceDeleter<T, Release>>;
 using TransferBuffer = GpuResource<SDL_GPUTransferBuffer, SDL_ReleaseGPUTransferBuffer>;
 using GpuBuffer = GpuResource<SDL_GPUBuffer, SDL_ReleaseGPUBuffer>;
 using GpuTexture = GpuResource<SDL_GPUTexture, SDL_ReleaseGPUTexture>;
+using GpuFence = GpuResource<SDL_GPUFence, SDL_ReleaseGPUFence>;
 using GpuSampler = GpuResource<SDL_GPUSampler, SDL_ReleaseGPUSampler>;
 
 TransferBuffer CreateTransferBuffer(SDL_GPUDevice* device, std::span<const uint8_t> memory)
@@ -564,35 +566,117 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 			return;
 		}
 	}
+	GpuTexture screenshotTexture {nullptr, {_gpuDevice.get()}};
+	TransferBuffer screenshotTransfer {nullptr, {_gpuDevice.get()}};
+	SDL_GPUTextureFormat screenshotFormat = SDL_GPU_TEXTUREFORMAT_INVALID;
+	// Swapchain textures are write-only. Capture from a matching render target.
+	if (_screenshotPath)
+	{
+		screenshotFormat =
+		    SDL_GetGPUSwapchainTextureFormat(_gpuDevice.get(), reinterpret_cast<SDL_Window*>(window.GetHandle()));
+		const uint64_t size = static_cast<uint64_t>(resolution.x) * resolution.y * 4;
+		if (size > std::numeric_limits<uint32_t>::max() || (screenshotFormat != SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM &&
+		                                                    screenshotFormat != SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM))
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Unsupported screenshot format or dimensions");
+			_screenshotPath.reset();
+		}
+		else
+		{
+			const SDL_GPUTextureCreateInfo textureInfo {
+			    .type = SDL_GPU_TEXTURETYPE_2D,
+			    .format = screenshotFormat,
+			    .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET,
+			    .width = resolution.x,
+			    .height = resolution.y,
+			    .layer_count_or_depth = 1,
+			    .num_levels = 1,
+			};
+			const SDL_GPUTransferBufferCreateInfo transferInfo {.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD,
+			                                                    .size = static_cast<uint32_t>(size)};
+			screenshotTexture.reset(SDL_CreateGPUTexture(_gpuDevice.get(), &textureInfo));
+			screenshotTransfer.reset(SDL_CreateGPUTransferBuffer(_gpuDevice.get(), &transferInfo));
+			if (!screenshotTexture || !screenshotTransfer)
+			{
+				SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to allocate screenshot buffers: {}", SDL_GetError());
+				_screenshotPath.reset();
+			}
+		}
+	}
+	const bool capture = _screenshotPath.has_value();
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::MainPass);
-		if (!DrawPass(mainDesc, cmdBufferMain, swapchainTexture, _depthStencil))
+		if (!DrawPass(mainDesc, cmdBufferMain, capture ? screenshotTexture.get() : swapchainTexture, _depthStencil))
 		{
 			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 			return;
 		}
 	}
 
+	if (!capture)
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
-		// TODO:
-		// const bool screenshotThisFrame = _requestScreenshot.has_value() && _requestScreenshot->first == _frameCount;
-		// // Skip drawing Debug UI for screenshots
-		// if (screenshotThisFrame)
-		// {
-		// 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
-		// 	Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
-		// }
-		// else
+		Locator::debugGui::value().Draw(cmdBufferMain, swapchainTexture);
+		if (!SDL_SubmitGPUCommandBuffer(cmdBufferMain))
 		{
-			Locator::debugGui::value().Draw(cmdBufferMain, swapchainTexture);
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to submit frame: {}", SDL_GetError());
 		}
+		return;
 	}
-
-	if (!SDL_SubmitGPUCommandBuffer(cmdBufferMain))
+	auto* copyPass = SDL_BeginGPUCopyPass(cmdBufferMain);
+	if (copyPass == nullptr)
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to submit frame: {}", SDL_GetError());
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin screenshot readback: {}", SDL_GetError());
+		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+		_screenshotPath.reset();
+		return;
 	}
+	const SDL_GPUTextureLocation source {.texture = screenshotTexture.get()};
+	const SDL_GPUTextureLocation destination {.texture = swapchainTexture};
+	SDL_CopyGPUTextureToTexture(copyPass, &source, &destination, resolution.x, resolution.y, 1, false);
+	const SDL_GPUTextureRegion region {.texture = screenshotTexture.get(), .w = resolution.x, .h = resolution.y, .d = 1};
+	const SDL_GPUTextureTransferInfo download {.transfer_buffer = screenshotTransfer.get()};
+	SDL_DownloadFromGPUTexture(copyPass, &region, &download);
+	SDL_EndGPUCopyPass(copyPass);
+	const GpuFence fence {SDL_SubmitGPUCommandBufferAndAcquireFence(cmdBufferMain), {_gpuDevice.get()}};
+	auto* fenceHandle = fence.get();
+	const auto path = std::move(*_screenshotPath);
+	_screenshotPath.reset();
+	if (!fence || !SDL_WaitForGPUFences(_gpuDevice.get(), true, &fenceHandle, 1))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to complete screenshot readback: {}", SDL_GetError());
+		return;
+	}
+	auto* pixels = static_cast<uint8_t*>(SDL_MapGPUTransferBuffer(_gpuDevice.get(), screenshotTransfer.get(), false));
+	if (pixels == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to map screenshot pixels: {}", SDL_GetError());
+		return;
+	}
+	// Screenshots are opaque regardless of the alpha written by scene materials.
+	for (uint64_t i = 3; i < static_cast<uint64_t>(resolution.x) * resolution.y * 4; i += 4)
+	{
+		pixels[i] = 255;
+	}
+	const auto format =
+	    screenshotFormat == SDL_GPU_TEXTUREFORMAT_B8G8R8A8_UNORM ? SDL_PIXELFORMAT_BGRA32 : SDL_PIXELFORMAT_RGBA32;
+	std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface {
+	    SDL_CreateSurfaceFrom(static_cast<int>(resolution.x), static_cast<int>(resolution.y), format, pixels,
+	                          static_cast<int>(resolution.x * 4)),
+	    SDL_DestroySurface};
+	const auto filename = path.string();
+	const bool saved = surface && SDL_SavePNG(surface.get(), filename.c_str());
+	if (!saved)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to save screenshot at {}: {}", filename, SDL_GetError());
+	}
+	surface.reset();
+	SDL_UnmapGPUTransferBuffer(_gpuDevice.get(), screenshotTransfer.get());
+	if (!saved)
+	{
+		return;
+	}
+	SPDLOG_LOGGER_INFO(spdlog::get("graphics"), "Screenshot ({}x{}) saved at {}", resolution.x, resolution.y, filename);
 }
 
 bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* defaultTarget,
@@ -992,7 +1076,12 @@ void RendererSdl3Gpu::Frame() noexcept
 
 void RendererSdl3Gpu::RequestScreenshot(const std::filesystem::path& filepath) noexcept
 {
-	// TODO
+	if (filepath.extension() != ".png")
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Screenshot output must be a PNG file: {}", filepath.string());
+		return;
+	}
+	_screenshotPath = filepath;
 }
 
 [[nodiscard]] bool RendererSdl3Gpu::GetDebug() const noexcept
