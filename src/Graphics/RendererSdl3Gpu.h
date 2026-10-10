@@ -38,6 +38,7 @@ public:
 	{
 		SDL_GPUGraphicsPipeline* sky;
 		SDL_GPUGraphicsPipeline* water;
+		SDL_GPUGraphicsPipeline* terrain;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(bool vsync) noexcept;
@@ -91,15 +92,18 @@ private:
 
 	[[nodiscard]] SDL_GPUBuffer* UploadBuffer(const std::string& name, std::span<const uint8_t> memory,
 	                                          bool indexBuffer) const noexcept;
+	[[nodiscard]] bool ResizeDepthStencil(glm::uvec2 resolution) noexcept;
 	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const;
 	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
 	             const Camera& camera) const;
-	[[nodiscard]] bool DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer,
-	                            SDL_GPUTexture* defaultTarget) const noexcept;
+	[[nodiscard]] bool DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* defaultTarget,
+	                            SDL_GPUTexture* defaultDepthStencil = nullptr) const noexcept;
 
 	RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device,
 	                const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept;
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
+	SDL_GPUTexture* _depthStencil {};
+	glm::uvec2 _depthStencilResolution {};
 };
 } // namespace openblack::graphics

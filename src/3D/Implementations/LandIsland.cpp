@@ -108,8 +108,8 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                                      indexSize * static_cast<uint16_t>(k_CellCount) + glm::u16vec2(1, 1), 1,
 	                                      graphics::TextureFormat::R8, Wrapping::ClampEdge, Filter::Linear);
 
-	// const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
-	// _footprintFrameBuffer = renderer.CreateFrameBuffer("Footprints", res, graphics::TextureFormat::RGBA8);
+	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
+	_footprintFrameBuffer = renderer.CreateFrameBuffer("Footprints", res, graphics::TextureFormat::RGBA8);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -145,11 +145,10 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                                           TextureFormat::R8, Wrapping::Repeat, Filter::Linear);
 
 	// build the meshes (we could move this elsewhere)
-	// for (auto& block : _landBlocks)
-	// {
-	// 	block.BuildMesh(*this);
-	// }
-	// bgfx::frame();
+	for (auto& block : _landBlocks)
+	{
+		block.BuildMesh(*this);
+	}
 }
 
 float LandIsland::GetHeightAt(glm::vec2 vec) const

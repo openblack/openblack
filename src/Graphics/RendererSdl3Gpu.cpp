@@ -29,6 +29,8 @@
 
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
+#include "3D/LandBlock.h"
+#include "3D/LandIslandInterface.h"
 #include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
@@ -43,6 +45,7 @@
 #include "Texture2d.h"
 #include "VertexBuffer.h"
 #include "generated/shaders/sky.slang.spv.h"
+#include "generated/shaders/terrain.slang.spv.h"
 #include "generated/shaders/water.slang.spv.h"
 
 using namespace openblack::graphics;
@@ -104,14 +107,21 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
                                         const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
                                         const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo,
                                         const SDL_GPUVertexInputState& vertexInputState,
-                                        SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID)
+                                        SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID,
+                                        bool alphaBlend = false, SDL_GPUCullMode cullMode = SDL_GPU_CULLMODE_NONE)
 {
 
 	const SDL_GPUColorTargetDescription colorTargetDescriptions = {
 	    .format = targetFormat,
 	    .blend_state =
 	        {
-	            .enable_blend = false,
+	            .src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+	            .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+	            .color_blend_op = SDL_GPU_BLENDOP_ADD,
+	            .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+	            .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+	            .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+	            .enable_blend = alphaBlend,
 	            .enable_color_write_mask = false,
 	        },
 	};
@@ -136,6 +146,8 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
 	    .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
 	    .rasterizer_state =
 	        {
+	            .cull_mode = cullMode,
+	            .front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
 	            .enable_depth_bias = false,
 	            .enable_depth_clip = true,
 	        },
@@ -203,23 +215,29 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	}
 
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> pipelines {};
+	const auto depthFormat = GetSupportedDepthStencilFormat(gpuDevice.get(), TextureFormat::Depth24Stencil8);
+	const auto mainColorFormat = SDL_GetGPUSwapchainTextureFormat(gpuDevice.get(), sdlWindow);
 	auto& main = pipelines[static_cast<size_t>(RenderPass::Main)];
 	main = {
-	    .sky = CreatePipeline(gpuDevice.get(), SDL_GetGPUSwapchainTextureFormat(gpuDevice.get(), sdlWindow),
-	                          k_SkyVertexShaderCreateInfo, k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex),
-	    .water =
-	        CreatePipeline(gpuDevice.get(), SDL_GetGPUSwapchainTextureFormat(gpuDevice.get(), sdlWindow),
-	                       k_WaterVertexShaderCreateInfo, k_WaterFragmentShaderCreateInfo, k_WaterVertexInputStateByVertex),
+	    .sky = CreatePipeline(gpuDevice.get(), mainColorFormat, k_SkyVertexShaderCreateInfo, k_SkyFragmentShaderCreateInfo,
+	                          k_SkyVertexInputStateByVertex, depthFormat),
+	    .water = CreatePipeline(gpuDevice.get(), mainColorFormat, k_WaterVertexShaderCreateInfo,
+	                            k_WaterFragmentShaderCreateInfo, k_WaterVertexInputStateByVertex, depthFormat),
+	    .terrain =
+	        CreatePipeline(gpuDevice.get(), mainColorFormat, k_TerrainVertexShaderCreateInfo, k_TerrainFragmentShaderCreateInfo,
+	                       k_TerrainVertexInputStateByVertex, depthFormat, true, SDL_GPU_CULLMODE_BACK),
 	};
 	auto& reflection = pipelines[static_cast<size_t>(RenderPass::Reflection)];
 	reflection.sky = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_SkyVertexShaderCreateInfo,
-	                                k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex,
-	                                GetSupportedDepthStencilFormat(gpuDevice.get(), TextureFormat::Depth24Stencil8));
-	if (!main.sky || !main.water || !reflection.sky)
+	                                k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex, depthFormat);
+	reflection.terrain = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_TerrainVertexShaderCreateInfo,
+	                                    k_TerrainFragmentShaderCreateInfo, k_TerrainVertexInputStateByVertex, depthFormat, true,
+	                                    SDL_GPU_CULLMODE_FRONT);
+	if (!main.sky || !main.water || !main.terrain || !reflection.sky || !reflection.terrain)
 	{
 		for (const auto& pass : pipelines)
 		{
-			for (auto* pipeline : {pass.sky, pass.water})
+			for (auto* pipeline : {pass.sky, pass.water, pass.terrain})
 			{
 				if (pipeline)
 				{
@@ -242,9 +260,13 @@ RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&&
 
 RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 {
+	if (_depthStencil != nullptr)
+	{
+		SDL_ReleaseGPUTexture(_gpuDevice.get(), _depthStencil);
+	}
 	for (const auto& pass : _pipelines)
 	{
-		for (auto* pipeline : {pass.sky, pass.water})
+		for (auto* pipeline : {pass.sky, pass.water, pass.terrain})
 		{
 			if (pipeline)
 			{
@@ -264,6 +286,38 @@ void RendererSdl3Gpu::Reset(glm::u16vec2 resolution) const noexcept
 	// TODO
 }
 
+bool RendererSdl3Gpu::ResizeDepthStencil(glm::uvec2 resolution) noexcept
+{
+	if (_depthStencil != nullptr && _depthStencilResolution == resolution)
+	{
+		return true;
+	}
+	const SDL_GPUTextureCreateInfo info {
+	    .type = SDL_GPU_TEXTURETYPE_2D,
+	    .format = GetSupportedDepthStencilFormat(_gpuDevice.get(), TextureFormat::Depth24Stencil8),
+	    .usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET,
+	    .width = resolution.x,
+	    .height = resolution.y,
+	    .layer_count_or_depth = 1,
+	    .num_levels = 1,
+	    .sample_count = SDL_GPU_SAMPLECOUNT_1,
+	};
+	auto* texture = SDL_CreateGPUTexture(_gpuDevice.get(), &info);
+	if (texture == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create main depth/stencil target: {}", SDL_GetError());
+		return false;
+	}
+	SDL_SetGPUTextureName(_gpuDevice.get(), texture, "Main_depthStencil");
+	if (_depthStencil != nullptr)
+	{
+		SDL_ReleaseGPUTexture(_gpuDevice.get(), _depthStencil);
+	}
+	_depthStencil = texture;
+	_depthStencilResolution = resolution;
+	return true;
+}
+
 void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 {
 	auto& profiler = Locator::profiler::value();
@@ -277,8 +331,9 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 
 	const auto& window = Locator::windowing::value();
 	SDL_GPUTexture* swapchainTexture = nullptr;
+	glm::uvec2 resolution {};
 	if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmdBufferMain, reinterpret_cast<SDL_Window*>(window.GetHandle()),
-	                                           &swapchainTexture, nullptr, nullptr))
+	                                           &swapchainTexture, &resolution.x, &resolution.y))
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to acquire swapchain texture: {}", SDL_GetError());
 		SDL_CancelGPUCommandBuffer(cmdBufferMain);
@@ -291,11 +346,37 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
 	}
+	if (!ResizeDepthStencil(resolution))
+	{
+		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+		return;
+	}
 	DrawSceneDesc mainDesc = drawDesc;
 	const auto& textures = Locator::resources::value().GetTextures();
 	mainDesc.drawWater = drawDesc.drawWater && Locator::oceanSystem::has_value() &&
 	                     textures.Contains(Locator::oceanSystem::value().GetDiffuseTexture()) &&
 	                     textures.Contains(Locator::oceanSystem::value().GetAlphaTexture());
+	if (mainDesc.drawIsland)
+	{
+		auto section = profiler.BeginScoped(Profiler::Stage::FootprintPass);
+		const auto& footprint = Locator::terrainSystem::value().GetFootprintFramebuffer();
+		const SDL_GPUColorTargetInfo target {
+		    .texture = toSdl(footprint.colorAttachment),
+		    .clear_color = {0, 0, 0, 0},
+		    .load_op = SDL_GPU_LOADOP_CLEAR,
+		    .store_op = SDL_GPU_STOREOP_STORE,
+		    .cycle = true,
+		};
+		auto* pass = SDL_BeginGPURenderPass(cmdBufferMain, &target, 1, nullptr);
+		if (pass == nullptr)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to clear footprints: {}", SDL_GetError());
+			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+			return;
+		}
+		// Footprint geometry will be submitted here when its draw path is ported.
+		SDL_EndGPURenderPass(pass);
+	}
 	if (mainDesc.drawWater)
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::ReflectionPass);
@@ -315,7 +396,7 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 	}
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::MainPass);
-		if (!DrawPass(mainDesc, cmdBufferMain, swapchainTexture))
+		if (!DrawPass(mainDesc, cmdBufferMain, swapchainTexture, _depthStencil))
 		{
 			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 			return;
@@ -344,8 +425,8 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 	}
 }
 
-bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer,
-                               SDL_GPUTexture* defaultTarget) const noexcept
+bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* defaultTarget,
+                               SDL_GPUTexture* defaultDepthStencil) const noexcept
 {
 	auto& profiler = Locator::profiler::value();
 	const auto& camera = *desc.camera;
@@ -361,11 +442,12 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 	    .cycle = frameBuffer != nullptr,
 	};
 	SDL_GPUDepthStencilTargetInfo depthStencil {};
-	const bool hasDepthStencil = frameBuffer && frameBuffer->depthStencilFormat.has_value();
+	auto* depthTexture = frameBuffer != nullptr ? toSdl(frameBuffer->depthStencilAttachment) : defaultDepthStencil;
+	const bool hasDepthStencil = depthTexture != nullptr;
 	if (hasDepthStencil)
 	{
 		depthStencil = {
-		    .texture = toSdl(frameBuffer->depthStencilAttachment),
+		    .texture = depthTexture,
 		    .clear_depth = 0.0f,
 		    .load_op = SDL_GPU_LOADOP_CLEAR,
 		    .store_op = SDL_GPU_STOREOP_STORE,
@@ -429,7 +511,38 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
 		if (desc.drawIsland)
 		{
-			assert(false);
+			const auto& island = Locator::terrainSystem::value();
+			const auto smallBump = textures.Handle(LandIslandInterface::k_SmallBumpTextureId);
+			const auto& albedo = island.GetAlbedoArray();
+			const auto& bump = island.GetBump();
+			const auto& footprint = island.GetFootprintFramebuffer();
+			const std::array<SDL_GPUTextureSamplerBinding, 4> bindings {{
+			    {toSdl(albedo.handle), toSdl(albedo.samplerHandle)},
+			    {toSdl(bump.handle), toSdl(bump.samplerHandle)},
+			    {toSdl(smallBump->handle), toSdl(smallBump->samplerHandle)},
+			    {toSdl(footprint.colorAttachment), toSdl(footprint.colorSampler)},
+			}};
+			SDL_BindGPUFragmentSamplers(renderPass, 0, bindings.data(), static_cast<uint32_t>(bindings.size()));
+			const std::array<glm::mat4, 2> cameraData {view, viewProj};
+			const glm::vec4 skyAndBump {Locator::skySystem::value().GetCurrentSkyType(), desc.bumpMapStrength,
+			                            desc.smallBumpMapStrength, 0.0f};
+			SDL_PushGPUVertexUniformData(commandBuffer, 0, cameraData.data(), sizeof(cameraData));
+			SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAndBump, sizeof(skyAndBump));
+			struct BlockData
+			{
+				glm::vec4 positionAndSize;
+				glm::vec4 islandExtent;
+			};
+			const auto extent = island.GetExtent();
+			for (const auto& block : island.GetBlocks())
+			{
+				const BlockData data {glm::vec4(block.GetMapPosition(),
+				                                LandIslandInterface::k_CellSize * LandIslandInterface::k_CellCount,
+				                                LandIslandInterface::k_CellSize * LandIslandInterface::k_CellCount),
+				                      glm::vec4(extent.minimum, extent.maximum)};
+				SDL_PushGPUVertexUniformData(commandBuffer, 1, &data, sizeof(data));
+				DrawGeometry(renderPass, pipelines.terrain, block.GetMesh());
+			}
 		}
 	}
 
