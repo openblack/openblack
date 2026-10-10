@@ -45,6 +45,9 @@ public:
 		SDL_GPUGraphicsPipeline* sprites;
 		SDL_GPUGraphicsPipeline* footprints;
 		std::array<SDL_GPUGraphicsPipeline*, 6> objects {}; // blend mode and depth writes
+		std::array<SDL_GPUGraphicsPipeline*, 6> vegetation {};
+
+		void Release(SDL_GPUDevice* device) noexcept;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(bool vsync) noexcept;
@@ -102,8 +105,6 @@ private:
 	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh,
 	                  uint32_t instanceCount = 1) const;
 	[[nodiscard]] bool UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept;
-	void DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
-	                  const DrawSceneDesc& desc) const noexcept;
 	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
 	             const Camera& camera) const;
 	[[nodiscard]] bool DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* defaultTarget,
@@ -117,6 +118,7 @@ private:
 	std::unique_ptr<Mesh> _spriteQuad;
 	uint32_t _sceneMatrixCapacity {};
 	uint32_t _treeMatrixOffset {};
+	uint32_t _treeSwayOffset {};
 	std::map<entt::id_type, uint32_t> _entityBoneOffsets;
 	Texture2dUniquePtr _whiteTexture;
 	SDL_GPUTexture* _depthStencil {};
