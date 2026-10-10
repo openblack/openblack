@@ -324,11 +324,6 @@ void Renderer::Reset(glm::u16vec2 resolution) const noexcept
 	bgfx::reset(resolution.x, resolution.y, _bgfxReset);
 }
 
-graphics::ShaderManager& Renderer::GetShaderManager() const noexcept
-{
-	return *_shaderManager;
-}
-
 const Texture2d* GetTexture(uint32_t skinID, const std::unordered_map<SkinId, Texture2dUniquePtr>& meshSkins)
 {
 	const auto& textureManager = Locator::resources::value().GetTextures();

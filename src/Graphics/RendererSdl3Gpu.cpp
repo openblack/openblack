@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <new>
@@ -67,6 +68,13 @@ enum class AdditiveBlend
 	Disabled,
 	Color,
 	ColorAndAlpha,
+};
+
+struct MeshCamera
+{
+	glm::mat4 viewProjection;
+	glm::vec4 islandExtent;
+	glm::uvec4 offsets;
 };
 
 template <typename T, auto Release>
@@ -318,8 +326,13 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 			}
 		}
 	}
-	if (!main.sky || !main.water || !main.terrain || !main.sprites || !main.lines || !reflection.sky || !reflection.terrain ||
-	    !reflection.sprites || !footprints || !meshPipelinesValid)
+	auto& viewer = pipelines[static_cast<size_t>(RenderPass::MeshViewer)];
+	viewer.lines = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_LineVertexShaderCreateInfo,
+	                              k_LineFragmentShaderCreateInfo, k_LineVertexInputStateByVertex, depthFormat, false,
+	                              SDL_GPU_CULLMODE_NONE, true, AdditiveBlend::Disabled, SDL_GPU_PRIMITIVETYPE_LINELIST);
+	const std::array requiredPipelines {main.sky,       main.water,         main.terrain,       main.sprites, main.lines,
+	                                    reflection.sky, reflection.terrain, reflection.sprites, footprints,   viewer.lines};
+	if (std::ranges::any_of(requiredPipelines, [](const auto* pipeline) { return pipeline == nullptr; }) || !meshPipelinesValid)
 	{
 		for (auto& pass : pipelines)
 		{
@@ -725,48 +738,10 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 			offsets.z =
 			    mesh->IsBoned() && !mesh->GetBoneMatrices().empty() ? static_cast<uint32_t>(mesh->GetBoneMatrices().size()) : 1;
 		}
-		struct MeshCamera
-		{
-			glm::mat4 viewProjection;
-			glm::vec4 islandExtent;
-			glm::uvec4 offsets;
-		};
 		const MeshCamera data {viewProj, glm::vec4(extent.minimum, extent.maximum), offsets};
 		SDL_PushGPUVertexUniformData(commandBuffer, 0, &data, sizeof(data));
-		for (const auto& subMesh : mesh->GetSubMeshes())
-		{
-			const auto flags = subMesh->GetFlags();
-			if (flags.isPhysics || flags.status != 0 || (flags.lodMask & 1) == 0)
-			{
-				continue;
-			}
-			const auto& geometry = subMesh->GetMesh();
-			const SDL_GPUBufferBinding vertices {toSdl(geometry.GetVertexBuffer().handle), 0};
-			const SDL_GPUBufferBinding indices {toSdl(geometry.GetIndexBuffer().handle), 0};
-			SDL_BindGPUVertexBuffers(renderPass, 0, &vertices, 1);
-			SDL_BindGPUIndexBuffer(renderPass, &indices, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-			for (const auto& primitive : subMesh->GetPrimitives())
-			{
-				const Texture2d* texture = _whiteTexture.get();
-				if (const auto skin = mesh->GetSkins().find(primitive.skinID); skin != mesh->GetSkins().end())
-				{
-					texture = skin->second.get();
-				}
-				else if (textures.Contains(primitive.skinID))
-				{
-					texture = textures.Handle(primitive.skinID).operator->();
-				}
-				const SDL_GPUTextureSamplerBinding diffuse {toSdl(texture->handle), toSdl(texture->samplerHandle)};
-				SDL_BindGPUFragmentSamplers(renderPass, 0, &diffuse, 1);
-				const glm::vec4 skyAlpha {Locator::skySystem::value().GetCurrentSkyType(),
-				                          primitive.thresholdAlpha ? primitive.alphaCutoutThreshold : 0.0f, 0, 0};
-				SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAlpha, sizeof(skyAlpha));
-				const auto pipelineIndex = static_cast<size_t>(primitive.blend) * 2 + (primitive.depthWrite ? 1 : 0);
-				SDL_BindGPUGraphicsPipeline(renderPass, meshPipelines[pipelineIndex]);
-				SDL_DrawGPUIndexedPrimitives(renderPass, primitive.indicesCount, instances.count, primitive.indicesOffset, 0,
-				                             0);
-			}
-		}
+		DrawMeshPrimitives(commandBuffer, renderPass, *mesh, meshPipelines, instances.count,
+		                   std::numeric_limits<uint8_t>::max(), false);
 	};
 
 	{
@@ -1042,15 +1017,171 @@ void RendererSdl3Gpu::SetProfile([[maybe_unused]] bool value) noexcept
 	// TODO(bwrsandman): Implement profiling
 }
 
-void RendererSdl3Gpu::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
+void RendererSdl3Gpu::DrawMeshPrimitives(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
+                                         const L3DMesh& mesh, const std::array<SDL_GPUGraphicsPipeline*, 6>& pipelines,
+                                         uint32_t instanceCount, uint8_t subMeshIndex, bool drawAll) const
 {
-	// TODO
+	const auto& textures = Locator::resources::value().GetTextures();
+	for (size_t index = 0; const auto& subMesh : mesh.GetSubMeshes())
+	{
+		const auto currentIndex = index++;
+		if (subMeshIndex != std::numeric_limits<uint8_t>::max() && currentIndex != subMeshIndex)
+		{
+			continue;
+		}
+		const auto flags = subMesh->GetFlags();
+		if (!drawAll && (flags.isPhysics || flags.status != 0 || (flags.lodMask & 1) == 0))
+		{
+			continue;
+		}
+		const auto& geometry = subMesh->GetMesh();
+		const SDL_GPUBufferBinding vertices {toSdl(geometry.GetVertexBuffer().handle), 0};
+		const SDL_GPUBufferBinding indices {toSdl(geometry.GetIndexBuffer().handle), 0};
+		SDL_BindGPUVertexBuffers(renderPass, 0, &vertices, 1);
+		SDL_BindGPUIndexBuffer(renderPass, &indices, SDL_GPU_INDEXELEMENTSIZE_16BIT);
+		for (const auto& primitive : subMesh->GetPrimitives())
+		{
+			const Texture2d* texture = _whiteTexture.get();
+			if (const auto skin = mesh.GetSkins().find(primitive.skinID); skin != mesh.GetSkins().end())
+			{
+				texture = skin->second.get();
+			}
+			else if (textures.Contains(primitive.skinID))
+			{
+				texture = textures.Handle(primitive.skinID).operator->();
+			}
+			const SDL_GPUTextureSamplerBinding diffuse {toSdl(texture->handle), toSdl(texture->samplerHandle)};
+			SDL_BindGPUFragmentSamplers(renderPass, 0, &diffuse, 1);
+			const glm::vec4 skyAlpha {Locator::skySystem::value().GetCurrentSkyType(),
+			                          primitive.thresholdAlpha ? primitive.alphaCutoutThreshold : 0.0f, 0, 0};
+			SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAlpha, sizeof(skyAlpha));
+			const auto pipelineIndex = static_cast<size_t>(primitive.blend) * 2 + (primitive.depthWrite ? 1 : 0);
+			SDL_BindGPUGraphicsPipeline(renderPass, pipelines.at(pipelineIndex));
+			SDL_DrawGPUIndexedPrimitives(renderPass, primitive.indicesCount, instanceCount, primitive.indicesOffset, 0, 0);
+		}
+	}
 }
 
-[[nodiscard]] ShaderManager& RendererSdl3Gpu::GetShaderManager() const noexcept
+void RendererSdl3Gpu::DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept
 {
-	SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "The bgfx shader manager is unavailable in the SDL GPU renderer");
-	std::abort();
+	if (desc.camera == nullptr || desc.frameBuffer == nullptr || !desc.frameBuffer->depthStencilFormat ||
+	    desc.frameBuffer->colorFormat != TextureFormat::RGBA8 ||
+	    toSdl(*desc.frameBuffer->depthStencilFormat) !=
+	        GetSupportedDepthStencilFormat(_gpuDevice.get(), TextureFormat::Depth24Stencil8))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "DrawMesh requires a camera and an RGBA8 framebuffer with depth");
+		return;
+	}
+	if (subMeshIndex != std::numeric_limits<uint8_t>::max() && subMeshIndex >= mesh.GetSubMeshes().size())
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("graphics"), "Submesh {} is out of range for {}", subMeshIndex, mesh.GetDebugName());
+		return;
+	}
+	std::vector<glm::mat4> matrices {glm::mat4(1.0f), glm::mat4(1.0f)};
+	uint32_t boneCount = 1;
+	if (mesh.IsBoned())
+	{
+		if (desc.modelMatrices != nullptr && desc.matrixCount > 0)
+		{
+			matrices.resize(1);
+			matrices.insert(matrices.end(), desc.modelMatrices, desc.modelMatrices + desc.matrixCount);
+			boneCount = desc.matrixCount;
+		}
+		else if (!mesh.GetBoneMatrices().empty())
+		{
+			matrices.resize(1);
+			matrices.insert(matrices.end(), mesh.GetBoneMatrices().begin(), mesh.GetBoneMatrices().end());
+			boneCount = static_cast<uint32_t>(mesh.GetBoneMatrices().size());
+		}
+	}
+	else if (desc.modelMatrices != nullptr && desc.matrixCount > 0)
+	{
+		matrices[0] = desc.modelMatrices[0];
+	}
+	const auto boxOffset = static_cast<uint32_t>(matrices.size());
+	if (desc.boundingBox != nullptr)
+	{
+		const auto box = mesh.GetBoundingBox();
+		matrices.push_back(matrices[0] * glm::scale(glm::translate(glm::mat4(1.0f), box.Center()), box.Size()));
+	}
+	const auto byteCount = static_cast<uint32_t>(matrices.size() * sizeof(glm::mat4));
+	const SDL_GPUBufferCreateInfo bufferInfo {.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ, .size = byteCount};
+	const GpuBuffer buffer {SDL_CreateGPUBuffer(_gpuDevice.get(), &bufferInfo), {_gpuDevice.get()}};
+	auto transfer = CreateTransferBuffer(_gpuDevice.get(), {reinterpret_cast<const uint8_t*>(matrices.data()), byteCount});
+	if (!buffer || !transfer)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to upload mesh matrices: {}", SDL_GetError());
+		return;
+	}
+	auto* commandBuffer = SDL_AcquireGPUCommandBuffer(_gpuDevice.get());
+	if (commandBuffer == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to acquire mesh command buffer: {}", SDL_GetError());
+		return;
+	}
+	auto* copyPass = SDL_BeginGPUCopyPass(commandBuffer);
+	if (copyPass == nullptr)
+	{
+		SDL_CancelGPUCommandBuffer(commandBuffer);
+		return;
+	}
+	const SDL_GPUTransferBufferLocation source {.transfer_buffer = transfer.get()};
+	const SDL_GPUBufferRegion destination {.buffer = buffer.get(), .size = byteCount};
+	SDL_UploadToGPUBuffer(copyPass, &source, &destination, false);
+	SDL_EndGPUCopyPass(copyPass);
+	const SDL_GPUColorTargetInfo colorTarget {
+	    .texture = toSdl(desc.frameBuffer->colorAttachment),
+	    .clear_color = {0x27 / 255.0f, 0x46 / 255.0f, 0x59 / 255.0f, 1.0f},
+	    .load_op = SDL_GPU_LOADOP_CLEAR,
+	    .store_op = SDL_GPU_STOREOP_STORE,
+	    .cycle = true,
+	};
+	const SDL_GPUDepthStencilTargetInfo depthTarget {
+	    .texture = toSdl(desc.frameBuffer->depthStencilAttachment),
+	    .clear_depth = 0.0f,
+	    .load_op = SDL_GPU_LOADOP_CLEAR,
+	    .store_op = SDL_GPU_STOREOP_DONT_CARE,
+	    .stencil_load_op = SDL_GPU_LOADOP_CLEAR,
+	    .stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+	    .cycle = true,
+	};
+	auto* pass = SDL_BeginGPURenderPass(commandBuffer, &colorTarget, 1, &depthTarget);
+	if (pass == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin mesh pass: {}", SDL_GetError());
+		SDL_CancelGPUCommandBuffer(commandBuffer);
+		return;
+	}
+	// Reflection materials already target the same RGBA8/depth formats as the viewer.
+	const auto& pipelines = _pipelines[static_cast<size_t>(RenderPass::Reflection)];
+	const auto viewProjection = desc.camera->GetViewProjectionMatrix(Camera::Projection::ReversedZ);
+	const auto& island = Locator::terrainSystem::value();
+	const auto extent = island.GetExtent();
+	const MeshCamera data {
+	    viewProjection, glm::vec4(extent.minimum, extent.maximum), {0, 1, boneCount, desc.morphWithTerrain ? 1u : 0u}};
+	SDL_PushGPUVertexUniformData(commandBuffer, 0, &data, sizeof(data));
+	auto* storage = buffer.get();
+	SDL_BindGPUVertexStorageBuffers(pass, 0, &storage, 1);
+	const auto& heightMap = island.GetHeightMap();
+	const SDL_GPUTextureSamplerBinding heightBinding {toSdl(heightMap.handle), toSdl(heightMap.samplerHandle)};
+	SDL_BindGPUVertexSamplers(pass, 0, &heightBinding, 1);
+	DrawMeshPrimitives(commandBuffer, pass, mesh, pipelines.objects, 1, subMeshIndex, desc.drawAll);
+	if (desc.boundingBox != nullptr)
+	{
+		struct LineData
+		{
+			glm::mat4 viewProjection;
+			glm::uvec4 offsets;
+		};
+		const LineData lineData {viewProjection, {boxOffset, 0, 0, 0}};
+		SDL_PushGPUVertexUniformData(commandBuffer, 0, &lineData, sizeof(lineData));
+		DrawGeometry(pass, _pipelines[static_cast<size_t>(RenderPass::MeshViewer)].lines, *desc.boundingBox);
+	}
+	SDL_EndGPURenderPass(pass);
+	if (!SDL_SubmitGPUCommandBuffer(commandBuffer))
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to submit mesh pass: {}", SDL_GetError());
+	}
 }
 
 SDL_GPUBuffer* RendererSdl3Gpu::UploadBuffer(const std::string& name, std::span<const uint8_t> memory,

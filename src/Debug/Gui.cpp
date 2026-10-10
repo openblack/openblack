@@ -60,7 +60,7 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 
 	std::vector<std::unique_ptr<Window>> debugWindows;
 	debugWindows.emplace_back(new Profiler);
-	// debugWindows.emplace_back(new MeshViewer);
+	debugWindows.emplace_back(new MeshViewer);
 	debugWindows.emplace_back(new TextureViewer);
 	debugWindows.emplace_back(new Console);
 	debugWindows.emplace_back(new LandIsland);

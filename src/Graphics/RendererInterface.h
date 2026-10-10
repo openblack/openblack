@@ -41,7 +41,7 @@ class Registry;
 namespace openblack::graphics
 {
 class L3DMesh;
-class ShaderManager;
+class Mesh;
 class ShaderProgram;
 
 class RendererInterface
@@ -71,6 +71,9 @@ public:
 
 	struct L3DMeshSubmitDesc
 	{
+		const Camera* camera {};
+		const FrameBuffer* frameBuffer {};
+		const Mesh* boundingBox {};
 		graphics::RenderPass viewId;
 		const graphics::ShaderProgram* program;
 		uint64_t state;
@@ -102,8 +105,6 @@ public:
 
 	// TODO: Remove this function. All renderables should be drawn through RenderingSystem with Components
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
-	// TODO: Should shader manager be available through Locator as a service?
-	[[nodiscard]] virtual ShaderManager& GetShaderManager() const noexcept = 0;
 
 	[[nodiscard]] virtual VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
 	                                                               VertexDecl decl) noexcept = 0;
