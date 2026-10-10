@@ -69,7 +69,6 @@ public:
 	void SetProfile(bool value) noexcept final;
 
 	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept final;
-	[[nodiscard]] ShaderManager& GetShaderManager() const noexcept final;
 
 	[[nodiscard]] VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
 	                                                       VertexDecl decl) noexcept final;
@@ -105,6 +104,9 @@ private:
 	[[nodiscard]] bool ResizeDepthStencil(glm::uvec2 resolution) noexcept;
 	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh,
 	                  uint32_t instanceCount = 1) const;
+	void DrawMeshPrimitives(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, const L3DMesh& mesh,
+	                        const std::array<SDL_GPUGraphicsPipeline*, 6>& pipelines, uint32_t instanceCount,
+	                        uint8_t subMeshIndex, bool drawAll) const;
 	[[nodiscard]] bool UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept;
 	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
 	             const Camera& camera) const;
