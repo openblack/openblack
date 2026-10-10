@@ -117,6 +117,7 @@ private:
 	                const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept;
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
+	std::optional<std::filesystem::path> _screenshotPath;
 	SDL_GPUBuffer* _sceneMatrices {};
 	std::unique_ptr<Mesh> _spriteQuad;
 	uint32_t _sceneMatrixCapacity {};

@@ -65,7 +65,7 @@ find_program(
                    clang-tidy
 )
 
-find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3 3.4 CONFIG REQUIRED)
 
 find_package(Stb QUIET)
 if (NOT Stb_FOUND)

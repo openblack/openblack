@@ -854,21 +854,17 @@ bool Game::Run() noexcept
 			    .drawStreams = config.drawStreams,
 			    .cullBack = false,
 			};
+			if (_requestScreenshot && _requestScreenshot->first <= _frameCount)
+			{
+				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
+				_requestScreenshot.reset();
+			}
 			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}
 
 		{
 			auto section = profiler.BeginScoped(Profiler::Stage::RendererFrame);
 			Locator::rendererInterface::value().Frame();
-		}
-
-		// Clear the stale screenshot request
-		if (_requestScreenshot.has_value())
-		{
-			if (_requestScreenshot->first <= _frameCount)
-			{
-				_requestScreenshot = std::nullopt;
-			}
 		}
 
 		_frameCount++;
