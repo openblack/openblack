@@ -10,27 +10,6 @@ endif ()
 
 set(OPENBLACK_RC ${CMAKE_SOURCE_DIR}/assets/resource/icon/openblack.rc)
 
-# file(GLOB OPENBLACK_IMGUI_VS_SHADERS
-#      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/vs_*.sc"
-# )
-# file(GLOB OPENBLACK_IMGUI_FS_SHADERS
-#      "${CMAKE_SOURCE_DIR}/assets/shaders/imgui/fs_*.sc"
-# )
-# bgfx_compile_shaders(
-#   AS_HEADERS
-#   TYPE VERTEX
-#   SHADERS ${OPENBLACK_IMGUI_VS_SHADERS}
-#   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-#   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui
-# )
-# bgfx_compile_shaders(
-#   AS_HEADERS
-#   TYPE FRAGMENT
-#   SHADERS ${OPENBLACK_IMGUI_FS_SHADERS}
-#   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-#   OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders/imgui
-# )
-
 function (compile_shaders)
   set(options "")
   set(oneValueArgs OUTPUT_DIR)
@@ -70,40 +49,6 @@ compile_shaders(
 )
 add_custom_target(openblack_shaders DEPENDS ${OPENBLACK_GENERATED_SHADERS})
 
-# ShaderManager still embeds the legacy shaders during the SDL GPU migration.
-# Generate them explicitly so builds do not depend on headers left by older builds.
-file(GLOB OPENBLACK_LEGACY_VERTEX_SHADERS CONFIGURE_DEPENDS
-     "${CMAKE_SOURCE_DIR}/assets/shaders/vs_*.sc"
-)
-file(GLOB OPENBLACK_LEGACY_FRAGMENT_SHADERS CONFIGURE_DEPENDS
-     "${CMAKE_SOURCE_DIR}/assets/shaders/fs_*.sc"
-)
-bgfx_compile_shaders(
-  AS_HEADERS
-  TYPE VERTEX
-  SHADERS ${OPENBLACK_LEGACY_VERTEX_SHADERS}
-  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc
-  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
-             OUT_FILES_VAR OPENBLACK_LEGACY_GENERATED_VERTEX_SHADERS
-)
-bgfx_compile_shaders(
-  AS_HEADERS
-  TYPE FRAGMENT
-  SHADERS ${OPENBLACK_LEGACY_FRAGMENT_SHADERS}
-  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/shaders/varying.def.sc
-  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
-             OUT_FILES_VAR OPENBLACK_LEGACY_GENERATED_FRAGMENT_SHADERS
-)
-
-# list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_VS_SHADERS})
-# list(APPEND OPENBLACK_SHADERS ${OPENBLACK_IMGUI_FS_SHADERS})
-# list(APPEND OPENBLACK_SHADERS
-#      ${CMAKE_SOURCE_DIR}/assets/shaders/imgui/varying.def.sc
-# )
-# list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VERTEX_SHADERS})
-# list(APPEND OPENBLACK_SHADERS ${OPENBLACK_FRAGMENT_SHADERS})
-# list(APPEND OPENBLACK_SHADERS ${OPENBLACK_VARYING_DEF_FILE})
-
 if (ANDROID)
   add_library(openblack_lib SHARED)
   set_target_properties(
@@ -116,13 +61,8 @@ endif ()
 add_dependencies(openblack_lib openblack_shaders)
 target_sources(
   openblack_lib
-  PRIVATE ${OPENBLACK_SOURCES}
-          ${OPENBLACK_HEADERS}
-          ${OPENBLACK_RC}
-          ${OPENBLACK_SHADERS}
-          ${OPENBLACK_GENERATED_SHADERS}
-          ${OPENBLACK_LEGACY_GENERATED_VERTEX_SHADERS}
-          ${OPENBLACK_LEGACY_GENERATED_FRAGMENT_SHADERS}
+  PRIVATE ${OPENBLACK_SOURCES} ${OPENBLACK_HEADERS} ${OPENBLACK_RC}
+          ${OPENBLACK_SHADERS} ${OPENBLACK_GENERATED_SHADERS}
 )
 set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 
