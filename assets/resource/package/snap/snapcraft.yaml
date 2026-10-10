@@ -68,11 +68,11 @@ parts:
       - automake
       - libltdl-dev
       - libtool
-      # bgfx
+      # SDL video dependencies
       - libgl1-mesa-dev
       - x11proto-core-dev
       - libx11-dev
-      # sdl2
+      # SDL input and windowing dependencies
       - python3-jinja2
       - libxft-dev
       - libxext-dev

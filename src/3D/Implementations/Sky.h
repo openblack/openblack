@@ -28,7 +28,6 @@ namespace openblack
 namespace graphics
 {
 class L3DMesh;
-class ShaderProgram;
 struct Texture2d;
 } // namespace graphics
 

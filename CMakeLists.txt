@@ -92,12 +92,6 @@ if (TARGET glm AND NOT TARGET glm::glm)
   add_library(glm::glm ALIAS glm)
 endif ()
 
-# vcpkg loses the dependency of bx on windows which fails to pull in all headers
-find_package(bgfx REQUIRED)
-if (TARGET bgfx::bgfx AND TARGET bgfx::bx)
-  target_link_libraries(bgfx::bgfx INTERFACE bgfx::bx)
-endif ()
-
 find_path(
   DRLIBS_INCLUDE_DIRS REQUIRED
   NAMES dr_flac.h dr_mp3.h dr_wav.h
@@ -114,7 +108,6 @@ find_path(CXXOPTS_INCLUDE_DIRS "cxxopts.hpp")
 
 include(ClangFormat)
 
-# gets bundled dependencies (imgui, bgfx.cmake)
 add_subdirectory(externals)
 add_subdirectory(components/l3d)
 add_subdirectory(components/pack)

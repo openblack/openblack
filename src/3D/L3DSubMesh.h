@@ -24,7 +24,6 @@ namespace openblack::graphics
 {
 class L3DMesh;
 class Mesh;
-class ShaderProgram;
 
 class L3DSubMesh
 {

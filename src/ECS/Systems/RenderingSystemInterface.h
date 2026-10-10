@@ -15,7 +15,6 @@
 #include <entt/fwd.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "Graphics/GraphicsHandle.h"
 #include "Graphics/Mesh.h"
 
 namespace openblack::ecs::systems
@@ -73,12 +72,7 @@ struct RenderContext
 	std::map<InstancedDrawKey, InstancedDrawDesc> instancedDrawDescs;
 	std::map<entt::id_type, InstancedDrawDesc> treeInstancedDrawDescs;
 
-	/// Retained while the legacy renderer is compiled. The SDL renderer uploads
-	/// the prepared CPU arrays into its own storage buffers.
-	graphics::DynamicVertexBufferHandle instanceUniformBuffer;
-	graphics::DynamicVertexBufferHandle treeInstanceUniformBuffer;
-
-	/// Kept for backward compatibility, will be removed once shader is updated
+	/// Prepared CPU instance data uploaded by the renderer.
 	std::vector<glm::mat4> treeInstanceUniforms;
 	std::vector<glm::vec4> treeSwayParams;
 

@@ -15,7 +15,6 @@
 #include "3D/LandIslandInterface.h"
 #include "EngineConfig.h"
 #include "Graphics/FrameBuffer.h"
-#include "Graphics/GraphicsHandleBgfx.h"
 #include "Locator.h"
 
 using namespace openblack::debug::gui;

@@ -11,7 +11,6 @@
 
 #include <vector>
 
-#include <bgfx/bgfx.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/vec_swizzle.hpp>

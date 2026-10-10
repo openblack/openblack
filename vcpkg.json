@@ -19,24 +19,6 @@
         "cxxopts",
         "openal-soft",
         "drlibs",
-        {
-            "name": "bgfx",
-            "default-features": false,
-            "features": [ "multithreaded" ],
-            "host": true,
-            "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
-        },
-        {
-            "name": "bgfx",
-            "default-features": false,
-            "platform": "emscripten"
-        },
-        {
-            "name": "bgfx",
-            "default-features": false,
-            "features": [ "multithreaded" ],
-            "platform": "!emscripten"
-        },
         "bullet3",
         "minizip",
         "gtest"

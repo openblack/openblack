@@ -18,14 +18,6 @@
 #include <SDL3/SDL_video.h>
 #include <spdlog/spdlog.h>
 
-#if defined(SDL_PLATFORM_LINUX)
-#include <X11/Xlib.h>
-#include <wayland-egl.h>
-#endif // defined(SDL_VIDEO_DRIVER_WAYLAND)
-#if defined(SDL_VIDEO_DRIVER_COCOA)
-void* cbSetupMetalLayer(void* wnd);
-#endif
-
 using namespace openblack::windowing;
 
 void Sdl3WindowingSystem::SDLDestroyer::operator()(SDL_Window* window) const
@@ -79,71 +71,6 @@ Sdl3WindowingSystem::Sdl3WindowingSystem(const std::string& title, int width, in
 void* Sdl3WindowingSystem::GetHandle() const
 {
 	return _window.get();
-}
-
-// TODO Remove
-Sdl3WindowingSystem::NativeHandles Sdl3WindowingSystem::GetNativeHandles() const
-{
-	NativeHandles result {nullptr, nullptr};
-
-	// clang-format off
-#if defined(SDL_PLATFORM_EMSCRIPTEN)
-	if (const auto* canvasId = reinterpret_cast<const char*>(SDL_GetPropertyString(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_EMSCRIPTEN_CANVAS_ID)))
-	{
-		nativeWindow = const_cast<void*>(reinterpret_cast<const void*>(canvasId));
-	}
-	else
-
-#elif defined(SDL_PLATFORM_LINUX)
-	if (auto* xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr),
-			     * xwindow = reinterpret_cast<void*>(static_cast<uintptr_t>(SDL_GetNumberProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0)));
-			 xdisplay != nullptr && xwindow != nullptr)
-	{
-		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		result.nativeWindow = xwindow;
-		result.nativeDisplay = xdisplay;
-	}
-	else if (auto* display = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr),
-		    * surface = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
-		display != nullptr && surface != nullptr)
-	{
-		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		result.nativeWindow = surface;
-		result.nativeDisplay = display;
-	}
-	else
-
-#elif defined(SDL_PLATFORM_MACOS)
-	if (auto *nswindow = (__bridge NSWindow *)SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr))
-	{
-		result.nativeWindow = cbSetupMetalLayer(nswindow);
-		result.nativeDisplay = nullptr;
-	}
-	else
-
-	// Windows
-#elif defined(SDL_PLATFORM_WIN32)
-	if (auto hwnd = reinterpret_cast<HWND>(SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)))
-	{
-		result.nativeWindow = hwnd;
-		result.nativeDisplay = nullptr;
-	}
-	else
-
-	// Android
-#elif defined(SDL_VIDEO_DRIVER_ANDROID)
-	if (auto *awindow = reinterpret_cast<ANativeWindow*>(SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_ANDROID_WINDOW_POINTER, nullptr)))
-	{
-		result.nativeWindow = awindow;
-		result.nativeDisplay = nullptr;
-	}
-	else
-#endif // defined(SDL_VIDEO_DRIVER_ANDROID)
-	{
-		throw std::runtime_error("Unsupported platform or window manager");
-	}
-	return result;
-	// clang-format on
 }
 
 bool Sdl3WindowingSystem::IsOpen() const

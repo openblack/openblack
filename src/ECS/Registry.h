@@ -23,7 +23,6 @@ class Camera;
 namespace openblack::graphics
 {
 class DebugLines;
-class ShaderManager;
 } // namespace openblack::graphics
 
 namespace openblack::ecs

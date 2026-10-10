@@ -48,26 +48,12 @@ jobs:
           source ${GITHUB_WORKSPACE}/openblack-git/PKGBUILD
           export makedepends=${makedepends[@]}
           export depends=${depends[@]}
-          export makedepends=${makedepends/bgfx-cmake-git/}
           export makedepends=${makedepends/dr_libs-git/}
-          export depends=${depends/bgfx/}
           export depends=${depends/entt/}
           export depends=${depends/imgui/}
           pacman -S --noconfirm --noprogressbar --needed mesa libx11 ${makedepends} ${depends}
 
-      - name: Cache AUR Packages
-        id: cache-packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            entt/entt*.pkg.tar.*
-            bgfx-cmake-git/bgfx-cmake-git*.pkg.tar.*
-            imgui/imgui*.pkg.tar.*
-            dr_libs-git/dr_libs-git*.pkg.tar.*
-          key: ${{ runner.os }}-cmake
-
       - name: Build ${{ env.PKG }} from the AUR
-        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
           chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
@@ -77,17 +63,6 @@ jobs:
           PKG: entt
 
       - name: Build ${{ env.PKG }} from the AUR
-        if: steps.cache-packages.outputs.cache-hit != 'true'
-        run: |
-          git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          cd ${GITHUB_WORKSPACE}/${{ env.PKG }}
-          sudo -u builduser makepkg
-        env:
-          PKG: bgfx-cmake-git
-
-      - name: Build ${{ env.PKG }} from the AUR
-        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
           chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}
@@ -97,7 +72,6 @@ jobs:
           PKG: imgui
 
       - name: Build ${{ env.PKG }} from the AUR
-        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           git clone https://aur.archlinux.org/${{ env.PKG }}.git ${GITHUB_WORKSPACE}/${{ env.PKG }}
           chown -R builduser ${GITHUB_WORKSPACE}/${{ env.PKG }}

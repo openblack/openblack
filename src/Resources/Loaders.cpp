@@ -16,7 +16,6 @@
 
 #include <GLWFile.h>
 #include <PackFile.h>
-#include <bgfx/bgfx.h>
 #include <glm/fwd.hpp>
 #include <spdlog/spdlog.h>
 

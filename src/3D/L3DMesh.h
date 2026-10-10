@@ -20,7 +20,6 @@
 
 #include "AxisAlignedBoundingBox.h"
 #include "Graphics/Mesh.h"
-#include "Graphics/ShaderProgram.h"
 #include "Graphics/Texture2d.h"
 
 class btConvexShape;

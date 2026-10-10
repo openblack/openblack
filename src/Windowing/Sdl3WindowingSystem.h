@@ -40,7 +40,6 @@ public:
 	Sdl3WindowingSystem(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags);
 
 	[[nodiscard]] void* GetHandle() const final;
-	[[nodiscard]] NativeHandles GetNativeHandles() const final;
 	[[nodiscard]] uint32_t GetID() const final;
 	[[nodiscard]] glm::ivec2 GetSize() const final;
 	[[nodiscard]] float GetAspectRatio() const final;

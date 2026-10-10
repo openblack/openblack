@@ -1319,12 +1319,6 @@ SDL_GPUBuffer* RendererSdl3Gpu::UploadBuffer(const std::string& name, std::span<
 	return buffer.release();
 }
 
-VertexBufferUniquePtr RendererSdl3Gpu::CreateVertexBuffer(std::string name, const void*, VertexDecl) noexcept
-{
-	SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Buffer {} requires a byte span for SDL GPU uploads", name);
-	return nullptr;
-}
-
 VertexBufferUniquePtr RendererSdl3Gpu::CreateVertexBuffer(std::string name, std::span<const uint8_t> memory,
                                                           VertexDecl decl) noexcept
 {
@@ -1352,21 +1346,17 @@ VertexBufferUniquePtr RendererSdl3Gpu::CreateVertexBuffer(std::string name, std:
 	{
 		return nullptr;
 	}
-	return {new VertexBuffer {std::move(name),
-	                          static_cast<uint32_t>(memory.size_bytes() / stride),
-	                          stride,
-	                          fromSdl<VertexBufferHandle>(buffer),
-	                          {}},
-	        [device = _gpuDevice.get()](VertexBuffer* vertexBuffer) {
+	auto* result = new (std::nothrow) VertexBuffer {std::move(name), static_cast<uint32_t>(memory.size_bytes() / stride),
+	                                                stride, fromSdl<VertexBufferHandle>(buffer)};
+	if (result == nullptr)
+	{
+		SDL_ReleaseGPUBuffer(_gpuDevice.get(), buffer);
+		return nullptr;
+	}
+	return {result, [device = _gpuDevice.get()](VertexBuffer* vertexBuffer) {
 		        SDL_ReleaseGPUBuffer(device, toSdl(vertexBuffer->handle));
 		        delete vertexBuffer;
 	        }};
-}
-
-IndexBufferUniquePtr RendererSdl3Gpu::CreateIndexBuffer(std::string name, const void*, IndexBuffer::Type) noexcept
-{
-	SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Buffer {} requires a byte span for SDL GPU uploads", name);
-	return nullptr;
 }
 
 IndexBufferUniquePtr RendererSdl3Gpu::CreateIndexBuffer(std::string name, std::span<const uint8_t> memory,
@@ -1395,13 +1385,6 @@ IndexBufferUniquePtr RendererSdl3Gpu::CreateIndexBuffer(std::string name, std::s
 		        SDL_ReleaseGPUBuffer(device, toSdl(indexBuffer->handle));
 		        delete indexBuffer;
 	        }};
-}
-
-Texture2dUniquePtr RendererSdl3Gpu::CreateTexture2d(std::string name, const void*, glm::u16vec2, uint16_t, TextureFormat,
-                                                    Wrapping, Filter) noexcept
-{
-	SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Texture {} requires a byte span for SDL GPU uploads", name);
-	return nullptr;
 }
 
 Texture2dUniquePtr RendererSdl3Gpu::CreateTexture2d(std::string name, std::span<const uint8_t> memory, glm::u16vec2 resolution,
@@ -1582,14 +1565,4 @@ std::unique_ptr<FrameBuffer> RendererSdl3Gpu::CreateFrameBuffer(std::string name
 			                                     SDL_ReleaseGPUTexture(device, depth);
 		                                     }
 	                                     });
-}
-
-void RendererSdl3Gpu::Bind(const VertexBuffer& buffer) const noexcept
-{
-	// TODO
-}
-
-void RendererSdl3Gpu::Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept
-{
-	// TODO
 }
