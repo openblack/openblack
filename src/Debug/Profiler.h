@@ -36,13 +36,14 @@ private:
 	struct CircularBuffer
 	{
 		static constexpr uint8_t k_BufferSize = N;
-		std::array<T, N> values;
+		std::array<T, N> values {};
 		uint8_t offset = 0;
+		uint8_t count = 0;
 
 		[[nodiscard]] T Back() const noexcept
 		{
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
-			return values[offset];
+			return count == 0 ? T {} : values[(offset + N - 1) % N];
 		}
 		void PushBack(T value) noexcept
 		{
@@ -50,11 +51,13 @@ private:
 			// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): perf sensitive
 			values[offset] = value;
 			offset = (offset + 1u) % values.size();
+			if (count < N)
+			{
+				++count;
+			}
 		}
 	};
 	CircularBuffer<float, 100> _times;
-	CircularBuffer<float, 100> _fps;
-	uint64_t _previousPerformanceCounter = 0;
 };
 
 } // namespace openblack::debug::gui
