@@ -903,20 +903,20 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	Script script;
 	script.Load(source);
 
-	// // Each released map comes with an optional .fot file which contains the footpath information for the map
-	// const auto stem = string_utils::LowerCase(path.stem().generic_string());
-	// const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
+	// Each released map comes with an optional .fot file which contains the footpath information for the map
+	const auto stem = string_utils::LowerCase(path.stem().generic_string());
+	const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
-	// if (fileSystem.Exists(fotPath))
-	// {
-	// 	FotFile fotFile(*this);
-	// 	fotFile.Load(fotPath);
-	// }
-	// else
-	// {
-	// 	SPDLOG_LOGGER_WARN(spdlog::get("game"), "The map at {} does not come with a footpath file. Expected {}",
-	// 	                   path.generic_string(), fotPath.generic_string());
-	// }
+	if (fileSystem.Exists(fotPath))
+	{
+		FotFile fotFile(*this);
+		fotFile.Load(fotPath);
+	}
+	else
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("game"), "The map at {} does not come with a footpath file. Expected {}",
+		                   path.generic_string(), fotPath.generic_string());
+	}
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
