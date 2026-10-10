@@ -13,6 +13,7 @@
 #include <SDL3/SDL.h>
 
 #include "generated/shaders/footprint.slang.spv.h"
+#include "generated/shaders/line.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/sprite.slang.spv.h"
 #include "generated/shaders/vegetation.slang.spv.h"
@@ -35,9 +36,16 @@ static_assert(k_VegetationVertexShaderCreateInfo.num_samplers == 1);
 static_assert(k_VegetationVertexShaderCreateInfo.num_uniform_buffers == 1);
 static_assert(k_VegetationFragmentShaderCreateInfo.num_uniform_buffers == 1);
 static_assert(k_VegetationFragmentShaderCreateInfo.num_samplers == 1);
+static_assert(k_LineVertexBufferDescriptionByVertex.pitch == 32);
+static_assert(k_LineVertexAttributes[1].offset == 16);
+static_assert(k_LineVertexShaderCreateInfo.num_storage_buffers == 1);
+static_assert(k_LineVertexShaderCreateInfo.num_uniform_buffers == 1);
+static_assert(k_LineFragmentShaderCreateInfo.num_samplers == 0);
+static_assert(k_LineFragmentShaderCreateInfo.num_uniform_buffers == 0);
 
 bool CheckPipeline(SDL_GPUDevice* device, const char* name, const SDL_GPUShaderCreateInfo& vertexInfo,
-                   const SDL_GPUShaderCreateInfo& fragmentInfo, const SDL_GPUVertexInputState& inputState)
+                   const SDL_GPUShaderCreateInfo& fragmentInfo, const SDL_GPUVertexInputState& inputState,
+                   SDL_GPUPrimitiveType primitiveType = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST)
 {
 	auto* vs = SDL_CreateGPUShader(device, &vertexInfo);
 	auto* fs = SDL_CreateGPUShader(device, &fragmentInfo);
@@ -59,7 +67,7 @@ bool CheckPipeline(SDL_GPUDevice* device, const char* name, const SDL_GPUShaderC
 	    .vertex_shader = vs,
 	    .fragment_shader = fs,
 	    .vertex_input_state = inputState,
-	    .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+	    .primitive_type = primitiveType,
 	    .rasterizer_state = {.enable_depth_clip = true},
 	    .multisample_state = {.sample_count = SDL_GPU_SAMPLECOUNT_1},
 	    .target_info = {.color_target_descriptions = &target, .num_color_targets = 1},
@@ -101,7 +109,9 @@ int main()
 	                                     k_FootprintFragmentShaderCreateInfo, k_FootprintVertexInputStateByVertex);
 	const bool vegetation = CheckPipeline(device, "vegetation", k_VegetationVertexShaderCreateInfo,
 	                                      k_VegetationFragmentShaderCreateInfo, k_VegetationVertexInputStateByVertex);
+	const bool lines = CheckPipeline(device, "lines", k_LineVertexShaderCreateInfo, k_LineFragmentShaderCreateInfo,
+	                                 k_LineVertexInputStateByVertex, SDL_GPU_PRIMITIVETYPE_LINELIST);
 	SDL_DestroyGPUDevice(device);
 	SDL_Quit();
-	return sky && sprite && footprint && vegetation ? EXIT_SUCCESS : EXIT_FAILURE;
+	return sky && sprite && footprint && vegetation && lines ? EXIT_SUCCESS : EXIT_FAILURE;
 }

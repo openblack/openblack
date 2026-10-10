@@ -44,6 +44,7 @@ public:
 		SDL_GPUGraphicsPipeline* terrain;
 		SDL_GPUGraphicsPipeline* sprites;
 		SDL_GPUGraphicsPipeline* footprints;
+		SDL_GPUGraphicsPipeline* lines;
 		std::array<SDL_GPUGraphicsPipeline*, 6> objects {}; // blend mode and depth writes
 		std::array<SDL_GPUGraphicsPipeline*, 6> vegetation {};
 
@@ -119,6 +120,7 @@ private:
 	uint32_t _sceneMatrixCapacity {};
 	uint32_t _treeMatrixOffset {};
 	uint32_t _treeSwayOffset {};
+	uint32_t _identityMatrixOffset {};
 	std::map<entt::id_type, uint32_t> _entityBoneOffsets;
 	Texture2dUniquePtr _whiteTexture;
 	SDL_GPUTexture* _depthStencil {};

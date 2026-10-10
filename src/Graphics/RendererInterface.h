@@ -64,6 +64,8 @@ public:
 		bool drawSprites;
 		bool drawVegetation;
 		bool drawBoundingBoxes;
+		bool drawFootpaths;
+		bool drawStreams;
 		bool cullBack;
 		bool wireframe;
 	};
