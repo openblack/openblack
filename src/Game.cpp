@@ -125,21 +125,19 @@ Game::~Game() noexcept
 
 bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
-	static bool leftMouseButton = false;
-	static bool middleMouseButton = false;
-
-	if ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
-	    event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP)
 	{
-		leftMouseButton = !leftMouseButton;
+		const bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+		if (event.button.button == SDL_BUTTON_LEFT)
+		{
+			_leftMouseButtonDown = isDown;
+		}
+		else if (event.button.button == SDL_BUTTON_MIDDLE)
+		{
+			_middleMouseButtonDown = isDown;
+		}
+		_handGripping = _leftMouseButtonDown || _middleMouseButtonDown;
 	}
-	if ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
-	    event.button.button == SDL_BUTTON_MIDDLE)
-	{
-		middleMouseButton = !middleMouseButton;
-	}
-
-	_handGripping = middleMouseButton || leftMouseButton;
 
 	auto& window = Locator::windowing::value();
 	auto& camera = Locator::camera::value();
@@ -368,59 +366,23 @@ bool Game::Update() noexcept
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
-		// // Update Hand and intersection point
-		// ecs::components::Transform intersectionTransform {};
-		// {
-		// 	const auto screenSize =
-		// 	    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
-		// 	const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
-		// 	if (screenSize.x > 0 && screenSize.y > 0)
-		// 	{
-		// 		glm::vec3 rayOrigin;
-		// 		glm::vec3 rayDirection;
-		// 		camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
-		// 		                              rayOrigin, rayDirection);
-		// 		auto& dynamicsSystem = Locator::dynamicsSystem::value();
-
-		// 		if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
-		// 		{
-		// 			if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
-		// 			{
-		// 				intersectionTransform = hit->first;
-		// 			}
-		// 			else // For the water
-		// 			{
-		// 				float intersectDistance = 0.0f;
-		// 				const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-		// 				const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-		// 				if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
-		// 				{
-		// 					intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
-		// 					intersectionTransform.rotation = glm::mat3(1.0f);
-		// 				}
-		// 			}
-		// 		}
-		// 		intersectionTransform.scale = scale;
-		// 	}
-
-		// 	if (!_handGripping)
-		// 	{
-		// 		const glm::vec3 handOffset(0, 1.5f, 0);
-		// 		const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
-
-		// 		const auto handEntity =
-		// 		    Locator::handSystem::value()
-		// 		        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
-		// 		auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
-		// 		// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-		// 		handTransform.position = intersectionTransform.position;
-		// 		handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
-		// 		handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
-		// 		handTransform.position += intersectionTransform.rotation * handOffset;
-		// 		Locator::entitiesRegistry::value().SetDirty();
-		// 	}
-		// }
-		// Locator::handSystem::value().Update();
+		if (!_handGripping)
+		{
+			if (const auto intersection = camera.RaycastMouseToLand(true))
+			{
+				constexpr glm::vec3 k_HandOffset {0.0f, 1.5f, 0.0f};
+				const auto modelRotationCorrection = glm::mat3(glm::eulerAngleX(glm::radians(90.0f)));
+				const auto handEntity =
+				    Locator::handSystem::value()
+				        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+				auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
+				handTransform.position = intersection->position + intersection->rotation * k_HandOffset;
+				handTransform.rotation =
+				    intersection->rotation * glm::mat3(glm::eulerAngleY(camera.GetRotation().y)) * modelRotationCorrection;
+				Locator::entitiesRegistry::value().SetDirty();
+			}
+		}
+		Locator::handSystem::value().Update();
 
 		// Update Entities
 		{
