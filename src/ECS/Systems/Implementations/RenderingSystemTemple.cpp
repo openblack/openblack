@@ -21,8 +21,6 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "Graphics/DebugLines.h"
-#include "Graphics/GraphicsHandleBgfx.h"
-#include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -38,7 +36,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
-	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
+	std::map<RenderContext::InstancedDrawKey, uint32_t> meshIds;
 	std::set<TempleRoom> loadedRooms {TempleRoom::MainRoom};
 	auto roomLoaded = [&loadedRooms, &camera](const Mesh& mesh, const Transform& transform,
 	                                          const TempleInteriorPart& templePart) {
@@ -54,8 +52,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	_loadedRooms = loadedRooms;
 
 	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
-		auto count = meshIds.insert(std::make_pair(mesh.id, std::make_pair(mesh.submeshId, morphWithTerrain)));
-		count.first->second.first++;
+		++meshIds[{mesh.id, morphWithTerrain}];
 		instanceCount++;
 	};
 
@@ -73,23 +70,7 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 		instanceCount *= 2;
 	}
 
-	// Recreate instancing uniform buffer if it is too small
-	if (_renderContext.instanceUniforms.size() < instanceCount)
-	{
-		if (bgfx::isValid(toBgfx(_renderContext.instanceUniformBuffer)))
-		{
-			bgfx::destroy(toBgfx(_renderContext.instanceUniformBuffer));
-		}
-		bgfx::VertexLayout layout;
-		layout.begin()
-		    .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
-		    .end();
-		_renderContext.instanceUniformBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(instanceCount, layout));
-		_renderContext.instanceUniforms.resize(instanceCount);
-	}
+	_renderContext.instanceUniforms.resize(instanceCount);
 
 	// Determine uniform buffer offsets and instance count for draw
 	uint32_t offset = 0;
@@ -97,8 +78,8 @@ void RenderingSystemTemple::PrepareDrawDescs(bool drawBoundingBox)
 	for (const auto& [meshId, desc] : meshIds)
 	{
 		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, desc.first, desc.second));
-		offset += desc.first;
+		                                          std::forward_as_tuple(offset, desc, meshId.morphWithTerrain));
+		offset += desc;
 	}
 }
 
@@ -107,7 +88,7 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	auto& registry = Locator::entitiesRegistry::value();
 
 	// Store offsets of uniforms for descs
-	std::map<entt::id_type, uint32_t> uniformOffsets;
+	std::map<RenderContext::InstancedDrawKey, uint32_t> uniformOffsets;
 
 	// Set transforms for instanced draw at offsets
 	registry.Each<const Mesh, const Transform, const TempleInteriorPart>(
@@ -117,8 +98,9 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 
 		    if (_loadedRooms.contains(templePart.room))
 		    {
-			    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
-			    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
+			    const RenderContext::InstancedDrawKey key {mesh.id, false};
+			    auto offset = uniformOffsets.insert(std::make_pair(key, 0));
+			    auto desc = _renderContext.instancedDrawDescs.find(key);
 
 			    auto modelMatrix = glm::mat4(transform.rotation);
 			    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
@@ -135,11 +117,4 @@ void RenderingSystemTemple::PrepareDrawUploadUniforms(bool drawBoundingBox)
 			    offset.first->second++;
 		    }
 	    });
-
-	if (!_renderContext.instanceUniforms.empty())
-	{
-		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
-		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
-		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
-	}
 }

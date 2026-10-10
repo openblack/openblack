@@ -49,6 +49,7 @@ public:
 	template <typename It>
 	void Destroy(It first, It last)
 	{
+		SetDirty();
 		_registry.destroy(first, last);
 	}
 	template <typename Component, typename... Args>

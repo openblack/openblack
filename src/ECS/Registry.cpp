@@ -28,6 +28,7 @@ void Registry::Release(entt::entity entity)
 
 void Registry::Destroy(entt::entity entity)
 {
+	SetDirty();
 	_registry.destroy(entity);
 }
 

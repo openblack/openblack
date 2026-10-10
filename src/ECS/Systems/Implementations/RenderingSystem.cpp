@@ -29,8 +29,6 @@
 #include "ECS/Systems/TimeSystemInterface.h"
 #include "Game.h"
 #include "Graphics/DebugLines.h"
-#include "Graphics/GraphicsHandleBgfx.h"
-#include "Graphics/ShaderManager.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
 
@@ -45,11 +43,10 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 
 	// Count number of instances
 	uint32_t instanceCount = 0;
-	std::unordered_map<entt::id_type, std::pair<uint32_t, bool>> meshIds;
+	std::map<RenderContext::InstancedDrawKey, uint32_t> meshIds;
 
 	auto prep = [&meshIds, &instanceCount](const Mesh& mesh, bool morphWithTerrain) {
-		auto count = meshIds.insert(std::make_pair(mesh.id, std::make_pair(mesh.submeshId, morphWithTerrain)));
-		count.first->second.first++;
+		++meshIds[{mesh.id, morphWithTerrain}];
 		instanceCount++;
 	};
 
@@ -57,30 +54,14 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	                                           entt::exclude<MorphWithTerrain, Tree, TempleInteriorPart>);
 	registry.Each<const Mesh, const Transform, const MorphWithTerrain>(
 	    [&prep](const Mesh& mesh, const Transform& /*unused*/, const MorphWithTerrain& /*unused*/) { prep(mesh, true); },
-	    entt::exclude<Tree>);
+	    entt::exclude<Tree, TempleInteriorPart>);
 
 	if (drawBoundingBox)
 	{
 		instanceCount *= 2;
 	}
 
-	// Recreate instancing uniform buffer if it is too small
-	if (_renderContext.instanceUniforms.size() < instanceCount)
-	{
-		if (bgfx::isValid(toBgfx(_renderContext.instanceUniformBuffer)))
-		{
-			bgfx::destroy(toBgfx(_renderContext.instanceUniformBuffer));
-		}
-		bgfx::VertexLayout layout;
-		layout.begin()
-		    .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
-		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
-		    .end();
-		_renderContext.instanceUniformBuffer = graphics::fromBgfx(bgfx::createDynamicVertexBuffer(instanceCount, layout));
-		_renderContext.instanceUniforms.resize(instanceCount);
-	}
+	_renderContext.instanceUniforms.resize(instanceCount);
 
 	// Determine uniform buffer offsets and instance count for draw
 	uint32_t offset = 0;
@@ -88,8 +69,8 @@ void RenderingSystem::PrepareDrawDescs(bool drawBoundingBox)
 	for (const auto& [meshId, desc] : meshIds)
 	{
 		_renderContext.instancedDrawDescs.emplace(std::piecewise_construct, std::forward_as_tuple(meshId),
-		                                          std::forward_as_tuple(offset, desc.first, desc.second));
-		offset += desc.first;
+		                                          std::forward_as_tuple(offset, desc, meshId.morphWithTerrain));
+		offset += desc;
 	}
 
 	// Prepare tree instances separately
@@ -114,8 +95,10 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 	};
 
 	// Process Tree entities
-	registry.Each<const Mesh, const Transform, const Tree>(
-	    [&prepTree](const Mesh& mesh, const Transform& /*unused*/, const Tree& /*unused*/) { prepTree(mesh); });
+	registry.Each<const Mesh, const Transform, const Tree, const Swayable>(
+	    [&prepTree](const Mesh& mesh, const Transform& /*unused*/, const Tree& /*unused*/, const Swayable& /*unused*/) {
+		    prepTree(mesh);
+	    });
 
 	_renderContext.treeInstanceCount = treeInstanceCount;
 	if (drawBoundingBox)
@@ -123,25 +106,7 @@ void RenderingSystem::PrepareTreeDrawDescs(bool drawBoundingBox)
 		treeInstanceCount *= 2;
 	}
 
-	// Create tree instance buffer if needed
-	if (_renderContext.treeInstanceData.size() < treeInstanceCount)
-	{
-		if (bgfx::isValid(toBgfx(_renderContext.treeInstanceUniformBuffer)))
-		{
-			bgfx::destroy(toBgfx(_renderContext.treeInstanceUniformBuffer));
-		}
-		bgfx::VertexLayout layout;
-		layout.begin()
-		    .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float) // i_data0 (matrix row 0)
-		    .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float) // i_data1 (matrix row 1)
-		    .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float) // i_data2 (matrix row 2)
-		    .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float) // i_data3 (matrix row 3)
-		    .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float) // i_data4 (sway params)
-		    .end();
-		_renderContext.treeInstanceUniformBuffer =
-		    graphics::fromBgfx(bgfx::createDynamicVertexBuffer(treeInstanceCount, layout));
-		_renderContext.treeInstanceData.resize(treeInstanceCount);
-	}
+	_renderContext.treeInstanceData.resize(treeInstanceCount);
 
 	// Determine tree uniform buffer offsets and instance count for draw
 	uint32_t treeOffset = 0;
@@ -159,13 +124,14 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 	auto& registry = Locator::entitiesRegistry::value();
 
 	// Store offsets of uniforms for descs
-	std::map<entt::id_type, uint32_t> uniformOffsets;
+	std::map<RenderContext::InstancedDrawKey, uint32_t> uniformOffsets;
 
 	// Set transforms for instanced draw at offsets
 	registry.Each<const Mesh, const Transform>(
-	    [this, &uniformOffsets, drawBoundingBox](const Mesh& mesh, const Transform& transform) {
-		    auto offset = uniformOffsets.insert(std::make_pair(mesh.id, 0));
-		    auto desc = _renderContext.instancedDrawDescs.find(mesh.id);
+	    [this, &registry, &uniformOffsets, drawBoundingBox](entt::entity entity, const Mesh& mesh, const Transform& transform) {
+		    const RenderContext::InstancedDrawKey key {mesh.id, registry.TryGet<const MorphWithTerrain>(entity) != nullptr};
+		    auto offset = uniformOffsets.insert(std::make_pair(key, 0));
+		    auto desc = _renderContext.instancedDrawDescs.find(key);
 
 		    auto modelMatrix = glm::mat4(transform.rotation);
 		    modelMatrix = glm::translate(modelMatrix, transform.position * transform.rotation);
@@ -183,13 +149,6 @@ void RenderingSystem::PrepareDrawUploadUniforms(bool drawBoundingBox)
 		    offset.first->second++;
 	    },
 	    entt::exclude<TempleInteriorPart, Tree>);
-
-	if (!_renderContext.instanceUniforms.empty())
-	{
-		const auto size = static_cast<uint32_t>(_renderContext.instanceUniforms.size() * sizeof(glm::mat4));
-		bgfx::update(toBgfx(_renderContext.instanceUniformBuffer), 0,
-		             bgfx::makeRef(_renderContext.instanceUniforms.data(), size));
-	}
 
 	// Upload tree uniforms separately
 	PrepareTreeDrawUploadUniforms(drawBoundingBox);
@@ -229,15 +188,4 @@ void RenderingSystem::PrepareTreeDrawUploadUniforms(bool drawBoundingBox)
 		    }
 		    offset.first->second++;
 	    });
-
-	if (!_renderContext.treeInstanceData.empty())
-	{
-		// Calculate the full buffer size including both matrices and sway params
-		const auto size =
-		    static_cast<uint32_t>(_renderContext.treeInstanceData.size() * sizeof(RenderContext::TreeInstanceData));
-
-		// Update the buffer with the combined data
-		bgfx::update(toBgfx(_renderContext.treeInstanceUniformBuffer), 0,
-		             bgfx::makeRef(_renderContext.treeInstanceData.data(), size));
-	}
 }
