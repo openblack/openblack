@@ -9,8 +9,7 @@
 
 #include "TextureViewer.h"
 
-#include "Debug/ImGuiUtils.h"
-#include "Graphics/GraphicsHandleBgfx.h"
+#include "Graphics/GraphicsHandleSdl3Gpu.h"
 #include "Graphics/Texture2d.h"
 #include "Locator.h"
 #include "Resources/ResourcesInterface.h"
@@ -65,7 +64,7 @@ void TextureViewer::Draw() noexcept
 		const auto format = texture->format;
 		const auto* formatStr = graphics::k_TextureFormatStrings.at(static_cast<size_t>(format));
 		ImGui::Text("width: %u, height: %u, format: %s", texture->resolution.x, texture->resolution.y, formatStr);
-		ImGui::Image(toBgfx(texture->handle), ImVec2(512, 512));
+		ImGui::Image(static_cast<ImTextureID>(texture->handle.id), ImVec2(512, 512));
 	}
 
 	ImGui::EndChild();

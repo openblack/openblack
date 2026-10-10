@@ -25,7 +25,6 @@
 #include "3D/L3DSubMesh.h"
 #include "3D/LandIslandInterface.h"
 #include "Camera/Camera.h"
-#include "Debug/ImGuiUtils.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -227,7 +226,7 @@ void MeshViewer::Draw() noexcept
 			_selectedFootprint = static_cast<int>(mesh->GetFootprints().size()) - 1;
 		}
 		const auto& footprint = mesh->GetFootprints().at(_selectedFootprint);
-		ImGui::Image(toBgfx(footprint.texture->handle), ImVec2(128, 128));
+		ImGui::Image(static_cast<ImTextureID>(footprint.texture->handle.id), ImVec2(128, 128));
 		ImGui::TreePop();
 	}
 
@@ -249,7 +248,7 @@ void MeshViewer::Draw() noexcept
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(toBgfx(_frameBuffer->GetColorAttachment()), ImVec2(512, 512));
+	ImGui::Image(static_cast<ImTextureID>(_frameBuffer->GetColorAttachment().id), ImVec2(512, 512));
 
 	ImGui::EndChild();
 

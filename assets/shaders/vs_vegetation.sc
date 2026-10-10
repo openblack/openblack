@@ -23,11 +23,7 @@ void main()
     uint modelIndex = uint(max(0, a_indices.x));
 #endif
 
-    mat4 model;
-    model[0] = i_data0;
-    model[1] = i_data1;
-    model[2] = i_data2;
-    model[3] = i_data3;
+    mat4 model = mtxFromCols(i_data0, i_data1, i_data2, i_data3);
 
     // Get sway parameters from instance data
     // i_data4 contains: (swayX, swayZ, swayOffset, swayStrength)
@@ -39,7 +35,7 @@ void main()
     vec3 position = a_position.xyz;
 
     // First transform to world space WITHOUT sway
-    vec4 worldPosition = instMul(model, vec4(position, 1.0));
+    vec4 worldPosition = mul(model, vec4(position, 1.0));
 
     // Store original world position for later
     vec3 originalWorldPos = worldPosition.xyz;
@@ -65,12 +61,12 @@ void main()
     v_position = worldPosition;
 
     // Get tree base position from the model matrix (translation component)
-    vec3 treeBasePos = vec3(model[3][0], model[3][1], model[3][2]);
+    vec3 treeBasePos = i_data3.xyz;
     // Sample terrain height at the tree base only
     vec2 baseBlockUv = (treeBasePos.xz - extentMin) / (extentMax - extentMin);
     float terrain_height = texture2DLod(s_heightmap, baseBlockUv, 0.0).r * 170.85;
     // Get intended base height from the model matrix
-    float original_height = model[3][1]; // y-component of translation
+    float original_height = i_data3.y; // y-component of translation
     // Apply height adjustment uniformly to all vertices
     float height_adjustment = terrain_height - original_height;
     v_position.y += height_adjustment;

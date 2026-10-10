@@ -139,16 +139,11 @@ enum class Filter : uint8_t
 {
 	Nearest,
 	Linear,
-	NearestMipmapNearest,
-	LinearMipmapNearest,
-	NearestMipmapLinear,
-	LinearMipmapLinear,
 };
 
 enum class Wrapping : uint8_t
 {
 	ClampEdge,
-	ClampBorder,
 	Repeat,
 	MirroredRepeat,
 };
@@ -157,11 +152,10 @@ struct Texture2d
 {
 	const std::string name;
 	const TextureHandle handle;
+	const SamplerHandle samplerHandle;
 	const glm::u16vec2 resolution;
 	const uint16_t numLayers;
-	const uint16_t stride;
 	const TextureFormat format;
-	const uint32_t storageSize;
 };
 
 using Texture2dUniquePtr = std::unique_ptr<Texture2d, std::function<void(Texture2d*)>>;

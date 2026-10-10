@@ -13,7 +13,6 @@
 
 #include "3D/LandBlock.h"
 #include "3D/LandIslandInterface.h"
-#include "Debug/ImGuiUtils.h"
 #include "EngineConfig.h"
 #include "Graphics/FrameBuffer.h"
 #include "Graphics/GraphicsHandleBgfx.h"
@@ -51,7 +50,7 @@ void LandIsland::Draw() noexcept
 		const auto& texture = landIsland.GetHeightMap();
 		ImGui::Text("Resolution: %ux%u", dim.x, dim.y);
 		const float scaling = 512.0f / static_cast<float>(dim.x);
-		ImGui::Image(toBgfx(texture.handle), ImVec2(dim.x * scaling, dim.y * scaling));
+		ImGui::Image(static_cast<ImTextureID>(texture.handle.id), ImVec2(dim.x * scaling, dim.y * scaling));
 		ImGui::TreePop();
 	}
 
@@ -63,7 +62,7 @@ void LandIsland::Draw() noexcept
 		frameBuffer.GetSize(width, height);
 		ImGui::Text("Resolution: %ux%u", width, height);
 		const float scaling = 512.0f / static_cast<float>(width);
-		ImGui::Image(toBgfx(frameBuffer.GetColorAttachment()), ImVec2(width * scaling, height * scaling));
+		ImGui::Image(static_cast<ImTextureID>(frameBuffer.GetColorAttachment().id), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
 	}
 }

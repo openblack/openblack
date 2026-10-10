@@ -224,7 +224,7 @@ void Console::Draw() noexcept
 	const auto screenSize = Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::ivec2 {};
 	glm::vec2 mousePosition {};
 	SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0)
+	if (!io.WantCaptureMouse && screenSize.x > 0 && screenSize.y > 0 && Locator::dynamicsSystem::has_value())
 	{
 		glm::vec3 rayOrigin;
 		glm::vec3 rayDirection;

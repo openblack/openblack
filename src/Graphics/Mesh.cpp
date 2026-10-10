@@ -37,6 +37,11 @@ const IndexBuffer& Mesh::GetIndexBuffer() const
 	return *_indexBuffer;
 }
 
+bool Mesh::HasVertexBuffer() const
+{
+	return _vertexBuffer != nullptr;
+}
+
 bool Mesh::IsIndexed() const
 {
 	return _indexBuffer != nullptr && _indexBuffer->count > 0;

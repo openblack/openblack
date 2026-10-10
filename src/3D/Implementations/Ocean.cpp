@@ -10,7 +10,6 @@
 #include "Locator.h"
 #define LOCATOR_IMPLEMENTATIONS
 
-#include <bgfx/bgfx.h>
 #include <glm/vec2.hpp>
 
 #include "Graphics/FrameBuffer.h"
@@ -50,10 +49,9 @@ void Ocean::CreateMesh()
 	static constexpr std::array<uint16_t, 6> k_Indices = {2, 1, 0, 0, 3, 2};
 
 	auto& renderer = Locator::rendererInterface::value();
-	const auto* memVtx = bgfx::makeRef(k_Points.data(), static_cast<uint32_t>(k_Points.size() * sizeof(k_Points[0])));
+	const auto memVtx = std::span(reinterpret_cast<const uint8_t*>(k_Points.data()), k_Points.size() * sizeof(k_Points[0]));
 	auto vertexBuffer = renderer.CreateVertexBuffer("Water", memVtx, decl);
-	const auto* memIdx = bgfx::makeRef(
-	    k_Indices.data(), static_cast<uint32_t>(k_Indices.size() * IndexBuffer::GetTypeSize(IndexBuffer::Type::Uint16)));
+	const auto memIdx = std::span(reinterpret_cast<const uint8_t*>(k_Indices.data()), k_Indices.size() * sizeof(k_Indices[0]));
 	auto indexBuffer = renderer.CreateIndexBuffer("Water", memIdx, IndexBuffer::Type::Uint16);
 
 	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer), std::move(indexBuffer), graphics::Mesh::Topology::TriangleList);

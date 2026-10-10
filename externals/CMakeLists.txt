@@ -9,8 +9,6 @@ add_library(
   imgui_user/imgui_bitfield.h
   imgui_user/imgui_memory_editor.h
   # https://raw.githubusercontent.com/ocornut/imgui/master/backends/
-  imgui_user/imgui_impl_sdl3.cpp
-  imgui_user/imgui_impl_sdl3.h
   # https://github.com/bwrsandman/imgui-flame-graph
   imgui_user/imgui_widget_flamegraph.cpp
   imgui_user/imgui_widget_flamegraph.h

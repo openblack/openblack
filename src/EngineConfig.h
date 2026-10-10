@@ -19,7 +19,7 @@ namespace openblack
 
 enum class GraphicsBackend : uint8_t
 {
-	Noop,
+	Noop, // TODO(bwrsandman): Test Noop
 	Direct3D12,
 	Metal,
 	Vulkan,
@@ -41,16 +41,16 @@ struct EngineConfig
 
 	bool viewDetailOverlay {false};
 	bool drawSky {true};
-	bool drawWater {true};
-	bool drawIsland {true};
-	bool drawEntities {true};
-	bool drawVegetation {true};
-	bool drawSprites {true};
+	bool drawWater {false};
+	bool drawIsland {false};
+	bool drawEntities {false};
+	bool drawVegetation {false};
+	bool drawSprites {false};
 	bool drawBoundingBoxes {false};
 	bool drawFootpaths {false};
 	bool drawStreams {false};
 
-	bool vsync {false};
+	bool vsync {false}; // TODO(bwrsandman): Tell renderer and gui
 	bool running {false};
 
 	float timeOfDay {12.0f};

@@ -312,9 +312,9 @@ bool Game::Update() noexcept
 		auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
-			auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			dynamicsSystem.Update(deltaTime);
-			dynamicsSystem.UpdatePhysicsTransforms();
+			// auto& dynamicsSystem = Locator::dynamicsSystem::value();
+			// dynamicsSystem.Update(deltaTime);
+			// dynamicsSystem.UpdatePhysicsTransforms();
 		}
 	}
 
@@ -347,8 +347,8 @@ bool Game::Update() noexcept
 		}
 	}
 
-	camera.Update(deltaTime);
-	Locator::cameraBookmarkSystem::value().Update(deltaTime);
+	// camera.Update(deltaTime);
+	// Locator::cameraBookmarkSystem::value().Update(deltaTime);
 
 	// Update Game Logic in Registry
 	{
@@ -368,69 +368,69 @@ bool Game::Update() noexcept
 	{
 		auto profilerScopedUpdateUniforms = profiler.BeginScoped(Profiler::Stage::UpdateUniforms);
 
-		// Update Hand and intersection point
-		ecs::components::Transform intersectionTransform {};
-		{
-			const auto screenSize =
-			    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
-			const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
-			if (screenSize.x > 0 && screenSize.y > 0)
-			{
-				glm::vec3 rayOrigin;
-				glm::vec3 rayDirection;
-				camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
-				                              rayOrigin, rayDirection);
-				auto& dynamicsSystem = Locator::dynamicsSystem::value();
+		// // Update Hand and intersection point
+		// ecs::components::Transform intersectionTransform {};
+		// {
+		// 	const auto screenSize =
+		// 	    Locator::windowing::has_value() ? Locator::windowing::value().GetSize() : glm::zero<glm::ivec2>();
+		// 	const auto scale = glm::vec3(50.0f, 50.0f, 50.0f);
+		// 	if (screenSize.x > 0 && screenSize.y > 0)
+		// 	{
+		// 		glm::vec3 rayOrigin;
+		// 		glm::vec3 rayDirection;
+		// 		camera.DeprojectScreenToWorld(static_cast<glm::vec2>(_mousePosition) / static_cast<glm::vec2>(screenSize),
+		// 		                              rayOrigin, rayDirection);
+		// 		auto& dynamicsSystem = Locator::dynamicsSystem::value();
 
-				if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
-				{
-					if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
-					{
-						intersectionTransform = hit->first;
-					}
-					else // For the water
-					{
-						float intersectDistance = 0.0f;
-						const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
-						const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-						if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
-						{
-							intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
-							intersectionTransform.rotation = glm::mat3(1.0f);
-						}
-					}
-				}
-				intersectionTransform.scale = scale;
-			}
+		// 		if (!glm::any(glm::isnan(rayOrigin) || glm::isnan(rayDirection)))
+		// 		{
+		// 			if (auto hit = dynamicsSystem.RayCastClosestHit(rayOrigin, rayDirection, 1e10f))
+		// 			{
+		// 				intersectionTransform = hit->first;
+		// 			}
+		// 			else // For the water
+		// 			{
+		// 				float intersectDistance = 0.0f;
+		// 				const auto planeOrigin = glm::vec3(0.0f, 0.0f, 0.0f);
+		// 				const auto planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+		// 				if (glm::intersectRayPlane(rayOrigin, rayDirection, planeOrigin, planeNormal, intersectDistance))
+		// 				{
+		// 					intersectionTransform.position = rayOrigin + rayDirection * intersectDistance;
+		// 					intersectionTransform.rotation = glm::mat3(1.0f);
+		// 				}
+		// 			}
+		// 		}
+		// 		intersectionTransform.scale = scale;
+		// 	}
 
-			if (!_handGripping)
-			{
-				const glm::vec3 handOffset(0, 1.5f, 0);
-				const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
+		// 	if (!_handGripping)
+		// 	{
+		// 		const glm::vec3 handOffset(0, 1.5f, 0);
+		// 		const glm::mat4 modelRotationCorrection = glm::eulerAngleX(glm::radians(90.0f));
 
-				const auto handEntity =
-				    Locator::handSystem::value()
-				        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
-				auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
-				// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
-				handTransform.position = intersectionTransform.position;
-				handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
-				handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
-				handTransform.position += intersectionTransform.rotation * handOffset;
-				Locator::entitiesRegistry::value().SetDirty();
-			}
-		}
-		Locator::handSystem::value().Update();
+		// 		const auto handEntity =
+		// 		    Locator::handSystem::value()
+		// 		        .GetPlayerHands()[static_cast<size_t>(ecs::systems::HandSystemInterface::Side::Left)];
+		// 		auto& handTransform = Locator::entitiesRegistry::value().Get<ecs::components::Transform>(handEntity);
+		// 		// TODO(#480): move using velocity rather than snapping hand to intersectionTransform
+		// 		handTransform.position = intersectionTransform.position;
+		// 		handTransform.rotation = glm::eulerAngleY(camera.GetRotation().y) * modelRotationCorrection;
+		// 		handTransform.rotation = intersectionTransform.rotation * handTransform.rotation;
+		// 		handTransform.position += intersectionTransform.rotation * handOffset;
+		// 		Locator::entitiesRegistry::value().SetDirty();
+		// 	}
+		// }
+		// Locator::handSystem::value().Update();
 
-		// Update Entities
-		{
-			auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
-			if (config.drawEntities)
-			{
-				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
-				                                                config.drawStreams);
-			}
-		}
+		// // Update Entities
+		// {
+		// 	auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
+		// 	if (config.drawEntities)
+		// 	{
+		// 		Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
+		// 		                                                config.drawStreams);
+		// 	}
+		// }
 	} // Update Uniforms
 
 	// Update Audio
@@ -524,59 +524,59 @@ bool Game::Initialize() noexcept
 	auto& soundManager = resources.GetSounds();
 	auto& glowManager = resources.GetGlows();
 
-	fileSystem.Iterate(
-	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
+	// fileSystem.Iterate(
+	//     fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
+	// 	    if (f.extension() == ".zzz")
+	// 	    {
+	// 		    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
+	// 		    try
+	// 		    {
+	// 			    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
+	// 		    }
+	// 		    catch (std::runtime_error& err)
+	// 		    {
+	// 			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	// 		    }
+	// 	    }
+	//     });
 
-	fileSystem.Iterate( //
-	    fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
-	    [&meshManager, &glowManager](const std::filesystem::path& f) {
-		    if (f.extension() == ".zzz")
-		    {
-			    if (f.stem().string().ends_with("lo_l3d"))
-			    {
-				    SPDLOG_LOGGER_WARN(
-				        spdlog::get("game"),
-				        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
-				    return;
-			    }
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
-			    try
-			    {
-				    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
-				                     f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-		    else if (f.extension() == ".glw")
-		    {
-			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
-			    try
-			    {
-				    glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
-				                     resources::LightLoader::FromDiskTag {}, f);
-			    }
-			    catch (std::runtime_error& err)
-			    {
-				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-			    }
-		    }
-	    });
+	// fileSystem.Iterate( //
+	//     fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
+	//     [&meshManager, &glowManager](const std::filesystem::path& f) {
+	// 	    if (f.extension() == ".zzz")
+	// 	    {
+	// 		    if (f.stem().string().ends_with("lo_l3d"))
+	// 		    {
+	// 			    SPDLOG_LOGGER_WARN(
+	// 			        spdlog::get("game"),
+	// 			        "Skipping lo duplicate lo meshes. See https://github.com/openblack/openblack/issues/727");
+	// 			    return;
+	// 		    }
+	// 		    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple mesh: {}", f.stem().string());
+	// 		    try
+	// 		    {
+	// 			    meshManager.Load(fmt::format("temple/interior/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {},
+	// 			                     f);
+	// 		    }
+	// 		    catch (std::runtime_error& err)
+	// 		    {
+	// 			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	// 		    }
+	// 	    }
+	// 	    else if (f.extension() == ".glw")
+	// 	    {
+	// 		    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading interior temple glows: {}", f.stem().string());
+	// 		    try
+	// 		    {
+	// 			    glowManager.Load(fmt::format("temple/interior/glow/{}", f.stem().string()),
+	// 			                     resources::LightLoader::FromDiskTag {}, f);
+	// 		    }
+	// 		    catch (std::runtime_error& err)
+	// 		    {
+	// 			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	// 		    }
+	// 	    }
+	//     });
 
 	pack::PackFile pack;
 
@@ -589,12 +589,12 @@ bool Game::Initialize() noexcept
 
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
-	for (size_t i = 0; const auto& mesh : meshes)
-	{
-		const auto meshId = static_cast<MeshId>(i);
-		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-		++i;
-	}
+	// for (size_t i = 0; const auto& mesh : meshes)
+	// {
+	// 	const auto meshId = static_cast<MeshId>(i);
+	// 	meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
+	// 	++i;
+	// }
 
 	const auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
@@ -617,39 +617,39 @@ bool Game::Initialize() noexcept
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
-	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
-		const auto& fileName = f.stem().string();
-		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
-		try
-		{
-			if (string_utils::BeginsWith(fileName, "Hand"))
-			{
-				return;
-			}
+	// fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
+	// 	const auto& fileName = f.stem().string();
+	// 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
+	// 	try
+	// 	{
+	// 		if (string_utils::BeginsWith(fileName, "Hand"))
+	// 		{
+	// 			return;
+	// 		}
 
-			const auto meshId = creature::GetIdFromMeshName(fileName);
-			meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
-		}
-		catch (std::runtime_error& err)
-		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-		}
-	});
+	// 		const auto meshId = creature::GetIdFromMeshName(fileName);
+	// 		meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
+	// 	}
+	// 	catch (std::runtime_error& err)
+	// 	{
+	// 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+	// 	}
+	// });
 
 	// Load loose one-off assets
-	{
-		using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
-		animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
+	// {
+	// 	using AFromDiskTag = resources::L3DAnimLoader::FromDiskTag;
+	// 	animationManager.Load("coffre", AFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.anm");
 
-		using LFromDiskTag = resources::L3DLoader::FromDiskTag;
-		meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
-		meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
-		meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
-		meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
-		meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
-		meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
-		meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
-	}
+	// 	using LFromDiskTag = resources::L3DLoader::FromDiskTag;
+	// 	meshManager.Load("hand", LFromDiskTag {}, fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
+	// 	meshManager.Load("coffre", LFromDiskTag {}, fileSystem.GetPath<Path::Misc>() / "coffre.l3d");
+	// 	meshManager.Load("cone", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "cone.l3d");
+	// 	meshManager.Load("marker", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "marker.l3d");
+	// 	meshManager.Load("river", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river.l3d");
+	// 	meshManager.Load("river2", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "river2.l3d");
+	// 	meshManager.Load("metre_sphere", LFromDiskTag {}, fileSystem.GetPath<Path::Data>() / "metre_sphere.l3d");
+	// }
 
 	// TODO(raffclar): #400: Parse level files within the resource loader
 	// TODO(raffclar): #405: Determine campaign levels from the challenge script file
@@ -801,7 +801,7 @@ bool Game::Run() noexcept
 		return false;
 	}
 
-	Locator::dynamicsSystem::value().RegisterRigidBodies();
+	// Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto& fileSystem = Locator::filesystem::value();
 
@@ -830,28 +830,30 @@ bool Game::Run() noexcept
 	}
 
 	// Initialize the Acceleration Structure
-	Locator::entitiesMap::value().Rebuild();
+	// Locator::entitiesMap::value().Rebuild();
 
-	if (Locator::windowing::has_value())
-	{
-		const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
-	}
+	// TODO: Delete ConfigureView
+	// if (Locator::windowing::has_value())
+	// {
+	// 	const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
+	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
+	// }
 
-	{
-		uint16_t width;
-		uint16_t height;
-		Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
-	}
+	// if (config.drawWater)
+	// {
+	// 	uint16_t width;
+	// 	uint16_t height;
+	// 	Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
+	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
+	// }
 
-	if (config.drawIsland)
-	{
-		uint16_t width;
-		uint16_t height;
-		Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
-	}
+	// if (config.drawIsland)
+	// {
+	// 	uint16_t width;
+	// 	uint16_t height;
+	// 	Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
+	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
+	// }
 
 	Game::SetTime(config.timeOfDay);
 	Locator::time::value().Start();
@@ -886,21 +888,6 @@ bool Game::Run() noexcept
 			    .wireframe = config.wireframe,
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
-		}
-
-		{
-			auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
-			const bool screenshotThisFrame = _requestScreenshot.has_value() && _requestScreenshot->first == _frameCount;
-			// Skip drawing Debug UI for screenshots
-			if (screenshotThisFrame)
-			{
-				SPDLOG_LOGGER_INFO(spdlog::get("game"), "Requesting a screenshot at frame {}...", _frameCount);
-				Locator::rendererInterface::value().RequestScreenshot(_requestScreenshot->second);
-			}
-			else
-			{
-				Locator::debugGui::value().Draw();
-			}
 		}
 
 		{
@@ -948,23 +935,23 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	Locator::camera::value().SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
 	                                                        config.cameraFarClip);
 
-	Script script;
-	script.Load(source);
+	// Script script;
+	// script.Load(source);
 
-	// Each released map comes with an optional .fot file which contains the footpath information for the map
-	const auto stem = string_utils::LowerCase(path.stem().generic_string());
-	const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
+	// // Each released map comes with an optional .fot file which contains the footpath information for the map
+	// const auto stem = string_utils::LowerCase(path.stem().generic_string());
+	// const auto fotPath = fileSystem.GetPath<filesystem::Path::Landscape>() / fmt::format("{}.fot", stem);
 
-	if (fileSystem.Exists(fotPath))
-	{
-		FotFile fotFile(*this);
-		fotFile.Load(fotPath);
-	}
-	else
-	{
-		SPDLOG_LOGGER_WARN(spdlog::get("game"), "The map at {} does not come with a footpath file. Expected {}",
-		                   path.generic_string(), fotPath.generic_string());
-	}
+	// if (fileSystem.Exists(fotPath))
+	// {
+	// 	FotFile fotFile(*this);
+	// 	fotFile.Load(fotPath);
+	// }
+	// else
+	// {
+	// 	SPDLOG_LOGGER_WARN(spdlog::get("game"), "The map at {} does not come with a footpath file. Expected {}",
+	// 	                   path.generic_string(), fotPath.generic_string());
+	// }
 
 	_lastGameLoopTime = std::chrono::steady_clock::now();
 	_turnDeltaTime = 0ns;
@@ -993,8 +980,8 @@ void Game::LoadLandscape(const std::filesystem::path& path)
 	// There is always at least one player active.
 	ecs::archetypes::PlayerArchetype::Create(PlayerNames::PLAYER_ONE);
 
-	Locator::cameraBookmarkSystem::value().Initialize();
-	Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
+	// Locator::cameraBookmarkSystem::value().Initialize();
+	// Locator::dynamicsSystem::value().RegisterIslandRigidBodies(Locator::terrainSystem::value());
 	Locator::playerSystem::value().RegisterPlayers();
 }
 

@@ -15,7 +15,6 @@
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
-#include <bgfx/bgfx.h>
 
 #include "Dynamics/LandBlockBulletMeshInterface.h"
 #include "Graphics/Mesh.h"
@@ -62,12 +61,12 @@ void LandBlock::BuildMesh(LandIslandInterface& island)
 	decl.emplace_back(VertexAttrib::Attribute::Color3, static_cast<uint8_t>(1), VertexAttrib::Type::Float, true);
 
 	// reserve 16*16 quads of 2 tris with 3 verts = 1536
-	const bgfx::Memory* verticesMem = bgfx::alloc(sizeof(LandVertex) * k_VertexCount);
-	auto vertices = std::span(reinterpret_cast<LandVertex*>(verticesMem->data), k_VertexCount);
+	std::vector<LandVertex> vertices(k_VertexCount);
 
 	BuildVertexList(vertices, island);
 
-	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer("LandBlock", verticesMem, decl);
+	auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer(
+	    "LandBlock", {reinterpret_cast<const uint8_t*>(vertices.data()), vertices.size() * sizeof(vertices[0])}, decl);
 	_mesh = std::make_unique<Mesh>(std::move(vertexBuffer));
 
 	_dynamicsMeshInterface = std::make_unique<dynamics::LandBlockBulletMeshInterface>(vertices);
