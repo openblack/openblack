@@ -49,6 +49,7 @@
 #include "Resources/ResourcesInterface.h"
 #include "Texture2d.h"
 #include "VertexBuffer.h"
+#include "generated/shaders/footprint.slang.spv.h"
 #include "generated/shaders/object.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/sprite.slang.spv.h"
@@ -258,6 +259,10 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	reflection.sprites = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_SpriteVertexShaderCreateInfo,
 	                                    k_SpriteFragmentShaderCreateInfo, k_SpriteVertexInputStateByVertex, depthFormat, true,
 	                                    SDL_GPU_CULLMODE_NONE, false, AdditiveBlend::ColorAndAlpha);
+	auto& footprints = pipelines[static_cast<size_t>(RenderPass::Footprint)].footprints;
+	footprints = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_FootprintVertexShaderCreateInfo,
+	                            k_FootprintFragmentShaderCreateInfo, k_FootprintVertexInputStateByVertex,
+	                            SDL_GPU_TEXTUREFORMAT_INVALID, true, SDL_GPU_CULLMODE_BACK, false);
 	bool objectsValid = true;
 	for (auto viewId : {RenderPass::Main, RenderPass::Reflection})
 	{
@@ -277,12 +282,12 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 		}
 	}
 	if (!main.sky || !main.water || !main.terrain || !main.sprites || !reflection.sky || !reflection.terrain ||
-	    !reflection.sprites || !objectsValid)
+	    !reflection.sprites || !footprints || !objectsValid)
 	{
 		for (const auto& pass : pipelines)
 		{
-			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.objects[0], pass.objects[1],
-			                       pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
+			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.footprints, pass.objects[0],
+			                       pass.objects[1], pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
 			{
 				if (pipeline)
 				{
@@ -335,9 +340,9 @@ RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&&
 
 RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 {
-	if (_entityMatrices)
+	if (_sceneMatrices != nullptr)
 	{
-		SDL_ReleaseGPUBuffer(_gpuDevice.get(), _entityMatrices);
+		SDL_ReleaseGPUBuffer(_gpuDevice.get(), _sceneMatrices);
 	}
 	if (_depthStencil != nullptr)
 	{
@@ -345,8 +350,8 @@ RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 	}
 	for (const auto& pass : _pipelines)
 	{
-		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.objects[0], pass.objects[1],
-		                       pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
+		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.footprints, pass.objects[0],
+		                       pass.objects[1], pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
 		{
 			if (pipeline)
 			{
@@ -431,7 +436,7 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
 	}
-	if (drawDesc.drawEntities && !UploadEntityMatrices(cmdBufferMain))
+	if ((drawDesc.drawEntities || drawDesc.drawIsland) && !UploadSceneMatrices(cmdBufferMain))
 	{
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
@@ -444,7 +449,8 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 	if (mainDesc.drawIsland)
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::FootprintPass);
-		const auto& footprint = Locator::terrainSystem::value().GetFootprintFramebuffer();
+		const auto& island = Locator::terrainSystem::value();
+		const auto& footprint = island.GetFootprintFramebuffer();
 		const SDL_GPUColorTargetInfo target {
 		    .texture = toSdl(footprint.colorAttachment),
 		    .clear_color = {0, 0, 0, 0},
@@ -455,11 +461,52 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		auto* pass = SDL_BeginGPURenderPass(cmdBufferMain, &target, 1, nullptr);
 		if (pass == nullptr)
 		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to clear footprints: {}", SDL_GetError());
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin footprint pass: {}", SDL_GetError());
 			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 			return;
 		}
-		// Footprint geometry will be submitted here when its draw path is ported.
+		const auto& context = Locator::rendereringSystem::value().GetContext();
+		const auto& meshes = Locator::resources::value().GetMeshes();
+		const auto viewProjection = island.GetOrthoProj() * island.GetOrthoView();
+		auto* const pipeline = _pipelines[static_cast<size_t>(RenderPass::Footprint)].footprints;
+		if (!context.instancedDrawDescs.empty() || !context.treeInstancedDrawDescs.empty())
+		{
+			SDL_BindGPUVertexStorageBuffers(pass, 0, &_sceneMatrices, 1);
+		}
+		const auto drawFootprints = [&](entt::id_type meshId, const auto& instances, uint32_t matrixOffset) {
+			if (!meshes.Contains(meshId) || instances.count == 0)
+			{
+				return;
+			}
+			const auto mesh = meshes.Handle(meshId);
+			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
+			{
+				return;
+			}
+			const auto& decal = mesh->GetFootprints().front();
+			if (!decal.texture || !decal.mesh || !decal.mesh->HasVertexBuffer())
+			{
+				return;
+			}
+			const SDL_GPUTextureSamplerBinding binding {toSdl(decal.texture->handle), toSdl(decal.texture->samplerHandle)};
+			SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
+			struct FootprintData
+			{
+				glm::mat4 viewProjection;
+				glm::uvec4 offsets;
+			};
+			const FootprintData data {viewProjection, {matrixOffset + instances.offset, 0, 0, 0}};
+			SDL_PushGPUVertexUniformData(cmdBufferMain, 0, &data, sizeof(data));
+			DrawGeometry(pass, pipeline, *decal.mesh, instances.count);
+		};
+		for (const auto& [key, instances] : context.instancedDrawDescs)
+		{
+			drawFootprints(key.meshId, instances, 0);
+		}
+		for (const auto& [meshId, instances] : context.treeInstancedDrawDescs)
+		{
+			drawFootprints(meshId, instances, _treeMatrixOffset);
+		}
 		SDL_EndGPURenderPass(pass);
 	}
 	if (mainDesc.drawWater)
@@ -686,17 +733,22 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 	return true;
 }
 
-bool RendererSdl3Gpu::UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept
+bool RendererSdl3Gpu::UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept
 {
 	const auto& context = Locator::rendereringSystem::value().GetContext();
 	_entityBoneOffsets.clear();
-	if (context.instancedDrawDescs.empty())
+	if (context.instancedDrawDescs.empty() && context.treeInstancedDrawDescs.empty())
 	{
 		return true;
 	}
-	// Instances stay in EnTT's prepared batch order. Append one set of rest-pose
-	// bones per mesh, sharing this upload between the main and reflection passes.
+	// Keep each instance array in prepared batch order, then append rest-pose bones.
+	// The footprint, main and reflection passes share this upload.
 	std::vector<glm::mat4> matrices = context.instanceUniforms;
+	_treeMatrixOffset = static_cast<uint32_t>(matrices.size());
+	for (const auto& instance : context.treeInstanceData)
+	{
+		matrices.push_back(instance.modelMatrix);
+	}
 	const auto identityOffset = static_cast<uint32_t>(matrices.size());
 	matrices.emplace_back(1.0f);
 	const auto& meshes = Locator::resources::value().GetMeshes();
@@ -722,26 +774,26 @@ bool RendererSdl3Gpu::UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) 
 	    std::span<const uint8_t> {reinterpret_cast<const uint8_t*>(matrices.data()), matrices.size() * sizeof(glm::mat4)};
 	if (memory.size_bytes() > std::numeric_limits<uint32_t>::max())
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Entity matrix buffer is too large");
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Scene matrix buffer is too large");
 		return false;
 	}
-	if (memory.size_bytes() > _entityMatrixCapacity)
+	if (memory.size_bytes() > _sceneMatrixCapacity)
 	{
 		const SDL_GPUBufferCreateInfo info {.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
 		                                    .size = static_cast<uint32_t>(memory.size_bytes())};
 		auto* buffer = SDL_CreateGPUBuffer(_gpuDevice.get(), &info);
 		if (buffer == nullptr)
 		{
-			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create entity matrices: {}", SDL_GetError());
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create scene matrices: {}", SDL_GetError());
 			return false;
 		}
-		if (_entityMatrices)
+		if (_sceneMatrices != nullptr)
 		{
-			SDL_ReleaseGPUBuffer(_gpuDevice.get(), _entityMatrices);
+			SDL_ReleaseGPUBuffer(_gpuDevice.get(), _sceneMatrices);
 		}
-		_entityMatrices = buffer;
-		_entityMatrixCapacity = info.size;
-		SDL_SetGPUBufferName(_gpuDevice.get(), buffer, "Entity instances and bones");
+		_sceneMatrices = buffer;
+		_sceneMatrixCapacity = info.size;
+		SDL_SetGPUBufferName(_gpuDevice.get(), buffer, "Scene instances and bones");
 	}
 	auto transfer = CreateTransferBuffer(_gpuDevice.get(), memory);
 	if (!transfer)
@@ -751,12 +803,12 @@ bool RendererSdl3Gpu::UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) 
 	auto* copyPass = SDL_BeginGPUCopyPass(commandBuffer);
 	if (copyPass == nullptr)
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin entity upload: {}", SDL_GetError());
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin scene upload: {}", SDL_GetError());
 		return false;
 	}
 	const SDL_GPUTransferBufferLocation source {.transfer_buffer = transfer.get()};
-	const SDL_GPUBufferRegion destination {.buffer = _entityMatrices, .size = static_cast<uint32_t>(memory.size_bytes())};
-	// Cycle when prior frames still reference the buffer; both passes below use
+	const SDL_GPUBufferRegion destination {.buffer = _sceneMatrices, .size = static_cast<uint32_t>(memory.size_bytes())};
+	// Cycle when prior frames still reference the buffer; all passes below use
 	// this frame's matrices without overwriting an in-flight draw.
 	SDL_UploadToGPUBuffer(copyPass, &source, &destination, true);
 	SDL_EndGPUCopyPass(copyPass);
@@ -777,7 +829,7 @@ void RendererSdl3Gpu::DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPUR
 	const auto extent = island.GetExtent();
 	const SDL_GPUTextureSamplerBinding heightBinding {toSdl(heightMap.handle), toSdl(heightMap.samplerHandle)};
 	SDL_BindGPUVertexSamplers(renderPass, 0, &heightBinding, 1);
-	SDL_BindGPUVertexStorageBuffers(renderPass, 0, &_entityMatrices, 1);
+	SDL_BindGPUVertexStorageBuffers(renderPass, 0, &_sceneMatrices, 1);
 	const auto& pipelines = _pipelines[static_cast<size_t>(desc.viewId)].objects;
 	struct ObjectCamera
 	{
@@ -850,9 +902,9 @@ void RendererSdl3Gpu::DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURender
 	DrawGeometry(renderPass, pipeline, sky.GetMesh().GetSubMeshes()[0]->GetMesh());
 }
 
-void RendererSdl3Gpu::DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const
+void RendererSdl3Gpu::DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh,
+                                   uint32_t instanceCount) const
 {
-	const uint32_t numInstances = 1;
 	{
 		const SDL_GPUBufferBinding bindings = {
 		    .buffer = toSdl(mesh.GetVertexBuffer().handle),
@@ -873,11 +925,11 @@ void RendererSdl3Gpu::DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphic
 	SDL_BindGPUGraphicsPipeline(renderPass, pipeline);
 	if (mesh.IsIndexed())
 	{
-		SDL_DrawGPUIndexedPrimitives(renderPass, mesh.GetIndexBuffer().count, numInstances, 0, 0, 0);
+		SDL_DrawGPUIndexedPrimitives(renderPass, mesh.GetIndexBuffer().count, instanceCount, 0, 0, 0);
 	}
 	else
 	{
-		SDL_DrawGPUPrimitives(renderPass, mesh.GetVertexBuffer().vertexCount, numInstances, 0, 0);
+		SDL_DrawGPUPrimitives(renderPass, mesh.GetVertexBuffer().vertexCount, instanceCount, 0, 0);
 	}
 }
 

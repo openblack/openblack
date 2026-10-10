@@ -12,6 +12,7 @@
 
 #include <SDL3/SDL.h>
 
+#include "generated/shaders/footprint.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/sprite.slang.spv.h"
 
@@ -21,6 +22,11 @@ static_assert(k_SpriteVertexBufferDescriptionByVertex.pitch == 8);
 static_assert(k_SpriteVertexShaderCreateInfo.num_uniform_buffers == 1);
 static_assert(k_SpriteFragmentShaderCreateInfo.num_uniform_buffers == 1);
 static_assert(k_SpriteFragmentShaderCreateInfo.num_samplers == 1);
+static_assert(k_FootprintVertexBufferDescriptionByVertex.pitch == 16);
+static_assert(k_FootprintVertexAttributes[1].offset == 8);
+static_assert(k_FootprintVertexShaderCreateInfo.num_storage_buffers == 1);
+static_assert(k_FootprintVertexShaderCreateInfo.num_uniform_buffers == 1);
+static_assert(k_FootprintFragmentShaderCreateInfo.num_samplers == 1);
 
 bool CheckPipeline(SDL_GPUDevice* device, const char* name, const SDL_GPUShaderCreateInfo& vertexInfo,
                    const SDL_GPUShaderCreateInfo& fragmentInfo, const SDL_GPUVertexInputState& inputState)
@@ -83,7 +89,9 @@ int main()
 	    CheckPipeline(device, "sky", k_SkyVertexShaderCreateInfo, k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex);
 	const bool sprite = CheckPipeline(device, "sprite", k_SpriteVertexShaderCreateInfo, k_SpriteFragmentShaderCreateInfo,
 	                                  k_SpriteVertexInputStateByVertex);
+	const bool footprint = CheckPipeline(device, "footprint", k_FootprintVertexShaderCreateInfo,
+	                                     k_FootprintFragmentShaderCreateInfo, k_FootprintVertexInputStateByVertex);
 	SDL_DestroyGPUDevice(device);
 	SDL_Quit();
-	return sky && sprite ? EXIT_SUCCESS : EXIT_FAILURE;
+	return sky && sprite && footprint ? EXIT_SUCCESS : EXIT_FAILURE;
 }

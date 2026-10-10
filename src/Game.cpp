@@ -387,7 +387,7 @@ bool Game::Update() noexcept
 		// Update Entities
 		{
 			auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
-			if (config.drawEntities)
+			if (config.drawEntities || config.drawIsland)
 			{
 				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
 				                                                config.drawStreams);
