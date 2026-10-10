@@ -74,13 +74,14 @@ public:
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
 	    "Main Pass",            //
 	    "Draw Sky",             //
 	    "Draw Water",           //
 	    "Draw Island",          //
 	    "Draw Models",          //
-	    "Draw Vegetation"       //
+	    "Draw Vegetation",      //
 	    "Draw Sprites",         //
 	    "Encode GUI Draw",      //
 	    "Renderer Frame",       //
@@ -104,16 +105,16 @@ private:
 public:
 	struct Scope
 	{
-		uint8_t level;
-		std::chrono::system_clock::time_point start;
-		std::chrono::system_clock::time_point end;
+		uint8_t level = 0;
+		std::chrono::steady_clock::time_point start;
+		std::chrono::steady_clock::time_point end;
 		bool finalized = false;
 	};
 
 	struct Entry
 	{
-		std::chrono::system_clock::time_point frameStart;
-		std::chrono::system_clock::time_point frameEnd;
+		std::chrono::steady_clock::time_point frameStart;
+		std::chrono::steady_clock::time_point frameEnd;
 		std::array<Scope, static_cast<uint8_t>(Stage::_count)> stages;
 	};
 
@@ -129,7 +130,7 @@ public:
 	[[nodiscard]] const std::array<Entry, k_BufferSize>& GetEntries() const { return _entries; }
 
 private:
-	std::array<Entry, k_BufferSize> _entries;
+	std::array<Entry, k_BufferSize> _entries {};
 	uint8_t _currentEntry = k_BufferSize - 1;
 	uint8_t _currentLevel = 0;
 };
