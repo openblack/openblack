@@ -42,6 +42,7 @@ public:
 		SDL_GPUGraphicsPipeline* sky;
 		SDL_GPUGraphicsPipeline* water;
 		SDL_GPUGraphicsPipeline* terrain;
+		SDL_GPUGraphicsPipeline* sprites;
 		std::array<SDL_GPUGraphicsPipeline*, 6> objects {}; // blend mode and depth writes
 	};
 
@@ -111,6 +112,7 @@ private:
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
 	SDL_GPUBuffer* _entityMatrices {};
+	std::unique_ptr<Mesh> _spriteQuad;
 	uint32_t _entityMatrixCapacity {};
 	std::map<entt::id_type, uint32_t> _entityBoneOffsets;
 	Texture2dUniquePtr _whiteTexture;

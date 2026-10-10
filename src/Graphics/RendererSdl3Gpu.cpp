@@ -25,6 +25,7 @@
 
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_stdinc.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
 #include "3D/L3DMesh.h"
@@ -35,6 +36,9 @@
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "Debug/DebugGuiInterface.h"
+#include "ECS/Components/Sprite.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Registry.h"
 #include "ECS/Systems/RenderingSystemInterface.h"
 #include "FrameBuffer.h"
 #include "GraphicsHandleSdl3Gpu.h"
@@ -47,6 +51,7 @@
 #include "VertexBuffer.h"
 #include "generated/shaders/object.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
+#include "generated/shaders/sprite.slang.spv.h"
 #include "generated/shaders/terrain.slang.spv.h"
 #include "generated/shaders/water.slang.spv.h"
 
@@ -54,6 +59,13 @@ using namespace openblack::graphics;
 
 namespace
 {
+enum class AdditiveBlend
+{
+	Disabled,
+	Color,
+	ColorAndAlpha,
+};
+
 template <typename T, auto Release>
 struct GpuResourceDeleter
 {
@@ -105,11 +117,13 @@ void RendererSdl3Gpu::SdlGpuDeleter::operator()(SDL_GPUDevice* device) const noe
 	}
 }
 
-SDL_GPUGraphicsPipeline*
-CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat, const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
-               const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo, const SDL_GPUVertexInputState& vertexInputState,
-               SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID, bool alphaBlend = false,
-               SDL_GPUCullMode cullMode = SDL_GPU_CULLMODE_NONE, bool depthWrite = true, bool additiveBlend = false)
+SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat,
+                                        const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
+                                        const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo,
+                                        const SDL_GPUVertexInputState& vertexInputState,
+                                        SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID,
+                                        bool alphaBlend = false, SDL_GPUCullMode cullMode = SDL_GPU_CULLMODE_NONE,
+                                        bool depthWrite = true, AdditiveBlend additiveBlend = AdditiveBlend::Disabled)
 {
 
 	const SDL_GPUColorTargetDescription colorTargetDescriptions = {
@@ -117,10 +131,14 @@ CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat, const S
 	    .blend_state =
 	        {
 	            .src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-	            .dst_color_blendfactor = additiveBlend ? SDL_GPU_BLENDFACTOR_ONE : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+	            .dst_color_blendfactor = additiveBlend != AdditiveBlend::Disabled ? SDL_GPU_BLENDFACTOR_ONE
+	                                                                              : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
 	            .color_blend_op = SDL_GPU_BLENDOP_ADD,
-	            .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-	            .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+	            .src_alpha_blendfactor =
+	                additiveBlend == AdditiveBlend::ColorAndAlpha ? SDL_GPU_BLENDFACTOR_SRC_ALPHA : SDL_GPU_BLENDFACTOR_ONE,
+	            .dst_alpha_blendfactor = additiveBlend == AdditiveBlend::ColorAndAlpha
+	                                         ? SDL_GPU_BLENDFACTOR_ONE
+	                                         : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
 	            .alpha_blend_op = SDL_GPU_BLENDOP_ADD,
 	            .enable_blend = alphaBlend,
 	            .enable_color_write_mask = false,
@@ -227,6 +245,9 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	    .terrain =
 	        CreatePipeline(gpuDevice.get(), mainColorFormat, k_TerrainVertexShaderCreateInfo, k_TerrainFragmentShaderCreateInfo,
 	                       k_TerrainVertexInputStateByVertex, depthFormat, true, SDL_GPU_CULLMODE_BACK),
+	    .sprites = CreatePipeline(gpuDevice.get(), mainColorFormat, k_SpriteVertexShaderCreateInfo,
+	                              k_SpriteFragmentShaderCreateInfo, k_SpriteVertexInputStateByVertex, depthFormat, true,
+	                              SDL_GPU_CULLMODE_NONE, false, AdditiveBlend::ColorAndAlpha),
 	};
 	auto& reflection = pipelines[static_cast<size_t>(RenderPass::Reflection)];
 	reflection.sky = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_SkyVertexShaderCreateInfo,
@@ -234,6 +255,9 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	reflection.terrain = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_TerrainVertexShaderCreateInfo,
 	                                    k_TerrainFragmentShaderCreateInfo, k_TerrainVertexInputStateByVertex, depthFormat, true,
 	                                    SDL_GPU_CULLMODE_FRONT);
+	reflection.sprites = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_SpriteVertexShaderCreateInfo,
+	                                    k_SpriteFragmentShaderCreateInfo, k_SpriteVertexInputStateByVertex, depthFormat, true,
+	                                    SDL_GPU_CULLMODE_NONE, false, AdditiveBlend::ColorAndAlpha);
 	bool objectsValid = true;
 	for (auto viewId : {RenderPass::Main, RenderPass::Reflection})
 	{
@@ -244,19 +268,21 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 			for (size_t depthWrite = 0; depthWrite < 2; ++depthWrite)
 			{
 				auto*& pipeline = pass.objects.at(blend * 2 + depthWrite);
-				pipeline = CreatePipeline(gpuDevice.get(), format, k_ObjectVertexShaderCreateInfo,
-				                          k_ObjectFragmentShaderCreateInfo, k_ObjectVertexInputStateByVertex, depthFormat,
-				                          blend != 0, SDL_GPU_CULLMODE_NONE, depthWrite != 0, blend == 2);
+				pipeline =
+				    CreatePipeline(gpuDevice.get(), format, k_ObjectVertexShaderCreateInfo, k_ObjectFragmentShaderCreateInfo,
+				                   k_ObjectVertexInputStateByVertex, depthFormat, blend != 0, SDL_GPU_CULLMODE_NONE,
+				                   depthWrite != 0, blend == 2 ? AdditiveBlend::Color : AdditiveBlend::Disabled);
 				objectsValid &= pipeline != nullptr;
 			}
 		}
 	}
-	if (!main.sky || !main.water || !main.terrain || !reflection.sky || !reflection.terrain || !objectsValid)
+	if (!main.sky || !main.water || !main.terrain || !main.sprites || !reflection.sky || !reflection.terrain ||
+	    !reflection.sprites || !objectsValid)
 	{
 		for (const auto& pass : pipelines)
 		{
-			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.objects[0], pass.objects[1], pass.objects[2],
-			                       pass.objects[3], pass.objects[4], pass.objects[5]})
+			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.objects[0], pass.objects[1],
+			                       pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
 			{
 				if (pipeline)
 				{
@@ -273,6 +299,23 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to allocate RendererSdl3Gpu");
 		return nullptr;
 	}
+	{
+		struct Vertex
+		{
+			glm::vec2 position;
+		};
+		static constexpr std::array<Vertex, 6> k_Vertices {{{{-1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}, {{1, -1}}, {{1, 1}}}};
+		VertexDecl decl;
+		decl.emplace_back(VertexAttrib::Attribute::Position, 2, VertexAttrib::Type::Float);
+		const auto bytes = std::span<const uint8_t> {reinterpret_cast<const uint8_t*>(k_Vertices.data()), sizeof(k_Vertices)};
+		auto buffer = renderer->CreateVertexBuffer("Sprite quad", bytes, decl);
+		if (!buffer)
+		{
+			return nullptr;
+		}
+		renderer->_spriteQuad = std::make_unique<Mesh>(std::move(buffer));
+	}
+
 	const std::array<uint8_t, 4> white {255, 255, 255, 255};
 	renderer->_whiteTexture = renderer->CreateTexture2d("Untextured objects", white, {1, 1}, 1, TextureFormat::RGBA8,
 	                                                    Wrapping::ClampEdge, Filter::Nearest);
@@ -302,8 +345,8 @@ RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 	}
 	for (const auto& pass : _pipelines)
 	{
-		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.objects[0], pass.objects[1], pass.objects[2],
-		                       pass.objects[3], pass.objects[4], pass.objects[5]})
+		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.objects[0], pass.objects[1],
+		                       pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
 		{
 			if (pipeline)
 			{
@@ -594,6 +637,48 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 		if (desc.drawEntities)
 		{
 			DrawEntities(commandBuffer, renderPass, desc);
+		}
+	}
+	{
+		auto section =
+		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawSprites : Profiler::Stage::MainPassDrawSprites);
+		if (desc.drawSprites)
+		{
+			const auto inverseView = glm::inverse(view);
+			std::map<uint64_t, SDL_GPUTextureSamplerBinding> bindings;
+			desc.entities.Each<const ecs::components::Sprite, const ecs::components::Transform>(
+			    [&](const ecs::components::Sprite& sprite, const ecs::components::Transform& transform) {
+				    auto [binding, inserted] = bindings.try_emplace(sprite.texture.id);
+				    if (inserted)
+				    {
+					    textures.Each([&](entt::id_type, const auto& resource) {
+						    if (resource && resource->handle.id == sprite.texture.id)
+						    {
+							    binding->second = {toSdl(resource->handle), toSdl(resource->samplerHandle)};
+						    }
+					    });
+				    }
+				    if (binding->second.texture == nullptr || binding->second.sampler == nullptr)
+				    {
+					    return;
+				    }
+				    glm::mat4 model {1.0f};
+				    model = glm::translate(model, transform.position);
+				    model *= glm::mat4(transform.rotation);
+				    model = glm::scale(model, transform.scale);
+				    struct SpriteData
+				    {
+					    glm::mat4 viewProjection;
+					    glm::mat4 model;
+					    glm::mat4 inverseView;
+					    glm::vec4 sampleRect;
+				    };
+				    const SpriteData data {viewProj, model, inverseView, glm::vec4(sprite.uvExtent, sprite.uvMin)};
+				    SDL_PushGPUVertexUniformData(commandBuffer, 0, &data, sizeof(data));
+				    SDL_PushGPUFragmentUniformData(commandBuffer, 0, &sprite.tint, sizeof(sprite.tint));
+				    SDL_BindGPUFragmentSamplers(renderPass, 0, &binding->second, 1);
+				    DrawGeometry(renderPass, pipelines.sprites, *_spriteQuad);
+			    });
 		}
 	}
 
