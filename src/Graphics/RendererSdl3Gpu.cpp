@@ -54,6 +54,7 @@
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/sprite.slang.spv.h"
 #include "generated/shaders/terrain.slang.spv.h"
+#include "generated/shaders/vegetation.slang.spv.h"
 #include "generated/shaders/water.slang.spv.h"
 
 using namespace openblack::graphics;
@@ -199,6 +200,30 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
 	return result;
 }
 
+void RendererSdl3Gpu::Pipelines::Release(SDL_GPUDevice* device) noexcept
+{
+	const auto release = [device](SDL_GPUGraphicsPipeline*& pipeline) {
+		if (pipeline != nullptr)
+		{
+			SDL_ReleaseGPUGraphicsPipeline(device, pipeline);
+			pipeline = nullptr;
+		}
+	};
+	release(sky);
+	release(water);
+	release(terrain);
+	release(sprites);
+	release(footprints);
+	for (auto& pipeline : objects)
+	{
+		release(pipeline);
+	}
+	for (auto& pipeline : vegetation)
+	{
+		release(pipeline);
+	}
+}
+
 std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 {
 	const bool debugMode =
@@ -263,7 +288,7 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	footprints = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_FootprintVertexShaderCreateInfo,
 	                            k_FootprintFragmentShaderCreateInfo, k_FootprintVertexInputStateByVertex,
 	                            SDL_GPU_TEXTUREFORMAT_INVALID, true, SDL_GPU_CULLMODE_BACK, false);
-	bool objectsValid = true;
+	bool meshPipelinesValid = true;
 	for (auto viewId : {RenderPass::Main, RenderPass::Reflection})
 	{
 		auto& pass = pipelines.at(static_cast<size_t>(viewId));
@@ -277,23 +302,22 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 				    CreatePipeline(gpuDevice.get(), format, k_ObjectVertexShaderCreateInfo, k_ObjectFragmentShaderCreateInfo,
 				                   k_ObjectVertexInputStateByVertex, depthFormat, blend != 0, SDL_GPU_CULLMODE_NONE,
 				                   depthWrite != 0, blend == 2 ? AdditiveBlend::Color : AdditiveBlend::Disabled);
-				objectsValid &= pipeline != nullptr;
+				meshPipelinesValid &= pipeline != nullptr;
+				auto*& treePipeline = pass.vegetation.at(blend * 2 + depthWrite);
+				treePipeline = CreatePipeline(gpuDevice.get(), format, k_VegetationVertexShaderCreateInfo,
+				                              k_VegetationFragmentShaderCreateInfo, k_VegetationVertexInputStateByVertex,
+				                              depthFormat, blend != 0, SDL_GPU_CULLMODE_NONE, depthWrite != 0,
+				                              blend == 2 ? AdditiveBlend::Color : AdditiveBlend::Disabled);
+				meshPipelinesValid &= treePipeline != nullptr;
 			}
 		}
 	}
 	if (!main.sky || !main.water || !main.terrain || !main.sprites || !reflection.sky || !reflection.terrain ||
-	    !reflection.sprites || !footprints || !objectsValid)
+	    !reflection.sprites || !footprints || !meshPipelinesValid)
 	{
-		for (const auto& pass : pipelines)
+		for (auto& pass : pipelines)
 		{
-			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.footprints, pass.objects[0],
-			                       pass.objects[1], pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
-			{
-				if (pipeline)
-				{
-					SDL_ReleaseGPUGraphicsPipeline(gpuDevice.get(), pipeline);
-				}
-			}
+			pass.Release(gpuDevice.get());
 		}
 		return nullptr;
 	}
@@ -348,16 +372,9 @@ RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 	{
 		SDL_ReleaseGPUTexture(_gpuDevice.get(), _depthStencil);
 	}
-	for (const auto& pass : _pipelines)
+	for (auto& pass : _pipelines)
 	{
-		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.sprites, pass.footprints, pass.objects[0],
-		                       pass.objects[1], pass.objects[2], pass.objects[3], pass.objects[4], pass.objects[5]})
-		{
-			if (pipeline)
-			{
-				SDL_ReleaseGPUGraphicsPipeline(_gpuDevice.get(), pipeline);
-			}
-		}
+		pass.Release(_gpuDevice.get());
 	}
 }
 
@@ -436,7 +453,7 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
 	}
-	if ((drawDesc.drawEntities || drawDesc.drawIsland) && !UploadSceneMatrices(cmdBufferMain))
+	if ((drawDesc.drawEntities || drawDesc.drawIsland || drawDesc.drawVegetation) && !UploadSceneMatrices(cmdBufferMain))
 	{
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
@@ -678,12 +695,95 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 		}
 	}
 
+	const auto& context = Locator::rendereringSystem::value().GetContext();
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	const auto drawMeshBatch = [&](entt::id_type meshId, const auto& instances, glm::uvec4 offsets, const auto& meshPipelines,
+	                               bool vegetation) {
+		if (instances.count == 0 || !meshes.Contains(meshId) || (!vegetation && !_entityBoneOffsets.contains(meshId)))
+		{
+			return;
+		}
+		const auto mesh = meshes.Handle(meshId);
+		const auto& island = Locator::terrainSystem::value();
+		const auto& heightMap = island.GetHeightMap();
+		const auto extent = island.GetExtent();
+		const SDL_GPUTextureSamplerBinding heightBinding {toSdl(heightMap.handle), toSdl(heightMap.samplerHandle)};
+		SDL_BindGPUVertexSamplers(renderPass, 0, &heightBinding, 1);
+		const std::array<SDL_GPUBuffer*, 2> buffers {_sceneMatrices, _sceneMatrices};
+		SDL_BindGPUVertexStorageBuffers(renderPass, 0, buffers.data(), vegetation ? 2 : 1);
+		if (!vegetation)
+		{
+			offsets.y = _entityBoneOffsets.at(meshId);
+			offsets.z =
+			    mesh->IsBoned() && !mesh->GetBoneMatrices().empty() ? static_cast<uint32_t>(mesh->GetBoneMatrices().size()) : 1;
+		}
+		struct MeshCamera
+		{
+			glm::mat4 viewProjection;
+			glm::vec4 islandExtent;
+			glm::uvec4 offsets;
+		};
+		const MeshCamera data {viewProj, glm::vec4(extent.minimum, extent.maximum), offsets};
+		SDL_PushGPUVertexUniformData(commandBuffer, 0, &data, sizeof(data));
+		for (const auto& subMesh : mesh->GetSubMeshes())
+		{
+			const auto flags = subMesh->GetFlags();
+			if (flags.isPhysics || flags.status != 0 || (flags.lodMask & 1) == 0)
+			{
+				continue;
+			}
+			const auto& geometry = subMesh->GetMesh();
+			const SDL_GPUBufferBinding vertices {toSdl(geometry.GetVertexBuffer().handle), 0};
+			const SDL_GPUBufferBinding indices {toSdl(geometry.GetIndexBuffer().handle), 0};
+			SDL_BindGPUVertexBuffers(renderPass, 0, &vertices, 1);
+			SDL_BindGPUIndexBuffer(renderPass, &indices, SDL_GPU_INDEXELEMENTSIZE_16BIT);
+			for (const auto& primitive : subMesh->GetPrimitives())
+			{
+				const Texture2d* texture = _whiteTexture.get();
+				if (const auto skin = mesh->GetSkins().find(primitive.skinID); skin != mesh->GetSkins().end())
+				{
+					texture = skin->second.get();
+				}
+				else if (textures.Contains(primitive.skinID))
+				{
+					texture = textures.Handle(primitive.skinID).operator->();
+				}
+				const SDL_GPUTextureSamplerBinding diffuse {toSdl(texture->handle), toSdl(texture->samplerHandle)};
+				SDL_BindGPUFragmentSamplers(renderPass, 0, &diffuse, 1);
+				const glm::vec4 skyAlpha {Locator::skySystem::value().GetCurrentSkyType(),
+				                          primitive.thresholdAlpha ? primitive.alphaCutoutThreshold : 0.0f, 0, 0};
+				SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAlpha, sizeof(skyAlpha));
+				const auto pipelineIndex = static_cast<size_t>(primitive.blend) * 2 + (primitive.depthWrite ? 1 : 0);
+				SDL_BindGPUGraphicsPipeline(renderPass, meshPipelines[pipelineIndex]);
+				SDL_DrawGPUIndexedPrimitives(renderPass, primitive.indicesCount, instances.count, primitive.indicesOffset, 0,
+				                             0);
+			}
+		}
+	};
+
 	{
 		auto section =
 		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
 		if (desc.drawEntities)
 		{
-			DrawEntities(commandBuffer, renderPass, desc);
+			for (const auto& [key, instances] : context.instancedDrawDescs)
+			{
+				drawMeshBatch(key.meshId, instances, {instances.offset, 0, 0, instances.morphWithTerrain ? 1u : 0u},
+				              pipelines.objects, false);
+			}
+		}
+	}
+	{
+		auto section = profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawVegetation
+		                                                 : Profiler::Stage::MainPassDrawVegetation);
+		if (desc.drawVegetation)
+		{
+			for (const auto& [meshId, instances] : context.treeInstancedDrawDescs)
+			{
+				drawMeshBatch(meshId, instances,
+				              {_treeMatrixOffset + instances.offset, _treeSwayOffset + instances.offset, 0, 0},
+				              pipelines.vegetation, true);
+			}
 		}
 	}
 	{
@@ -770,17 +870,26 @@ bool RendererSdl3Gpu::UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) n
 			_entityBoneOffsets.emplace(key.meshId, identityOffset);
 		}
 	}
-	const auto memory =
-	    std::span<const uint8_t> {reinterpret_cast<const uint8_t*>(matrices.data()), matrices.size() * sizeof(glm::mat4)};
-	if (memory.size_bytes() > std::numeric_limits<uint32_t>::max())
+	const auto matrixBytes = matrices.size() * sizeof(glm::mat4);
+	const auto swayBytes = context.treeInstanceData.size() * sizeof(glm::vec4);
+	if (matrixBytes > std::numeric_limits<uint32_t>::max() || swayBytes > std::numeric_limits<uint32_t>::max() - matrixBytes)
 	{
 		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Scene matrix buffer is too large");
 		return false;
 	}
-	if (memory.size_bytes() > _sceneMatrixCapacity)
+	// Bind this storage buffer as matrices and as vec4s; sway data follows the matrices.
+	_treeSwayOffset = static_cast<uint32_t>(matrixBytes / sizeof(glm::vec4));
+	std::vector<uint8_t> memory(matrixBytes + swayBytes);
+	std::memcpy(memory.data(), matrices.data(), matrixBytes);
+	for (size_t i = 0; i < context.treeInstanceData.size(); ++i)
+	{
+		std::memcpy(memory.data() + matrixBytes + i * sizeof(glm::vec4), &context.treeInstanceData[i].swayParams,
+		            sizeof(glm::vec4));
+	}
+	if (memory.size() > _sceneMatrixCapacity)
 	{
 		const SDL_GPUBufferCreateInfo info {.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
-		                                    .size = static_cast<uint32_t>(memory.size_bytes())};
+		                                    .size = static_cast<uint32_t>(memory.size())};
 		auto* buffer = SDL_CreateGPUBuffer(_gpuDevice.get(), &info);
 		if (buffer == nullptr)
 		{
@@ -793,7 +902,7 @@ bool RendererSdl3Gpu::UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) n
 		}
 		_sceneMatrices = buffer;
 		_sceneMatrixCapacity = info.size;
-		SDL_SetGPUBufferName(_gpuDevice.get(), buffer, "Scene instances and bones");
+		SDL_SetGPUBufferName(_gpuDevice.get(), buffer, "Scene instances, bones and tree sway");
 	}
 	auto transfer = CreateTransferBuffer(_gpuDevice.get(), memory);
 	if (!transfer)
@@ -807,85 +916,12 @@ bool RendererSdl3Gpu::UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) n
 		return false;
 	}
 	const SDL_GPUTransferBufferLocation source {.transfer_buffer = transfer.get()};
-	const SDL_GPUBufferRegion destination {.buffer = _sceneMatrices, .size = static_cast<uint32_t>(memory.size_bytes())};
+	const SDL_GPUBufferRegion destination {.buffer = _sceneMatrices, .size = static_cast<uint32_t>(memory.size())};
 	// Cycle when prior frames still reference the buffer; all passes below use
 	// this frame's matrices without overwriting an in-flight draw.
 	SDL_UploadToGPUBuffer(copyPass, &source, &destination, true);
 	SDL_EndGPUCopyPass(copyPass);
 	return true;
-}
-
-void RendererSdl3Gpu::DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
-                                   const DrawSceneDesc& desc) const noexcept
-{
-	const auto& context = Locator::rendereringSystem::value().GetContext();
-	if (context.instancedDrawDescs.empty())
-	{
-		return;
-	}
-	auto& resources = Locator::resources::value();
-	const auto& island = Locator::terrainSystem::value();
-	const auto& heightMap = island.GetHeightMap();
-	const auto extent = island.GetExtent();
-	const SDL_GPUTextureSamplerBinding heightBinding {toSdl(heightMap.handle), toSdl(heightMap.samplerHandle)};
-	SDL_BindGPUVertexSamplers(renderPass, 0, &heightBinding, 1);
-	SDL_BindGPUVertexStorageBuffers(renderPass, 0, &_sceneMatrices, 1);
-	const auto& pipelines = _pipelines[static_cast<size_t>(desc.viewId)].objects;
-	struct ObjectCamera
-	{
-		glm::mat4 viewProjection;
-		glm::vec4 islandExtent;
-		glm::uvec4 offsets;
-	};
-	for (const auto& [key, instances] : context.instancedDrawDescs)
-	{
-		if (!_entityBoneOffsets.contains(key.meshId))
-		{
-			continue; // Assets that failed to load cannot be submitted.
-		}
-		const auto mesh = resources.GetMeshes().Handle(key.meshId);
-		const uint32_t boneCount =
-		    mesh->IsBoned() && !mesh->GetBoneMatrices().empty() ? static_cast<uint32_t>(mesh->GetBoneMatrices().size()) : 1;
-		const ObjectCamera camera {
-		    desc.camera->GetViewProjectionMatrix(Camera::Interpolation::Current),
-		    glm::vec4(extent.minimum, extent.maximum),
-		    {instances.offset, _entityBoneOffsets.at(key.meshId), boneCount, instances.morphWithTerrain ? 1u : 0u}};
-		SDL_PushGPUVertexUniformData(commandBuffer, 0, &camera, sizeof(camera));
-		for (const auto& subMesh : mesh->GetSubMeshes())
-		{
-			const auto flags = subMesh->GetFlags();
-			if (flags.isPhysics || flags.status != 0 || (flags.lodMask & 1) == 0)
-			{
-				continue;
-			}
-			const auto& geometry = subMesh->GetMesh();
-			const SDL_GPUBufferBinding vertices {toSdl(geometry.GetVertexBuffer().handle), 0};
-			const SDL_GPUBufferBinding indices {toSdl(geometry.GetIndexBuffer().handle), 0};
-			SDL_BindGPUVertexBuffers(renderPass, 0, &vertices, 1);
-			SDL_BindGPUIndexBuffer(renderPass, &indices, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-			for (const auto& primitive : subMesh->GetPrimitives())
-			{
-				const Texture2d* texture = _whiteTexture.get();
-				if (const auto skin = mesh->GetSkins().find(primitive.skinID); skin != mesh->GetSkins().end())
-				{
-					texture = skin->second.get();
-				}
-				else if (resources.GetTextures().Contains(primitive.skinID))
-				{
-					texture = resources.GetTextures().Handle(primitive.skinID).operator->();
-				}
-				const SDL_GPUTextureSamplerBinding diffuse {toSdl(texture->handle), toSdl(texture->samplerHandle)};
-				SDL_BindGPUFragmentSamplers(renderPass, 0, &diffuse, 1);
-				const glm::vec4 skyAlpha {Locator::skySystem::value().GetCurrentSkyType(),
-				                          primitive.thresholdAlpha ? primitive.alphaCutoutThreshold : 0.0f, 0, 0};
-				SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAlpha, sizeof(skyAlpha));
-				const auto pipelineIndex = static_cast<size_t>(primitive.blend) * 2 + (primitive.depthWrite ? 1 : 0);
-				SDL_BindGPUGraphicsPipeline(renderPass, pipelines[pipelineIndex]);
-				SDL_DrawGPUIndexedPrimitives(renderPass, primitive.indicesCount, instances.count, primitive.indicesOffset, 0,
-				                             0);
-			}
-		}
-	}
 }
 
 void RendererSdl3Gpu::DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,

@@ -15,6 +15,7 @@
 #include "generated/shaders/footprint.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/sprite.slang.spv.h"
+#include "generated/shaders/vegetation.slang.spv.h"
 
 static_assert(k_SkyVertexBufferDescriptionByVertex.pitch == 36);
 static_assert(k_SkyVertexAttributes[3].offset == 32);
@@ -27,6 +28,13 @@ static_assert(k_FootprintVertexAttributes[1].offset == 8);
 static_assert(k_FootprintVertexShaderCreateInfo.num_storage_buffers == 1);
 static_assert(k_FootprintVertexShaderCreateInfo.num_uniform_buffers == 1);
 static_assert(k_FootprintFragmentShaderCreateInfo.num_samplers == 1);
+static_assert(k_VegetationVertexBufferDescriptionByVertex.pitch == 36);
+static_assert(k_VegetationVertexAttributes[3].offset == 32);
+static_assert(k_VegetationVertexShaderCreateInfo.num_storage_buffers == 2);
+static_assert(k_VegetationVertexShaderCreateInfo.num_samplers == 1);
+static_assert(k_VegetationVertexShaderCreateInfo.num_uniform_buffers == 1);
+static_assert(k_VegetationFragmentShaderCreateInfo.num_uniform_buffers == 1);
+static_assert(k_VegetationFragmentShaderCreateInfo.num_samplers == 1);
 
 bool CheckPipeline(SDL_GPUDevice* device, const char* name, const SDL_GPUShaderCreateInfo& vertexInfo,
                    const SDL_GPUShaderCreateInfo& fragmentInfo, const SDL_GPUVertexInputState& inputState)
@@ -91,7 +99,9 @@ int main()
 	                                  k_SpriteVertexInputStateByVertex);
 	const bool footprint = CheckPipeline(device, "footprint", k_FootprintVertexShaderCreateInfo,
 	                                     k_FootprintFragmentShaderCreateInfo, k_FootprintVertexInputStateByVertex);
+	const bool vegetation = CheckPipeline(device, "vegetation", k_VegetationVertexShaderCreateInfo,
+	                                      k_VegetationFragmentShaderCreateInfo, k_VegetationVertexInputStateByVertex);
 	SDL_DestroyGPUDevice(device);
 	SDL_Quit();
-	return sky && sprite && footprint ? EXIT_SUCCESS : EXIT_FAILURE;
+	return sky && sprite && footprint && vegetation ? EXIT_SUCCESS : EXIT_FAILURE;
 }
