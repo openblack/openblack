@@ -12,6 +12,7 @@
 #include <iostream>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 #include <GLWFile.h>
 #include <PackFile.h>
@@ -100,10 +101,9 @@ Texture2dLoader::result_type Texture2dLoader::operator()(FromPackTag, const std:
 		throw std::runtime_error("Unsupported compressed texture format");
 	}
 
-	const auto* mem = bgfx::makeRef(g3dTexture.ddsData.data(), static_cast<uint32_t>(g3dTexture.ddsData.size()));
 	const auto resolution =
 	    glm::u16vec2(static_cast<uint16_t>(g3dTexture.ddsHeader.width), static_cast<uint16_t>(g3dTexture.ddsHeader.height));
-	auto texture = Locator::rendererInterface::value().CreateTexture2d(name, mem, resolution, 1, internalFormat,
+	auto texture = Locator::rendererInterface::value().CreateTexture2d(name, g3dTexture.ddsData, resolution, 1, internalFormat,
 	                                                                   graphics::Wrapping::Repeat, graphics::Filter::Linear);
 	return texture;
 }
@@ -113,7 +113,7 @@ Texture2dLoader::result_type Texture2dLoader::operator()(FromDiskTag, const std:
 	bool found = false;
 	const std::array<uint16_t, 12> resolutions = {{1024, 512, 256, 128, 64, 40, 32, 14, 12, 6}};
 
-	const auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
+	auto data = Locator::filesystem::value().ReadAll(rawTexturePath);
 	graphics::TextureFormat format = graphics::TextureFormat::R8;
 	uint16_t width = 0;
 	uint16_t height = 0;
@@ -136,7 +136,18 @@ Texture2dLoader::result_type Texture2dLoader::operator()(FromDiskTag, const std:
 		}
 		if (data.size() == 3 * pixelCount)
 		{
-			format = graphics::TextureFormat::RGB8;
+			// 24 bit pixel is unsupported
+			format = graphics::TextureFormat::RGBA8;
+			auto newData = std::vector<uint8_t>();
+			newData.resize((data.size() / 3) * 4);
+			for (uint32_t i = 0; i < data.size() / 3; ++i)
+			{
+				newData[i * 4 + 0] = data[i * 3 + 0];
+				newData[i * 4 + 1] = data[i * 3 + 1];
+				newData[i * 4 + 2] = data[i * 3 + 2];
+				newData[i * 4 + 3] = 1;
+			}
+			data = newData;
 			found = true;
 		}
 	}
@@ -146,9 +157,8 @@ Texture2dLoader::result_type Texture2dLoader::operator()(FromDiskTag, const std:
 	}
 
 	const auto name = ("raw" / rawTexturePath.stem()).string();
-	const auto* mem = bgfx::makeRef(data.data(), static_cast<uint32_t>(data.size()));
 	const auto resolution = glm::u16vec2(width, height);
-	auto texture = Locator::rendererInterface::value().CreateTexture2d(name, mem, resolution, 1, format,
+	auto texture = Locator::rendererInterface::value().CreateTexture2d(name, data, resolution, 1, format,
 	                                                                   graphics::Wrapping::Repeat, graphics::Filter::Linear);
 	return texture;
 }

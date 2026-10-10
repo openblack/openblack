@@ -2,8 +2,16 @@
     "name": "openblack",
     "version-string": "0.0.1-dev",
     "dependencies": [
-        "sdl3",
-        "imgui",
+        "shader-slang",
+        {
+            "name": "sdl3",
+            "features": [ "vulkan" ],
+            "platform": "linux"
+        },
+        {
+            "name": "imgui",
+            "features": [ "sdl3-binding", "sdlgpu3-binding" ]
+        },
         "spdlog",
         "glm",
         "stb",
@@ -14,7 +22,7 @@
         {
             "name": "bgfx",
             "default-features": false,
-            "features": [ "tools", "multithreaded" ],
+            "features": [ "multithreaded" ],
             "host": true,
             "$reason": "Don't want to build shaderc on non-native platforms so they are built on the host config."
         },

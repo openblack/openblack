@@ -1,4 +1,31 @@
 include(CTest)
+find_package(
+  Python3
+  COMPONENTS Interpreter
+  REQUIRED
+)
+
+if (Python3_FOUND)
+  add_test(
+    NAME test_slang_compiler
+    COMMAND
+      ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/graphics/test_slang_compiler.py
+      $<TARGET_FILE:slang-sdl3-gpu-compiler>
+      ${CMAKE_SOURCE_DIR}/assets/shaders/sky.slang
+  )
+endif ()
+
+# These checks build independently of openblack_lib during the renderer migration.
+add_executable(test_sdl_gpu_shaders graphics/test_sdl_gpu_shaders.cpp)
+add_dependencies(test_sdl_gpu_shaders openblack_shaders)
+target_include_directories(
+  test_sdl_gpu_shaders PRIVATE ${CMAKE_BINARY_DIR}/include
+)
+target_link_libraries(test_sdl_gpu_shaders PRIVATE SDL3::SDL3)
+set_property(TARGET test_sdl_gpu_shaders PROPERTY FOLDER "tests")
+add_test(NAME test_sdl_gpu_shaders COMMAND test_sdl_gpu_shaders)
+set_tests_properties(test_sdl_gpu_shaders PROPERTIES SKIP_RETURN_CODE 77)
 
 # Macro for setting up and adding a simple test.
 # TEST_NAME is the name of the test.

@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <span>
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -87,9 +88,10 @@ public:
 
 	virtual ~RendererInterface() noexcept = default;
 
+	[[nodiscard]] virtual void* GetDevice() const noexcept = 0;
 	virtual void ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept = 0;
 	virtual void Reset(glm::u16vec2 resolution) const noexcept = 0;
-	virtual void DrawScene(const DrawSceneDesc& drawDesc) const noexcept = 0;
+	virtual void DrawScene(const DrawSceneDesc& drawDesc) noexcept = 0;
 	virtual void Frame() noexcept = 0;
 	virtual void RequestScreenshot(const std::filesystem::path& filepath) noexcept = 0;
 	[[nodiscard]] virtual bool GetDebug() const noexcept = 0;
@@ -100,13 +102,20 @@ public:
 	// TODO: Remove this function. All renderables should be drawn through RenderingSystem with Components
 	virtual void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept = 0;
 	// TODO: Should shader manager be available through Locator as a service?
-	[[nodiscard]] virtual graphics::ShaderManager& GetShaderManager() const noexcept = 0;
+	[[nodiscard]] virtual ShaderManager& GetShaderManager() const noexcept = 0;
 
 	[[nodiscard]] virtual VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
 	                                                               VertexDecl decl) noexcept = 0;
+	[[nodiscard]] virtual VertexBufferUniquePtr CreateVertexBuffer(std::string name, std::span<const uint8_t> memory,
+	                                                               VertexDecl decl) noexcept = 0;
 	[[nodiscard]] virtual IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
 	                                                             IndexBuffer::Type type) noexcept = 0;
+	[[nodiscard]] virtual IndexBufferUniquePtr CreateIndexBuffer(std::string name, std::span<const uint8_t> memory,
+	                                                             IndexBuffer::Type type) noexcept = 0;
 	[[nodiscard]] virtual Texture2dUniquePtr CreateTexture2d(std::string name, const void* memory, glm::u16vec2 resolution,
+	                                                         uint16_t layers, TextureFormat format, Wrapping wrapping,
+	                                                         Filter filter) noexcept = 0;
+	[[nodiscard]] virtual Texture2dUniquePtr CreateTexture2d(std::string name, std::span<const uint8_t> memory, glm::u16vec2 resolution,
 	                                                         uint16_t layers, TextureFormat format, Wrapping wrapping,
 	                                                         Filter filter) noexcept = 0;
 

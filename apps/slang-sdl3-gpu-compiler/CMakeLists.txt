@@ -1,0 +1,35 @@
+set(SLANG_TO_SDL3_GPU_COMPILER slang-sdl3-gpu-compiler.cpp)
+
+source_group(apps\\slang-sdl3-gpu-compiler FILES ${SLANG_TO_SDL3_GPU_COMPILER})
+
+add_executable(slang-sdl3-gpu-compiler ${SLANG_TO_SDL3_GPU_COMPILER})
+
+target_compile_definitions(
+  slang-sdl3-gpu-compiler PRIVATE CXXOPTS_NO_EXCEPTIONS
+)
+target_link_libraries(slang-sdl3-gpu-compiler PRIVATE slang::slang)
+target_include_directories(
+  slang-sdl3-gpu-compiler PRIVATE ${CXXOPTS_INCLUDE_DIRS}
+)
+
+if (OPENBLACK_CLANG_TIDY_CHECKS)
+  if (CLANG_TIDY)
+    set_target_properties(
+      slang-sdl3-gpu-compiler PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY}
+    )
+  else ()
+    message("Clang-tidy checks requested but unavailable")
+  endif ()
+endif ()
+
+if (MSVC)
+  target_compile_definitions(slang-sdl3-gpu-compiler PRIVATE _HAS_EXCEPTIONS=0)
+  target_compile_options(slang-sdl3-gpu-compiler PRIVATE /W4 /WX /EHs-c-)
+else ()
+  target_compile_options(
+    slang-sdl3-gpu-compiler PRIVATE -Wall -Wextra -pedantic -Werror
+                                    -fno-exceptions
+  )
+endif ()
+
+set_property(TARGET slang-sdl3-gpu-compiler PROPERTY FOLDER "tools")

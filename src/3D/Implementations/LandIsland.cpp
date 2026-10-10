@@ -18,7 +18,6 @@
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LNDFile.h>
-#include <bgfx/bgfx.h>
 #include <glm/ext/vector_uint2_sized.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
@@ -105,13 +104,12 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	const auto indexSize = _extentIndexMax - _extentIndexMin + glm::u16vec2(1, 1);
 
 	const auto heightMapData = CreateHeightMap();
-	const auto* heightMapMem = bgfx::makeRef(heightMapData.data(), static_cast<uint32_t>(heightMapData.size()));
-	_heightMap = renderer.CreateTexture2d("Height Map", heightMapMem,
+	_heightMap = renderer.CreateTexture2d("Height Map", heightMapData,
 	                                      indexSize * static_cast<uint16_t>(k_CellCount) + glm::u16vec2(1, 1), 1,
 	                                      graphics::TextureFormat::R8, Wrapping::ClampEdge, Filter::Linear);
 
-	const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
-	_footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::TextureFormat::RGBA8);
+	// const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
+	// _footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::TextureFormat::RGBA8);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -129,8 +127,8 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 		            lnd.GetMaterials()[i].texels.data(),
 		            sizeof(lnd.GetMaterials()[i].texels[0]) * lnd.GetMaterials()[i].texels.size());
 	}
-	const auto* materialArrayMem =
-	    bgfx::makeRef(rgba5TextureData.data(), static_cast<uint32_t>(rgba5TextureData.size() * sizeof(rgba5TextureData[0])));
+	const auto materialArrayMem = std::span(reinterpret_cast<const uint8_t*>(rgba5TextureData.data()),
+	                                        rgba5TextureData.size() * sizeof(rgba5TextureData[0]));
 	_materialArray = renderer.CreateTexture2d("LandIslandMaterialArray", materialArrayMem,
 	                                          glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height),
 	                                          materialCount, TextureFormat::BGR5A1, Wrapping::ClampEdge, Filter::Linear);
@@ -139,23 +137,19 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 
 	// read noise map into Texture2D
 	_noiseMap = lnd.GetExtra().noise.texels;
-	const auto* noiseMapMem = bgfx::makeRef(_noiseMap.data(), static_cast<uint32_t>(_noiseMap.size() * sizeof(_noiseMap[0])));
-	_textureNoiseMap = renderer.CreateTexture2d("LandIslandNoiseMap", noiseMapMem, bumpMapResolution, 1, TextureFormat::R8,
+	_textureNoiseMap = renderer.CreateTexture2d("LandIslandNoiseMap", _noiseMap, bumpMapResolution, 1, TextureFormat::R8,
 	                                            Wrapping::ClampEdge, Filter::Linear);
 
 	// read bump map into Texture2D
-	const auto* textureBumpMapMem =
-	    bgfx::makeRef(lnd.GetExtra().bump.texels.data(),
-	                  static_cast<uint32_t>(sizeof(lnd.GetExtra().bump.texels[0]) * lnd.GetExtra().bump.texels.size()));
-	_textureBumpMap = renderer.CreateTexture2d("LandIslandBumpMap", textureBumpMapMem, bumpMapResolution, 1, TextureFormat::R8,
-	                                           Wrapping::Repeat, Filter::Linear);
+	_textureBumpMap = renderer.CreateTexture2d("LandIslandBumpMap", lnd.GetExtra().bump.texels, bumpMapResolution, 1,
+	                                           TextureFormat::R8, Wrapping::Repeat, Filter::Linear);
 
 	// build the meshes (we could move this elsewhere)
-	for (auto& block : _landBlocks)
-	{
-		block.BuildMesh(*this);
-	}
-	bgfx::frame();
+	// for (auto& block : _landBlocks)
+	// {
+	// 	block.BuildMesh(*this);
+	// }
+	// bgfx::frame();
 }
 
 float LandIsland::GetHeightAt(glm::vec2 vec) const

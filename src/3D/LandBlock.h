@@ -47,6 +47,7 @@ struct LandVertex
 	glm::u8vec4 lightLevel;               // aligned to 4 bytes
 	float waterAlpha;
 
+	LandVertex() = default;
 	LandVertex(const glm::vec3& position, const glm::vec3& weight, const std::array<uint32_t, 6>& mat, const glm::uvec3& blend,
 	           uint8_t lightLevel, float alpha);
 };

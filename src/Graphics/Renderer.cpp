@@ -14,7 +14,7 @@
 #include <cstdint>
 
 #include <SDL3/SDL_video.h>
-#include <bgfx/platform.h>
+#include <bgfx/bgfx.h>
 #include <bimg/bimg.h>
 #include <bx/file.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -198,7 +198,7 @@ struct BgfxCallback: public bgfx::CallbackI
 
 } // namespace openblack
 
-std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend backend, bool vsync) noexcept
+std::unique_ptr<RendererInterface> Renderer::Create(GraphicsBackend backend, bool vsync) noexcept
 {
 	bgfx::Init init {};
 	switch (backend)
@@ -262,7 +262,7 @@ std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend bac
 		return nullptr;
 	}
 
-	return std::make_unique<Renderer>(bgfxReset, std::move(bgfxCallback));
+	return {};//std::make_unique<Renderer>(bgfxReset, std::move(bgfxCallback));
 }
 
 Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept
@@ -524,7 +524,7 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 			}
 			const auto& footprint = mesh->GetFootprints()[0];
 			footprintShaderInstanced->SetTextureSampler("s_footprint", 0, *footprint.texture);
-			footprint.mesh->GetVertexBuffer().Bind();
+			Bind(footprint.mesh->GetVertexBuffer());
 			bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), placers.offset, placers.count);
 			const uint64_t state = 0u                       //
 			                       | BGFX_STATE_WRITE_RGB   //
@@ -538,8 +538,9 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	}
 }
 
-void Renderer::DrawScene(const DrawSceneDesc& drawDesc) const noexcept
+void Renderer::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 {
+	return;
 	// TODO(bwrsandman): Footprint framebuffer doesn't need to be updated each frame
 	DrawFootprintPass(drawDesc);
 	// Reflection Pass
@@ -811,7 +812,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 				{
 					const auto boundBoxOffset = renderCtx.treeInstanceCount;
 					const auto boundBoxCount = renderCtx.treeInstanceCount;
-					renderCtx.boundingBox->GetVertexBuffer().Bind();
+					Bind(renderCtx.boundingBox->GetVertexBuffer());
 					bgfx::setInstanceDataBuffer(toBgfx(renderCtx.treeInstanceUniformBuffer), boundBoxOffset, boundBoxCount);
 					bgfx::setState(k_BgfxDefaultStateInvertedZ | BGFX_STATE_PT_LINES);
 					bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(debugShaderInstanced->GetRawHandle()));
@@ -956,9 +957,6 @@ Texture2dUniquePtr Renderer::CreateTexture2d(std::string name, const void* memor
 	case Wrapping::ClampEdge:
 		flags |= BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
 		break;
-	case Wrapping::ClampBorder:
-		flags |= BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
-		break;
 	case Wrapping::Repeat:
 		break;
 	case Wrapping::MirroredRepeat:
@@ -986,8 +984,8 @@ Texture2dUniquePtr Renderer::CreateTexture2d(std::string name, const void* memor
 
 	bgfx::frame();
 
-	return {new Texture2d(name, handle, resolution, textureInfo.numLayers, textureInfo.width * textureInfo.bitsPerPixel / 8,
-	                      fromBgfx(textureInfo.format), textureInfo.storageSize),
+	return {new Texture2d(name, handle, {0}, resolution, textureInfo.numLayers,
+	                      fromBgfx(textureInfo.format)),
 	        DestroyTexture2d};
 }
 

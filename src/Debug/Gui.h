@@ -39,13 +39,10 @@ public:
 	void SetScale(float scale) noexcept override;
 	bool ProcessEvents(const SDL_Event& event) noexcept override;
 	bool Loop() noexcept override;
-	void Draw() noexcept override;
+	void Draw(SDL_GPUCommandBuffer* cmdBuf, SDL_GPUTexture* targetTexture) noexcept override;
 
 private:
-	bool CreateFontsTextureBgfx() noexcept;
-	bool CreateDeviceObjectsBgfx() noexcept;
 	void NewFrame() noexcept;
-	void RenderDrawDataBgfx(ImDrawData* drawData) noexcept;
 
 	void RenderArrow(const std::string& name, const ImVec2& pos, const ImVec2& size) const noexcept;
 	std::optional<glm::uvec4> RenderVillagerName(const std::vector<glm::vec4>& coveredAreas, const std::string& name,

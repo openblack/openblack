@@ -48,6 +48,7 @@ public:
 
 	[[nodiscard]] const VertexBuffer& GetVertexBuffer() const;
 	[[nodiscard]] const IndexBuffer& GetIndexBuffer() const;
+	[[nodiscard]] bool HasVertexBuffer() const;
 	[[nodiscard]] bool IsIndexed() const;
 
 	[[nodiscard]] Topology GetTopology() const noexcept;
@@ -78,11 +79,9 @@ public:
 
 	void Draw(const DrawDesc& desc) const;
 
-protected:
+private:
 	VertexBufferUniquePtr _vertexBuffer;
 	IndexBufferUniquePtr _indexBuffer;
-
-private:
 	Topology _topology;
 };
 

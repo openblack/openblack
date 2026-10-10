@@ -190,6 +190,7 @@ jobs:
           clang_tidy_checks: "" # Use checks from .clang-tidy tree
           lgtm_comment_body: "" # Don't post a lgtm message
           annotations: false
+          apt_packages: libstdc++-14-dev
       - name: If there are any comments, fail the check
         if: steps.review.outputs.total_comments > 0
         run: exit 1

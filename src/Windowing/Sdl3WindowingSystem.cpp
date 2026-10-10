@@ -46,13 +46,14 @@ Sdl3WindowingSystem::Sdl3WindowingSystem(const std::string& title, int width, in
 	                   SDL_VERSIONNUM_MICRO(linkedVersion));
 
 	// Initialize SDL
+	SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		throw std::runtime_error("Could not initialize SDL: " + std::string(SDL_GetError()));
 	}
 
 	SDL_HideCursor();
-	SDL_SetHint(SDL_PROP_WINDOW_CREATE_EXTERNAL_GRAPHICS_CONTEXT_BOOLEAN, "1");
+	// SDL_SetHint(SDL_PROP_WINDOW_CREATE_EXTERNAL_GRAPHICS_CONTEXT_BOOLEAN, "1");
 
 	uint32_t flags = SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | extraFlags;
 	if (displayMode == DisplayMode::Fullscreen)
@@ -80,6 +81,7 @@ void* Sdl3WindowingSystem::GetHandle() const
 	return _window.get();
 }
 
+// TODO Remove
 Sdl3WindowingSystem::NativeHandles Sdl3WindowingSystem::GetNativeHandles() const
 {
 	NativeHandles result {nullptr, nullptr};
@@ -93,21 +95,21 @@ Sdl3WindowingSystem::NativeHandles Sdl3WindowingSystem::GetNativeHandles() const
 	else
 
 #elif defined(SDL_PLATFORM_LINUX)
-	if (auto* display = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr),
-		    * surface = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
-		display != nullptr && surface != nullptr)
-	{
-		// NOLINTNEXTLINE(performance-no-int-to-ptr)
-		result.nativeWindow = surface;
-		result.nativeDisplay = display;
-	}
-	else if (auto* xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr),
+	if (auto* xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr),
 			     * xwindow = reinterpret_cast<void*>(static_cast<uintptr_t>(SDL_GetNumberProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0)));
 			 xdisplay != nullptr && xwindow != nullptr)
 	{
 		// NOLINTNEXTLINE(performance-no-int-to-ptr)
 		result.nativeWindow = xwindow;
 		result.nativeDisplay = xdisplay;
+	}
+	else if (auto* display = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr),
+		    * surface = SDL_GetPointerProperty(SDL_GetWindowProperties(_window.get()), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+		display != nullptr && surface != nullptr)
+	{
+		// NOLINTNEXTLINE(performance-no-int-to-ptr)
+		result.nativeWindow = surface;
+		result.nativeDisplay = display;
 	}
 	else
 

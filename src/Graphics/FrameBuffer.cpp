@@ -51,13 +51,13 @@ FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, Te
 
 FrameBuffer::~FrameBuffer()
 {
-	if (bgfx::isValid(toBgfx(_handle)))
-	{
-		bgfx::destroy(toBgfx(_handle));
-	}
+	// if (bgfx::isValid(toBgfx(_handle)))
+	// {
+	// 	bgfx::destroy(toBgfx(_handle));
+	// }
 }
 
 void FrameBuffer::Bind(RenderPass viewId) const
 {
-	bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), toBgfx(_handle));
+	// bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), toBgfx(_handle));
 }

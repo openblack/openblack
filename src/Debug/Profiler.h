@@ -54,6 +54,7 @@ private:
 	};
 	CircularBuffer<float, 100> _times;
 	CircularBuffer<float, 100> _fps;
+	uint64_t _previousPerformanceCounter = 0;
 };
 
 } // namespace openblack::debug::gui

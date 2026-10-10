@@ -32,6 +32,8 @@
 
 #include <cstdint> // Shaders below need uint8_t
 
+// The legacy shader set does not include WebGPU variants.
+#define BGFX_PLATFORM_SUPPORTS_WGSL 0
 #include <bgfx/embedded_shader.h>
 // BGFX has support for WSL to use windows d3d. We disable it here from the BGFX_EMBEDDED_SHADER macro.
 #if BX_PLATFORM_LINUX
@@ -91,6 +93,10 @@
 #include "ShaderIncluder.h"
 
 // clang-format on
+
+
+
+#include "generated/shaders/sky.slang.spv.h"
 
 namespace openblack::graphics
 {

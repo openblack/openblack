@@ -14,7 +14,6 @@
 
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <L3DFile.h>
-#include <bgfx/bgfx.h>
 #include <glm/ext/vector_uint2_sized.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
@@ -46,13 +45,15 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 
 	_flags = static_cast<l3d::L3DMeshFlags>(l3d.GetHeader().flags);
 	_nameData = l3d.GetNameData();
-	const auto resolution = glm::u16vec2(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height);
-	for (const auto& skin : l3d.GetSkins())
 	{
-		const auto* skinMem =
-		    bgfx::makeRef(skin.texels.data(), static_cast<uint32_t>(skin.texels.size() * sizeof(skin.texels[0])));
-		_skins[skin.id] = renderer.CreateTexture2d(_debugName, skinMem, resolution, 1, TextureFormat::BGRA4, Wrapping::Repeat,
-		                                           Filter::Linear);
+		const auto resolution = glm::u16vec2(l3d::L3DTexture::k_Width, l3d::L3DTexture::k_Height);
+		for (const auto& skin : l3d.GetSkins())
+		{
+			const auto skinMem =
+			    std::span(reinterpret_cast<const uint8_t*>(skin.texels.data()), skin.texels.size() * sizeof(skin.texels[0]));
+			_skins[skin.id] = renderer.CreateTexture2d(_debugName, skinMem, resolution, 1, TextureFormat::BGRA4,
+			                                           Wrapping::Repeat, Filter::Linear);
+		}
 	}
 
 	if (HasDoorPosition() && !l3d.GetExtraPoints().empty())
@@ -79,17 +80,15 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 		// TODO (#749) use use std::views::enumerate
 		for (uint32_t i = 1; const auto& entry : footprint.entries)
 		{
-			const auto* textureMem =
-			    bgfx::makeRef(entry.pixels.data(), static_cast<uint32_t>(entry.pixels.size() * sizeof(entry.pixels[0])));
+			const auto textureMem =
+			    std::span(reinterpret_cast<const uint8_t*>(entry.pixels.data()), entry.pixels.size() * sizeof(entry.pixels[0]));
 			auto texture =
 			    renderer.CreateTexture2d("footprints/texture/" + _debugName + "/" + std::to_string(i), textureMem, resolution,
 			                             1, graphics::TextureFormat::BGRA4, Wrapping::ClampEdge, Filter::Linear);
 
-			const bgfx::Memory* verticesMem =
-			    bgfx::alloc(static_cast<uint32_t>(sizeof(FootprintVertex) * entry.triangles.size() * 3));
-			auto* vertices = reinterpret_cast<FootprintVertex*>(verticesMem->data);
+			std::vector<FootprintVertex> vertices(entry.triangles.size() * 3);
 			// TODO (#749) Maybe use std::views::enumerate
-			for (uint8_t j = 0; const auto& t : entry.triangles)
+			for (size_t j = 0; const auto& t : entry.triangles)
 			{
 				for (uint8_t k = 0; k < 3; ++k)
 				{
@@ -110,7 +109,8 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 			}
 
 			auto vertexBuffer = Locator::rendererInterface::value().CreateVertexBuffer(
-			    "footprints/quad/" + _debugName + "/" + std::to_string(i), verticesMem, decl);
+			    "footprints/quad/" + _debugName + "/" + std::to_string(i),
+			    {reinterpret_cast<const uint8_t*>(vertices.data()), vertices.size() * sizeof(vertices[0])}, decl);
 			auto mesh = std::make_unique<Mesh>(std::move(vertexBuffer));
 			_footprints.emplace_back(Footprint {std::move(texture), std::move(mesh)});
 		}
@@ -176,7 +176,7 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
-	bgfx::frame();
+	// bgfx::frame();
 
 	return result;
 }

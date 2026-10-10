@@ -78,7 +78,7 @@ struct VertexBuffer
 	const uint32_t vertexCount;
 	const uint32_t strideBytes;
 	const VertexBufferHandle handle;
-	const VertexLayoutHandle layoutHandle;
+	const VertexLayoutHandle layoutHandle; // TODO: Remove
 };
 
 using VertexBufferUniquePtr = std::unique_ptr<VertexBuffer, std::function<void(VertexBuffer*)>>;
