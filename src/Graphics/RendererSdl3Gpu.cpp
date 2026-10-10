@@ -35,6 +35,7 @@
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "Debug/DebugGuiInterface.h"
+#include "ECS/Systems/RenderingSystemInterface.h"
 #include "FrameBuffer.h"
 #include "GraphicsHandleSdl3Gpu.h"
 #include "IndexBuffer.h"
@@ -44,6 +45,7 @@
 #include "Resources/ResourcesInterface.h"
 #include "Texture2d.h"
 #include "VertexBuffer.h"
+#include "generated/shaders/object.slang.spv.h"
 #include "generated/shaders/sky.slang.spv.h"
 #include "generated/shaders/terrain.slang.spv.h"
 #include "generated/shaders/water.slang.spv.h"
@@ -103,12 +105,11 @@ void RendererSdl3Gpu::SdlGpuDeleter::operator()(SDL_GPUDevice* device) const noe
 	}
 }
 
-SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat,
-                                        const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
-                                        const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo,
-                                        const SDL_GPUVertexInputState& vertexInputState,
-                                        SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID,
-                                        bool alphaBlend = false, SDL_GPUCullMode cullMode = SDL_GPU_CULLMODE_NONE)
+SDL_GPUGraphicsPipeline*
+CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat, const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
+               const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo, const SDL_GPUVertexInputState& vertexInputState,
+               SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID, bool alphaBlend = false,
+               SDL_GPUCullMode cullMode = SDL_GPU_CULLMODE_NONE, bool depthWrite = true, bool additiveBlend = false)
 {
 
 	const SDL_GPUColorTargetDescription colorTargetDescriptions = {
@@ -116,7 +117,7 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
 	    .blend_state =
 	        {
 	            .src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-	            .dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+	            .dst_color_blendfactor = additiveBlend ? SDL_GPU_BLENDFACTOR_ONE : SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
 	            .color_blend_op = SDL_GPU_BLENDOP_ADD,
 	            .src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
 	            .dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
@@ -161,7 +162,7 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
 	        {
 	            .compare_op = SDL_GPU_COMPAREOP_GREATER,
 	            .enable_depth_test = depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
-	            .enable_depth_write = depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
+	            .enable_depth_write = depthWrite && depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
 	        },
 	    .target_info =
 	        {
@@ -233,11 +234,29 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 	reflection.terrain = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_TerrainVertexShaderCreateInfo,
 	                                    k_TerrainFragmentShaderCreateInfo, k_TerrainVertexInputStateByVertex, depthFormat, true,
 	                                    SDL_GPU_CULLMODE_FRONT);
-	if (!main.sky || !main.water || !main.terrain || !reflection.sky || !reflection.terrain)
+	bool objectsValid = true;
+	for (auto viewId : {RenderPass::Main, RenderPass::Reflection})
+	{
+		auto& pass = pipelines.at(static_cast<size_t>(viewId));
+		const auto format = viewId == RenderPass::Main ? mainColorFormat : SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+		for (size_t blend = 0; blend < 3; ++blend)
+		{
+			for (size_t depthWrite = 0; depthWrite < 2; ++depthWrite)
+			{
+				auto*& pipeline = pass.objects.at(blend * 2 + depthWrite);
+				pipeline = CreatePipeline(gpuDevice.get(), format, k_ObjectVertexShaderCreateInfo,
+				                          k_ObjectFragmentShaderCreateInfo, k_ObjectVertexInputStateByVertex, depthFormat,
+				                          blend != 0, SDL_GPU_CULLMODE_NONE, depthWrite != 0, blend == 2);
+				objectsValid &= pipeline != nullptr;
+			}
+		}
+	}
+	if (!main.sky || !main.water || !main.terrain || !reflection.sky || !reflection.terrain || !objectsValid)
 	{
 		for (const auto& pass : pipelines)
 		{
-			for (auto* pipeline : {pass.sky, pass.water, pass.terrain})
+			for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.objects[0], pass.objects[1], pass.objects[2],
+			                       pass.objects[3], pass.objects[4], pass.objects[5]})
 			{
 				if (pipeline)
 				{
@@ -248,7 +267,20 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 		return nullptr;
 	}
 
-	return std::unique_ptr<RendererInterface> {new RendererSdl3Gpu(std::move(gpuDevice), std::move(pipelines))};
+	auto renderer = std::unique_ptr<RendererSdl3Gpu> {new (std::nothrow) RendererSdl3Gpu(std::move(gpuDevice), pipelines)};
+	if (renderer == nullptr)
+	{
+		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to allocate RendererSdl3Gpu");
+		return nullptr;
+	}
+	const std::array<uint8_t, 4> white {255, 255, 255, 255};
+	renderer->_whiteTexture = renderer->CreateTexture2d("Untextured objects", white, {1, 1}, 1, TextureFormat::RGBA8,
+	                                                    Wrapping::ClampEdge, Filter::Nearest);
+	if (!renderer->_whiteTexture)
+	{
+		return nullptr;
+	}
+	return renderer;
 }
 
 RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device,
@@ -260,13 +292,18 @@ RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&&
 
 RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 {
+	if (_entityMatrices)
+	{
+		SDL_ReleaseGPUBuffer(_gpuDevice.get(), _entityMatrices);
+	}
 	if (_depthStencil != nullptr)
 	{
 		SDL_ReleaseGPUTexture(_gpuDevice.get(), _depthStencil);
 	}
 	for (const auto& pass : _pipelines)
 	{
-		for (auto* pipeline : {pass.sky, pass.water, pass.terrain})
+		for (auto* pipeline : {pass.sky, pass.water, pass.terrain, pass.objects[0], pass.objects[1], pass.objects[2],
+		                       pass.objects[3], pass.objects[4], pass.objects[5]})
 		{
 			if (pipeline)
 			{
@@ -351,6 +388,11 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
 	}
+	if (drawDesc.drawEntities && !UploadEntityMatrices(cmdBufferMain))
+	{
+		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+		return;
+	}
 	DrawSceneDesc mainDesc = drawDesc;
 	const auto& textures = Locator::resources::value().GetTextures();
 	mainDesc.drawWater = drawDesc.drawWater && Locator::oceanSystem::has_value() &&
@@ -431,7 +473,7 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 	auto& profiler = Locator::profiler::value();
 	const auto& camera = *desc.camera;
 	const auto& textures = Locator::resources::value().GetTextures();
-	const auto& pipelines = _pipelines[static_cast<size_t>(desc.viewId)];
+	const auto& pipelines = _pipelines.at(static_cast<size_t>(desc.viewId));
 	const bool isReflection = desc.viewId == RenderPass::Reflection;
 	const auto* frameBuffer = desc.frameBuffer;
 	const SDL_GPUColorTargetInfo colorTarget = {
@@ -551,12 +593,162 @@ bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* 
 		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
 		if (desc.drawEntities)
 		{
-			assert(false);
+			DrawEntities(commandBuffer, renderPass, desc);
 		}
 	}
 
 	SDL_EndGPURenderPass(renderPass);
 	return true;
+}
+
+bool RendererSdl3Gpu::UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept
+{
+	const auto& context = Locator::rendereringSystem::value().GetContext();
+	_entityBoneOffsets.clear();
+	if (context.instancedDrawDescs.empty())
+	{
+		return true;
+	}
+	// Instances stay in EnTT's prepared batch order. Append one set of rest-pose
+	// bones per mesh, sharing this upload between the main and reflection passes.
+	std::vector<glm::mat4> matrices = context.instanceUniforms;
+	const auto identityOffset = static_cast<uint32_t>(matrices.size());
+	matrices.emplace_back(1.0f);
+	const auto& meshes = Locator::resources::value().GetMeshes();
+	for (const auto& [key, instances] : context.instancedDrawDescs)
+	{
+		if (_entityBoneOffsets.contains(key.meshId) || !meshes.Contains(key.meshId))
+		{
+			continue;
+		}
+		const auto mesh = meshes.Handle(key.meshId);
+		const auto& bones = mesh->GetBoneMatrices();
+		if (mesh->IsBoned() && !bones.empty())
+		{
+			_entityBoneOffsets.emplace(key.meshId, static_cast<uint32_t>(matrices.size()));
+			matrices.insert(matrices.end(), bones.begin(), bones.end());
+		}
+		else
+		{
+			_entityBoneOffsets.emplace(key.meshId, identityOffset);
+		}
+	}
+	const auto memory =
+	    std::span<const uint8_t> {reinterpret_cast<const uint8_t*>(matrices.data()), matrices.size() * sizeof(glm::mat4)};
+	if (memory.size_bytes() > std::numeric_limits<uint32_t>::max())
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Entity matrix buffer is too large");
+		return false;
+	}
+	if (memory.size_bytes() > _entityMatrixCapacity)
+	{
+		const SDL_GPUBufferCreateInfo info {.usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ,
+		                                    .size = static_cast<uint32_t>(memory.size_bytes())};
+		auto* buffer = SDL_CreateGPUBuffer(_gpuDevice.get(), &info);
+		if (buffer == nullptr)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create entity matrices: {}", SDL_GetError());
+			return false;
+		}
+		if (_entityMatrices)
+		{
+			SDL_ReleaseGPUBuffer(_gpuDevice.get(), _entityMatrices);
+		}
+		_entityMatrices = buffer;
+		_entityMatrixCapacity = info.size;
+		SDL_SetGPUBufferName(_gpuDevice.get(), buffer, "Entity instances and bones");
+	}
+	auto transfer = CreateTransferBuffer(_gpuDevice.get(), memory);
+	if (!transfer)
+	{
+		return false;
+	}
+	auto* copyPass = SDL_BeginGPUCopyPass(commandBuffer);
+	if (copyPass == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin entity upload: {}", SDL_GetError());
+		return false;
+	}
+	const SDL_GPUTransferBufferLocation source {.transfer_buffer = transfer.get()};
+	const SDL_GPUBufferRegion destination {.buffer = _entityMatrices, .size = static_cast<uint32_t>(memory.size_bytes())};
+	// Cycle when prior frames still reference the buffer; both passes below use
+	// this frame's matrices without overwriting an in-flight draw.
+	SDL_UploadToGPUBuffer(copyPass, &source, &destination, true);
+	SDL_EndGPUCopyPass(copyPass);
+	return true;
+}
+
+void RendererSdl3Gpu::DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
+                                   const DrawSceneDesc& desc) const noexcept
+{
+	const auto& context = Locator::rendereringSystem::value().GetContext();
+	if (context.instancedDrawDescs.empty())
+	{
+		return;
+	}
+	auto& resources = Locator::resources::value();
+	const auto& island = Locator::terrainSystem::value();
+	const auto& heightMap = island.GetHeightMap();
+	const auto extent = island.GetExtent();
+	const SDL_GPUTextureSamplerBinding heightBinding {toSdl(heightMap.handle), toSdl(heightMap.samplerHandle)};
+	SDL_BindGPUVertexSamplers(renderPass, 0, &heightBinding, 1);
+	SDL_BindGPUVertexStorageBuffers(renderPass, 0, &_entityMatrices, 1);
+	const auto& pipelines = _pipelines[static_cast<size_t>(desc.viewId)].objects;
+	struct ObjectCamera
+	{
+		glm::mat4 viewProjection;
+		glm::vec4 islandExtent;
+		glm::uvec4 offsets;
+	};
+	for (const auto& [key, instances] : context.instancedDrawDescs)
+	{
+		if (!_entityBoneOffsets.contains(key.meshId))
+		{
+			continue; // Assets that failed to load cannot be submitted.
+		}
+		const auto mesh = resources.GetMeshes().Handle(key.meshId);
+		const uint32_t boneCount =
+		    mesh->IsBoned() && !mesh->GetBoneMatrices().empty() ? static_cast<uint32_t>(mesh->GetBoneMatrices().size()) : 1;
+		const ObjectCamera camera {
+		    desc.camera->GetViewProjectionMatrix(Camera::Interpolation::Current),
+		    glm::vec4(extent.minimum, extent.maximum),
+		    {instances.offset, _entityBoneOffsets.at(key.meshId), boneCount, instances.morphWithTerrain ? 1u : 0u}};
+		SDL_PushGPUVertexUniformData(commandBuffer, 0, &camera, sizeof(camera));
+		for (const auto& subMesh : mesh->GetSubMeshes())
+		{
+			const auto flags = subMesh->GetFlags();
+			if (flags.isPhysics || flags.status != 0 || (flags.lodMask & 1) == 0)
+			{
+				continue;
+			}
+			const auto& geometry = subMesh->GetMesh();
+			const SDL_GPUBufferBinding vertices {toSdl(geometry.GetVertexBuffer().handle), 0};
+			const SDL_GPUBufferBinding indices {toSdl(geometry.GetIndexBuffer().handle), 0};
+			SDL_BindGPUVertexBuffers(renderPass, 0, &vertices, 1);
+			SDL_BindGPUIndexBuffer(renderPass, &indices, SDL_GPU_INDEXELEMENTSIZE_16BIT);
+			for (const auto& primitive : subMesh->GetPrimitives())
+			{
+				const Texture2d* texture = _whiteTexture.get();
+				if (const auto skin = mesh->GetSkins().find(primitive.skinID); skin != mesh->GetSkins().end())
+				{
+					texture = skin->second.get();
+				}
+				else if (resources.GetTextures().Contains(primitive.skinID))
+				{
+					texture = resources.GetTextures().Handle(primitive.skinID).operator->();
+				}
+				const SDL_GPUTextureSamplerBinding diffuse {toSdl(texture->handle), toSdl(texture->samplerHandle)};
+				SDL_BindGPUFragmentSamplers(renderPass, 0, &diffuse, 1);
+				const glm::vec4 skyAlpha {Locator::skySystem::value().GetCurrentSkyType(),
+				                          primitive.thresholdAlpha ? primitive.alphaCutoutThreshold : 0.0f, 0, 0};
+				SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyAlpha, sizeof(skyAlpha));
+				const auto pipelineIndex = static_cast<size_t>(primitive.blend) * 2 + (primitive.depthWrite ? 1 : 0);
+				SDL_BindGPUGraphicsPipeline(renderPass, pipelines[pipelineIndex]);
+				SDL_DrawGPUIndexedPrimitives(renderPass, primitive.indicesCount, instances.count, primitive.indicesOffset, 0,
+				                             0);
+			}
+		}
+	}
 }
 
 void RendererSdl3Gpu::DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,

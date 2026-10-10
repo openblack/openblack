@@ -422,15 +422,15 @@ bool Game::Update() noexcept
 		// }
 		// Locator::handSystem::value().Update();
 
-		// // Update Entities
-		// {
-		// 	auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
-		// 	if (config.drawEntities)
-		// 	{
-		// 		Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
-		// 		                                                config.drawStreams);
-		// 	}
-		// }
+		// Update Entities
+		{
+			auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
+			if (config.drawEntities)
+			{
+				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
+				                                                config.drawStreams);
+			}
+		}
 	} // Update Uniforms
 
 	// Update Audio
@@ -524,21 +524,21 @@ bool Game::Initialize() noexcept
 	auto& soundManager = resources.GetSounds();
 	auto& glowManager = resources.GetGlows();
 
-	// fileSystem.Iterate(
-	//     fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
-	// 	    if (f.extension() == ".zzz")
-	// 	    {
-	// 		    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
-	// 		    try
-	// 		    {
-	// 			    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
-	// 		    }
-	// 		    catch (std::runtime_error& err)
-	// 		    {
-	// 			    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-	// 		    }
-	// 	    }
-	//     });
+	fileSystem.Iterate(
+	    fileSystem.GetPath<Path::Citadel>() / "OutsideMeshes", false, [&meshManager](const std::filesystem::path& f) {
+		    if (f.extension() == ".zzz")
+		    {
+			    SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading temple mesh: {}", f.stem().string());
+			    try
+			    {
+				    meshManager.Load(fmt::format("temple/{}", f.stem().string()), resources::L3DLoader::FromDiskTag {}, f);
+			    }
+			    catch (std::runtime_error& err)
+			    {
+				    SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+			    }
+		    }
+	    });
 
 	// fileSystem.Iterate( //
 	//     fileSystem.GetPath<filesystem::Path::Citadel>() / "engine", false,
@@ -617,24 +617,27 @@ bool Game::Initialize() noexcept
 		animationManager.Load(i, resources::L3DAnimLoader::FromBufferTag {}, animations[i]);
 	}
 
-	// fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
-	// 	const auto& fileName = f.stem().string();
-	// 	SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
-	// 	try
-	// 	{
-	// 		if (string_utils::BeginsWith(fileName, "Hand"))
-	// 		{
-	// 			return;
-	// 		}
+	fileSystem.Iterate(fileSystem.GetPath<Path::CreatureMesh>(), false, [&meshManager](const std::filesystem::path& f) {
+		const auto& fileName = f.stem().string();
+		SPDLOG_LOGGER_DEBUG(spdlog::get("game"), "Loading creature mesh: {}", fileName);
+		try
+		{
+			if (string_utils::BeginsWith(fileName, "Hand"))
+			{
+				return;
+			}
 
-	// 		const auto meshId = creature::GetIdFromMeshName(fileName);
-	// 		meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
-	// 	}
-	// 	catch (std::runtime_error& err)
-	// 	{
-	// 		SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
-	// 	}
-	// });
+			const auto meshId = creature::GetIdFromMeshName(fileName);
+			meshManager.Load(meshId, resources::L3DLoader::FromDiskTag {}, f);
+		}
+		catch (std::runtime_error& err)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("game"), "{}", err.what());
+		}
+	});
+
+	meshManager.Load("hand", resources::L3DLoader::FromDiskTag {},
+	                 fileSystem.GetPath<Path::CreatureMesh>() / "Hand_Boned_Base2.l3d");
 
 	// Load loose one-off assets
 	// {

@@ -262,7 +262,7 @@ std::unique_ptr<RendererInterface> Renderer::Create(GraphicsBackend backend, boo
 		return nullptr;
 	}
 
-	return {};//std::make_unique<Renderer>(bgfxReset, std::move(bgfxCallback));
+	return {}; // std::make_unique<Renderer>(bgfxReset, std::move(bgfxCallback));
 }
 
 Renderer::Renderer(uint32_t bgfxReset, std::unique_ptr<BgfxCallback>&& bgfxCallback) noexcept
@@ -493,9 +493,9 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 		const auto& meshManager = Locator::resources::value().GetMeshes();
 		const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 		const auto* footprintShaderInstanced = _shaderManager->GetShader("FootprintInstanced");
-		for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+		for (const auto& [key, placers] : renderCtx.instancedDrawDescs)
 		{
-			auto mesh = meshManager.Handle(meshId);
+			auto mesh = meshManager.Handle(key.meshId);
 			if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
 			{
 				continue;
@@ -709,9 +709,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			const auto& renderCtx = Locator::rendereringSystem::value().GetContext();
 
 			// Instance meshes
-			for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+			for (const auto& [key, placers] : renderCtx.instancedDrawDescs)
 			{
-				auto mesh = meshManager.Handle(meshId);
+				auto mesh = meshManager.Handle(key.meshId);
 
 				submitDesc.instanceDesc =
 				    std::make_unique<graphics::InstanceDesc>(renderCtx.instanceUniformBuffer, placers.offset, placers.count);
@@ -738,9 +738,9 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			// Debug
 			if (desc.viewId == graphics::RenderPass::Main)
 			{
-				for (const auto& [meshId, placers] : renderCtx.instancedDrawDescs)
+				for (const auto& [key, placers] : renderCtx.instancedDrawDescs)
 				{
-					auto mesh = meshManager.Handle(meshId);
+					auto mesh = meshManager.Handle(key.meshId);
 					if (!mesh->ContainsLandscapeFeature() || mesh->GetFootprints().empty())
 					{
 						continue;
@@ -979,8 +979,7 @@ Texture2dUniquePtr Renderer::CreateTexture2d(std::string name, const void* memor
 
 	bgfx::frame();
 
-	return {new Texture2d(name, handle, {0}, resolution, textureInfo.numLayers,
-	                      fromBgfx(textureInfo.format)),
+	return {new Texture2d(name, handle, {0}, resolution, textureInfo.numLayers, fromBgfx(textureInfo.format)),
 	        DestroyTexture2d};
 }
 

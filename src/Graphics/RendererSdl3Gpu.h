@@ -10,6 +10,9 @@
 #pragma once
 
 #include <array>
+#include <map>
+
+#include <entt/fwd.hpp>
 
 #include "Graphics/RendererInterface.h"
 
@@ -39,6 +42,7 @@ public:
 		SDL_GPUGraphicsPipeline* sky;
 		SDL_GPUGraphicsPipeline* water;
 		SDL_GPUGraphicsPipeline* terrain;
+		std::array<SDL_GPUGraphicsPipeline*, 6> objects {}; // blend mode and depth writes
 	};
 
 	static std::unique_ptr<RendererInterface> Create(bool vsync) noexcept;
@@ -94,6 +98,9 @@ private:
 	                                          bool indexBuffer) const noexcept;
 	[[nodiscard]] bool ResizeDepthStencil(glm::uvec2 resolution) noexcept;
 	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const;
+	[[nodiscard]] bool UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept;
+	void DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
+	                  const DrawSceneDesc& desc) const noexcept;
 	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
 	             const Camera& camera) const;
 	[[nodiscard]] bool DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* defaultTarget,
@@ -103,6 +110,10 @@ private:
 	                const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept;
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
+	SDL_GPUBuffer* _entityMatrices {};
+	uint32_t _entityMatrixCapacity {};
+	std::map<entt::id_type, uint32_t> _entityBoneOffsets;
+	Texture2dUniquePtr _whiteTexture;
 	SDL_GPUTexture* _depthStencil {};
 	glm::uvec2 _depthStencilResolution {};
 };
