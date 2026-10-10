@@ -310,9 +310,9 @@ bool Game::Update() noexcept
 		auto physics = profiler.BeginScoped(Profiler::Stage::PhysicsUpdate);
 		if (_frameCount > 0)
 		{
-			// auto& dynamicsSystem = Locator::dynamicsSystem::value();
-			// dynamicsSystem.Update(deltaTime);
-			// dynamicsSystem.UpdatePhysicsTransforms();
+			auto& dynamicsSystem = Locator::dynamicsSystem::value();
+			dynamicsSystem.Update(deltaTime);
+			dynamicsSystem.UpdatePhysicsTransforms();
 		}
 	}
 
@@ -766,7 +766,7 @@ bool Game::Run() noexcept
 		return false;
 	}
 
-	// Locator::dynamicsSystem::value().RegisterRigidBodies();
+	Locator::dynamicsSystem::value().RegisterRigidBodies();
 
 	auto& fileSystem = Locator::filesystem::value();
 
