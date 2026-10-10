@@ -113,8 +113,10 @@ private:
 	uint32_t _frameCount {0};
 	uint32_t _turnCount {0};
 	bool _paused {true};
+	bool _leftMouseButtonDown {false};
+	bool _middleMouseButtonDown {false};
 	glm::vec2 _mousePosition;
-	bool _handGripping;
+	bool _handGripping {false};
 	std::optional<std::pair</* frame number */ uint32_t, /* output */ std::filesystem::path>> _requestScreenshot;
 };
 } // namespace openblack
