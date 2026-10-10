@@ -857,10 +857,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	{
 		debugMode |= BGFX_DEBUG_STATS;
 	}
-	if (desc.wireframe)
-	{
-		debugMode |= BGFX_DEBUG_WIREFRAME;
-	}
 	if (_bgfxProfile)
 	{
 		debugMode |= BGFX_DEBUG_PROFILER;

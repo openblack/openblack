@@ -34,7 +34,6 @@ static const std::map<std::string_view, GraphicsBackend> k_GraphicsBackendString
 
 struct EngineConfig
 {
-	bool wireframe {false};
 	bool showVillagerNames {false};
 	bool debugVillagerNames {false};
 	bool debugVillagerStates {false};
