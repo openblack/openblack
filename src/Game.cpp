@@ -387,7 +387,8 @@ bool Game::Update() noexcept
 		// Update Entities
 		{
 			auto updateEntities = profiler.BeginScoped(Profiler::Stage::UpdateEntities);
-			if (config.drawEntities || config.drawIsland || config.drawVegetation)
+			if (config.drawEntities || config.drawIsland || config.drawVegetation || config.drawBoundingBoxes ||
+			    config.drawFootpaths || config.drawStreams)
 			{
 				Locator::rendereringSystem::value().PrepareDraw(config.drawBoundingBoxes, config.drawFootpaths,
 				                                                config.drawStreams);
@@ -849,6 +850,8 @@ bool Game::Run() noexcept
 			    .drawSprites = config.drawSprites,
 			    .drawVegetation = config.drawVegetation,
 			    .drawBoundingBoxes = config.drawBoundingBoxes,
+			    .drawFootpaths = config.drawFootpaths,
+			    .drawStreams = config.drawStreams,
 			    .cullBack = false,
 			    .wireframe = config.wireframe,
 			};
