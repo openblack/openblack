@@ -10,8 +10,6 @@
 #include <SDL3/SDL_gpu.h>
 #define LOCATOR_IMPLEMENTATIONS
 
-#include "Gui.h"
-
 #include <cmath>
 
 #include <SDL3/SDL.h>
@@ -37,14 +35,14 @@
 #include "EngineConfig.h"
 #include "FileSystem/FileSystemInterface.h"
 #include "Game.h"
-#include "Graphics/GraphicsHandleBgfx.h"
+#include "Graphics/RendererInterface.h"
+#include "Gui.h"
 #include "LHVMViewer.h"
 #include "LandIsland.h"
 #include "Locator.h"
 #include "MeshViewer.h"
 #include "PathFinding.h"
 #include "Profiler.h"
-#include "Graphics/RendererInterface.h"
 #include "Resources/ResourcesInterface.h"
 #include "Temple.h"
 #include "TextureViewer.h"
@@ -53,7 +51,7 @@
 using namespace openblack;
 using namespace openblack::debug::gui;
 
-std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPass viewId) noexcept
+std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create() noexcept
 {
 	IMGUI_CHECKVERSION();
 	auto* imgui = ImGui::CreateContext();
@@ -69,8 +67,13 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	debugWindows.emplace_back(new Audio);
 	debugWindows.emplace_back(new TempleInterior);
 
-	auto gui = std::unique_ptr<DebugGuiInterface>(
-	    new Gui(imgui, static_cast<bgfx::ViewId>(viewId), std::move(debugWindows), !Locator::windowing::has_value()));
+	auto gui = std::unique_ptr<DebugGuiInterface>(new (std::nothrow)
+	                                                  Gui(imgui, std::move(debugWindows), !Locator::windowing::has_value()));
+	if (gui == nullptr)
+	{
+		ImGui::DestroyContext(imgui);
+		return nullptr;
+	}
 
 	if (Locator::windowing::has_value() && Locator::rendererInterface::has_value())
 	{
@@ -81,9 +84,9 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 
 		ImGui_ImplSDL3_InitForSDLGPU(window);
 		ImGui_ImplSDLGPU3_InitInfo initInfo = {
-			.Device = device,
-			.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(device, window),
-			.MSAASamples = SDL_GPU_SAMPLECOUNT_1,
+		    .Device = device,
+		    .ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(device, window),
+		    .MSAASamples = SDL_GPU_SAMPLECOUNT_1,
 		};
 		ImGui_ImplSDLGPU3_Init(&initInfo);
 	}
@@ -91,18 +94,11 @@ std::unique_ptr<DebugGuiInterface> DebugGuiInterface::Create(graphics::RenderPas
 	return gui;
 }
 
-Gui::Gui(ImGuiContext* imgui, uint16_t viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept
+Gui::Gui(ImGuiContext* imgui, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept
     : _imgui(imgui)
     , _headless(headless)
-    , _program(BGFX_INVALID_HANDLE)
-    , _imageProgram(BGFX_INVALID_HANDLE)
-    , _texture(BGFX_INVALID_HANDLE)
-    , _s_tex(BGFX_INVALID_HANDLE)
-    , _u_imageLodEnabled(BGFX_INVALID_HANDLE)
-    , _viewId(viewId)
     , _debugWindows(std::move(debugWindows))
 {
-	// CreateDeviceObjectsBgfx();
 }
 
 Gui::~Gui() noexcept
@@ -113,27 +109,6 @@ Gui::~Gui() noexcept
 		ImGui_ImplSDL3_Shutdown();
 	}
 	ImGui::DestroyContext(_imgui);
-
-	if (bgfx::isValid(toBgfx(_u_imageLodEnabled)))
-	{
-		bgfx::destroy(toBgfx(_u_imageLodEnabled));
-	}
-	if (bgfx::isValid(toBgfx(_s_tex)))
-	{
-		bgfx::destroy(toBgfx(_s_tex));
-	}
-	if (bgfx::isValid(toBgfx(_texture)))
-	{
-		bgfx::destroy(toBgfx(_texture));
-	}
-	if (bgfx::isValid(toBgfx(_imageProgram)))
-	{
-		bgfx::destroy(toBgfx(_imageProgram));
-	}
-	if (bgfx::isValid(toBgfx(_program)))
-	{
-		bgfx::destroy(toBgfx(_program));
-	}
 }
 
 bool Gui::StealsFocus() const noexcept
@@ -182,48 +157,6 @@ bool Gui::ProcessEvents(const SDL_Event& event) noexcept
 	return _stealsFocus;
 }
 
-// bool Gui::CreateFontsTextureBgfx() noexcept
-// {
-// 	// Build texture atlas
-// 	const auto& io = ImGui::GetIO();
-// 	unsigned char* pixels;
-// 	int width;
-// 	int height;
-// 	// Load as RGBA 32-bits (75% of the memory is wasted, but
-// 	// default font is so small) because it is more likely to
-// 	// be compatible with user's existing shaders. If your
-// 	// ImTextureId represent a higher-level concept than just
-// 	// a GL texture id, consider calling GetTexDataAsAlpha8()
-// 	// instead to save on GPU memory.
-// 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-
-// 	_texture = graphics::fromBgfx(bgfx::createTexture2D(static_cast<uint16_t>(width), static_cast<uint16_t>(height), false, 1,
-// 	                                                    bgfx::TextureFormat::BGRA8, 0, bgfx::copy(pixels, width * height * 4)));
-
-// 	return true;
-// }
-
-// bool Gui::CreateDeviceObjectsBgfx() noexcept
-// {
-// 	// Create shaders
-// 	const auto type = bgfx::getRendererType();
-// 	_program = graphics::fromBgfx(
-// 	    bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_ocornut_imgui"),
-// 	                        bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_ocornut_imgui"), true));
-// 	_imageProgram = graphics::fromBgfx(
-// 	    bgfx::createProgram(bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "vs_imgui_image"),
-// 	                        bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, "fs_imgui_image"), true));
-
-// 	// Create buffers
-// 	_u_imageLodEnabled = graphics::fromBgfx(bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4));
-
-// 	_s_tex = graphics::fromBgfx(bgfx::createUniform("s_tex", bgfx::UniformType::Sampler));
-
-// 	CreateFontsTextureBgfx();
-
-// 	return true;
-// }
-
 void Gui::NewFrame() noexcept
 {
 	ImGui::SetCurrentContext(_imgui);
@@ -258,186 +191,35 @@ bool Gui::Loop() noexcept
 	return false;
 }
 
-// /// Returns true if both internal transient index and vertex buffer have
-// /// enough space.
-// ///
-// /// @param[in] numVertices Number of vertices.
-// /// @param[in] layout Vertex layout.
-// /// @param[in] numIndices Number of indices.
-// ///
-// inline bool checkAvailTransientBuffers(uint32_t numVertices, const bgfx::VertexLayout& layout, uint32_t numIndices) noexcept
-// {
-// 	return numVertices == bgfx::getAvailTransientVertexBuffer(numVertices, layout) &&
-// 	       (0 == numIndices || numIndices == bgfx::getAvailTransientIndexBuffer(numIndices));
-// }
-
-// void Gui::RenderDrawDataBgfx(ImDrawData* drawData) noexcept
-// {
-// 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-// 	const int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
-// 	const int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
-// 	if (fbWidth <= 0 || fbHeight <= 0)
-// 	{
-// 		return;
-// 	}
-
-// 	bgfx::setViewMode(_viewId, bgfx::ViewMode::Sequential);
-
-// 	const bgfx::Caps* caps = bgfx::getCaps();
-// 	{
-// 		glm::mat4 ortho;
-// 		const float x = drawData->DisplayPos.x;
-// 		const float y = drawData->DisplayPos.y;
-// 		const float width = drawData->DisplaySize.x;
-// 		const float height = drawData->DisplaySize.y;
-
-// 		bx::mtxOrtho(glm::value_ptr(ortho), x, x + width, y + height, y, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
-// 		bgfx::setViewTransform(_viewId, nullptr, glm::value_ptr(ortho));
-// 		bgfx::setViewRect(_viewId, 0, 0, static_cast<uint16_t>(width), static_cast<uint16_t>(height));
-// 	}
-
-// 	const ImVec2 clipPos = drawData->DisplayPos;         // (0,0) unless using multi-viewports
-// 	const ImVec2 clipScale = drawData->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
-
-// 	// Render command lists
-// 	for (int32_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii)
-// 	{
-// 		bgfx::TransientVertexBuffer tvb;
-// 		bgfx::TransientIndexBuffer tib;
-
-// 		const ImDrawList* drawList = drawData->CmdLists[ii];
-// 		const auto numVertices = static_cast<uint32_t>(drawList->VtxBuffer.size());
-// 		const auto numIndices = static_cast<uint32_t>(drawList->IdxBuffer.size());
-
-// 		bgfx::VertexLayout layout;
-// 		layout.begin()
-// 		    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-// 		    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-// 		    .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-// 		    .end();
-
-// 		if (!checkAvailTransientBuffers(numVertices, layout, numIndices))
-// 		{
-// 			// not enough space in transient buffer just quit drawing the rest...
-// 			break;
-// 		}
-
-// 		bgfx::allocTransientVertexBuffer(&tvb, numVertices, layout);
-// 		bgfx::allocTransientIndexBuffer(&tib, numIndices, sizeof(ImDrawIdx) == 4);
-
-// 		auto* verts = reinterpret_cast<ImDrawVert*>(tvb.data);
-// 		bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
-
-// 		auto* indices = reinterpret_cast<ImDrawIdx*>(tib.data);
-// 		bx::memCopy(indices, drawList->IdxBuffer.begin(), numIndices * sizeof(ImDrawIdx));
-
-// 		bgfx::Encoder* encoder = bgfx::begin();
-
-// 		for (const ImDrawCmd *cmd = drawList->CmdBuffer.begin(), *cmdEnd = drawList->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
-// 		{
-// 			if (cmd->UserCallback != nullptr)
-// 			{
-// 				cmd->UserCallback(drawList, cmd);
-// 			}
-// 			else if (0 != cmd->ElemCount)
-// 			{
-// 				uint64_t state = 0                      //
-// 				                 | BGFX_STATE_WRITE_RGB //
-// 				                 | BGFX_STATE_WRITE_A   //
-// 				                 | BGFX_STATE_MSAA      //
-// 				    ;
-
-// 				bgfx::TextureHandle th = toBgfx(_texture);
-// 				bgfx::ProgramHandle program = toBgfx(_program);
-
-// 				if (cmd->GetTexID() != 0)
-// 				{
-// 					const union
-// 					{
-// 						ImTextureID ptr;
-// 						struct
-// 						{
-// 							bgfx::TextureHandle handle;
-// 							uint8_t flags;
-// 							uint8_t mip;
-// 						} s;
-// 					} texture = {cmd->GetTexID()};
-// 					state |= 0 != (IMGUI_FLAGS_ALPHA_BLEND & texture.s.flags)
-// 					             ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-// 					             : BGFX_STATE_NONE;
-// 					th = texture.s.handle;
-// 					if (0 != texture.s.mip)
-// 					{
-// 						const glm::vec4 lodEnabled = {static_cast<float>(texture.s.mip), 1.0f, 0.0f, 0.0f};
-// 						bgfx::setUniform(toBgfx(_u_imageLodEnabled), glm::value_ptr(lodEnabled));
-// 						program = toBgfx(_imageProgram);
-// 					}
-// 				}
-// 				else
-// 				{
-// 					state |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-// 				}
-
-// 				// Project scissor/clipping rectangles into framebuffer space
-// 				ImVec4 clipRect;
-// 				clipRect.x = (cmd->ClipRect.x - clipPos.x) * clipScale.x;
-// 				clipRect.y = (cmd->ClipRect.y - clipPos.y) * clipScale.y;
-// 				clipRect.z = (cmd->ClipRect.z - clipPos.x) * clipScale.x;
-// 				clipRect.w = (cmd->ClipRect.w - clipPos.y) * clipScale.y;
-
-// 				if (clipRect.x < fbWidth && clipRect.y < fbHeight && clipRect.z >= 0.0f && clipRect.w >= 0.0f)
-// 				{
-// 					const auto xx = static_cast<uint16_t>(bx::max(clipRect.x, 0.0f));
-// 					const auto yy = static_cast<uint16_t>(bx::max(clipRect.y, 0.0f));
-// 					encoder->setScissor(xx, yy, static_cast<uint16_t>(bx::min(clipRect.z, 65535.0f) - xx),
-// 					                    static_cast<uint16_t>(bx::min(clipRect.w, 65535.0f) - yy));
-
-// 					encoder->setState(state);
-// 					encoder->setTexture(0, toBgfx(_s_tex), th);
-// 					encoder->setVertexBuffer(0, &tvb, cmd->VtxOffset, numVertices);
-// 					encoder->setIndexBuffer(&tib, cmd->IdxOffset, cmd->ElemCount);
-// 					encoder->submit(_viewId, program);
-// 				}
-// 			}
-// 		}
-
-// 		bgfx::end(encoder);
-// 	}
-// }
-
 void Gui::Draw(SDL_GPUCommandBuffer* cmdBuf, SDL_GPUTexture* targetTexture) noexcept
 {
-	// auto& renderer = Locator::rendererInterface::value();
-	// auto* window = reinterpret_cast<SDL_Window*>(Locator::windowing::value().GetHandle());
-	// auto* device = reinterpret_cast<SDL_GPUDevice*>(renderer.GetDevice());
-
 	ImGui::SetCurrentContext(_imgui);
 
-	ImDrawData* draw_data = ImGui::GetDrawData();
-	const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
+	ImDrawData* drawData = ImGui::GetDrawData();
+	const bool isMinimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
 
-	if (targetTexture != nullptr && !is_minimized)
+	if (targetTexture != nullptr && !isMinimized)
 	{
 		// This is mandatory: call Imgui_ImplSDLGPU3_PrepareDrawData() to upload the vertex/index buffer!
-		ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, cmdBuf);
+		ImGui_ImplSDLGPU3_PrepareDrawData(drawData, cmdBuf);
 
 		// Setup and start a render pass
 
-    	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-		SDL_GPUColorTargetInfo target_info = {};
-		target_info.texture = targetTexture;
-		target_info.clear_color = SDL_FColor { clear_color.x, clear_color.y, clear_color.z, clear_color.w };
-		target_info.load_op = SDL_GPU_LOADOP_DONT_CARE;
-		target_info.store_op = SDL_GPU_STOREOP_STORE;
-		target_info.mip_level = 0;
-		target_info.layer_or_depth_plane = 0;
-		target_info.cycle = false;
-		SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(cmdBuf, &target_info, 1, nullptr);
+		const ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+		SDL_GPUColorTargetInfo targetInfo = {};
+		targetInfo.texture = targetTexture;
+		targetInfo.clear_color = SDL_FColor {clearColor.x, clearColor.y, clearColor.z, clearColor.w};
+		targetInfo.load_op = SDL_GPU_LOADOP_DONT_CARE;
+		targetInfo.store_op = SDL_GPU_STOREOP_STORE;
+		targetInfo.mip_level = 0;
+		targetInfo.layer_or_depth_plane = 0;
+		targetInfo.cycle = false;
+		SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(cmdBuf, &targetInfo, 1, nullptr);
 
 		// Render ImGui
-		ImGui_ImplSDLGPU3_RenderDrawData(draw_data, cmdBuf, render_pass);
+		ImGui_ImplSDLGPU3_RenderDrawData(drawData, cmdBuf, renderPass);
 
-		SDL_EndGPURenderPass(render_pass);
+		SDL_EndGPURenderPass(renderPass);
 	}
 }
 
@@ -980,11 +762,6 @@ void Gui::ShowCameraPositionOverlay() noexcept
 				        glm::zero<glm::vec3>()));
 				ImGui::Text("Hand Position: (%.1f,%.1f,%.1f)", position.x, position.y, position.z);
 			}
-
-			const auto* stats = bgfx::getStats();
-			const auto* caps = bgfx::getCaps();
-			ImGui::Text("Num Vertex Buffers: %u/%u", stats->numVertexBuffers, caps->limits.maxVertexBuffers);
-			ImGui::Text("Num Textures: %u/%u", stats->numTextures, caps->limits.maxTextures);
 
 			ImGui::Text("Game Turn: %u (%.3f ms)%s", game.GetTurn(), game.GetDeltaTime().count(),
 			            game.IsPaused() ? " - paused" : "");

@@ -176,7 +176,6 @@ bool L3DMesh::Load(const l3d::L3DFile& l3d) noexcept
 	// TODO(bwrsandman): if no physics mesh was found, make physics mesh the bounding box
 
 	// TODO(bwrsandman): store vertex and index buffers at mesh level
-	// bgfx::frame();
 
 	return result;
 }

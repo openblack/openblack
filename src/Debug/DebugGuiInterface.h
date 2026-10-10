@@ -11,8 +11,6 @@
 
 #include <memory>
 
-#include "Graphics/RenderPass.h"
-
 struct SDL_Window;
 struct SDL_Cursor;
 struct SDL_GPUCommandBuffer;
@@ -29,7 +27,7 @@ namespace openblack::debug::gui
 class DebugGuiInterface
 {
 public:
-	static std::unique_ptr<DebugGuiInterface> Create(graphics::RenderPass viewId) noexcept;
+	static std::unique_ptr<DebugGuiInterface> Create() noexcept;
 
 	virtual ~DebugGuiInterface() noexcept = default;
 	[[nodiscard]] virtual bool StealsFocus() const noexcept = 0;

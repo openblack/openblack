@@ -26,14 +26,7 @@ enum class DisplayMode : std::uint8_t
 class WindowingInterface
 {
 public:
-	struct NativeHandles
-	{
-		void* nativeWindow;
-		void* nativeDisplay;
-	};
-
 	[[nodiscard]] virtual void* GetHandle() const = 0;
-	[[nodiscard]] virtual NativeHandles GetNativeHandles() const = 0;
 	[[nodiscard]] virtual uint32_t GetID() const = 0;
 	[[nodiscard]] virtual glm::ivec2 GetSize() const = 0;
 	[[nodiscard]] virtual float GetAspectRatio() const = 0;

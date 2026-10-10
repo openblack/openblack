@@ -44,8 +44,8 @@ file(GLOB OPENBLACK_SHADERS CONFIGURE_DEPENDS
      "${CMAKE_SOURCE_DIR}/assets/shaders/*.slang"
 )
 compile_shaders(
-  SHADERS ${OPENBLACK_SHADERS} OUTPUT_DIR
-  ${CMAKE_BINARY_DIR}/include/generated/shaders
+  SHADERS ${OPENBLACK_SHADERS}
+  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
 )
 add_custom_target(openblack_shaders DEPENDS ${OPENBLACK_GENERATED_SHADERS})
 
@@ -69,7 +69,7 @@ set_target_properties(openblack_lib PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(
   openblack_lib
   PUBLIC ${CMAKE_CURRENT_LIST_DIR}
-         ${CMAKE_BINARY_DIR}/include # For shaders and other bin2c
+         ${CMAKE_BINARY_DIR}/include # Generated shader headers
          ${BULLET_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${DRLIBS_INCLUDE_DIRS}
 )
 if (NOT VCPKG_TARGET_ANDROID)
@@ -95,7 +95,6 @@ target_link_libraries(
           ScriptLibrary
           glm::glm
           EnTT::EnTT
-          bgfx::bgfx
           OpenAL::OpenAL
           Bullet3Common
           BulletDynamics
@@ -123,15 +122,6 @@ if (OPENBLACK_CLANG_TIDY_CHECKS)
     endif ()
   else ()
     message("Clang-tidy checks requested but unavailable")
-  endif ()
-endif ()
-
-if (ANDROID)
-  target_link_libraries(openblack_lib PRIVATE EGL)
-elseif (UNIX)
-  find_library(WAYLAND wayland-egl)
-  if (WAYLAND)
-    target_link_libraries(openblack_lib PRIVATE ${WAYLAND})
   endif ()
 endif ()
 

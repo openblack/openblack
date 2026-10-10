@@ -72,7 +72,6 @@ jobs:
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
 
-      # TODO(https://github.com/bkaradzic/bgfx.cmake/issues/242): Android and Emscripten wants opengl and wayland installed on system to build bgfx
       - name: Setup (Android and Emscripten and Linux)
         run: |
           sudo apt update -y

@@ -70,17 +70,10 @@ public:
 
 	void DrawMesh(const L3DMesh& mesh, const L3DMeshSubmitDesc& desc, uint8_t subMeshIndex) const noexcept final;
 
-	[[nodiscard]] VertexBufferUniquePtr CreateVertexBuffer(std::string name, const void* memory,
-	                                                       VertexDecl decl) noexcept final;
 	[[nodiscard]] VertexBufferUniquePtr CreateVertexBuffer(std::string name, std::span<const uint8_t> memory,
 	                                                       VertexDecl decl) noexcept final;
-	[[nodiscard]] IndexBufferUniquePtr CreateIndexBuffer(std::string name, const void* memory,
-	                                                     IndexBuffer::Type type) noexcept final;
 	[[nodiscard]] IndexBufferUniquePtr CreateIndexBuffer(std::string name, std::span<const uint8_t> memory,
 	                                                     IndexBuffer::Type type) noexcept final;
-	[[nodiscard]] Texture2dUniquePtr CreateTexture2d(std::string name, const void* memory, glm::u16vec2 resolution,
-	                                                 uint16_t layers, TextureFormat format, Wrapping wrapping,
-	                                                 Filter filter) noexcept final;
 	[[nodiscard]] Texture2dUniquePtr CreateTexture2d(std::string name, std::span<const uint8_t> memory, glm::u16vec2 resolution,
 	                                                 uint16_t layers, TextureFormat format, Wrapping wrapping,
 	                                                 Filter filter) noexcept final;
@@ -88,9 +81,6 @@ public:
 	[[nodiscard]] std::unique_ptr<FrameBuffer>
 	CreateFrameBuffer(std::string name, glm::u16vec2 resolution, TextureFormat colorFormat,
 	                  std::optional<TextureFormat> depthStencilFormat) noexcept final;
-
-	void Bind(const VertexBuffer& buffer) const noexcept final;
-	void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept final;
 
 private:
 	struct SdlGpuDeleter

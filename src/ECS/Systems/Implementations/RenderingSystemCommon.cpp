@@ -27,11 +27,7 @@
 using namespace openblack::ecs::systems;
 using namespace openblack::ecs::components;
 
-RenderContext::RenderContext()
-    : instanceUniformBuffer {UINT16_MAX}
-    , treeInstanceUniformBuffer {UINT16_MAX}
-{
-}
+RenderContext::RenderContext() = default;
 RenderContext::~RenderContext() = default;
 
 RenderingSystemCommon::~RenderingSystemCommon() = default;

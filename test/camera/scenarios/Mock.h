@@ -58,7 +58,6 @@ const uint32_t k_InteractionFrames = 100;
 class MockWindowingSystem final: public openblack::windowing::WindowingInterface
 {
 	[[nodiscard]] void* GetHandle() const final { assert(false); }
-	[[nodiscard]] NativeHandles GetNativeHandles() const final { assert(false); }
 	[[nodiscard]] uint32_t GetID() const final { assert(false); }
 	[[nodiscard]] glm::ivec2 GetSize() const final { return {k_Width, k_Height}; }
 	[[nodiscard]] float GetAspectRatio() const final { return static_cast<float>(k_Width) / static_cast<float>(k_Height); }

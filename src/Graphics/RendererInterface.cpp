@@ -11,13 +11,11 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
-// #include "Renderer.h"
 #include "RendererSdl3Gpu.h"
 
 using namespace openblack::graphics;
 
 std::unique_ptr<RendererInterface> RendererInterface::Create(GraphicsBackend backend, bool vsync) noexcept
 {
-	// return Renderer::Create(backend, vsync);
 	return RendererSdl3Gpu::Create(vsync);
 }

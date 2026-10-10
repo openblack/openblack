@@ -19,22 +19,7 @@ struct IndexBufferHandle
 	uint64_t id = 0;
 };
 
-struct FrameBufferHandle
-{
-	uint64_t id = 0;
-};
-
 struct VertexBufferHandle
-{
-	uint64_t id = 0;
-};
-
-struct VertexLayoutHandle
-{
-	uint64_t id = 0;
-};
-
-struct DynamicVertexBufferHandle
 {
 	uint64_t id = 0;
 };
@@ -45,21 +30,6 @@ struct TextureHandle
 };
 
 struct SamplerHandle
-{
-	uint64_t id = 0;
-};
-
-struct UniformHandle
-{
-	uint64_t id = 0;
-};
-
-struct ShaderHandle
-{
-	uint64_t id = 0;
-};
-
-struct ProgramHandle
 {
 	uint64_t id = 0;
 };

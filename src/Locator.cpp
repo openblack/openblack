@@ -94,7 +94,7 @@ bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
 		SPDLOG_LOGGER_CRITICAL(spdlog::get("graphics"), "Failed to create renderer");
 		return false;
 	}
-	Locator::debugGui::reset(DebugGuiInterface::Create(graphics::RenderPass::ImGui).release());
+	Locator::debugGui::reset(DebugGuiInterface::Create().release());
 	Locator::events::emplace<EventManager>();
 
 #if __ANDROID__
@@ -154,7 +154,7 @@ void openblack::ShutDownServices()
 		Locator::audio::value().Stop();
 	}
 
-	// Manually delete the assets here before BGFX renderer clears its buffers resulting in invalid handles in our assets
+	// Release assets before destroying the GPU device that owns their resources.
 	if (Locator::resources::has_value())
 	{
 		auto& resources = Locator::resources::value();

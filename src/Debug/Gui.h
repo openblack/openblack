@@ -19,7 +19,6 @@
 #include <imgui.h>
 
 #include "DebugGuiInterface.h"
-#include "Graphics/GraphicsHandle.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -32,7 +31,7 @@ class Window;
 class Gui final: public DebugGuiInterface
 {
 public:
-	Gui(ImGuiContext* imgui, uint16_t viewId, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept;
+	Gui(ImGuiContext* imgui, std::vector<std::unique_ptr<Window>>&& debugWindows, bool headless) noexcept;
 	~Gui() noexcept override;
 
 	[[nodiscard]] bool StealsFocus() const noexcept override;
@@ -55,13 +54,6 @@ private:
 	ImGuiContext* _imgui;
 	const bool _headless;
 	ImVec2 _menuBarSize;
-	uint64_t _time {0};
-	graphics::ProgramHandle _program;
-	graphics::ProgramHandle _imageProgram;
-	graphics::TextureHandle _texture;
-	graphics::UniformHandle _s_tex;
-	graphics::UniformHandle _u_imageLodEnabled;
-	const uint16_t _viewId;
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";
 	bool _stealsFocus = false;
