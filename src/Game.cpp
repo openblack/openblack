@@ -853,7 +853,6 @@ bool Game::Run() noexcept
 			    .drawFootpaths = config.drawFootpaths,
 			    .drawStreams = config.drawStreams,
 			    .cullBack = false,
-			    .wireframe = config.wireframe,
 			};
 			Locator::rendererInterface::value().DrawScene(drawDesc);
 		}

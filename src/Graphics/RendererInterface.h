@@ -67,7 +67,6 @@ public:
 		bool drawFootpaths;
 		bool drawStreams;
 		bool cullBack;
-		bool wireframe;
 	};
 
 	struct L3DMeshSubmitDesc

@@ -545,7 +545,6 @@ bool Gui::ShowMenu() noexcept
 				ImGui::Checkbox("Island", &config.drawIsland);
 				ImGui::Checkbox("Entities", &config.drawEntities);
 				ImGui::Checkbox("Sprites", &config.drawSprites);
-				ImGui::Checkbox("Wireframe", &config.wireframe);
 				ImGui::Checkbox("Bounding Boxes", &config.drawBoundingBoxes);
 				ImGui::Checkbox("Footpaths", &config.drawFootpaths);
 				ImGui::Checkbox("Streams", &config.drawStreams);
