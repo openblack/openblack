@@ -7,148 +7,15 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
-// How to add a Shader:
-// Shaders in openblack are compiled using bgfx's shaderc compiler. Shaderc
-// will compile different variations for different rendering APIs and
-// platforms. The implementation is in Shaders.cmake.
-// Shader sources are located in assets/shaders. The shader language used is a
-// subset of glsl made specifically for bgfx.
-// Inputs and outputs of shaders (excluding uniforms, textures samplers, etc)
-// are declared in varying.def.sc.
-// Once compiled they go in ${CMAKE_BINARY_DIR}/include/generated/shaders and
-// are included in the openblack binary by way of ShaderManager.cpp.
-// The helper header ShaderIncluder.h used with the SHADER_NAME define will
-// automatically include all the shader variants in the file.
-// Once included, they must be added to the s_embeddedShaders array.
-// Finally, the renderer calls the shader manager to load all shaders
-// named in the Shaders array.
-// tldr:
-// 1. Create shaders in assets/shaders
-// 2. Define SHADER_NAME and include ShaderIncluder.h
-// 3. Add BGFX_EMBEDDED_SHADER entries to s_embeddedShaders
-// 4. Add ShaderDefinition to Shaders array
-
 #include "ShaderManager.h"
 
-#include <cstdint> // Shaders below need uint8_t
-
-// The legacy shader set does not include WebGPU variants.
-#define BGFX_PLATFORM_SUPPORTS_WGSL 0
-#include <bgfx/embedded_shader.h>
-// BGFX has support for WSL to use windows d3d. We disable it here from the BGFX_EMBEDDED_SHADER macro.
-#if BX_PLATFORM_LINUX
-#undef BGFX_EMBEDDED_SHADER_DXBC
-#define BGFX_EMBEDDED_SHADER_DXBC(...)
-#undef BGFX_EMBEDDED_SHADER_DX9BC
-#define BGFX_EMBEDDED_SHADER_DX9BC(...)
-#endif
-
 #include "Camera/Camera.h"
-#include "GraphicsHandleBgfx.h"
-
-// clang-format off
-#define SHADER_NAME vs_line
-#include "ShaderIncluder.h"
-#define SHADER_NAME vs_line_instanced
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_line
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_object
-#include "ShaderIncluder.h"
-#define SHADER_NAME vs_object_instanced
-#include "ShaderIncluder.h"
-#define SHADER_NAME vs_object_hm_instanced
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_object
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_sky
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_terrain
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_terrain
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_water
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_water
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_sprite
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_sprite
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_footprint_instanced
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_footprint
-#include "ShaderIncluder.h"
-
-#define SHADER_NAME vs_vegetation
-#include "ShaderIncluder.h"
-#define SHADER_NAME vs_vegetation_hm_instanced
-#include "ShaderIncluder.h"
-#define SHADER_NAME fs_vegetation
-#include "ShaderIncluder.h"
-
-// clang-format on
-
-
-
-#include "generated/shaders/sky.slang.spv.h"
 
 namespace openblack::graphics
 {
 
-struct ShaderDefinition
-{
-	const std::string_view name;
-	const std::string_view vertexShaderName;
-	const std::string_view fragmentShaderName;
-};
-
-const std::array<bgfx::EmbeddedShader, 20> k_EmbeddedShaders = {{
-    BGFX_EMBEDDED_SHADER(vs_line),
-    BGFX_EMBEDDED_SHADER(vs_line_instanced), //
-    BGFX_EMBEDDED_SHADER(fs_line),           //
-    BGFX_EMBEDDED_SHADER(vs_object),
-    BGFX_EMBEDDED_SHADER(vs_object_instanced),
-    BGFX_EMBEDDED_SHADER(vs_object_hm_instanced), //
-    BGFX_EMBEDDED_SHADER(fs_object),
-    BGFX_EMBEDDED_SHADER(fs_sky), //
-    BGFX_EMBEDDED_SHADER(vs_terrain),
-    BGFX_EMBEDDED_SHADER(fs_terrain), //
-    BGFX_EMBEDDED_SHADER(vs_water),
-    BGFX_EMBEDDED_SHADER(fs_water), //
-    BGFX_EMBEDDED_SHADER(vs_sprite),
-    BGFX_EMBEDDED_SHADER(fs_sprite), //
-    BGFX_EMBEDDED_SHADER(vs_footprint_instanced),
-    BGFX_EMBEDDED_SHADER(fs_footprint), //
-    BGFX_EMBEDDED_SHADER(vs_vegetation),
-    BGFX_EMBEDDED_SHADER(vs_vegetation_hm_instanced),
-    BGFX_EMBEDDED_SHADER(fs_vegetation), //
-    BGFX_EMBEDDED_SHADER_END()           //
-}};
-
-constexpr std::array k_Shaders {
-    ShaderDefinition {"DebugLine", "vs_line", "fs_line"},
-    ShaderDefinition {"DebugLineInstanced", "vs_line_instanced", "fs_line"},
-    ShaderDefinition {"Terrain", "vs_terrain", "fs_terrain"},
-    ShaderDefinition {"Object", "vs_object", "fs_object"},
-    ShaderDefinition {"ObjectInstanced", "vs_object_instanced", "fs_object"},
-    ShaderDefinition {"ObjectHeightMapInstanced", "vs_object_hm_instanced", "fs_object"},
-    ShaderDefinition {"Sky", "vs_object", "fs_sky"},
-    ShaderDefinition {"Water", "vs_water", "fs_water"},
-    ShaderDefinition {"Sprite", "vs_sprite", "fs_sprite"},
-    ShaderDefinition {"FootprintInstanced", "vs_footprint_instanced", "fs_footprint"},
-    ShaderDefinition {"Vegetation", "vs_vegetation", "fs_vegetation"},
-    ShaderDefinition {"VegetationHeightMapInstanced", "vs_vegetation_hm_instanced", "fs_vegetation"},
-};
-
 ShaderManager::~ShaderManager()
 {
-	// delete all mapped shaders
 	ShaderMap::iterator iter;
 	for (iter = _shaderPrograms.begin(); iter != _shaderPrograms.end(); ++iter)
 	{
@@ -160,15 +27,7 @@ ShaderManager::~ShaderManager()
 
 void ShaderManager::LoadShaders()
 {
-	for (const auto& shader : k_Shaders)
-	{
-		bgfx::RendererType::Enum type = bgfx::getRendererType();
-		auto vs = bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, shader.vertexShaderName.data());
-		assert(bgfx::isValid(vs));
-		auto fs = bgfx::createEmbeddedShader(k_EmbeddedShaders.data(), type, shader.fragmentShaderName.data());
-		assert(bgfx::isValid(fs));
-		_shaderPrograms[shader.name.data()] = new ShaderProgram(shader.name.data(), fromBgfx(vs), fromBgfx(fs));
-	}
+	// The active SDL GPU renderer loads Slang pipelines directly.
 }
 
 const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
@@ -183,11 +42,9 @@ const ShaderProgram* ShaderManager::GetShader(const std::string& name) const
 	return nullptr;
 }
 
-void ShaderManager::SetCamera(graphics::RenderPass viewId, const Camera& camera)
+void ShaderManager::SetCamera(graphics::RenderPass, const Camera&)
 {
-	auto view = camera.GetViewMatrix(Camera::Interpolation::Current);
-	auto proj = camera.GetProjectionMatrix();
-	bgfx::setViewTransform(static_cast<bgfx::ViewId>(viewId), &view, &proj);
+	// The bgfx renderer is inactive; camera transforms are set by the SDL GPU renderer.
 }
 
 } // namespace openblack::graphics
