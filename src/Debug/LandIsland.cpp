@@ -57,12 +57,11 @@ void LandIsland::Draw() noexcept
 	if (ImGui::TreeNodeEx("Footprints", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		const auto& frameBuffer = landIsland.GetFootprintFramebuffer();
-		uint16_t width;
-		uint16_t height;
-		frameBuffer.GetSize(width, height);
+		const auto width = frameBuffer.resolution.x;
+		const auto height = frameBuffer.resolution.y;
 		ImGui::Text("Resolution: %ux%u", width, height);
 		const float scaling = 512.0f / static_cast<float>(width);
-		ImGui::Image(static_cast<ImTextureID>(frameBuffer.GetColorAttachment().id), ImVec2(width * scaling, height * scaling));
+		ImGui::Image(static_cast<ImTextureID>(frameBuffer.colorAttachment.id), ImVec2(width * scaling, height * scaling));
 		ImGui::TreePop();
 	}
 }

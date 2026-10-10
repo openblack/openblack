@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "3D/LandIslandInterface.h"
+#include "Graphics/FrameBuffer.h"
 #include "Graphics/Texture2d.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)

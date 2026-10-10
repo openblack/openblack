@@ -11,40 +11,38 @@
 
 #include <cstdint>
 
+#include <functional>
 #include <memory>
 #include <optional>
 
 #include "GraphicsHandle.h"
-#include "RenderPass.h"
 #include "Texture2d.h"
 
 namespace openblack::graphics
 {
 
-class FrameBuffer
+struct FrameBuffer
 {
-public:
-	FrameBuffer() = delete;
-	FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
-	            std::optional<TextureFormat> depthStencilFormat = {});
-	~FrameBuffer();
+	FrameBuffer(std::string name, glm::u16vec2 resolution, TextureFormat colorFormat,
+	            std::optional<TextureFormat> depthStencilFormat, TextureHandle colorAttachment, SamplerHandle colorSampler,
+	            TextureHandle depthStencilAttachment, std::function<void()> release) noexcept;
+	~FrameBuffer() noexcept;
 
-	void Bind(RenderPass viewId) const;
+	FrameBuffer(const FrameBuffer&) = delete;
+	FrameBuffer& operator=(const FrameBuffer&) = delete;
+	FrameBuffer(FrameBuffer&&) = delete;
+	FrameBuffer& operator=(FrameBuffer&&) = delete;
 
-	[[nodiscard]] const TextureHandle& GetColorAttachment() const { return _colorAttachment; }
-	void GetSize(uint16_t& width, uint16_t& height) const { width = _width, height = _height; }
+	const std::string name;
+	const glm::u16vec2 resolution;
+	const TextureFormat colorFormat;
+	const std::optional<TextureFormat> depthStencilFormat;
+	const TextureHandle colorAttachment;
+	const SamplerHandle colorSampler;
+	const TextureHandle depthStencilAttachment;
 
 private:
-	std::string _name;
-	FrameBufferHandle _handle;
-
-	uint16_t _width;
-	uint16_t _height;
-	TextureFormat _colorFormat;
-	std::optional<TextureFormat> _depthStencilFormat;
-
-	TextureHandle _colorAttachment;
-	TextureHandle _depthStencilAttachment;
+	std::function<void()> _release;
 };
 
 } // namespace openblack::graphics

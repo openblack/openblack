@@ -109,6 +109,7 @@ Gui::~Gui() noexcept
 {
 	if (!_headless)
 	{
+		ImGui_ImplSDLGPU3_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
 	}
 	ImGui::DestroyContext(_imgui);

@@ -16,6 +16,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
+#include "FrameBuffer.h"
 #include "IndexBuffer.h"
 #include "InstanceDesc.h"
 #include "RenderPass.h"
@@ -40,7 +41,6 @@ class Registry;
 namespace openblack::graphics
 {
 class L3DMesh;
-class FrameBuffer;
 class ShaderManager;
 class ShaderProgram;
 
@@ -118,6 +118,10 @@ public:
 	[[nodiscard]] virtual Texture2dUniquePtr CreateTexture2d(std::string name, std::span<const uint8_t> memory, glm::u16vec2 resolution,
 	                                                         uint16_t layers, TextureFormat format, Wrapping wrapping,
 	                                                         Filter filter) noexcept = 0;
+
+	[[nodiscard]] virtual std::unique_ptr<FrameBuffer>
+	CreateFrameBuffer(std::string name, glm::u16vec2 resolution, TextureFormat colorFormat,
+	                  std::optional<TextureFormat> depthStencilFormat = {}) noexcept = 0;
 
 	virtual void Bind(const VertexBuffer& buffer) const noexcept = 0;
 	virtual void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept = 0;

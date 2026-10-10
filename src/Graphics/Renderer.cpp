@@ -479,7 +479,6 @@ void Renderer::DrawFootprintPass(const DrawSceneDesc& drawDesc) const
 	if (drawDesc.drawIsland)
 	{
 		const auto& island = Locator::terrainSystem::value();
-		island.GetFootprintFramebuffer().Bind(viewId);
 
 		// This dummy draw call is here to make sure that view is cleared if no
 		// other draw calls are submitted to view
@@ -576,10 +575,6 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 	const auto& meshManager = Locator::resources::value().GetMeshes();
 	auto& profiler = Locator::profiler::value();
 
-	if (desc.frameBuffer != nullptr)
-	{
-		desc.frameBuffer->Bind(desc.viewId);
-	}
 	// This dummy draw call is here to make sure that view is cleared if no
 	// other draw calls are submitted to view
 	bgfx::touch(static_cast<bgfx::ViewId>(desc.viewId));
@@ -640,7 +635,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			auto alpha = Locator::resources::value().GetTextures().Handle(ocean.GetAlphaTexture());
 			waterShader->SetTextureSampler("s_diffuse", 0, *diffuse);
 			waterShader->SetTextureSampler("s_alpha", 1, *alpha);
-			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().GetColorAttachment());
+			waterShader->SetTextureSampler("s_reflection", 2, ocean.GetReflectionFramebuffer().colorAttachment);
 			const glm::vec4 u_sky = {skyType, 0.0f, 0.0f, 0.0f};
 			waterShader->SetUniformValue("u_sky", &u_sky); // fs
 			bgfx::submit(static_cast<bgfx::ViewId>(desc.viewId), toBgfx(waterShader->GetRawHandle()));
@@ -661,7 +656,7 @@ void Renderer::DrawPass(const DrawSceneDesc& desc) const
 			terrainShader->SetTextureSampler("s0_materials", 0, island.GetAlbedoArray());
 			terrainShader->SetTextureSampler("s1_bump", 1, island.GetBump());
 			terrainShader->SetTextureSampler("s2_smallBump", 2, *texture);
-			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().GetColorAttachment());
+			terrainShader->SetTextureSampler("s3_footprints", 3, island.GetFootprintFramebuffer().colorAttachment);
 
 			terrainShader->SetUniformValue("u_skyAndBump", &u_skyAndBump);
 			terrainShader->SetUniformValue("u_islandExtent", &islandExtent);

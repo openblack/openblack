@@ -26,9 +26,8 @@ using namespace openblack::graphics;
 
 Ocean::Ocean() noexcept
 {
-	_reflectionFrameBuffer =
-	    std::make_unique<FrameBuffer>("Reflection", static_cast<uint16_t>(1024), static_cast<uint16_t>(1024),
-	                                  graphics::TextureFormat::RGBA8, graphics::TextureFormat::Depth24Stencil8);
+	_reflectionFrameBuffer = Locator::rendererInterface::value().CreateFrameBuffer(
+	    "Reflection", {1024, 1024}, TextureFormat::RGBA8, TextureFormat::Depth24Stencil8);
 	CreateMesh();
 }
 Ocean::~Ocean() noexcept = default;

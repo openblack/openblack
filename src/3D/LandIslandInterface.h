@@ -22,7 +22,7 @@ namespace openblack
 class LandBlock;
 namespace graphics
 {
-class FrameBuffer;
+struct FrameBuffer;
 struct Texture2d;
 } // namespace graphics
 namespace lnd

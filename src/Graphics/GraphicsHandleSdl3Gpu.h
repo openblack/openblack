@@ -136,6 +136,14 @@ inline SDL_GPUTextureFormat toSdl(TextureFormat format)
 		return SDL_GPU_TEXTUREFORMAT_BC2_RGBA_UNORM;
 	case TextureFormat::BlockCompression3:
 		return SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM;
+	case TextureFormat::Depth24Stencil8:
+		return SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT;
+	case TextureFormat::Depth32Stencil8:
+		return SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT;
+	case TextureFormat::DepthComponent16:
+		return SDL_GPU_TEXTUREFORMAT_D16_UNORM;
+	case TextureFormat::DepthComponent24:
+		return SDL_GPU_TEXTUREFORMAT_D24_UNORM;
 	case TextureFormat::BGR5A1:
 		return SDL_GPU_TEXTUREFORMAT_B5G5R5A1_UNORM;
 	case TextureFormat::BGRA4:
@@ -191,6 +199,14 @@ inline TextureFormat fromSdl(SDL_GPUTextureFormat format)
 		return TextureFormat::BlockCompression2;
 	case SDL_GPU_TEXTUREFORMAT_BC3_RGBA_UNORM:
 		return TextureFormat::BlockCompression3;
+	case SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT:
+		return TextureFormat::Depth24Stencil8;
+	case SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT:
+		return TextureFormat::Depth32Stencil8;
+	case SDL_GPU_TEXTUREFORMAT_D16_UNORM:
+		return TextureFormat::DepthComponent16;
+	case SDL_GPU_TEXTUREFORMAT_D24_UNORM:
+		return TextureFormat::DepthComponent24;
 	case SDL_GPU_TEXTUREFORMAT_B5G5R5A1_UNORM:
 		return TextureFormat::BGR5A1;
 	case SDL_GPU_TEXTUREFORMAT_B4G4R4A4_UNORM:
@@ -229,5 +245,15 @@ inline TextureFormat fromSdl(SDL_GPUTextureFormat format)
 		assert(false);
 		std::unreachable();
 	}
+}
+inline SDL_GPUTextureFormat GetSupportedDepthStencilFormat(SDL_GPUDevice* device, TextureFormat format)
+{
+	const auto preferred = toSdl(format);
+	if (format == TextureFormat::Depth24Stencil8 &&
+	    !SDL_GPUTextureSupportsFormat(device, preferred, SDL_GPU_TEXTURETYPE_2D, SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET))
+	{
+		return SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT;
+	}
+	return preferred;
 }
 } // namespace openblack::graphics

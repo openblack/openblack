@@ -16,7 +16,7 @@ namespace openblack
 
 namespace graphics
 {
-class FrameBuffer;
+struct FrameBuffer;
 class Mesh;
 } // namespace graphics
 

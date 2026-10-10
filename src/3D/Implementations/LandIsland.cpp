@@ -109,7 +109,7 @@ void LandIsland::LoadFromFile(const std::filesystem::path& path)
 	                                      graphics::TextureFormat::R8, Wrapping::ClampEdge, Filter::Linear);
 
 	// const auto res = indexSize * glm::u16vec2(lnd::LNDMaterial::k_Width, lnd::LNDMaterial::k_Height);
-	// _footprintFrameBuffer = std::make_unique<FrameBuffer>("Footprints", res.x, res.y, graphics::TextureFormat::RGBA8);
+	// _footprintFrameBuffer = renderer.CreateFrameBuffer("Footprints", res, graphics::TextureFormat::RGBA8);
 
 	_proj = glm::ortho(_extentMin.x, _extentMax.x, _extentMin.y, _extentMax.y);
 	_view = glm::rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));

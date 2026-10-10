@@ -29,17 +29,21 @@
 
 #include "3D/L3DMesh.h"
 #include "3D/L3DSubMesh.h"
+#include "3D/OceanInterface.h"
 #include "3D/SkyInterface.h"
 #include "Camera/Camera.h"
 #include "Debug/DebugGuiInterface.h"
+#include "FrameBuffer.h"
 #include "GraphicsHandleSdl3Gpu.h"
 #include "IndexBuffer.h"
 #include "Locator.h"
 #include "Mesh.h"
 #include "Profiler.h"
+#include "Resources/ResourcesInterface.h"
 #include "Texture2d.h"
 #include "VertexBuffer.h"
 #include "generated/shaders/sky.slang.spv.h"
+#include "generated/shaders/water.slang.spv.h"
 
 using namespace openblack::graphics;
 
@@ -99,7 +103,8 @@ void RendererSdl3Gpu::SdlGpuDeleter::operator()(SDL_GPUDevice* device) const noe
 SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFormat targetFormat,
                                         const SDL_GPUShaderCreateInfo& vertexShaderCreateinfo,
                                         const SDL_GPUShaderCreateInfo& fragmentShaderCreateinfo,
-                                        const SDL_GPUVertexInputState& vertexInputState)
+                                        const SDL_GPUVertexInputState& vertexInputState,
+                                        SDL_GPUTextureFormat depthStencilFormat = SDL_GPU_TEXTUREFORMAT_INVALID)
 {
 
 	const SDL_GPUColorTargetDescription colorTargetDescriptions = {
@@ -142,13 +147,16 @@ SDL_GPUGraphicsPipeline* CreatePipeline(SDL_GPUDevice* device, SDL_GPUTextureFor
 	        },
 	    .depth_stencil_state =
 	        {
-	            .enable_depth_write = false,
+	            .compare_op = SDL_GPU_COMPAREOP_GREATER,
+	            .enable_depth_test = depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
+	            .enable_depth_write = depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
 	        },
 	    .target_info =
 	        {
 	            .color_target_descriptions = &colorTargetDescriptions,
 	            .num_color_targets = 1,
-	            .has_depth_stencil_target = false,
+	            .depth_stencil_format = depthStencilFormat,
+	            .has_depth_stencil_target = depthStencilFormat != SDL_GPU_TEXTUREFORMAT_INVALID,
 	        },
 	};
 	auto* result = SDL_CreateGPUGraphicsPipeline(device, &createInfo);
@@ -194,19 +202,39 @@ std::unique_ptr<RendererInterface> RendererSdl3Gpu::Create(bool vsync) noexcept
 		return nullptr;
 	}
 
-	Pipelines pipelines = {
+	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> pipelines {};
+	auto& main = pipelines[static_cast<size_t>(RenderPass::Main)];
+	main = {
 	    .sky = CreatePipeline(gpuDevice.get(), SDL_GetGPUSwapchainTextureFormat(gpuDevice.get(), sdlWindow),
 	                          k_SkyVertexShaderCreateInfo, k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex),
+	    .water =
+	        CreatePipeline(gpuDevice.get(), SDL_GetGPUSwapchainTextureFormat(gpuDevice.get(), sdlWindow),
+	                       k_WaterVertexShaderCreateInfo, k_WaterFragmentShaderCreateInfo, k_WaterVertexInputStateByVertex),
 	};
-	if (!pipelines.sky)
+	auto& reflection = pipelines[static_cast<size_t>(RenderPass::Reflection)];
+	reflection.sky = CreatePipeline(gpuDevice.get(), SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, k_SkyVertexShaderCreateInfo,
+	                                k_SkyFragmentShaderCreateInfo, k_SkyVertexInputStateByVertex,
+	                                GetSupportedDepthStencilFormat(gpuDevice.get(), TextureFormat::Depth24Stencil8));
+	if (!main.sky || !main.water || !reflection.sky)
 	{
+		for (const auto& pass : pipelines)
+		{
+			for (auto* pipeline : {pass.sky, pass.water})
+			{
+				if (pipeline)
+				{
+					SDL_ReleaseGPUGraphicsPipeline(gpuDevice.get(), pipeline);
+				}
+			}
+		}
 		return nullptr;
 	}
 
 	return std::unique_ptr<RendererInterface> {new RendererSdl3Gpu(std::move(gpuDevice), std::move(pipelines))};
 }
 
-RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device, Pipelines&& pipelines) noexcept
+RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device,
+                                 const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept
     : _gpuDevice(std::move(device))
     , _pipelines(pipelines)
 {
@@ -214,7 +242,16 @@ RendererSdl3Gpu::RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&&
 
 RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 {
-	SDL_ReleaseGPUGraphicsPipeline(_gpuDevice.get(), _pipelines.sky);
+	for (const auto& pass : _pipelines)
+	{
+		for (auto* pipeline : {pass.sky, pass.water})
+		{
+			if (pipeline)
+			{
+				SDL_ReleaseGPUGraphicsPipeline(_gpuDevice.get(), pipeline);
+			}
+		}
+	}
 }
 
 void RendererSdl3Gpu::ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept
@@ -254,86 +291,36 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
 		return;
 	}
-	SDL_GPUColorTargetInfo colorTargetMain = {.texture = swapchainTexture,
-	                                          .clear_color = {.r = 0x27 / static_cast<float>(0xff),
-	                                                          .g = 0x46 / static_cast<float>(0xff),
-	                                                          .b = 0x59 / static_cast<float>(0xff),
-	                                                          .a = 1.0f},
-	                                          .load_op = SDL_GPU_LOADOP_CLEAR,
-	                                          .store_op = SDL_GPU_STOREOP_STORE,
-	                                          .cycle = false};
-
-	auto* renderPassMain = SDL_BeginGPURenderPass(cmdBufferMain, &colorTargetMain, 1, nullptr);
-	if (!renderPassMain)
+	DrawSceneDesc mainDesc = drawDesc;
+	const auto& textures = Locator::resources::value().GetTextures();
+	mainDesc.drawWater = drawDesc.drawWater && Locator::oceanSystem::has_value() &&
+	                     textures.Contains(Locator::oceanSystem::value().GetDiffuseTexture()) &&
+	                     textures.Contains(Locator::oceanSystem::value().GetAlphaTexture());
+	if (mainDesc.drawWater)
 	{
-		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin render pass: {}", SDL_GetError());
-		SDL_SubmitGPUCommandBuffer(cmdBufferMain);
-		return;
-	}
-
-	const auto& camera = *drawDesc.camera;
-	auto view = camera.GetViewMatrix(Camera::Interpolation::Current);
-	auto proj = camera.GetProjectionMatrix();
-	auto viewProj = proj * view;
-
-	{
-		auto section = profiler.BeginScoped(Profiler::Stage::MainPassDrawSky);
-		if (drawDesc.drawSky)
+		auto section = profiler.BeginScoped(Profiler::Stage::ReflectionPass);
+		const auto reflectedCamera = drawDesc.camera->Reflect();
+		DrawSceneDesc reflectionDesc = mainDesc;
+		reflectionDesc.viewId = RenderPass::Reflection;
+		reflectionDesc.camera = reflectedCamera.get();
+		reflectionDesc.frameBuffer = &Locator::oceanSystem::value().GetReflectionFramebuffer();
+		reflectionDesc.drawWater = false;
+		reflectionDesc.drawBoundingBoxes = false;
+		reflectionDesc.cullBack = true;
+		if (!DrawPass(reflectionDesc, cmdBufferMain, nullptr))
 		{
-			const auto& sky = Locator::skySystem::value();
-			const auto skyType = sky.GetCurrentSkyType();
-			struct Sky
-			{
-				float timeOfDay;
-				float alignment;
-			};
-			Sky skyData = {
-			    .timeOfDay = skyType,
-			    .alignment = Locator::config::value().skyAlignment + 1.0f,
-			};
-
-			auto& skyMesh = Locator::skySystem::value().GetMesh();
-			const auto& subMesh = *skyMesh.GetSubMeshes()[0].get();
-
-			{
-				auto& skyTexture = sky.GetTexture();
-				SDL_GPUTextureSamplerBinding bindings = {
-				    .texture = toSdl(skyTexture.handle),
-				    .sampler = toSdl(skyTexture.samplerHandle),
-				};
-				SDL_BindGPUFragmentSamplers(renderPassMain, 0, &bindings, 1);
-			}
-			SDL_PushGPUVertexUniformData(cmdBufferMain, 0, &viewProj, sizeof(viewProj));
-			SDL_PushGPUFragmentUniformData(cmdBufferMain, 0, &skyData, sizeof(skyData));
-			DrawSubMesh(renderPassMain, _pipelines.sky, subMesh);
+			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+			return;
 		}
 	}
-
 	{
-		auto section = profiler.BeginScoped(Profiler::Stage::ReflectionDrawWater);
-		if (drawDesc.drawWater)
+		auto section = profiler.BeginScoped(Profiler::Stage::MainPass);
+		if (!DrawPass(mainDesc, cmdBufferMain, swapchainTexture))
 		{
-			assert(false);
+			SDL_SubmitGPUCommandBuffer(cmdBufferMain);
+			return;
 		}
 	}
-
-	{
-		auto section = profiler.BeginScoped(Profiler::Stage::MainPassDrawIsland);
-		if (drawDesc.drawIsland)
-		{
-			assert(false);
-		}
-	}
-
-	{
-		auto section = profiler.BeginScoped(Profiler::Stage::MainPassDrawModels);
-		if (drawDesc.drawEntities)
-		{
-			assert(false);
-		}
-	}
-
-	SDL_EndGPURenderPass(renderPassMain);
 
 	{
 		auto section = profiler.BeginScoped(Profiler::Stage::GuiDraw);
@@ -357,11 +344,125 @@ void RendererSdl3Gpu::DrawScene(const DrawSceneDesc& drawDesc) noexcept
 	}
 }
 
-void RendererSdl3Gpu::DrawSubMesh(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
-                                  const L3DSubMesh& subMesh) const
+bool RendererSdl3Gpu::DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer,
+                               SDL_GPUTexture* defaultTarget) const noexcept
+{
+	auto& profiler = Locator::profiler::value();
+	const auto& camera = *desc.camera;
+	const auto& textures = Locator::resources::value().GetTextures();
+	const auto& pipelines = _pipelines[static_cast<size_t>(desc.viewId)];
+	const bool isReflection = desc.viewId == RenderPass::Reflection;
+	const auto* frameBuffer = desc.frameBuffer;
+	const SDL_GPUColorTargetInfo colorTarget = {
+	    .texture = frameBuffer != nullptr ? toSdl(frameBuffer->colorAttachment) : defaultTarget,
+	    .clear_color = {0x27 / 255.0f, 0x46 / 255.0f, 0x59 / 255.0f, 1.0f},
+	    .load_op = SDL_GPU_LOADOP_CLEAR,
+	    .store_op = SDL_GPU_STOREOP_STORE,
+	    .cycle = frameBuffer != nullptr,
+	};
+	SDL_GPUDepthStencilTargetInfo depthStencil {};
+	const bool hasDepthStencil = frameBuffer && frameBuffer->depthStencilFormat.has_value();
+	if (hasDepthStencil)
+	{
+		depthStencil = {
+		    .texture = toSdl(frameBuffer->depthStencilAttachment),
+		    .clear_depth = 0.0f,
+		    .load_op = SDL_GPU_LOADOP_CLEAR,
+		    .store_op = SDL_GPU_STOREOP_STORE,
+		    .stencil_load_op = SDL_GPU_LOADOP_CLEAR,
+		    .stencil_store_op = SDL_GPU_STOREOP_STORE,
+		    .cycle = true,
+		    .clear_stencil = 0,
+		};
+	}
+	auto* renderPass = SDL_BeginGPURenderPass(commandBuffer, &colorTarget, 1, hasDepthStencil ? &depthStencil : nullptr);
+	if (renderPass == nullptr)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to begin {}: {}",
+		                    k_RenderPassNames.at(static_cast<size_t>(desc.viewId)), SDL_GetError());
+		return false;
+	}
+
+	auto view = camera.GetViewMatrix(Camera::Interpolation::Current);
+	auto proj = camera.GetProjectionMatrix();
+	auto viewProj = proj * view;
+
+	{
+		auto section =
+		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawSky : Profiler::Stage::MainPassDrawSky);
+		if (desc.drawSky)
+		{
+			DrawSky(commandBuffer, renderPass, pipelines.sky, camera);
+		}
+	}
+
+	{
+		auto section =
+		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawWater : Profiler::Stage::MainPassDrawWater);
+		if (desc.drawWater)
+		{
+			const auto& ocean = Locator::oceanSystem::value();
+			const auto diffuse = textures.Handle(ocean.GetDiffuseTexture());
+			const auto alpha = textures.Handle(ocean.GetAlphaTexture());
+			const auto& reflection = ocean.GetReflectionFramebuffer();
+			const std::array<SDL_GPUTextureSamplerBinding, 3> bindings {{
+			    {toSdl(diffuse->handle), toSdl(diffuse->samplerHandle)},
+			    {toSdl(alpha->handle), toSdl(alpha->samplerHandle)},
+			    {toSdl(reflection.colorAttachment), toSdl(reflection.colorSampler)},
+			}};
+			SDL_BindGPUFragmentSamplers(renderPass, 0, bindings.data(), static_cast<uint32_t>(bindings.size()));
+			struct WaterCamera
+			{
+				glm::mat4 view;
+				glm::mat4 viewProjection;
+			};
+			const WaterCamera waterCamera {view, viewProj};
+			const float skyType = Locator::skySystem::value().GetCurrentSkyType();
+			SDL_PushGPUVertexUniformData(commandBuffer, 0, &waterCamera, sizeof(waterCamera));
+			SDL_PushGPUFragmentUniformData(commandBuffer, 0, &skyType, sizeof(skyType));
+			DrawGeometry(renderPass, pipelines.water, ocean.GetMesh());
+		}
+	}
+
+	{
+		auto section =
+		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawIsland : Profiler::Stage::MainPassDrawIsland);
+		if (desc.drawIsland)
+		{
+			assert(false);
+		}
+	}
+
+	{
+		auto section =
+		    profiler.BeginScoped(isReflection ? Profiler::Stage::ReflectionDrawModels : Profiler::Stage::MainPassDrawModels);
+		if (desc.drawEntities)
+		{
+			assert(false);
+		}
+	}
+
+	SDL_EndGPURenderPass(renderPass);
+	return true;
+}
+
+void RendererSdl3Gpu::DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
+                              SDL_GPUGraphicsPipeline* pipeline, const Camera& camera) const
+{
+	const auto& sky = Locator::skySystem::value();
+	const auto viewProjection = camera.GetViewProjectionMatrix(Camera::Interpolation::Current);
+	const std::array<float, 2> skyData {sky.GetCurrentSkyType(), Locator::config::value().skyAlignment + 1.0f};
+	const auto& texture = sky.GetTexture();
+	const SDL_GPUTextureSamplerBinding binding {toSdl(texture.handle), toSdl(texture.samplerHandle)};
+	SDL_BindGPUFragmentSamplers(renderPass, 0, &binding, 1);
+	SDL_PushGPUVertexUniformData(commandBuffer, 0, &viewProjection, sizeof(viewProjection));
+	SDL_PushGPUFragmentUniformData(commandBuffer, 0, skyData.data(), sizeof(skyData));
+	DrawGeometry(renderPass, pipeline, sky.GetMesh().GetSubMeshes()[0]->GetMesh());
+}
+
+void RendererSdl3Gpu::DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const
 {
 	const uint32_t numInstances = 1;
-	auto& mesh = subMesh.GetMesh();
 	{
 		const SDL_GPUBufferBinding bindings = {
 		    .buffer = toSdl(mesh.GetVertexBuffer().handle),
@@ -666,6 +767,82 @@ Texture2dUniquePtr RendererSdl3Gpu::CreateTexture2d(std::string name, std::span<
 		        SDL_ReleaseGPUTexture(device, toSdl(texture2d->handle));
 		        delete texture2d;
 	        }};
+}
+
+std::unique_ptr<FrameBuffer> RendererSdl3Gpu::CreateFrameBuffer(std::string name, glm::u16vec2 resolution,
+                                                                TextureFormat colorFormat,
+                                                                std::optional<TextureFormat> depthStencilFormat) noexcept
+{
+	if (resolution.x == 0 || resolution.y == 0)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Invalid render target dimensions for {}", name);
+		return nullptr;
+	}
+	const SDL_GPUTextureCreateInfo info = {
+	    .type = SDL_GPU_TEXTURETYPE_2D,
+	    .format = toSdl(colorFormat),
+	    .usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
+	    .width = resolution.x,
+	    .height = resolution.y,
+	    .layer_count_or_depth = 1,
+	    .num_levels = 1,
+	    .sample_count = SDL_GPU_SAMPLECOUNT_1,
+	};
+	GpuTexture texture {SDL_CreateGPUTexture(_gpuDevice.get(), &info), {_gpuDevice.get()}};
+	if (!texture)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create render target {}: {}", name, SDL_GetError());
+		return nullptr;
+	}
+	GpuTexture depthStencil {nullptr, {_gpuDevice.get()}};
+	if (depthStencilFormat)
+	{
+		const auto format = GetSupportedDepthStencilFormat(_gpuDevice.get(), *depthStencilFormat);
+		if (!SDL_GPUTextureSupportsFormat(_gpuDevice.get(), format, SDL_GPU_TEXTURETYPE_2D,
+		                                  SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET))
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Unsupported depth/stencil format for {}", name);
+			return nullptr;
+		}
+		auto depthInfo = info;
+		depthInfo.format = format;
+		depthInfo.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
+		depthStencil.reset(SDL_CreateGPUTexture(_gpuDevice.get(), &depthInfo));
+		if (!depthStencil)
+		{
+			SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create depth/stencil target {}: {}", name, SDL_GetError());
+			return nullptr;
+		}
+		depthStencilFormat = fromSdl(format);
+		SDL_SetGPUTextureName(_gpuDevice.get(), depthStencil.get(), (name + "_depthStencil").c_str());
+	}
+	const SDL_GPUSamplerCreateInfo samplerInfo = {
+	    .min_filter = SDL_GPU_FILTER_LINEAR,
+	    .mag_filter = SDL_GPU_FILTER_LINEAR,
+	    .address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+	    .address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+	    .address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+	};
+	GpuSampler sampler {SDL_CreateGPUSampler(_gpuDevice.get(), &samplerInfo), {_gpuDevice.get()}};
+	if (!sampler)
+	{
+		SPDLOG_LOGGER_ERROR(spdlog::get("graphics"), "Failed to create render target sampler {}: {}", name, SDL_GetError());
+		return nullptr;
+	}
+	SDL_SetGPUTextureName(_gpuDevice.get(), texture.get(), name.c_str());
+	auto* color = texture.release();
+	auto* colorSampler = sampler.release();
+	auto* depth = depthStencil.release();
+	return std::make_unique<FrameBuffer>(std::move(name), resolution, colorFormat, depthStencilFormat, fromSdl(color),
+	                                     fromSdl(colorSampler), fromSdl(depth),
+	                                     [device = _gpuDevice.get(), color, colorSampler, depth] {
+		                                     SDL_ReleaseGPUSampler(device, colorSampler);
+		                                     SDL_ReleaseGPUTexture(device, color);
+		                                     if (depth != nullptr)
+		                                     {
+			                                     SDL_ReleaseGPUTexture(device, depth);
+		                                     }
+	                                     });
 }
 
 void RendererSdl3Gpu::Bind(const VertexBuffer& buffer) const noexcept
