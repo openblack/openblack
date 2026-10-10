@@ -9,55 +9,26 @@
 
 #include "FrameBuffer.h"
 
-#include <cassert>
-
-#include <array>
-
-#include <bgfx/bgfx.h>
-
-#include "GraphicsHandleBgfx.h"
+#include <utility>
 
 using namespace openblack::graphics;
 
-FrameBuffer::FrameBuffer(std::string&& name, uint16_t width, uint16_t height, TextureFormat colorFormat,
-                         std::optional<TextureFormat> depthStencilFormat)
-    : _name(std::move(name))
-    , _handle(BGFX_INVALID_HANDLE)
-    , _width(width)
-    , _height(height)
-    , _colorFormat(colorFormat)
-    , _depthStencilFormat(depthStencilFormat)
-    , _colorAttachment(BGFX_INVALID_HANDLE)
-    , _depthStencilAttachment(BGFX_INVALID_HANDLE)
+FrameBuffer::FrameBuffer(std::string name, glm::u16vec2 resolution, TextureFormat colorFormat,
+                         std::optional<TextureFormat> depthStencilFormat, TextureHandle colorAttachment,
+                         SamplerHandle colorSampler, TextureHandle depthStencilAttachment,
+                         std::function<void()> release) noexcept
+    : name(std::move(name))
+    , resolution(resolution)
+    , colorFormat(colorFormat)
+    , depthStencilFormat(depthStencilFormat)
+    , colorAttachment(colorAttachment)
+    , colorSampler(colorSampler)
+    , depthStencilAttachment(depthStencilAttachment)
+    , _release(std::move(release))
 {
-	if (depthStencilFormat)
-	{
-		std::array<bgfx::TextureHandle, 2> textures = {
-		    bgfx::createTexture2D(width, height, false, 1, toBgfx(colorFormat), BGFX_TEXTURE_RT),
-		    bgfx::createTexture2D(width, height, false, 1, toBgfx(depthStencilFormat.value()), BGFX_TEXTURE_RT),
-		};
-		_handle = fromBgfx(bgfx::createFrameBuffer(static_cast<uint8_t>(textures.size()), textures.data()));
-		_colorAttachment = fromBgfx(bgfx::getTexture(toBgfx(_handle), 0));
-		_depthStencilAttachment = fromBgfx(bgfx::getTexture(toBgfx(_handle), 1));
-	}
-	else
-	{
-		_handle = fromBgfx(bgfx::createFrameBuffer(_width, _height, toBgfx(colorFormat), BGFX_TEXTURE_RT));
-		_colorAttachment = fromBgfx(bgfx::getTexture(toBgfx(_handle), 0));
-	}
-
-	assert(bgfx::isValid(toBgfx(_handle)));
 }
 
-FrameBuffer::~FrameBuffer()
+FrameBuffer::~FrameBuffer() noexcept
 {
-	// if (bgfx::isValid(toBgfx(_handle)))
-	// {
-	// 	bgfx::destroy(toBgfx(_handle));
-	// }
-}
-
-void FrameBuffer::Bind(RenderPass viewId) const
-{
-	// bgfx::setViewFrameBuffer(static_cast<uint8_t>(viewId), toBgfx(_handle));
+	_release();
 }

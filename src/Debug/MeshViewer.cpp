@@ -44,9 +44,8 @@ MeshViewer::MeshViewer() noexcept
     : Window("MeshPack Viewer", ImVec2(950.0f, 780.0f))
     , _selectedMesh(resources::HashIdentifier(MeshId::Dummy))
     , _boundingBox(graphics::DebugLines::CreateBox(glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)))
-    , _frameBuffer(std::make_unique<graphics::FrameBuffer>("MeshViewer", static_cast<uint16_t>(512), static_cast<uint16_t>(512),
-                                                           graphics::TextureFormat::RGBA8,
-                                                           graphics::TextureFormat::Depth24Stencil8))
+    , _frameBuffer(Locator::rendererInterface::value().CreateFrameBuffer(
+          "MeshViewer", {512, 512}, graphics::TextureFormat::RGBA8, graphics::TextureFormat::Depth24Stencil8))
 {
 }
 
@@ -248,7 +247,7 @@ void MeshViewer::Draw() noexcept
 	}
 	ImGui::Columns(1);
 
-	ImGui::Image(static_cast<ImTextureID>(_frameBuffer->GetColorAttachment().id), ImVec2(512, 512));
+	ImGui::Image(static_cast<ImTextureID>(_frameBuffer->colorAttachment.id), ImVec2(512, 512));
 
 	ImGui::EndChild();
 
@@ -308,14 +307,12 @@ void MeshViewer::Update() noexcept
 #endif
 	bgfx::setViewTransform(static_cast<bgfx::ViewId>(k_ViewId), &view, &perspective);
 
-	_frameBuffer->Bind(k_ViewId);
 	// TODO(bwrsandman): The setting of viewport and clearing should probably be
 	// done in framebuffer bind
 	static const uint32_t clearColor = 0x274659ff;
 	bgfx::setViewClear(static_cast<bgfx::ViewId>(k_ViewId), BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, clearColor, 1.0f, 0);
-	uint16_t width;
-	uint16_t height;
-	_frameBuffer->GetSize(width, height);
+	const auto width = _frameBuffer->resolution.x;
+	const auto height = _frameBuffer->resolution.y;
 	bgfx::setViewRect(static_cast<bgfx::ViewId>(k_ViewId), 0, 0, width, height);
 
 	// clang-format off

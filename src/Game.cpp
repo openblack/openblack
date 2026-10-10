@@ -589,12 +589,12 @@ bool Game::Initialize() noexcept
 
 	const auto& meshes = pack.GetMeshes();
 	// TODO (#749) use std::views::enumerate
-	// for (size_t i = 0; const auto& mesh : meshes)
-	// {
-	// 	const auto meshId = static_cast<MeshId>(i);
-	// 	meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
-	// 	++i;
-	// }
+	for (size_t i = 0; const auto& mesh : meshes)
+	{
+		const auto meshId = static_cast<MeshId>(i);
+		meshManager.Load(meshId, resources::L3DLoader::FromBufferTag {}, k_MeshNames.at(i), mesh);
+		++i;
+	}
 
 	const auto& textures = pack.GetTextures();
 	for (auto const& [name, g3dTexture] : textures)
@@ -935,8 +935,8 @@ bool Game::LoadMap(const std::filesystem::path& path) noexcept
 	Locator::camera::value().SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip,
 	                                                        config.cameraFarClip);
 
-	// Script script;
-	// script.Load(source);
+	Script script;
+	script.Load(source);
 
 	// // Each released map comes with an optional .fot file which contains the footpath information for the map
 	// const auto stem = string_utils::LowerCase(path.stem().generic_string());

@@ -77,6 +77,7 @@ enum class TextureFormat : uint8_t
 	RGBA32UI,
 	BGRA4,
 	RGBA4,
+	Depth32Stencil8,
 	_COUNT
 };
 
@@ -133,6 +134,7 @@ constexpr std::array<const char*, static_cast<size_t>(TextureFormat::_COUNT)> k_
     "RGBA32UI",
     "BGRA4",
     "RGBA4",
+    "Depth32Stencil8",
 }};
 
 enum class Filter : uint8_t

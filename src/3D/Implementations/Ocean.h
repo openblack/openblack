@@ -14,6 +14,7 @@
 #include <entt/core/hashed_string.hpp>
 
 #include "3D/OceanInterface.h"
+#include "Graphics/FrameBuffer.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
 #error "Locator interface implementations should only be included in Locator.cpp, use interface instead."
@@ -24,7 +25,6 @@ namespace openblack
 
 namespace graphics
 {
-class FrameBuffer;
 class Mesh;
 } // namespace graphics
 

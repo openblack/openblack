@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "Graphics/RendererInterface.h"
 
 #if !defined(LOCATOR_IMPLEMENTATIONS)
@@ -16,6 +18,7 @@
 #endif
 
 struct SDL_GPUDevice;
+struct SDL_GPUCommandBuffer;
 struct SDL_GPUGraphicsPipeline;
 struct SDL_GPUSampler;
 struct SDL_GPURenderPass;
@@ -26,6 +29,7 @@ struct SDL_Window;
 namespace openblack::graphics
 {
 class L3DSubMesh;
+class Mesh;
 
 class RendererSdl3Gpu final: public RendererInterface
 {
@@ -33,6 +37,7 @@ public:
 	struct Pipelines
 	{
 		SDL_GPUGraphicsPipeline* sky;
+		SDL_GPUGraphicsPipeline* water;
 	};
 
 	static std::unique_ptr<RendererInterface> Create(bool vsync) noexcept;
@@ -70,6 +75,10 @@ public:
 	                                                 uint16_t layers, TextureFormat format, Wrapping wrapping,
 	                                                 Filter filter) noexcept final;
 
+	[[nodiscard]] std::unique_ptr<FrameBuffer>
+	CreateFrameBuffer(std::string name, glm::u16vec2 resolution, TextureFormat colorFormat,
+	                  std::optional<TextureFormat> depthStencilFormat) noexcept final;
+
 	void Bind(const VertexBuffer& buffer) const noexcept final;
 	void Bind(const IndexBuffer& buffer, uint32_t count, uint32_t startIndex) const noexcept final;
 
@@ -82,10 +91,15 @@ private:
 
 	[[nodiscard]] SDL_GPUBuffer* UploadBuffer(const std::string& name, std::span<const uint8_t> memory,
 	                                          bool indexBuffer) const noexcept;
-	void DrawSubMesh(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const L3DSubMesh& subMesh) const;
+	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const;
+	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
+	             const Camera& camera) const;
+	[[nodiscard]] bool DrawPass(const DrawSceneDesc& desc, SDL_GPUCommandBuffer* commandBuffer,
+	                            SDL_GPUTexture* defaultTarget) const noexcept;
 
-	RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device, Pipelines&& pipelines) noexcept;
+	RendererSdl3Gpu(std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter>&& device,
+	                const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept;
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
-	Pipelines _pipelines;
+	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
 };
 } // namespace openblack::graphics

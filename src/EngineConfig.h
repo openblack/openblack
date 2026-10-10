@@ -41,7 +41,7 @@ struct EngineConfig
 
 	bool viewDetailOverlay {false};
 	bool drawSky {true};
-	bool drawWater {false};
+	bool drawWater {true};
 	bool drawIsland {false};
 	bool drawEntities {false};
 	bool drawVegetation {false};

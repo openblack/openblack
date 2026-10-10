@@ -145,7 +145,7 @@ Texture2dLoader::result_type Texture2dLoader::operator()(FromDiskTag, const std:
 				newData[i * 4 + 0] = data[i * 3 + 0];
 				newData[i * 4 + 1] = data[i * 3 + 1];
 				newData[i * 4 + 2] = data[i * 3 + 2];
-				newData[i * 4 + 3] = 1;
+				newData[i * 4 + 3] = 0xff;
 			}
 			data = newData;
 			found = true;

@@ -19,6 +19,7 @@
 #include "3D/AllMeshes.h"
 #include "Graphics/DebugLines.h"
 #include "Graphics/FrameBuffer.h"
+#include "Graphics/RenderPass.h"
 #include "Window.h"
 
 namespace openblack
