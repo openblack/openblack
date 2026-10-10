@@ -43,6 +43,7 @@ public:
 		SDL_GPUGraphicsPipeline* water;
 		SDL_GPUGraphicsPipeline* terrain;
 		SDL_GPUGraphicsPipeline* sprites;
+		SDL_GPUGraphicsPipeline* footprints;
 		std::array<SDL_GPUGraphicsPipeline*, 6> objects {}; // blend mode and depth writes
 	};
 
@@ -98,8 +99,9 @@ private:
 	[[nodiscard]] SDL_GPUBuffer* UploadBuffer(const std::string& name, std::span<const uint8_t> memory,
 	                                          bool indexBuffer) const noexcept;
 	[[nodiscard]] bool ResizeDepthStencil(glm::uvec2 resolution) noexcept;
-	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh) const;
-	[[nodiscard]] bool UploadEntityMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept;
+	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh,
+	                  uint32_t instanceCount = 1) const;
+	[[nodiscard]] bool UploadSceneMatrices(SDL_GPUCommandBuffer* commandBuffer) noexcept;
 	void DrawEntities(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass,
 	                  const DrawSceneDesc& desc) const noexcept;
 	void DrawSky(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline,
@@ -111,9 +113,10 @@ private:
 	                const std::array<Pipelines, static_cast<size_t>(RenderPass::_count)>& pipelines) noexcept;
 	std::unique_ptr<SDL_GPUDevice, SdlGpuDeleter> _gpuDevice;
 	std::array<Pipelines, static_cast<size_t>(RenderPass::_count)> _pipelines;
-	SDL_GPUBuffer* _entityMatrices {};
+	SDL_GPUBuffer* _sceneMatrices {};
 	std::unique_ptr<Mesh> _spriteQuad;
-	uint32_t _entityMatrixCapacity {};
+	uint32_t _sceneMatrixCapacity {};
+	uint32_t _treeMatrixOffset {};
 	std::map<entt::id_type, uint32_t> _entityBoneOffsets;
 	Texture2dUniquePtr _whiteTexture;
 	SDL_GPUTexture* _depthStencil {};
