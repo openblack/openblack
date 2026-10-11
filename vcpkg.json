@@ -2,7 +2,10 @@
     "name": "openblack",
     "version-string": "0.0.1-dev",
     "dependencies": [
-        "shader-slang",
+        {
+            "name": "shader-slang",
+            "host": true
+        },
         {
             "name": "sdl3",
             "features": [ "vulkan" ],
@@ -17,6 +20,10 @@
         "stb",
         "entt",
         "cxxopts",
+        {
+            "name": "cxxopts",
+            "host": true
+        },
         "openal-soft",
         "drlibs",
         "bullet3",
