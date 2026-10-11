@@ -399,16 +399,6 @@ RendererSdl3Gpu::~RendererSdl3Gpu() noexcept
 	}
 }
 
-void RendererSdl3Gpu::ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept
-{
-	// TODO
-}
-
-void RendererSdl3Gpu::Reset(glm::u16vec2 resolution) const noexcept
-{
-	// TODO
-}
-
 bool RendererSdl3Gpu::ResizeDepthStencil(glm::uvec2 resolution) noexcept
 {
 	if (_depthStencil != nullptr && _depthStencilResolution == resolution)

@@ -155,10 +155,6 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	case SDL_EVENT_WINDOW_RESIZED:
 	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 	{
-		const auto resolution = glm::u16vec2(event.window.data1, event.window.data2);
-		Locator::rendererInterface::value().Reset(resolution);
-		Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, resolution, 0x274659ff);
-
 		auto aspect = window.GetAspectRatio();
 		const auto& config = Locator::config::value();
 		camera.SetProjectionMatrixPerspective(config.cameraXFov, aspect, config.cameraNearClip, config.cameraFarClip);
@@ -796,30 +792,7 @@ bool Game::Run() noexcept
 	}
 
 	// Initialize the Acceleration Structure
-	// Locator::entitiesMap::value().Rebuild();
-
-	// TODO: Delete ConfigureView
-	// if (Locator::windowing::has_value())
-	// {
-	// 	const auto size = static_cast<glm::u16vec2>(Locator::windowing::value().GetSize());
-	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Main, size, 0x274659ff);
-	// }
-
-	// if (config.drawWater)
-	// {
-	// 	uint16_t width;
-	// 	uint16_t height;
-	// 	Locator::oceanSystem::value().GetReflectionFramebuffer().GetSize(width, height);
-	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Reflection, {width, height}, 0x274659ff);
-	// }
-
-	// if (config.drawIsland)
-	// {
-	// 	uint16_t width;
-	// 	uint16_t height;
-	// 	Locator::terrainSystem::value().GetFootprintFramebuffer().GetSize(width, height);
-	// 	Locator::rendererInterface::value().ConfigureView(graphics::RenderPass::Footprint, {width, height}, 0x00000000);
-	// }
+	Locator::entitiesMap::value().Rebuild();
 
 	Game::SetTime(config.timeOfDay);
 	Locator::time::value().Start();
