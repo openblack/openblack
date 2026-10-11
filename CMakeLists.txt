@@ -98,7 +98,6 @@ find_path(
   PATHS /usr/include/dr_libs
 )
 
-find_package(slang CONFIG REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(imgui REQUIRED)
 find_package(Bullet REQUIRED)
@@ -116,7 +115,7 @@ add_subdirectory(components/anm)
 add_subdirectory(components/glw)
 add_subdirectory(components/morph)
 add_subdirectory(components/ScriptLibrary)
-add_subdirectory(apps/slang-sdl3-gpu-compiler)
+include(ShaderCompiler)
 add_subdirectory(src)
 add_subdirectory(apps/l3dtool)
 add_subdirectory(apps/packtool)
