@@ -18,7 +18,7 @@ permissions:
 jobs:
   clang-format-check:
     name: clang-format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config
@@ -33,7 +33,7 @@ jobs:
   # Run only if a PR and clang-format has failed
   clang-format-action-suggester:
     name: clang-format fix suggester
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: clang-format-check
     if: always() && startsWith(github.event_name, 'pull_request') && needs.clang-format-check.result == 'failure'
     steps:
@@ -59,7 +59,7 @@ jobs:
 
   linelint:
     name: linelint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config
@@ -69,7 +69,7 @@ jobs:
 
   linelint-action-suggester:
     name: linelint fix suggester
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: linelint
     if: always() && startsWith(github.event_name, 'pull_request') && needs.linelint.result == 'failure'
     steps:
@@ -93,7 +93,7 @@ jobs:
 
   cmake-format-check:
     name: cmake-format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config
@@ -108,7 +108,7 @@ jobs:
   # Run only if a PR and cmake-format has failed
   cmake-format-action-suggester:
     name: cmake-format fix suggester
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: cmake-format-check
     if: always() && startsWith(github.event_name, 'pull_request') && needs.cmake-format-check.result == 'failure'
     steps:
@@ -134,7 +134,7 @@ jobs:
 
   copyright-check:
     name: license_checker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config
@@ -148,7 +148,7 @@ jobs:
 
   copyright-check-action-suggester:
     name: license_checker fix suggester
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: copyright-check
     if: always() && startsWith(github.event_name, 'pull_request') && needs.copyright-check.result == 'failure'
     steps:
@@ -173,7 +173,7 @@ jobs:
 
   gradle-lint:
     name: gradle lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config
