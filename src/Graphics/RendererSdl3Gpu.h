@@ -57,9 +57,6 @@ public:
 
 	[[nodiscard]] void* GetDevice() const noexcept final { return _gpuDevice.get(); }
 
-	void ConfigureView(RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept final;
-
-	void Reset(glm::u16vec2 resolution) const noexcept final;
 	void DrawScene(const DrawSceneDesc& drawDesc) noexcept final;
 	void Frame() noexcept final;
 	void RequestScreenshot(const std::filesystem::path& filepath) noexcept final;

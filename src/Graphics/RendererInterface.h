@@ -84,8 +84,6 @@ public:
 	virtual ~RendererInterface() noexcept = default;
 
 	[[nodiscard]] virtual void* GetDevice() const noexcept = 0;
-	virtual void ConfigureView(graphics::RenderPass viewId, glm::u16vec2 resolution, uint32_t clearColor) const noexcept = 0;
-	virtual void Reset(glm::u16vec2 resolution) const noexcept = 0;
 	virtual void DrawScene(const DrawSceneDesc& drawDesc) noexcept = 0;
 	virtual void Frame() noexcept = 0;
 	virtual void RequestScreenshot(const std::filesystem::path& filepath) noexcept = 0;
