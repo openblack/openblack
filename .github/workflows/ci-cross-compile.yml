@@ -25,11 +25,11 @@ jobs:
         # This is the matrix. They form permutations.
         triplet: [""]
         preset: [android-armeabi-v7a-vcpkg, android-arm64-v8a-vcpkg, android-x86-vcpkg, android-x86_64-vcpkg]
-        os: [ubuntu-24.04]
+        os: [ubuntu-26.04]
         # These are additional individual jobs. There are no permutations of these.
         include:
           # - triplet: x86-linux
-          #   os: ubuntu-24.04
+          #   os: ubuntu-26.04
           #   preset: ninja-multi-vcpkg
           #   setup: |
           #     sudo dpkg --add-architecture i386
@@ -37,14 +37,14 @@ jobs:
           #     sudo apt-get install -y gcc-multilib g++-multilib libx11-dev:i386 libxext-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libtool autoconf libc6-dev-i386 libgpg-error-dev:i386 libltdl-dev:i386 libwayland-dev:i386 libwayland-egl-backend-dev:i386
           #   additional_args: "`-DCMAKE_C_FLAGS=-m32`, `-DCMAKE_CXX_FLAGS=-m32`, `-DOPENBLACK_CROSSCOMPILING=ON`"
           - triplet: arm64-linux
-            os: ubuntu-24.04-arm
+            os: ubuntu-26.04-arm
             preset: ninja-multi-vcpkg
             setup: |
               sudo apt-get update
               sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
           # TODO(#638): Many of the emscripten dependencies conflict due to pthreads
           # - preset: emscripten-vcpkg
-          #   os: ubuntu-latest
+          #   os: ubuntu-26.04
           #   setup: |
           #     git clone https://github.com/emscripten-core/emsdk ${EMSDK}
           #     cd ${EMSDK}
@@ -56,7 +56,7 @@ jobs:
           - triplet: arm64-windows
             os: windows-latest
             preset: ninja-multi-vcpkg
-          - os: macos-latest
+          - os: macos-26
             preset: ios-arm64-vcpkg
 
     env:
@@ -137,7 +137,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-26.04, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - name: Add base repo to git config

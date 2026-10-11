@@ -16,7 +16,7 @@ concurrency:
 jobs:
   aur:
     name: Arch Linux AUR Packaging
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
       image: archlinux:base-devel
       options: --privileged
@@ -100,7 +100,7 @@ jobs:
 
   flatpak:
     name: Package for flatpak
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
       image: bilelmoussaoui/flatpak-github-actions:freedesktop-23.08
       options: --privileged
@@ -129,7 +129,7 @@ jobs:
 
   appimage:
     name: Package for appimage
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -163,7 +163,7 @@ jobs:
 
   snapcraft:
     name: Package for snap
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
         with:

@@ -24,12 +24,12 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ubuntu-24.04, macos-14, windows-latest]
+        os: [ubuntu-26.04, macos-26, windows-latest]
         cc: [""]
         cxx: [""]
         # These are additional individual jobs. There are no permutations of these.
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             cc: clang
             cxx: clang++
           - os: windows-latest
@@ -166,7 +166,7 @@ jobs:
 
   clang-tidy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: startsWith(github.event_name, 'pull_request')
     steps:
       - uses: actions/checkout@v4
@@ -202,7 +202,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ ubuntu-24.04, macos-14, windows-latest ]
+        os: [ ubuntu-26.04, macos-26, windows-latest ]
     steps:
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
@@ -268,7 +268,7 @@ jobs:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ windows-latest ] # ubuntu-latest, macos-latest
+        os: [ windows-latest ] # ubuntu-26.04, macos-26
     env:
       ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
       BACKEND: Direct3D12
