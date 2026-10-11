@@ -51,6 +51,13 @@ jobs:
           sudo apt install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
         if: startsWith(matrix.os, 'ubuntu')
 
+      - name: Export compiler environment
+        run: |
+          echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV
+          echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
+        shell: bash
+        if: matrix.cc != ''
+
       - name: Download ClangBuildAnalyzer
         uses: dsaltares/fetch-gh-release-asset@master
         if: matrix.cc == 'clang' || startsWith(matrix.os, 'macos')
@@ -159,10 +166,6 @@ jobs:
             cmake-build-presets/ninja-multi-vcpkg/test/mock/Audio
           if-no-files-found: error
           overwrite: true
-
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
 
   clang-tidy:
     needs: build
