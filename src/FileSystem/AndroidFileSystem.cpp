@@ -18,7 +18,7 @@
 #include <fstream>
 #include <system_error>
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <spdlog/spdlog.h>
 
 #include "MemoryStream.h"
@@ -81,8 +81,8 @@ private:
 } // namespace
 
 AndroidFileSystem::AndroidFileSystem()
-    : _jniEnv(static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv()))
-    , _jniActivity(static_cast<jobject>(SDL_AndroidGetActivity()))
+    : _jniEnv(static_cast<JNIEnv*>(SDL_GetAndroidJNIEnv()))
+    , _jniActivity(static_cast<jobject>(SDL_GetAndroidActivity()))
     , _jniInteropClass((jclass)_jniEnv->NewGlobalRef(_jniEnv->FindClass("org/openblack/app/FileSystemInterop")))
 {
 	// You need to create a global reference to use it outside the method where it was created
