@@ -75,7 +75,7 @@ jobs:
       - name: Setup (Android and Emscripten and Linux)
         run: |
           sudo apt update -y
-          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev libwayland-dev libwayland-egl-backend-dev
+          sudo apt install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libwayland-dev libwayland-egl-backend-dev
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV # to use C++23 on 26.2.11394342
         if: (startsWith(matrix.preset, 'android') || startsWith(matrix.preset, 'emscripten')) || startsWith(matrix.os, 'ubuntu')
 
