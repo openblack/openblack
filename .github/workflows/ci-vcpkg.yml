@@ -48,7 +48,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt update -y
-          sudo apt install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev
+          sudo apt install -y autoconf autoconf-archive automake libtool libgl1-mesa-dev libglu1-mesa-dev libltdl-dev libxext-dev libwayland-dev libwayland-egl-backend-dev mesa-vulkan-drivers
         if: startsWith(matrix.os, 'ubuntu')
 
       - name: Export compiler environment
@@ -96,6 +96,8 @@ jobs:
 
       - name: Run CMake+Ninja+CTest to build/test the code (Debug).
         uses: lukka/run-cmake@v10
+        env:
+          SDL_VIDEO_DRIVER: offscreen
         with:
           buildPreset: 'ninja-multi-vcpkg-debug'
           testPreset: 'ninja-multi-vcpkg-debug'
@@ -109,6 +111,8 @@ jobs:
 
       - name: Run CMake+Ninja+CTest to build/test the code (Release).
         uses: lukka/run-cmake@v10
+        env:
+          SDL_VIDEO_DRIVER: offscreen
         with:
           buildPreset: 'ninja-multi-vcpkg-release'
           testPreset: 'ninja-multi-vcpkg-release'
@@ -242,7 +246,7 @@ jobs:
       - name: Install valgrind and libc6-dbg
         run: |
           sudo apt update -y
-          sudo apt install -y valgrind
+          sudo apt install -y valgrind mesa-vulkan-drivers
         if: startsWith(matrix.os, 'ubuntu')
       - name: Check unittests for memory leaks
         run:  |
@@ -253,6 +257,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         env:
           ALSOFT_DRIVERS: "null" # avoid using also which fails, then leaks memory outside of project
+          SDL_VIDEO_DRIVER: offscreen
       - name: Check openblack for memory leaks (Mock)
         run: valgrind --tool=memcheck --track-origins=yes --leak-check=full -s --error-exitcode=1 ${{steps.download-binary.outputs.download-path}}/Debug/openblack -g ${{steps.download-test.outputs.download-path}}/mock -b Noop --num-frames-to-simulate 10  --log-level all=error
         if: startsWith(matrix.os, 'ubuntu')
