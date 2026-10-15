@@ -20,48 +20,35 @@ if (OPENBLACK_USE_VCPKG AND NOT VCPKG_HOST_TRIPLET)
   endif ()
 endif ()
 
+# A build tree has one toolchain. When that toolchain cannot produce a binary
+# the host can run against a host slang, the compiler must come from a separate
+# native build of apps/slang-sdl3-gpu-compiler instead.
+set(build_shader_compiler_default ON)
 if (CMAKE_CROSSCOMPILING
     OR (OPENBLACK_USE_VCPKG AND NOT VCPKG_TARGET_TRIPLET STREQUAL
                                 VCPKG_HOST_TRIPLET)
 )
-  include(ExternalProject)
+  set(build_shader_compiler_default OFF)
+endif ()
+option(
+  OPENBLACK_BUILD_SHADER_COMPILER
+  "Build slang-sdl3-gpu-compiler in this tree instead of importing a host build"
+  ${build_shader_compiler_default}
+)
 
-  set(host_build_dir "${CMAKE_BINARY_DIR}/host-shader-compiler")
-  set(host_compiler "${host_build_dir}/bin/slang-sdl3-gpu-compiler")
-  if (CMAKE_HOST_WIN32)
-    string(APPEND host_compiler ".exe")
-  endif ()
-
-  set(host_cmake_args "")
-  if (OPENBLACK_USE_VCPKG)
-    list(
-      APPEND
-      host_cmake_args
-      "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}"
-      "-DVCPKG_TARGET_TRIPLET:STRING=${VCPKG_HOST_TRIPLET}"
-      "-DVCPKG_HOST_TRIPLET:STRING=${VCPKG_HOST_TRIPLET}"
-      "-DVCPKG_INSTALLED_DIR:PATH=${VCPKG_INSTALLED_DIR}"
-      "-DVCPKG_MANIFEST_MODE:BOOL=OFF"
+if (OPENBLACK_BUILD_SHADER_COMPILER)
+  add_subdirectory(apps/slang-sdl3-gpu-compiler)
+else ()
+  # Host tools never live in the target sysroot, so skip find root re-rooting.
+  find_package(slang-sdl3-gpu-compiler CONFIG NO_CMAKE_FIND_ROOT_PATH)
+  if (NOT slang-sdl3-gpu-compiler_FOUND)
+    message(
+      FATAL_ERROR
+        "slang-sdl3-gpu-compiler must be built for the host first:\n"
+        "  cmake -S apps/slang-sdl3-gpu-compiler -B build-host -DCMAKE_BUILD_TYPE=Release"
+        " [-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake]\n"
+        "  cmake --build build-host\n"
+        "Then configure this project with -Dslang-sdl3-gpu-compiler_DIR=<build-host>"
     )
   endif ()
-
-  ExternalProject_Add(
-    slang-sdl3-gpu-compiler-host
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/apps/slang-sdl3-gpu-compiler"
-    BINARY_DIR "${host_build_dir}"
-    CMAKE_GENERATOR "${CMAKE_GENERATOR}"
-    CMAKE_ARGS "-DCMAKE_BUILD_TYPE:STRING=Release" ${host_cmake_args}
-    BUILD_COMMAND "${CMAKE_COMMAND}" --build <BINARY_DIR> --config Release
-    BUILD_ALWAYS ON
-    BUILD_BYPRODUCTS "${host_compiler}"
-    INSTALL_COMMAND ""
-  )
-
-  add_executable(slang-sdl3-gpu-compiler IMPORTED GLOBAL)
-  set_target_properties(
-    slang-sdl3-gpu-compiler PROPERTIES IMPORTED_LOCATION "${host_compiler}"
-  )
-  add_dependencies(slang-sdl3-gpu-compiler slang-sdl3-gpu-compiler-host)
-else ()
-  add_subdirectory(apps/slang-sdl3-gpu-compiler)
 endif ()

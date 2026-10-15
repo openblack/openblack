@@ -47,3 +47,10 @@ else ()
 endif ()
 
 set_property(TARGET slang-sdl3-gpu-compiler PROPERTY FOLDER "tools")
+
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  # Cross builds import this tree with -Dslang-sdl3-gpu-compiler_DIR=<binary dir>
+  export(TARGETS slang-sdl3-gpu-compiler
+         FILE "${CMAKE_BINARY_DIR}/slang-sdl3-gpu-compiler-config.cmake"
+  )
+endif ()
