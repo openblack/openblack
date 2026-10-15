@@ -1,0 +1,8 @@
+{
+    "name": "slang-sdl3-gpu-compiler",
+    "version-string": "0.0.1-dev",
+    "dependencies": [
+        "shader-slang",
+        "cxxopts"
+    ]
+}
