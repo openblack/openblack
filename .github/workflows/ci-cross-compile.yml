@@ -106,11 +106,9 @@ jobs:
       - name: Run CMake+vcpkg to build packages.
         id: build-packages
         uses: lukka/run-cmake@v10
-        env:
-          slang-sdl3-gpu-compiler_DIR: ${{ github.workspace }}/cmake-build-presets/host-tools
         with:
           configurePreset: '${{ matrix.preset }}'
-          configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`, `-DOPENBLACK_BUILD_SHADER_COMPILER=OFF`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
+          configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`, `-DOPENBLACK_BUILD_SHADER_COMPILER=OFF`, `-Dslang-sdl3-gpu-compiler_DIR=${{ github.workspace }}/cmake-build-presets/host-tools`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
 
       - name: Upload logs if failed
         if: failure()
