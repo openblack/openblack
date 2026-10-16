@@ -103,12 +103,16 @@ jobs:
           cmake -S apps/slang-sdl3-gpu-compiler -B cmake-build-presets/host-tools -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
           cmake --build cmake-build-presets/host-tools --config Release
 
+      - name: Locate host shader compiler
+        shell: bash
+        run: echo "HOST_TOOLS_DIR=$(pwd -W 2>/dev/null || pwd)/cmake-build-presets/host-tools" >> "$GITHUB_ENV"
+
       - name: Run CMake+vcpkg to build packages.
         id: build-packages
         uses: lukka/run-cmake@v10
         with:
           configurePreset: '${{ matrix.preset }}'
-          configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`, `-DOPENBLACK_BUILD_SHADER_COMPILER=OFF`, `-Dslang-sdl3-gpu-compiler_DIR=${{ github.workspace }}/cmake-build-presets/host-tools`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
+          configurePresetAdditionalArgs: "[`-DOPENBLACK_WARNINGS_AS_ERRORS=ON`, `-DOPENBLACK_BUILD_SHADER_COMPILER=OFF`, `-Dslang-sdl3-gpu-compiler_DIR=${{ env.HOST_TOOLS_DIR }}`${{ matrix.triplet && format(', `-DVCPKG_TARGET_TRIPLET={0}`', matrix.triplet) }}${{ matrix.additional_args && format(', {0}', matrix.additional_args) }}]"
 
       - name: Upload logs if failed
         if: failure()
