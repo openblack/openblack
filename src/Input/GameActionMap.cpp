@@ -58,8 +58,10 @@ GameActionMap::GameActionMap()
 	_keyboardBindings.emplace(SDL_SCANCODE_L, BindableActionMap::LEASH_UNLEASH_CREATURE);
 	_keyboardBindings.emplace(SDL_SCANCODE_N, BindableActionMap::SHOW_VILLAGER_NAMES);
 	_keyboardBindings.emplace(SDL_SCANCODE_S, BindableActionMap::SHOW_VILLAGER_DETAILS);
-	_keyboardModBindings.emplace(SDL_SCANCODE_S, std::make_pair(SDL_KMOD_CTRL, BindableActionMap::QUICK_SAVE));
-	_keyboardModBindings.emplace(SDL_SCANCODE_L, std::make_pair(SDL_KMOD_CTRL, BindableActionMap::QUICK_LOAD));
+	_keyboardModBindings.emplace(SDL_SCANCODE_S,
+	                             std::make_pair(static_cast<SDL_Keymod>(SDL_KMOD_CTRL), BindableActionMap::QUICK_SAVE));
+	_keyboardModBindings.emplace(SDL_SCANCODE_L,
+	                             std::make_pair(static_cast<SDL_Keymod>(SDL_KMOD_CTRL), BindableActionMap::QUICK_LOAD));
 	_keyboardBindings.emplace(SDL_SCANCODE_V, BindableActionMap::PREVIOUS_LEASH);
 	_keyboardBindings.emplace(SDL_SCANCODE_B, BindableActionMap::NEXT_LEASH);
 }
