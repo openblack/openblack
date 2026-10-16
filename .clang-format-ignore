@@ -6,5 +6,8 @@ apps/l3dtool/tiny_gltf.h
 apps/l3dtool/json.hpp
 src/Common/stb_image_write.h
 test/third_party/json.hpp
-externals/imgui_user/imgui_impl_sdl.h
-externals/imgui_user/imgui_impl_sdl.cpp
+externals/imgui_user/imgui_impl_sdl3.h
+externals/imgui_user/imgui_impl_sdl3.cpp
+externals/imgui_user/imgui_impl_sdlgpu3.h
+externals/imgui_user/imgui_impl_sdlgpu3.cpp
+externals/imgui_user/imgui_impl_sdlgpu3_shaders.h
