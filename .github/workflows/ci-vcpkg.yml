@@ -272,15 +272,24 @@ jobs:
   screenshot:
     needs: run
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         # This is the matrix. They form permutations.
-        os: [ windows-latest ] # ubuntu-26.04, macos-26
+        os: [ ubuntu-26.04 ]
     env:
-      ARGS: -g game-data\bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
-      BACKEND: Direct3D12
+      ARGS: -g game-data/bw --num-frames-to-simulate 10 --screenshot-frame 5 --log-file stdout --log-level all=debug -W 800 -H 600
+      BACKEND: Vulkan
+      # Runners are headless: render through Mesa's lavapipe into an offscreen window
+      SDL_VIDEO_DRIVER: offscreen
+      ALSOFT_DRIVERS: "null"
     steps:
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libvulkan1 mesa-vulkan-drivers
+        if: startsWith(matrix.os, 'ubuntu')
       - run: echo "GITHUB_REF_NAME_DASHES=${GITHUB_REF_NAME/\//-}" >> $GITHUB_ENV
         shell: bash
       - name: Download compiled openblack and tools
