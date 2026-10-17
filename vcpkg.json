@@ -9,7 +9,7 @@
         {
             "name": "sdl3",
             "features": [ "vulkan" ],
-            "platform": "linux"
+            "platform": "linux | android"
         },
         {
             "name": "imgui",

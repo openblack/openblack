@@ -123,9 +123,39 @@ Game::~Game() noexcept
 	spdlog::shutdown();
 }
 
+namespace
+{
+std::optional<input::InputDevice> GetInputDevice(const SDL_Event& event)
+{
+	switch (event.type)
+	{
+	case SDL_EVENT_FINGER_DOWN:
+		if (event.tfinger.touchID != SDL_MOUSE_TOUCHID)
+		{
+			return input::InputDevice::Touch;
+		}
+		break;
+	case SDL_EVENT_KEY_DOWN:
+		return input::InputDevice::KeyboardMouse;
+	case SDL_EVENT_MOUSE_MOTION:
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+	case SDL_EVENT_MOUSE_WHEEL:
+		if (event.motion.which != SDL_TOUCH_MOUSEID)
+		{
+			return input::InputDevice::KeyboardMouse;
+		}
+		break;
+	default:
+		break;
+	}
+	return std::nullopt;
+}
+} // namespace
+
 bool Game::ProcessEvents(const SDL_Event& event) noexcept
 {
-	if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+	if ((event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP) &&
+	    event.button.which != SDL_TOUCH_MOUSEID)
 	{
 		const bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
 		if (event.button.button == SDL_BUTTON_LEFT)
@@ -429,6 +459,10 @@ bool Game::Initialize() noexcept
 		if (!Locator::debugGui::value().ProcessEvents(event))
 		{
 			config.running = this->ProcessEvents(event);
+			if (const auto device = GetInputDevice(event))
+			{
+				SetInputDevice(*device);
+			}
 			Locator::gameActionSystem::value().ProcessEvent(event);
 		}
 	}));

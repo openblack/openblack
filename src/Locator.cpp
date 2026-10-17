@@ -39,6 +39,7 @@
 #include "ECS/Systems/Implementations/VegetationSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
+#include "Input/TouchGameActionMap.h"
 #include "LHVM.h"
 #include "Profiler.h"
 #include "Resources/Resources.h"
@@ -71,6 +72,8 @@ using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
 using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
+using openblack::input::InputDevice;
+using openblack::input::TouchGameActionMap;
 using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
@@ -123,7 +126,11 @@ bool openblack::InitializeGame() noexcept
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::playerSystem::emplace<PlayerSystem>();
-	Locator::gameActionSystem::emplace<GameActionMap>();
+#if __ANDROID__
+	SetInputDevice(InputDevice::Touch);
+#else
+	SetInputDevice(InputDevice::KeyboardMouse);
+#endif
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::handSystem::emplace<HandSystem>();
@@ -144,6 +151,28 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
+}
+
+void openblack::SetInputDevice(InputDevice device)
+{
+	if (Locator::gameActionSystem::has_value())
+	{
+		auto& current = Locator::gameActionSystem::value();
+		const bool isTouch = dynamic_cast<TouchGameActionMap*>(&current) != nullptr;
+		if (isTouch == (device == InputDevice::Touch))
+		{
+			return;
+		}
+	}
+	switch (device)
+	{
+	case InputDevice::KeyboardMouse:
+		Locator::gameActionSystem::emplace<GameActionMap>();
+		break;
+	case InputDevice::Touch:
+		Locator::gameActionSystem::emplace<TouchGameActionMap>();
+		break;
+	}
 }
 
 void openblack::ShutDownServices()

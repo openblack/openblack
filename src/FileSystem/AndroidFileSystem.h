@@ -40,9 +40,11 @@ public:
 	             const std::function<void(const std::filesystem::path&)>& function) const override;
 
 private:
-	JNIEnv* _jniEnv;
+	// Global references; a JNIEnv is per thread so it is fetched for each call instead
 	jobject _jniActivity;
 	jclass _jniInteropClass;
+	jmethodID _jniGetDirectoryFromPathMid;
+	jmethodID _jniExistsFromPathMid;
 	jmethodID _jniReadFileFromPathMid;
 	jmethodID _jniListFilesFromPathMid;
 
