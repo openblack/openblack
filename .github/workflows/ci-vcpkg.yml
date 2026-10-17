@@ -196,9 +196,9 @@ jobs:
           exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*stb_rect_pack.h,*dr_*.h"
           config_file: ""       # Don't use a single config file
           clang_tidy_checks: "" # Use checks from .clang-tidy tree
-          lgtm_comment_body: "" # Don't post a lgtm message
-          annotations: false
           apt_packages: libstdc++-14-dev
+          split_workflow: true
+      - uses: ZedThree/clang-tidy-review/upload@v0.19.0
       - name: If there are any comments, fail the check
         if: steps.review.outputs.total_comments > 0
         run: exit 1

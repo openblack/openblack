@@ -1,0 +1,48 @@
+name: Clang-Tidy Review Comment
+
+on:
+  workflow_run:
+    workflows: [VCPKG CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-26.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+    steps:
+      - name: Find the pull request
+        id: pr
+        run: |
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+          number=$(gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" |
+            jq -r --arg sha "$HEAD_SHA" --arg repo "$HEAD_REPO" \
+              '.[] | select(.head.sha == $sha and .head.repo.full_name == $repo) | .number' | head -n 1)
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: Download review
+        id: download
+        if: steps.pr.outputs.number != ''
+        continue-on-error: true
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          gh run download "$RUN_ID" --repo "$REPO" --name clang-tidy-review --dir .
+          test -f clang-tidy-review-output.json
+          jq -n --argjson pr "$PR" '{pr_number: $pr}' > clang-tidy-review-metadata.json
+
+      - uses: ZedThree/clang-tidy-review/post@v0.19.0
+        if: steps.download.outcome == 'success'
+        with:
+          lgtm_comment_body: ""
+          annotations: false
+          num_comments_as_exitcode: false
