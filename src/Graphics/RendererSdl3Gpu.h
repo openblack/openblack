@@ -10,6 +10,7 @@
 #pragma once
 
 #include <array>
+#include <deque>
 #include <map>
 
 #include <entt/fwd.hpp>
@@ -27,6 +28,7 @@ struct SDL_GPUSampler;
 struct SDL_GPURenderPass;
 struct SDL_GPUTexture;
 struct SDL_GPUBuffer;
+struct SDL_GPUFence;
 struct SDL_Window;
 
 namespace openblack::graphics
@@ -88,6 +90,7 @@ private:
 
 	[[nodiscard]] SDL_GPUBuffer* UploadBuffer(const std::string& name, std::span<const uint8_t> memory,
 	                                          bool indexBuffer) const noexcept;
+	[[nodiscard]] bool SubmitUpload(SDL_GPUCommandBuffer* commandBuffer) const noexcept;
 	[[nodiscard]] bool ResizeDepthStencil(glm::uvec2 resolution) noexcept;
 	void DrawGeometry(SDL_GPURenderPass* renderPass, SDL_GPUGraphicsPipeline* pipeline, const Mesh& mesh,
 	                  uint32_t instanceCount = 1) const;
@@ -115,5 +118,6 @@ private:
 	Texture2dUniquePtr _whiteTexture;
 	SDL_GPUTexture* _depthStencil {};
 	glm::uvec2 _depthStencilResolution {};
+	mutable std::deque<SDL_GPUFence*> _pendingUploads;
 };
 } // namespace openblack::graphics

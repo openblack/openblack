@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.UriPermission;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -20,29 +21,34 @@ import java.util.Arrays;
 public class OpenblackActivity extends SDLActivity {
 
     private static final int REQUEST_GAME_PATH = 1001;
+    private static final String PREFERENCES = "Openblack";
+    private static final String GAME_PATH_KEY = "selected_directory_uri";
+    private boolean gamePathRequestDone;
+    @Nullable
+    private String pickedGamePath;
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_GAME_PATH) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                Uri uri = data.getData();
-                if (uri != null) {
-                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-                    // Save the URI into SharedPreferences
-                    getSharedPreferences("Openblack", MODE_PRIVATE)
-                            .edit()
-                            .putString("selected_directory_uri", uri.toString())
-                            .apply();
-
-                    synchronized (this) {
-                        notify();
-                    }
-                }
+            Uri uri = resultCode == Activity.RESULT_OK && data != null ? data.getData() : null;
+            if (uri != null) {
+                // Persist the grant so the folder stays readable after restarts
+                getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                getSharedPreferences(PREFERENCES, MODE_PRIVATE)
+                        .edit()
+                        .putString(GAME_PATH_KEY, uri.toString())
+                        .apply();
             } else {
                 Log.e("OpenblackActivity", "Directory not selected or error");
+            }
+
+            // Wake the SDL thread even when cancelled, otherwise it waits forever
+            synchronized (this) {
+                pickedGamePath = uri != null ? uri.toString() : null;
+                gamePathRequestDone = true;
+                notifyAll();
             }
         }
     }
@@ -55,20 +61,53 @@ public class OpenblackActivity extends SDLActivity {
         return "main";
     }
 
-    private String requestGamePath() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        startActivityForResult(intent, REQUEST_GAME_PATH);
-
-        // Block execution until the user selects a directory
-        synchronized (this) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                Log.e("OpenblackActivity", "Error waiting for game path selection", e);
+    /**
+     * Returns the previously chosen game directory if its read grant is still held.
+     */
+    @Nullable
+    private String getSavedGamePath() {
+        String saved = getSharedPreferences(PREFERENCES, MODE_PRIVATE).getString(GAME_PATH_KEY, null);
+        if (saved == null) {
+            return null;
+        }
+        Uri uri = Uri.parse(saved);
+        for (UriPermission permission : getContentResolver().getPersistedUriPermissions()) {
+            if (permission.getUri().equals(uri) && permission.isReadPermission()) {
+                return saved;
             }
         }
+        Log.w("OpenblackActivity", "Lost access to saved game directory, asking again");
+        return null;
+    }
 
-        return getSharedPreferences("Openblack", MODE_PRIVATE).getString("selected_directory_uri", null);
+    @Nullable
+    private String requestGamePath() {
+        String saved = getSavedGamePath();
+        if (saved != null) {
+            return saved;
+        }
+
+        synchronized (this) {
+            gamePathRequestDone = false;
+            pickedGamePath = null;
+        }
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_GAME_PATH);
+
+        // Block the SDL thread until the user picks or cancels
+        synchronized (this) {
+            while (!gamePathRequestDone) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Log.e("OpenblackActivity", "Error waiting for game path selection", e);
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            return pickedGamePath;
+        }
     }
 
     /**
@@ -81,6 +120,9 @@ public class OpenblackActivity extends SDLActivity {
     @RequiresApi(api = Build.VERSION_CODES.M)
     protected String[] getArguments() {
         String gamePath = requestGamePath();
+        if (gamePath == null) {
+            return new String[]{"--backend-type", "Vulkan", "--log-file", "logcat"};
+        }
         return new String[]{
                 "--game-path", gamePath,
                 "--backend-type", "Vulkan",

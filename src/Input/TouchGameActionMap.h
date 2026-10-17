@@ -76,6 +76,7 @@ private:
 	void SetBindable(BindableActionMap action, bool value);
 	void SetUnbindable(UnbindableActionMap action, bool value);
 	[[nodiscard]] TwoFingerMetrics GetTwoFingerMetrics() const;
+	void SetTwoFingerGesture(Gesture gesture);
 	[[nodiscard]] static glm::vec2 ToWindowCoordinates(const SDL_TouchFingerEvent& event);
 
 	BindableActionMap _bindableMap = BindableActionMap::NONE;

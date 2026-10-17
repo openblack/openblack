@@ -38,7 +38,9 @@ Sdl3WindowingSystem::Sdl3WindowingSystem(const std::string& title, int width, in
 	                   SDL_VERSIONNUM_MICRO(linkedVersion));
 
 	// Initialize SDL
+#if defined(SDL_PLATFORM_LINUX) && !defined(SDL_PLATFORM_ANDROID)
 	SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
+#endif
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		throw std::runtime_error("Could not initialize SDL: " + std::string(SDL_GetError()));
