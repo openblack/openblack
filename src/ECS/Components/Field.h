@@ -14,7 +14,9 @@ namespace openblack::ecs::components
 
 struct Field
 {
-	int town;
+	static constexpr float radius2D = 5.0f;
+
+	char dummy;
 };
 
 } // namespace openblack::ecs::components
