@@ -1,0 +1,87 @@
+name: Screenshot Comment
+
+# Posts the screenshots rendered by VCPKG CI on its pull request. Pull requests from forks get no secrets
+# and a read-only token, so this runs separately from the base repository instead. It must never run
+# code from the pull request: it only reads the PNG artifact, and derives the pull request number and
+# upload names from the event rather than from anything the pull request controls.
+on:
+  workflow_run:
+    workflows: [VCPKG CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-26.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+    steps:
+      # workflow_run.pull_requests is empty for forks, so match the open pull request by its head instead
+      - name: Find the pull request
+        id: pr
+        run: |
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+          number=$(gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" |
+            jq -r --arg sha "$HEAD_SHA" --arg repo "$HEAD_REPO" \
+              '.[] | select(.head.sha == $sha and .head.repo.full_name == $repo) | .number' | head -n 1)
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: Download screenshots
+        id: download
+        if: steps.pr.outputs.number != ''
+        continue-on-error: true # The screenshot job did not run or failed
+        run: gh run download "$RUN_ID" --repo "$REPO" --name openblack-screenshots --dir artifact
+
+      - name: Upload screenshots and comment
+        if: steps.download.outcome == 'success'
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+          SCREENSHOTS_API_KEY: ${{ secrets.SCREENSHOTS_API_KEY }}
+        run: |
+          base=https://screenshots.bwgame.net
+          maps=(
+            "Land1.txt|land-1|https://user-images.githubusercontent.com/1013356/188042342-a6e84dfd-840d-4b90-a1b8-84128e4aab5d.png"
+            "Land2.txt|land-2|https://github.com/openblack/openblack/assets/1013356/0910a1c9-23f2-4cb2-a617-8e5efff9d9ab"
+            "Land3.txt|land-3|https://user-images.githubusercontent.com/1013356/188042339-4a3941f3-1089-4838-a086-9836c6fe5113.png"
+            "Land4.txt|land-4|https://user-images.githubusercontent.com/1013356/188042337-6d139916-5988-4020-a738-1a1fe64a915d.png"
+            "Land5.txt|land-5|https://user-images.githubusercontent.com/1013356/188042333-5009397c-087f-48fd-a150-b811284f65ed.png"
+            "LandT.txt|land-T|https://user-images.githubusercontent.com/1013356/188042332-f9fd0060-d0e0-478a-bb7f-c8eb0ae0690f.png"
+            "TwoGods.txt|two-gods|https://user-images.githubusercontent.com/1013356/188042326-6cbe726c-6753-4157-86fa-63016804f313.png"
+            "ThreeGods.txt|three-gods|https://user-images.githubusercontent.com/1013356/188042329-51054173-dec5-47b2-8537-ac605ab2be4b.png"
+            "FourGods.txt|four-gods|https://user-images.githubusercontent.com/1013356/188042323-7d428031-cf7e-4e46-b185-a12950bff76a.png"
+            "construct.txt|construct|https://github.com/openblack/openblack/assets/1013356/8e7480a9-5839-49d2-894f-b9821c3dd3e2"
+          )
+          body=$'# Uploaded images\n| Map | Debug | Release | Vanilla |\n| --- | ----- | ------- | ------- |\n'
+          for entry in "${maps[@]}"; do
+            IFS='|' read -r script key vanilla <<<"$entry"
+            row="| $script |"
+            for config in debug release; do
+              # Upload names come from the event, never from artifact file names
+              name="screenshot-$HEAD_SHA-$config-$key.png"
+              file=$(find artifact -maxdepth 1 -type f -name "screenshot-*-$config-$key.png" | head -n 1)
+              if [ -n "$file" ] && [ "$(stat -c %s "$file")" -le 10485760 ] &&
+                [ "$(head -c 8 "$file" | od -An -tx1 | tr -d ' \n')" = 89504e470d0a1a0a ]; then
+                curl -fsS --upload-file "$file" -H "X-Openblack-Auth-Key: $SCREENSHOTS_API_KEY" "$base/$name"
+                row+=" ![${script%.txt} ${config^}]($base/$name) |"
+              else
+                row+=" missing |"
+              fi
+            done
+            body+="$row ![${script%.txt} Vanilla]($vanilla) |"$'\n'
+          done
+          comment=$(gh api --paginate "repos/$REPO/issues/$PR/comments" |
+            jq -r '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("# Uploaded images"))) | .id' |
+            head -n 1)
+          if [ -n "$comment" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$comment" -f body="$body" > /dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -f body="$body" > /dev/null
+          fi
