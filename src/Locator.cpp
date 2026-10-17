@@ -11,8 +11,6 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
-#include <optional>
-
 #include <spdlog/spdlog.h>
 
 #include "3D/Implementations/LandIsland.h"
@@ -80,11 +78,6 @@ using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
 using openblack::windowing::Sdl3WindowingSystem;
-
-namespace
-{
-std::optional<InputDevice> g_InputDevice;
-} // namespace
 
 void openblack::InitializeWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
@@ -162,9 +155,14 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 
 void openblack::SetInputDevice(InputDevice device)
 {
-	if (g_InputDevice == device)
+	if (Locator::gameActionSystem::has_value())
 	{
-		return;
+		auto& current = Locator::gameActionSystem::value();
+		const bool isTouch = dynamic_cast<TouchGameActionMap*>(&current) != nullptr;
+		if (isTouch == (device == InputDevice::Touch))
+		{
+			return;
+		}
 	}
 	switch (device)
 	{
@@ -175,7 +173,6 @@ void openblack::SetInputDevice(InputDevice device)
 		Locator::gameActionSystem::emplace<TouchGameActionMap>();
 		break;
 	}
-	g_InputDevice = device;
 }
 
 void openblack::ShutDownServices()
@@ -212,7 +209,6 @@ void openblack::ShutDownServices()
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
-	g_InputDevice.reset();
 
 	Locator::oceanSystem::reset();
 	Locator::skySystem ::reset();

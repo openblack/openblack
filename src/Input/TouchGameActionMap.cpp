@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <span>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL_stdinc.h>
@@ -35,7 +36,7 @@ namespace
 {
 constexpr auto k_TapSlop = 0.03f;
 constexpr auto k_DoubleTapDistance = 0.06f;
-constexpr auto k_PinchThreshold = 0.05f;
+constexpr auto k_PinchThreshold = 0.08f;
 constexpr auto k_TiltThreshold = 0.05f;
 constexpr auto k_TwistThreshold = glm::radians(12.0f);
 
@@ -43,7 +44,7 @@ constexpr auto k_LongPressDelay = 450ms;
 constexpr auto k_DoubleTapDelay = 300ms;
 
 constexpr auto k_ReferenceShortSide = 1024.0f;
-// TODO: Tune on device. Signs follow the desktop mouse gestures and may need flipping.
+// TODO(bwrsandman): Tune on device. Signs follow the desktop mouse gestures and may need flipping.
 constexpr auto k_PinchScale = 1.5f;
 constexpr auto k_TwistScale = 400.0f;
 constexpr auto k_TiltScale = 1.0f;
@@ -342,30 +343,32 @@ void TouchGameActionMap::UpdateTwoFingerGesture()
 	const auto shortSide = GetShortSide();
 	const auto toReference = k_ReferenceShortSide / shortSide;
 
+	const std::array<std::pair<Gesture, float>, 3> scores {{
+	    {Gesture::Pinch, glm::abs(current.distance - _twoFingerStart.distance) / (k_PinchThreshold * shortSide)},
+	    {Gesture::Twist, glm::abs(WrapAngle(current.angle - _twoFingerStart.angle)) / k_TwistThreshold},
+	    {Gesture::Tilt, glm::abs(current.midpoint.y - _twoFingerStart.midpoint.y) / (k_TiltThreshold * shortSide)},
+	}};
+	// NOLINTNEXTLINE(readability-qualified-auto): std::array iterators are only raw pointers in libstdc++
+	const auto active = std::ranges::find(scores, _gesture, &std::pair<Gesture, float>::first);
+	// NOLINTNEXTLINE(readability-qualified-auto): std::array iterators are only raw pointers in libstdc++
+	const auto best = std::ranges::max_element(scores, {}, &std::pair<Gesture, float>::second);
+	if (active != scores.end() && active->second >= 1.0f)
+	{
+		_twoFingerStart = current;
+	}
+	else if (best->second >= 1.0f)
+	{
+		SetTwoFingerGesture(best->first);
+		_twoFingerStart = current;
+	}
+
 	switch (_gesture)
 	{
-	case Gesture::TwoFinger:
-		if (glm::abs(current.distance - _twoFingerStart.distance) > k_PinchThreshold * shortSide)
-		{
-			SetGesture(Gesture::Pinch);
-			SetUnbindable(UnbindableActionMap::TWO_BUTTON_CLICK, true);
-		}
-		else if (glm::abs(WrapAngle(current.angle - _twoFingerStart.angle)) > k_TwistThreshold)
-		{
-			SetGesture(Gesture::Twist);
-			SetBindable(BindableActionMap::ROTATE_AROUND_MOUSE_ON, true);
-		}
-		else if (glm::abs(current.midpoint.y - _twoFingerStart.midpoint.y) > k_TiltThreshold * shortSide)
-		{
-			SetGesture(Gesture::Tilt);
-			SetBindable(BindableActionMap::ROTATE_AROUND_MOUSE_ON, true);
-		}
-		break;
 	case Gesture::Pinch:
 		_delta.y -= (current.distance - _twoFingerLast.distance) * toReference * k_PinchScale;
 		break;
 	case Gesture::Twist:
-		_delta.x += WrapAngle(current.angle - _twoFingerLast.angle) * k_TwistScale;
+		_delta.x -= WrapAngle(current.angle - _twoFingerLast.angle) * k_TwistScale;
 		break;
 	case Gesture::Tilt:
 		_delta.y += (current.midpoint.y - _twoFingerLast.midpoint.y) * toReference * k_TiltScale;
@@ -375,6 +378,14 @@ void TouchGameActionMap::UpdateTwoFingerGesture()
 	}
 
 	_twoFingerLast = current;
+}
+
+void TouchGameActionMap::SetTwoFingerGesture(Gesture gesture)
+{
+	SetGesture(gesture);
+	SetUnbindable(UnbindableActionMap::TWO_BUTTON_CLICK, gesture == Gesture::Pinch);
+	SetBindable(BindableActionMap::ROTATE_AROUND_MOUSE_ON, gesture == Gesture::Twist || gesture == Gesture::Tilt);
+	_delta = glm::vec2(0.0f);
 }
 
 void TouchGameActionMap::DropStaleFingers()
@@ -395,7 +406,7 @@ void TouchGameActionMap::DropStaleFingers()
 			stale.push_back(id);
 		}
 	}
-	SDL_free(fingers);
+	SDL_free(static_cast<void*>(fingers));
 
 	for (const auto id : stale)
 	{

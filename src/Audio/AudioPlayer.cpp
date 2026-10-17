@@ -160,14 +160,14 @@ void AudioPlayer::UpdateSource(SourceId id, glm::vec3 pos, float volume, bool lo
 {
 	alCheckCall(alSource3f(id, AL_POSITION, pos.z, pos.y, pos.x));
 	alCheckCall(alSourcef(id, AL_GAIN, volume * _volume));
-	alCheckCall(alSourcef(id, AL_LOOPING, loop));
+	alCheckCall(alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE));
 	alCheckCall(alSourcef(id, AL_PITCH, 1.f));
 }
 
 void AudioPlayer::UpdateSource(SourceId id, float volume, bool loop)
 {
 	alCheckCall(alSourcef(id, AL_GAIN, volume * _volume));
-	alCheckCall(alSourcef(id, AL_LOOPING, loop));
+	alCheckCall(alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE));
 	alCheckCall(alSourcef(id, AL_PITCH, 1.f));
 }
 
