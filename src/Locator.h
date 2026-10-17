@@ -64,7 +64,13 @@ class RendererInterface;
 namespace input
 {
 class GameActionInterface;
-}
+
+enum class InputDevice : std::uint8_t
+{
+	KeyboardMouse,
+	Touch,
+};
+} // namespace input
 
 namespace lhvm
 {
@@ -106,6 +112,7 @@ void InitializeWindow(const std::string& title, int width, int height, windowing
 bool InitializeEngine(GraphicsBackend backend, bool vsync) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
+void SetInputDevice(input::InputDevice device);
 void ShutDownServices();
 
 struct Locator
