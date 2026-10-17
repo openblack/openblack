@@ -11,10 +11,9 @@
 
 #include <array>
 #include <filesystem>
-#include <istream>
 #include <map>
 #include <memory>
-#include <streambuf>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -193,13 +192,13 @@ protected:
 	/// Metadata and DDS formatted texture data
 	std::map<std::string, G3DTexture> _textures;
 	/// Bytes of l3d meshes
-	std::vector<std::vector<uint8_t>> _meshes;
-	/// Bytes of anm meshes
-	std::vector<std::vector<uint8_t>> _animations;
+	std::vector<std::span<const char>> _meshes;
+	/// Bytes of anm meshes (cannot be span because data is truncated in pack file vs anim files)
+	std::vector<std::vector<char>> _animations;
 	/// Headers of snd audio samples
 	std::vector<AudioBankSampleHeader> _audioSampleHeaders;
 	/// Bytes of snd audio samples
-	std::vector<std::vector<uint8_t>> _audioSampleData;
+	std::vector<std::span<const char>> _audioSampleData;
 
 	/// Read blocks from pack
 	PackResult ReadBlocks(std::istream& stream) noexcept;
@@ -254,7 +253,7 @@ public:
 	PackResult CreateMeshBlock() noexcept;
 
 	/// Insert Mesh Data for the Mesh Block
-	PackResult InsertMesh(std::vector<uint8_t> data) noexcept;
+	PackResult InsertMesh(std::span<const char> span) noexcept;
 
 	/// Create Info block from look-up table
 	PackResult CreateInfoBlock() noexcept;
@@ -265,15 +264,14 @@ public:
 	[[nodiscard]] const std::map<std::string, std::vector<uint8_t>>& GetBlocks() const noexcept { return _blocks; }
 	[[nodiscard]] bool HasBlock(const std::string& name) const noexcept { return _blocks.contains(name); }
 	[[nodiscard]] const std::vector<uint8_t>& GetBlock(const std::string& name) const noexcept { return _blocks.at(name); }
-	[[nodiscard]] std::unique_ptr<std::istream> GetBlockAsStream(const std::string& name) const noexcept;
 	[[nodiscard]] const std::vector<InfoBlockLookup>& GetInfoBlockLookup() const noexcept { return _infoBlockLookup; }
 	[[nodiscard]] const std::vector<BodyBlockLookup>& GetBodyBlockLookup() const noexcept { return _bodyBlockLookup; }
 	[[nodiscard]] const std::map<std::string, G3DTexture>& GetTextures() const noexcept { return _textures; }
 	[[nodiscard]] const G3DTexture& GetTexture(const std::string& name) const noexcept { return _textures.at(name); }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetMeshes() const noexcept { return _meshes; }
-	[[nodiscard]] const std::vector<uint8_t>& GetMesh(uint32_t index) const noexcept { return _meshes[index]; }
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAnimations() const noexcept { return _animations; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAnimation(uint32_t index) const noexcept { return _animations[index]; }
+	[[nodiscard]] const std::vector<std::span<const char>>& GetMeshes() const noexcept { return _meshes; }
+	[[nodiscard]] const std::span<const char>& GetMesh(uint32_t index) const noexcept { return _meshes[index]; }
+	[[nodiscard]] const std::vector<std::vector<char>>& GetAnimations() const noexcept { return _animations; }
+	[[nodiscard]] const std::vector<char>& GetAnimation(uint32_t index) const noexcept { return _animations[index]; }
 	[[nodiscard]] const std::vector<AudioBankSampleHeader>& GetAudioSampleHeaders() const noexcept
 	{
 		return _audioSampleHeaders;
@@ -282,8 +280,8 @@ public:
 	{
 		return _audioSampleHeaders[index];
 	}
-	[[nodiscard]] const std::vector<std::vector<uint8_t>>& GetAudioSamplesData() const noexcept { return _audioSampleData; }
-	[[nodiscard]] const std::vector<uint8_t>& GetAudioSampleData(uint32_t index) const noexcept
+	[[nodiscard]] const std::vector<std::span<const char>>& GetAudioSamplesData() const noexcept { return _audioSampleData; }
+	[[nodiscard]] const std::span<const char>& GetAudioSampleData(uint32_t index) const noexcept
 	{
 		return _audioSampleData[index];
 	}
