@@ -11,6 +11,8 @@
 
 #define LOCATOR_IMPLEMENTATIONS
 
+#include <optional>
+
 #include <spdlog/spdlog.h>
 
 #include "3D/Implementations/LandIsland.h"
@@ -39,6 +41,7 @@
 #include "ECS/Systems/Implementations/VegetationSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
+#include "Input/TouchGameActionMap.h"
 #include "LHVM.h"
 #include "Profiler.h"
 #include "Resources/Resources.h"
@@ -71,10 +74,17 @@ using openblack::ecs::systems::TownSystem;
 using openblack::ecs::systems::VegetationSystem;
 using openblack::graphics::RendererInterface;
 using openblack::input::GameActionMap;
+using openblack::input::InputDevice;
+using openblack::input::TouchGameActionMap;
 using openblack::lhvm::LHVM;
 using openblack::resources::Resources;
 using openblack::windowing::DisplayMode;
 using openblack::windowing::Sdl3WindowingSystem;
+
+namespace
+{
+std::optional<InputDevice> g_InputDevice;
+} // namespace
 
 void openblack::InitializeWindow(const std::string& title, int width, int height, DisplayMode displayMode, uint32_t extraFlags)
 {
@@ -123,7 +133,11 @@ bool openblack::InitializeGame() noexcept
 	Locator::terrainSystem::emplace<UnloadedIsland>();
 	Locator::resources::emplace<Resources>();
 	Locator::playerSystem::emplace<PlayerSystem>();
-	Locator::gameActionSystem::emplace<GameActionMap>();
+#if __ANDROID__
+	SetInputDevice(InputDevice::Touch);
+#else
+	SetInputDevice(InputDevice::KeyboardMouse);
+#endif
 	Locator::rendereringSystem::emplace<RenderingSystem>();
 	Locator::entitiesRegistry::emplace<Registry>();
 	Locator::handSystem::emplace<HandSystem>();
@@ -144,6 +158,24 @@ void openblack::InitializeLevel(const std::filesystem::path& path)
 	Locator::pathfindingSystem::emplace<PathfindingSystem>();
 	Locator::cameraBookmarkSystem::emplace<CameraBookmarkSystem>();
 	Locator::terrainSystem::emplace<LandIsland>(path);
+}
+
+void openblack::SetInputDevice(InputDevice device)
+{
+	if (g_InputDevice == device)
+	{
+		return;
+	}
+	switch (device)
+	{
+	case InputDevice::KeyboardMouse:
+		Locator::gameActionSystem::emplace<GameActionMap>();
+		break;
+	case InputDevice::Touch:
+		Locator::gameActionSystem::emplace<TouchGameActionMap>();
+		break;
+	}
+	g_InputDevice = device;
 }
 
 void openblack::ShutDownServices()
@@ -180,6 +212,7 @@ void openblack::ShutDownServices()
 	Locator::terrainSystem::reset();
 	Locator::filesystem::reset();
 	Locator::gameActionSystem::reset();
+	g_InputDevice.reset();
 
 	Locator::oceanSystem::reset();
 	Locator::skySystem ::reset();
