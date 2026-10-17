@@ -1,0 +1,12 @@
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -37,7 +37,8 @@
+ set_target_properties(libunshield PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
+ 
+ if(USE_OUR_OWN_MD5)
+-    target_link_libraries(libunshield PRIVATE $<TARGET_OBJECTS:md5>)
++    # Embed the objects; linking them would export a reference to the internal md5 target
++    target_sources(libunshield PRIVATE $<TARGET_OBJECTS:md5>)
+ else()
+     target_link_libraries(libunshield PRIVATE OpenSSL::Crypto)
+ endif()

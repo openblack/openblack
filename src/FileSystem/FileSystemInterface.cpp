@@ -25,6 +25,10 @@ std::filesystem::path FileSystemInterface::FixPath(const std::filesystem::path& 
 	    "\\Landscape\\",
 	    "\\Multi_Player\\",
 	};
+	constexpr std::array<std::array<std::string_view, 2>, 2> pathSubstitutionTable = {{
+	    {"BODGE_JC", "Misc"},    //
+	    {"Other Graphics/", ""}, //
+	}};
 	for (const auto& pattern : caseFixTable)
 	{
 		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
@@ -32,6 +36,16 @@ std::filesystem::path FileSystemInterface::FixPath(const std::filesystem::path& 
 		if (foundIter != result.cend())
 		{
 			result.replace(foundIter, foundIter + pattern.size(), pattern.data());
+		}
+	}
+
+	for (const auto& [pattern, replacement] : pathSubstitutionTable)
+	{
+		auto foundIter = std::search(result.cbegin(), result.cend(), pattern.cbegin(), pattern.cend(),
+		                             [](char left, char right) { return std::toupper(left) == std::toupper(right); });
+		if (foundIter != result.cend())
+		{
+			result.replace(foundIter, foundIter + pattern.size(), replacement.data());
 		}
 	}
 

@@ -103,7 +103,7 @@ class VegetationInterface;
 } // namespace ecs::systems
 
 void InitializeWindow(const std::string& title, int width, int height, windowing::DisplayMode displayMode, uint32_t extraFlags);
-bool InitializeEngine(GraphicsBackend backend, bool vsync) noexcept;
+bool InitializeEngine(GraphicsBackend backend, bool vsync, const std::filesystem::path& gamePath) noexcept;
 bool InitializeGame() noexcept;
 void InitializeLevel(const std::filesystem::path& path);
 void ShutDownServices();
