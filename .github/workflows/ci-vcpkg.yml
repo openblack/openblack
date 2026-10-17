@@ -15,6 +15,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: read
   pull-requests: write
 
 jobs:
@@ -224,18 +225,17 @@ jobs:
         with:
           name: openblack-test-data-${{ env.GITHUB_REF_NAME_DASHES }}
           path: cmake-build-presets/ninja-multi-vcpkg/test
-      - name: Download encrypted Game Data
-        env:
-          GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
+      - uses: oras-project/setup-oras@005458ad77f1c8facd38a094e4af2e69e5607ff4 # v2.0.2
+      - name: Download Game Data
         shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/openblack/bw1-assets
         run: |
+          echo "$GHCR_TOKEN" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+          layer=$(oras manifest fetch --platform linux/amd64 "$IMAGE:latest" | jq -r '.layers[0].digest')
           mkdir -p game-data
-          gh release download assets \
-            --repo ${{secrets.BW_DOWNLOAD_URL}} \
-            --pattern bw.zip \
-            --dir game-data
-      - name: Extract Game Data
-        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
+          oras blob fetch "$IMAGE@$layer" --output - | tar -xz -C game-data
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
@@ -305,18 +305,20 @@ jobs:
       - name: Enable execute permissions on binary
         run: chmod +x ${{steps.download-binary.outputs.download-path}}/*/*
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-      - name: Download encrypted Game Data
-        env:
-          GH_TOKEN: ${{ secrets.BW_ASSET_TOKEN }}
+      # Game data is a private GHCR artifact published by openblack/bw1-assets. Pulling it only needs the
+      # job's GITHUB_TOKEN, which fork pull requests also get, unlike repository secrets.
+      - uses: oras-project/setup-oras@005458ad77f1c8facd38a094e4af2e69e5607ff4 # v2.0.2
+      # The image is FROM scratch with one layer holding bw/, so unpack that layer instead of running it
+      - name: Download Game Data
         shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/openblack/bw1-assets
         run: |
+          echo "$GHCR_TOKEN" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+          layer=$(oras manifest fetch --platform linux/amd64 "$IMAGE:latest" | jq -r '.layers[0].digest')
           mkdir -p game-data
-          gh release download assets \
-            --repo ${{secrets.BW_DOWNLOAD_URL}} \
-            --pattern bw.zip \
-            --dir game-data
-      - name: Extract Game Data
-        run: 7z x -p"${{secrets.BW_DOWNLOAD_PW}}" -ogame-data "$PWD/game-data/${{steps.game-data.outputs.filename}}"
+          oras blob fetch "$IMAGE@$layer" --output - | tar -xz -C game-data
       - name: Get openblack-assets
         uses: actions/checkout@v4
         with:
@@ -363,212 +365,3 @@ jobs:
           name: openblack-screenshots
           path: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-*.png
           if-no-files-found: error
-      - name: Upload Land 1 Debug screenshot for comments
-        id: upload-screenshot-debug-land-1
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 1 Release screenshot for comments
-        id: upload-screenshot-release-land-1
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 2 Debug screenshot for comments
-        id: upload-screenshot-debug-land-2
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 2 Release screenshot for comments
-        id: upload-screenshot-release-land-2
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-2.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-2.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 3 Debug screenshot for comments
-        id: upload-screenshot-debug-land-3
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-3.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-3.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 3 Release screenshot for comments
-        id: upload-screenshot-release-land-3
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-3.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-3.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 4 Debug screenshot for comments
-        id: upload-screenshot-debug-land-4
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-4.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-4.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 4 Release screenshot for comments
-        id: upload-screenshot-release-land-4
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-4.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-4.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 5 Debug screenshot for comments
-        id: upload-screenshot-debug-land-5
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-5.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-5.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land 5 Release screenshot for comments
-        id: upload-screenshot-release-land-5
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-5.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-5.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land T Debug screenshot for comments
-        id: upload-screenshot-debug-land-T
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-T.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-T.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Land T Release screenshot for comments
-        id: upload-screenshot-release-land-T
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-T.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-T.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Two Gods Debug screenshot for comments
-        id: upload-screenshot-debug-two-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-two-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-two-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Two Gods Release screenshot for comments
-        id: upload-screenshot-release-two-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-two-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-two-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Three Gods Debug screenshot for comments
-        id: upload-screenshot-debug-three-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-three-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-three-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Three Gods Release screenshot for comments
-        id: upload-screenshot-release-three-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-three-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-three-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Four Gods Debug screenshot for comments
-        id: upload-screenshot-debug-four-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-four-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-four-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Four Gods Release screenshot for comments
-        id: upload-screenshot-release-four-gods
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Construct Debug screenshot for comments
-        id: upload-screenshot-debug-construct
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Upload Construct Release screenshot for comments
-        id: upload-screenshot-release-construct
-        uses: fjogeleit/http-request-action@v1
-        if: github.event_name == 'pull_request_target'
-        with:
-          file: screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png
-          url: "https://screenshots.bwgame.net/screenshot-${{ matrix.os }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png"
-          method: 'PUT'
-          customHeaders: '{"X-Openblack-Auth-Key": "${{ secrets.SCREENSHOTS_API_KEY }}"}'
-      - name: Find Image Comment
-        if: github.event_name == 'pull_request_target'
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Uploaded images
-      - name: Create or update comment with images
-        if: github.event_name == 'pull_request_target'
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            # Uploaded images
-            | Map | Debug | Release | Vanilla |
-            | --- | ----- | ------- | ------- |
-            | Land1.txt | ![Land1 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-1.png) | ![Land1 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-1.png) | ![Land1 Vanilla](https://user-images.githubusercontent.com/1013356/188042342-a6e84dfd-840d-4b90-a1b8-84128e4aab5d.png) |
-            | Land2.txt | ![Land2 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-2.png) | ![Land2 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-2.png) | ![Land2 Vanilla](https://github.com/openblack/openblack/assets/1013356/0910a1c9-23f2-4cb2-a617-8e5efff9d9ab) |
-            | Land3.txt | ![Land3 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-3.png) | ![Land3 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-3.png) | ![Land3 Vanilla](https://user-images.githubusercontent.com/1013356/188042339-4a3941f3-1089-4838-a086-9836c6fe5113.png) |
-            | Land4.txt | ![Land4 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-4.png) | ![Land4 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-4.png) | ![Land4 Vanilla](https://user-images.githubusercontent.com/1013356/188042337-6d139916-5988-4020-a738-1a1fe64a915d.png) |
-            | Land5.txt | ![Land5 Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-5.png) | ![Land5 Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-5.png) | ![Land5 Vanilla](https://user-images.githubusercontent.com/1013356/188042333-5009397c-087f-48fd-a150-b811284f65ed.png) |
-            | LandT.txt | ![LandT Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-land-T.png) | ![LandT Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-land-T.png) | ![LandT Vanilla](https://user-images.githubusercontent.com/1013356/188042332-f9fd0060-d0e0-478a-bb7f-c8eb0ae0690f.png) |
-            | TwoGods.txt | ![TwoGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-two-gods.png) | ![TwoGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-two-gods.png) | ![TwoGods Vanilla](https://user-images.githubusercontent.com/1013356/188042326-6cbe726c-6753-4157-86fa-63016804f313.png) |
-            | ThreeGods.txt | ![ThreeGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-three-gods.png) | ![ThreeGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-three-gods.png) | ![ThreeGods Vanilla](https://user-images.githubusercontent.com/1013356/188042329-51054173-dec5-47b2-8537-ac605ab2be4b.png) |
-            | FourGods.txt | ![FourGods Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-four-gods.png) | ![FourGods Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-four-gods.png) | ![FourGods Vanilla](https://user-images.githubusercontent.com/1013356/188042323-7d428031-cf7e-4e46-b185-a12950bff76a.png) |
-            | construct.txt | ![Construct Debug](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-debug-construct.png) | ![Construct Release](https://screenshots.bwgame.net/screenshot-${{matrix.os}}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}-release-construct.png) | ![construct Vanilla](https://github.com/openblack/openblack/assets/1013356/8e7480a9-5839-49d2-894f-b9821c3dd3e2) |
-          edit-mode: replace
