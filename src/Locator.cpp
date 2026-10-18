@@ -37,6 +37,7 @@
 #include "ECS/Systems/Implementations/TimeSystem.h"
 #include "ECS/Systems/Implementations/TownSystem.h"
 #include "ECS/Systems/Implementations/VegetationSystem.h"
+#include "FileSystem/CdFileSystem.h"
 #include "Graphics/RendererInterface.h"
 #include "Input/GameActionMap.h"
 #include "LHVM.h"
@@ -81,7 +82,7 @@ void openblack::InitializeWindow(const std::string& title, int width, int height
 	Locator::windowing::emplace<Sdl3WindowingSystem>(title, width, height, displayMode, extraFlags);
 }
 
-bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
+bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync, const std::filesystem::path& gamePath) noexcept
 {
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), "EnTT version: {}", ENTT_VERSION);
 	SPDLOG_LOGGER_INFO(spdlog::get("game"), GLM_VERSION_COMPLETE);
@@ -97,11 +98,19 @@ bool openblack::InitializeEngine(GraphicsBackend backend, bool vsync) noexcept
 	Locator::debugGui::reset(DebugGuiInterface::Create().release());
 	Locator::events::emplace<EventManager>();
 
+	// A disc image is read through libcdio and unshield instead of the platform's file system
+	if (gamePath.extension() == ".iso")
+	{
+		Locator::filesystem::emplace<CdFileSystem>();
+	}
+	else
+	{
 #if __ANDROID__
-	Locator::filesystem::emplace<AndroidFileSystem>();
+		Locator::filesystem::emplace<AndroidFileSystem>();
 #else
-	Locator::filesystem::emplace<DefaultFileSystem>();
+		Locator::filesystem::emplace<DefaultFileSystem>();
 #endif
+	}
 	Locator::rng::emplace<RandomNumberManagerProduction>();
 	try
 	{

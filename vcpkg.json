@@ -28,6 +28,8 @@
         "drlibs",
         "bullet3",
         "minizip",
-        "gtest"
+        "gtest",
+        "libcdio",
+        "unshield"
     ]
 }
