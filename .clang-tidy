@@ -22,7 +22,6 @@ Checks: >-
   -bugprone-implicit-widening-of-multiplication-result,
   google-*,
   -google-build-using-namespace,
-  -google-runtime-references,
   readability-*,
   -readability-magic-numbers,
   -readability-uppercase-literal-suffix,

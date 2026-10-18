@@ -40,7 +40,7 @@ jobs:
           test -f clang-tidy-review-output.json
           jq -n --argjson pr "$PR" '{pr_number: $pr}' > clang-tidy-review-metadata.json
 
-      - uses: ZedThree/clang-tidy-review/post@v0.19.0
+      - uses: ZedThree/clang-tidy-review/post@v0.23.1
         if: steps.download.outcome == 'success'
         with:
           lgtm_comment_body: ""

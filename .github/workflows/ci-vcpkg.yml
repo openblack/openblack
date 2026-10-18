@@ -188,7 +188,7 @@ jobs:
       - name: Add base repo to git config
         run: git remote add upstream ${{ github.event.pull_request.base.repo.html_url }}
         if: startsWith(github.event_name, 'pull_request')
-      - uses: ZedThree/clang-tidy-review@v0.19.0
+      - uses: ZedThree/clang-tidy-review@v0.23.1
         id: review
         continue-on-error: true
         with:
@@ -196,9 +196,8 @@ jobs:
           exclude: "*ShaderIncluder.h,*json.hpp,*imgui_impl_sdl*,*stb_image_write.h,*stb_rect_pack.h,*dr_*.h"
           config_file: ""       # Don't use a single config file
           clang_tidy_checks: "" # Use checks from .clang-tidy tree
-          apt_packages: libstdc++-14-dev
           split_workflow: true
-      - uses: ZedThree/clang-tidy-review/upload@v0.19.0
+      - uses: ZedThree/clang-tidy-review/upload@v0.23.1
       - name: If there are any comments, fail the check
         if: steps.review.outputs.total_comments > 0
         run: exit 1
