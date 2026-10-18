@@ -57,5 +57,7 @@ private:
 	std::vector<std::unique_ptr<Window>> _debugWindows;
 	std::string _screenshotFilename = "screenshot.png";
 	bool _stealsFocus = false;
+	float _scale = 1.0f;
+	float _dpiScale = 1.0f;
 };
 } // namespace openblack::debug::gui

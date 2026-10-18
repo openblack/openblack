@@ -118,8 +118,32 @@ bool Gui::StealsFocus() const noexcept
 
 void Gui::SetScale(float scale) noexcept
 {
-	ImGui::GetStyle().ScaleAllSizes(scale);
-	ImGui::GetIO().FontGlobalScale = scale;
+	ImGui::SetCurrentContext(_imgui);
+
+	float dpiScale = 1.0f;
+	if (!_headless)
+	{
+		auto* window = reinterpret_cast<SDL_Window*>(Locator::windowing::value().GetHandle());
+		const float contentScale = SDL_GetDisplayContentScale(SDL_GetDisplayForWindow(window));
+		if (contentScale > 0.0f)
+		{
+			dpiScale = contentScale;
+		}
+	}
+
+	if (scale == _scale && dpiScale == _dpiScale)
+	{
+		return;
+	}
+	_scale = scale;
+	_dpiScale = dpiScale;
+
+	ImGuiStyle style;
+	ImGui::StyleColorsDark(&style);
+	style.ScaleAllSizes(scale * dpiScale);
+	style.FontScaleMain = scale;
+	style.FontScaleDpi = dpiScale;
+	ImGui::GetStyle() = style;
 }
 
 bool Gui::ProcessEvents(const SDL_Event& event) noexcept
