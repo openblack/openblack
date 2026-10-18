@@ -29,7 +29,9 @@ Checks: >-
   -readability-make-member-function-const,
   -readability-convert-member-functions-to-static,
   -readability-named-parameter,
-  -readability-identifier-length
+  -readability-identifier-length,
+  -readability-use-concise-preprocessor-directives,
+  -readability-math-missing-parentheses
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold
     value: 35 # TODO: bring that number down to 25
