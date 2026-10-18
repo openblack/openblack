@@ -71,8 +71,18 @@ jobs:
 
       - name: Restore from cache and setup vcpkg executable and data files.
         uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_BINARY_SOURCES: default,rw
         with:
           vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ matrix.os }}-${{ matrix.cc }}-${{ github.sha }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-${{ matrix.cc }}-
 
       - name: Run CMake+vcpkg to build packages.
         id: build-packages
