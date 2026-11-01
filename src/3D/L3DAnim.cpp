@@ -21,7 +21,7 @@
 
 using namespace openblack;
 
-void L3DAnim::Load(const anm::ANMFile& anm) noexcept
+bool L3DAnim::Load(const anm::ANMFile& anm) noexcept
 {
 	_name = std::string(anm.GetHeader().name.data(), anm.GetHeader().name.size());
 	_unknown_0x20 = anm.GetHeader().unknown0x20;
@@ -54,6 +54,8 @@ void L3DAnim::Load(const anm::ANMFile& anm) noexcept
 			frame.bones[i] = matrix;
 		}
 	}
+
+	return true;
 }
 
 bool L3DAnim::LoadFromFilesystem(const std::filesystem::path& path) noexcept
@@ -91,11 +93,11 @@ bool L3DAnim::LoadFromFile(const std::filesystem::path& path) noexcept
 	return true;
 }
 
-bool L3DAnim::LoadFromBuffer(const std::vector<uint8_t>& data) noexcept
+bool L3DAnim::LoadFromBuffer(const std::span<const char>& span) noexcept
 {
 	anm::ANMFile anm;
 
-	const auto result = anm.Open(data);
+	const auto result = anm.Open(span);
 
 	if (result != anm::ANMResult::Success)
 	{
@@ -118,7 +120,7 @@ std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const noexcept
 	{
 		return _frames[0].bones;
 	}
-	uint32_t animationTime = time % _duration;
+	const uint32_t animationTime = time % _duration;
 	uint32_t index = 0;
 	uint32_t previousTime = 0;
 	for (const auto& frame : _frames)
@@ -142,7 +144,7 @@ std::vector<glm::mat4> L3DAnim::GetBoneMatrices(uint32_t time) const noexcept
 	{
 		return _frames[_frames.size() - 1].bones;
 	}
-	float t = static_cast<float>(animationTime - previousTime) / (_frames[index].time - previousTime);
+	const float t = static_cast<float>(animationTime - previousTime) / (_frames[index].time - previousTime);
 
 	// Interpolate
 	std::vector<glm::mat4> bones;

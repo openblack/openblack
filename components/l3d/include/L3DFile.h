@@ -345,8 +345,8 @@ public:
 	/// Read l3d file from the filesystem
 	L3DResult Open(const std::filesystem::path& filepath) noexcept;
 
-	/// Read l3d file from a buffer
-	L3DResult Open(const std::vector<uint8_t>& buffer) noexcept;
+	/// Read l3d file from a span
+	L3DResult Open(const std::span<const char>& span) noexcept;
 
 	/// Write l3d file to path on the filesystem
 	L3DResult Write(const std::filesystem::path& filepath) noexcept;
