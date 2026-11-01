@@ -192,7 +192,7 @@ std::unique_ptr<Stream> AndroidFileSystem::Open(const std::filesystem::path& pat
 	return std::make_unique<MemoryStream>(std::move(bytes));
 }
 
-bool AndroidFileSystem::Exists(const std::filesystem::path& path) const
+bool AndroidFileSystem::Exists(const std::filesystem::path& path)
 {
 	if (path.empty())
 	{
@@ -218,7 +218,7 @@ std::vector<uint8_t> AndroidFileSystem::ReadAll(const std::filesystem::path& pat
 }
 
 void AndroidFileSystem::Iterate(const std::filesystem::path& path, bool recursive,
-                                const std::function<void(const std::filesystem::path&)>& function) const
+                                const std::function<void(const std::filesystem::path&)>& function)
 {
 	auto* env = Env();
 	const LocalRef jgamePath {env, env->NewStringUTF(_gamePath.c_str())};
