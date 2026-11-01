@@ -12,8 +12,6 @@
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
-#include "Locator.h"
-
 using namespace openblack::ecs;
 
 MapInterface::CellId MapInterface::GetGridCell(const glm::vec2& pos)
@@ -30,7 +28,18 @@ MapInterface::CellId MapInterface::GetGridCell(const glm::vec3& pos)
 	return GetGridCell(glm::xz(pos));
 }
 
-glm::vec2 MapInterface::GetCellCenter(const MapInterface::CellId& cellId)
+glm::vec2 MapInterface::GetCellCenter(const CellId& cellId)
 {
 	return glm::vec2(cellId.x << 0x10, cellId.y << 0x10) / k_PositionToGridFactor + 5.0f;
+}
+
+glm::vec3 MapInterface::PointGridCellAdd(const glm::vec3& pos, const glm::i16vec2& cellIncrement)
+{
+	const glm::i32vec2 shiftedIncrement(cellIncrement.x << 0x10, cellIncrement.y << 0x10);
+	const auto coords = glm::i32vec2(glm::xz(pos) * k_PositionToGridFactor) + shiftedIncrement;
+	return {
+	    coords.x / k_PositionToGridFactor,
+	    pos.y,
+	    coords.y / k_PositionToGridFactor,
+	};
 }
