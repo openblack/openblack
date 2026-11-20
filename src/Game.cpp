@@ -193,8 +193,6 @@ bool Game::ProcessEvents(const SDL_Event& event) noexcept
 	case SDL_EVENT_KEY_DOWN:
 		switch (event.key.key)
 		{
-		case SDLK_ESCAPE:
-			return false;
 		case SDLK_F:
 			window.SetDisplayMode(windowing::DisplayMode::Fullscreen);
 			break;
@@ -353,6 +351,18 @@ bool Game::Update() noexcept
 		while (SDL_PollEvent(&e) != 0)
 		{
 			Locator::events::value().Create<SDL_Event>(e);
+		}
+		const auto& actionSystem = Locator::gameActionSystem::value();
+		if (actionSystem.Get(input::UnbindableActionMap::ESCAPE) && actionSystem.GetChanged(input::UnbindableActionMap::ESCAPE))
+		{
+			if (Locator::temple::has_value() && Locator::temple::value().Active())
+			{
+				Locator::temple::value().Deactivate();
+			}
+			else
+			{
+				config.running = false;
+			}
 		}
 		camera.HandleActions(deltaTime);
 	}

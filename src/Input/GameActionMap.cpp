@@ -189,6 +189,7 @@ void GameActionMap::Frame()
 
 	get_print(DOUBLE_CLICK);
 	get_print(TWO_BUTTON_CLICK);
+	get_print(ESCAPE);
 
 #undef get_print
 
@@ -202,6 +203,7 @@ void GameActionMap::Frame()
 	}
 	_mouseDelta = glm::ivec2(0, 0);
 	_bindableMapPrevious = _bindableMap;
+	_unbindableMapPrevious = _unbindableMap;
 	_bindableMap =
 	    static_cast<BindableActionMap>(static_cast<uint64_t>(_bindableMap) &
 	                                   ~(static_cast<uint64_t>(_mouseWheelBinding[0].value_or(BindableActionMap::NONE)) |
@@ -212,8 +214,13 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 {
 	if (event.type == SDL_EVENT_KEY_DOWN)
 	{
-		if (_keyboardModBindings.contains(event.key.scancode) &&
-		    (_keyboardModBindings[event.key.scancode].first & event.key.mod) != 0)
+		if (event.key.scancode == SDL_SCANCODE_ESCAPE)
+		{
+			_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) |
+			                                                  static_cast<uint8_t>(UnbindableActionMap::ESCAPE));
+		}
+		else if (_keyboardModBindings.contains(event.key.scancode) &&
+		         (_keyboardModBindings[event.key.scancode].first & event.key.mod) != 0)
 		{
 			_bindableMap = static_cast<BindableActionMap>(
 			    // Remove non-modded action
@@ -308,7 +315,12 @@ void GameActionMap::ProcessEvent(const SDL_Event& event)
 	}
 	else if (event.type == SDL_EVENT_KEY_UP)
 	{
-		if (_keyboardBindings.contains(event.key.scancode))
+		if (event.key.scancode == SDL_SCANCODE_ESCAPE)
+		{
+			_unbindableMap = static_cast<UnbindableActionMap>(static_cast<uint8_t>(_unbindableMap) &
+			                                                  ~static_cast<uint8_t>(UnbindableActionMap::ESCAPE));
+		}
+		else if (_keyboardBindings.contains(event.key.scancode))
 		{
 			_bindableMap = static_cast<BindableActionMap>(
 			    static_cast<uint64_t>(_bindableMap) & ~static_cast<uint64_t>(_keyboardModBindings[event.key.scancode].second));
