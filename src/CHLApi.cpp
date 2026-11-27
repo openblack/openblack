@@ -20,6 +20,8 @@
 #include <LHVMTypes.h>
 #include <entt/entity/entity.hpp>
 #include <entt/entity/fwd.hpp>
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <spdlog/spdlog.h>
 
@@ -27,6 +29,7 @@
 #include "3D/TempleInteriorInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
+#include "ECS/Components/Mobile.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Registry.h"
 #include "ECS/Systems/HandSystemInterface.h"
@@ -41,6 +44,7 @@ using namespace openblack::ecs::archetypes;
 
 using openblack::Locator;
 using openblack::MobileStaticInfo;
+using openblack::ecs::components::MobileStatic;
 using openblack::ecs::components::Transform;
 using openblack::ecs::systems::HandSystemInterface;
 using openblack::lhvm::DataType;
@@ -475,10 +479,31 @@ void MoveGameThing() // 033 MOVE_GAME_THING
 
 void SetFocus() // 034 SET_FOCUS
 {
-	// const auto position = PopVec();
-	// const auto object = Pop().uintVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const auto position = PopVec();
+	const auto object = Pop().uintVal;
+
+	const auto entity = static_cast<entt::entity>(object);
+	auto& registry = Locator::entitiesRegistry::value();
+	if (object == 0 || !registry.Valid(entity))
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "CHLApi Function {}(): Thing no longer valid", __func__);
+		return;
+	}
+
+	auto [mobileStatic, transform] = registry.TryGet<const MobileStatic, Transform>(entity);
+	if (mobileStatic == nullptr || transform == nullptr)
+	{
+		SPDLOG_LOGGER_WARN(spdlog::get("scripting"), "SET_FOCUS does not support entity {}", object);
+		return;
+	}
+
+	const auto offset = position - transform->position;
+	const auto rotation = mobileStatic->RotationWithYaw(std::atan2(offset.z, offset.x));
+	if (transform->rotation != rotation)
+	{
+		transform->rotation = rotation;
+		registry.SetDirty();
+	}
 }
 
 void HasCameraArrived() // 035 HAS_CAMERA_ARRIVED

@@ -9,8 +9,6 @@
 
 #include "MobileStaticArchetype.h"
 
-#include <glm/gtx/euler_angles.hpp>
-
 #include "AbodeArchetype.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Mobile.h"
@@ -34,10 +32,9 @@ entt::entity MobileStaticArchetype::Create(const glm::vec3& position, MobileStat
 
 	glm::vec3 offset(0.0f, altitude, 0.0f);
 
-	registry.Assign<Transform>(entity, position + offset, glm::eulerAngleXYZ(-xAngleRadians, -yAngleRadians, -zAngleRadians),
-	                           glm::vec3(scale));
+	const auto& mobileStatic = registry.Assign<MobileStatic>(entity, type, xAngleRadians, zAngleRadians);
+	registry.Assign<Transform>(entity, position + offset, mobileStatic.RotationWithYaw(yAngleRadians), glm::vec3(scale));
 	registry.Assign<Mobile>(entity);
-	registry.Assign<MobileStatic>(entity, type);
 	const auto resourceId = resources::HashIdentifier(info.meshId);
 	registry.Assign<Mesh>(entity, resourceId, static_cast<int8_t>(0), static_cast<int8_t>(1));
 
