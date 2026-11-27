@@ -7,8 +7,16 @@
  * openblack is licensed under the GNU General Public License version 3.
  *******************************************************************************/
 
+#include <array>
+#include <map>
+
+#include <ECS/Components/Creature.h>
+#include <ECS/Components/CreatureState.h>
+#include <ECS/Registry.h>
 #include <Game.h>
 #include <LHScriptX/Script.h>
+#include <Locator.h>
+#include <entt/core/hashed_string.hpp>
 #include <gtest/gtest.h>
 
 class LoadScene: public ::testing::Test
@@ -69,4 +77,28 @@ VERSION(2.300000)
 LOAD_LANDSCAPE(".\Data\Landscape\Land1.lnd")
 CREATE_ABODE(0, "2224.63,2372.52", "CELTIC_ABODE_F", 11100, 1095, 0, 0)
 )"""");
+}
+
+TEST_F(LoadScene, CreaturesSharingAMindReadDesireTimesFromTheirInfoRecords)
+{
+	using namespace openblack;
+	using namespace openblack::ecs::components;
+
+	LoadTestScene(R""""(
+VERSION(2.300000)
+LOAD_LANDSCAPE(".\Data\Landscape\Land1.lnd")
+CREATE_CREATURE_FROM_FILE("PLAYER_ONE", 1, "SharedMind", "1000.00,1000.00")
+CREATE_CREATURE_FROM_FILE("PLAYER_TWO", 17, "SharedMind", "1010.00,1000.00")
+)"""");
+
+	std::map<CreatureType, std::array<float, 2>> increaseTimes;
+	Locator::entitiesRegistry::value().Each<const Creature, const CreatureState>(
+	    [&](const Creature& creature, const CreatureState& state) {
+		    EXPECT_EQ(creature.mind, entt::hashed_string::value("SharedMind"));
+		    increaseTimes.emplace(creature.species,
+		                          std::array {state.desireIncreaseTimes.front(), state.desireIncreaseTimes.back()});
+	    });
+	const std::map<CreatureType, std::array<float, 2>> expected {{CreatureType::Cow, {2.5f, 6.0f}},
+	                                                             {CreatureType::GiantApe, {8.0f, 3.5f}}};
+	EXPECT_EQ(increaseTimes, expected);
 }

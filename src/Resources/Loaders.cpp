@@ -173,26 +173,9 @@ LevelLoader::result_type LevelLoader::operator()(FromDiskTag, const std::filesys
 	return std::make_shared<Level>(Level::ParseLevel(path, landType));
 }
 
-std::string CreatureMindLoader::Identifier(std::string_view creatureMind, CreatureType creatureType)
+CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& /*unused*/) const
 {
-	return std::string(creatureMind) + ":" + std::to_string(static_cast<uint32_t>(creatureType));
-}
-
-CreatureMindLoader::result_type CreatureMindLoader::operator()(FromDiskTag, const std::filesystem::path& creatureMindPath,
-                                                               CreatureType creatureType) const
-{
-	if (!Locator::infoConstants::has_value())
-	{
-		throw std::runtime_error("Cannot initialize creature mind '" + creatureMindPath.filename().string() +
-		                         "': InfoConstants is not loaded");
-	}
-	if (creatureType <= CreatureType::Unknown || creatureType >= CreatureType::_COUNT)
-	{
-		throw std::runtime_error("Cannot initialize creature mind '" + creatureMindPath.filename().string() +
-		                         "': invalid creature type " + std::to_string(static_cast<uint32_t>(creatureType)));
-	}
-
-	return std::make_shared<creature::CreatureMind>(Locator::infoConstants::value(), creatureType);
+	return std::make_shared<creature::CreatureMind>();
 }
 
 SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromBufferTag,

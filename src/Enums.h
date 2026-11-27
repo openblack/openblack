@@ -3382,6 +3382,32 @@ enum class AttackInfo : int
 	_COUNT = 2
 };
 
+namespace v120
+{
+enum class CreatureType : uint32_t
+{
+	Ape = 0,
+	Cow = 1,
+	Tiger = 2,
+	Leopard = 3,
+	Wolf = 4,
+	Lion = 5,
+	Horse = 6,
+	Tortoise = 7,
+	Zebra = 8,
+	BrownBear = 9,
+	PolarBear = 10,
+	Sheep = 11,
+	Chimp = 12,
+	Ogre = 13,
+	Mandrill = 14,
+	Rhino = 15,
+	Gorilla = 16,
+	Chicken = 17,
+	Crocodile = 18,
+};
+} // namespace v120
+
 enum class CreatureType : int32_t
 {
 	Unknown = 0,

@@ -11,15 +11,14 @@
 
 #include <array>
 
-#include "Creature/CreatureMind.h"
+#include "Enums.h"
 
 namespace openblack::ecs::components
 {
 
-// Present only when the creature's mind was loaded at spawn.
 struct CreatureState
 {
-	std::array<float, creature::k_DesireCount> desireIncreaseTimes {};
+	std::array<float, static_cast<size_t>(CreatureDesires::Invalid)> desireIncreaseTimes {};
 };
 
 } // namespace openblack::ecs::components
