@@ -25,6 +25,7 @@
 
 #include "3D/LandIslandInterface.h"
 #include "3D/TempleInteriorInterface.h"
+#include "Audio/AudioManagerInterface.h"
 #include "Camera/Camera.h"
 #include "ECS/Archetypes/MobileStaticArchetype.h"
 #include "ECS/Components/Transform.h"
@@ -549,12 +550,15 @@ void GetHandPosition() // 042 GET_HAND_POSITION
 
 void PlaySoundEffect() // 043 PLAY_SOUND_EFFECT
 {
-	// const auto withPosition = static_cast<bool>(Pop().intVal);
-	// const auto position = PopVec();
-	// const auto soundbank = Pop().intVal;
-	// const auto sound = Pop().intVal;
-	// TODO(Daniels118): implement this
-	SPDLOG_LOGGER_ERROR(spdlog::get("scripting"), "CHLApi Function {}() not implemented.", __func__);
+	const bool positional = Pop().uintVal != 0;
+	const auto position = PopVec();
+	const auto bank = Pop().uintVal;
+	const auto sample = Pop().uintVal;
+	if (Locator::audio::has_value() &&
+	    (!positional || (std::isfinite(position.x) && std::isfinite(position.y) && std::isfinite(position.z))))
+	{
+		Locator::audio::value().PlayScriptSound(bank, sample, positional ? std::optional(position) : std::nullopt);
+	}
 }
 
 void StartMusic() // 044 START_MUSIC

@@ -227,7 +227,8 @@ public:
 	int pitch;
 	int pitchDeviation;
 	ChannelLayout channelLayout;
-	PlayType playType;
+	bool restartOnPlay {true};
+	bool allowOverlap {};
 	BufferId bufferId;
 	float duration;
 	std::vector<std::vector<uint8_t>> buffer;

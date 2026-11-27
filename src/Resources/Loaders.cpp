@@ -202,10 +202,17 @@ SoundLoader::result_type SoundLoader::operator()(BaseLoader<audio::Sound>::FromB
 	sound->priority = header.priority;
 	sound->sampleRate = static_cast<int>(header.sampleRate);
 	sound->bitRate = 0;
-	sound->volume = 1.f;
-	sound->pitch = header.pitch;
+	constexpr uint32_t k_OverridePitch = 0x1;
+	constexpr uint32_t k_OverrideVolume = 0x20;
+	constexpr uint32_t k_OverridePlayType = 0x400;
+	sound->volume = (header.overrideFlags & k_OverrideVolume) != 0 ? std::min(header.volume / 127.0f, 1.0f) : 1.0f;
+	sound->pitch = (header.overrideFlags & k_OverridePitch) != 0 && header.pitch != 0 ? header.pitch : 100;
 	sound->pitchDeviation = header.pitchDeviation;
-	sound->playType = static_cast<audio::PlayType>(header.loopType);
+	if ((header.overrideFlags & k_OverridePlayType) != 0)
+	{
+		sound->restartOnPlay = header.playType == pack::AudioBankPlayType::Restart;
+		sound->allowOverlap = header.playType == pack::AudioBankPlayType::Overlap;
+	}
 	sound->buffer = buffer;
 	return sound;
 }

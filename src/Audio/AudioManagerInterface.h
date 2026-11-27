@@ -10,6 +10,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 
 #include <entt/fwd.hpp>
 
@@ -50,6 +51,7 @@ public:
 	virtual void PlayMusic(const std::string& packPath, PlayType type) = 0;
 	virtual void StopMusic() = 0;
 	virtual void PlaySound(entt::id_type id, PlayType type) = 0;
+	virtual void PlayScriptSound(uint32_t bank, uint32_t sample, std::optional<glm::vec3> position) = 0;
 	virtual const Sound& GetSound(entt::id_type id) = 0;
 	virtual void CreateSoundGroup(const std::string& name) = 0;
 	virtual void AddToSoundGroup(const std::string& name, entt::id_type id) = 0;

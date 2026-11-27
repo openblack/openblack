@@ -125,7 +125,7 @@ BufferId AudioPlayer::CreateBuffer(ChannelLayout layout, const std::vector<int16
 	{
 		throw std::runtime_error("Unknown channel layout");
 	}
-	BufferId id;
+	BufferId id {};
 	alCheckCall(alGenBuffers(1, &id));
 	auto bufferSize = static_cast<ALsizei>(buffer.size() * sizeof(buffer[0]));
 	alCheckCall(alBufferData(id, playerLayout, buffer.data(), bufferSize, sampleRate));
@@ -144,7 +144,7 @@ void AudioPlayer::DeleteBuffer(BufferId id)
 
 SourceId AudioPlayer::CreateSource(float pitch, bool relative)
 {
-	unsigned int id;
+	unsigned int id {};
 	alCheckCall(alGenSources(1, &id));
 	alCheckCall(alSourcef(id, AL_PITCH, pitch));
 	alCheckCall(alSourcei(id, AL_SOURCE_RELATIVE, relative));
@@ -161,14 +161,12 @@ void AudioPlayer::UpdateSource(SourceId id, glm::vec3 pos, float volume, bool lo
 	alCheckCall(alSource3f(id, AL_POSITION, pos.z, pos.y, pos.x));
 	alCheckCall(alSourcef(id, AL_GAIN, volume * _volume));
 	alCheckCall(alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE));
-	alCheckCall(alSourcef(id, AL_PITCH, 1.f));
 }
 
 void AudioPlayer::UpdateSource(SourceId id, float volume, bool loop)
 {
 	alCheckCall(alSourcef(id, AL_GAIN, volume * _volume));
 	alCheckCall(alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE));
-	alCheckCall(alSourcef(id, AL_PITCH, 1.f));
 }
 
 float AudioPlayer::GetDuration(BufferId id)
