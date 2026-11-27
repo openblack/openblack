@@ -49,6 +49,7 @@ public:
 		return result;
 	}
 	void PlaySound([[maybe_unused]] entt::id_type id, [[maybe_unused]] PlayType type) override {}
+	void PlayScriptSound(uint32_t, uint32_t, std::optional<glm::vec3>) override {}
 	void SetGlobalVolume([[maybe_unused]] float volume) override {}
 	void SetSfxVolume([[maybe_unused]] float volume) override {}
 	void SetMusicVolume([[maybe_unused]] float volume) override {}

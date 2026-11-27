@@ -55,6 +55,7 @@ public:
 	void StopMusic() override;
 	const Sound& GetSound(entt::id_type id) override;
 	void PlaySound(entt::id_type id, PlayType type) override;
+	void PlayScriptSound(uint32_t bank, uint32_t sample, std::optional<glm::vec3> position) override;
 	void SetGlobalVolume(float volume) override { _globalVolume = volume; }
 	void SetSfxVolume(float volume) override { _sfxVolume = volume; }
 	void SetMusicVolume(float volume) override { _musicVolume = volume; }

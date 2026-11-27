@@ -703,7 +703,7 @@ bool Game::Initialize() noexcept
 	auto& audioManager = Locator::audio::value();
 	fileSystem.Iterate(
 	    fileSystem.GetPath<Path::Audio>(), true, [&audioManager, &soundManager, &fileSystem](const std::filesystem::path& f) {
-		    if (f.extension() != ".sad")
+		    if (string_utils::LowerCase(f.extension().string()) != ".sad")
 		    {
 			    return;
 		    }
@@ -719,14 +719,13 @@ bool Game::Initialize() noexcept
 		    }
 		    const auto& audioHeaders = soundPack.GetAudioSampleHeaders();
 		    const auto& audioData = soundPack.GetAudioSamplesData();
-		    auto soundName = std::filesystem::path(audioHeaders[0].name.data());
-
 		    if (audioHeaders.empty())
 		    {
 			    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound pack found for {}. Skipping", f.filename().string());
 			    return;
 		    }
 
+		    auto soundName = std::filesystem::path(audioHeaders.front().name.data());
 		    auto groupName = f.filename().string();
 
 		    // A hacky way of detecting if the sound is music as all music sounds end with "mpg"
@@ -746,7 +745,7 @@ bool Game::Initialize() noexcept
 				    {
 					    SPDLOG_LOGGER_WARN(spdlog::get("audio"), "Empty sound buffer found for {}. Skipping",
 					                       soundName.string());
-					    return;
+					    continue;
 				    }
 
 				    const auto stringId = fmt::format("{}/{}", groupName, audioHeaders[i].id);

@@ -29,5 +29,6 @@ struct AudioEmitter
 	audio::PlayType loop = audio::PlayType::Once;
 	audio::AudioStatus state = audio::AudioStatus::Playing;
 	bool relative;
+	bool scriptEffect {};
 };
 } // namespace openblack::ecs::components
