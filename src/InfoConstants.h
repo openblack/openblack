@@ -798,23 +798,7 @@ struct GTotemStatueInfo: GMultiMapFixedInfo
 
 struct CreatureDesireForType
 {
-	float field0x0;
-	float field0x4;
-	float field0x8;
-	float field0xc;
-	float field0x10;
-	float field0x14;
-	float field0x18;
-	float field0x1c;
-	float field0x20;
-	float field0x24;
-	float field0x28;
-	float field0x2c;
-	float field0x30;
-	float field0x34;
-	float field0x38;
-	float field0x3c;
-	float field0x40;
+	std::array<float, 17> byCreatureType;
 };
 
 struct GVortexInfo
@@ -857,7 +841,8 @@ struct GSpeedThreshold
 
 struct GCreatureInfo: GLivingInfo
 {
-	std::array<uint8_t, 416> field0x1e4;
+	v120::CreatureType creatureType;
+	std::array<uint8_t, 412> field0x1e8;
 };
 
 struct GMagicRadiusSpellInfo: GMagicInfo

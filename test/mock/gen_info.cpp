@@ -74,6 +74,13 @@ int main(int argc, char* argv[]) noexcept
 	openblack::InfoConstants constants;
 	std::memset(&constants, 0, sizeof(constants));
 
+	constants.creature.at(0).creatureType = openblack::v120::CreatureType::Cow;
+	constants.creature.at(1).creatureType = openblack::v120::CreatureType::Ape;
+	constants.creatureDesireForType.front().byCreatureType.at(0) = 2.5f;
+	constants.creatureDesireForType.front().byCreatureType.at(1) = 8.0f;
+	constants.creatureDesireForType.back().byCreatureType.at(0) = 6.0f;
+	constants.creatureDesireForType.back().byCreatureType.at(1) = 3.5f;
+
 	// Add celtic abode name and mesh ids used in scene test
 	for (uint8_t i = 0; i < 6; ++i)
 	{
