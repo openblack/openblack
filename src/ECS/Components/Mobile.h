@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/mat3x3.hpp>
+
 #include "Enums.h"
 
 namespace openblack::ecs::components
@@ -22,6 +25,13 @@ struct Mobile
 struct MobileStatic
 {
 	MobileStaticInfo type; ///< This is 32 bits but could be 8 bits if stored in uint8_t
+	float xAngleRadians;
+	float zAngleRadians;
+
+	[[nodiscard]] glm::mat3 RotationWithYaw(float yAngleRadians) const
+	{
+		return {glm::eulerAngleYXZ(-yAngleRadians, -xAngleRadians, -zAngleRadians)};
+	}
 };
 
 struct MobileObject

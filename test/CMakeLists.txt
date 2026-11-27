@@ -41,11 +41,10 @@ endmacro ()
 
 openblack_setup_and_add_test(test_game_initialize test_game_initialize.cpp)
 openblack_setup_and_add_test(test_load_scene test_load_scene.cpp)
+target_link_libraries(test_load_scene PRIVATE ScriptLibrary)
 openblack_setup_and_add_test(test_fixed test_fixed.cpp)
 openblack_setup_and_add_test(test_interpolator test_interpolator.cpp)
 openblack_setup_and_add_test(test_set_camera_pos camera/test_set_camera_pos.cpp)
-openblack_setup_and_add_test(test_chlapi_set_focus chlapi/test_set_focus.cpp)
-target_link_libraries(test_chlapi_set_focus PRIVATE ScriptLibrary)
 openblack_setup_and_add_json_test(
   test_mobile_wall_hug mobile_wall_hug/test_mobile_wall_hug.cpp
 )
