@@ -86,7 +86,8 @@ enum class ObjectPropertyType : uint8_t
 	Scale,
 	InHand,
 	// InHandAny,	<-- CI
-	InHandGrabypeSpeed,
+	InHandGrab,
+	Speed,
 	RunningSpeed,
 	DefaultSpeed,
 	Death,
@@ -121,6 +122,10 @@ enum class ObjectPropertyType : uint8_t
 
 	Last,
 };
+static_assert(static_cast<uint8_t>(ObjectPropertyType::InHandGrab) == 10);
+static_assert(static_cast<uint8_t>(ObjectPropertyType::Speed) == 11);
+static_assert(static_cast<uint8_t>(ObjectPropertyType::YPos) == 24);
+static_assert(static_cast<uint8_t>(ObjectPropertyType::Last) == 38);
 
 enum class ObjectType : uint8_t
 {
